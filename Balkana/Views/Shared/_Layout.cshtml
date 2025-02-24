@@ -8,40 +8,117 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Balkana.styles.css" asp-append-version="true" />
     <link rel="icon" type="image/x-icon" href="~/favicon.ico">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        .dropdown-toggle-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .dropdown-toggle-left::after {
+            order: -1; /* Moves the arrow to the left */
+            margin-right: 8px; /* Adds spacing between arrow and text */
+            margin-left: 0;
+        }
+    </style>
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Balkana</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+<body class="bg-black text-white scrollbar" id="style-3">
+    <header class="d-flex fw-bold justify-content-center bg-balkana sticky-top align-middle">
+        <nav class="navbar navbar-expand-lg">
+            @*PC Perspective*@
+            <div class="container-fluid d-none d-lg-block fs-4">
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" data-bs-theme="dark">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle dropdown-toggle-left" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                About us
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="Info" asp-action="Balkana">About Balkana</a></li>
+                                <li><a class="dropdown-item" asp-controller="Info" asp-action="Tournaments">Our Tournaments</a></li>
+                                <li><a class="dropdown-item" asp-controller="Info" asp-action="ContentCreators">Our Streamers</a></li>
+                            </ul>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        <li class="nav-item d-none d-lg-block">
+                            <a class="nav-link active" aria-current="page" asp-controller="Home" asp-action="Index"><img src="~/Balkana.png" width="40" height="40" class="" /></a>
+                        </li>
+                        <li class="nav-item d-block d-md-none">
+                            <a class="nav-link active" aria-current="page">Home</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Esports
+                            </a>
+                            <ul class="dropdown-menu justify-content-center">
+                                <li><a class="dropdown-item" href="#">Tournaments</a></li>
+                                <li><a class="dropdown-item" href="#">Teams</a></li>
+                                <li><a class="dropdown-item" href="#">Players</a></li>
+                                <li><a class="dropdown-item" href="#">Statistics</a></li>
+                                <form class="" role="search">
+                                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                                </form>
+                            </ul>
                         </li>
                     </ul>
-                    <partial name="_LoginPartial" />
                 </div>
             </div>
+            @*Mobile perspective*@
+            <div class="container-fluid d-block d-md-none">
+                <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
+                    <img src="~/Balkana.png" width="30" height="30" class="" />
+                </button>
+                <a class="navbar-brand" href="">@ViewData["Title"]</a>
+                <div class="offcanvas offcanvas-end bg-dark" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+                    <div class="offcanvas-header">
+                        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Offcanvas</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                    </div>
+                    <div class="offcanvas-body ">
+                        <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">About Balkana</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">Our Tournaments</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">Our Streamers</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Esports
+                                </a>
+                                <ul class="dropdown-menu justify-content-center">
+                                    <li><a class="dropdown-item" href="#">Tournaments</a></li>
+                                    <li><a class="dropdown-item" href="#">Teams</a></li>
+                                    <li><a class="dropdown-item" href="#">Players</a></li>
+                                    <li><a class="dropdown-item" href="#">Statistics</a></li>
+                                    <form class="" role="search">
+                                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                                    </form>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
         </nav>
     </header>
-    <div class="container">
+    <div class="container w-90 bg-black">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
     <footer class="border-top footer text-muted">
-        <div class="container">
+        <div class="container sticky-bottom">
             &copy; 2025 - Balkana - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <symbol id="instagram" viewBox="0 0 16 16">
         </div>
+        
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
