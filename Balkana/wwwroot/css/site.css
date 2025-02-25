@@ -39,3 +39,18 @@ body {
     border: 0.1px solid;
     border-color:white;
 }
+a:visited {
+    text-decoration:none;
+}
+.socials {
+    text-decoration:none;
+    color:white;
+}
+.socials:active {
+    text-decoration:none;
+}
+.socials:visited {
+    text-decoration:none;
+    color:none;
+    border:none;
+}
