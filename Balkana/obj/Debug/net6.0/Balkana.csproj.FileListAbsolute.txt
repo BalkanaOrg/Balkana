@@ -75,3 +75,6 @@ G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net6.0\refint\Balkana.dll
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net6.0\Balkana.pdb
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net6.0\Balkana.genruntimeconfig.cache
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net6.0\ref\Balkana.dll
+G:\Programming\Csharp\Balkana\Balkana\bin\Debug\net6.0\libman.json
+G:\Programming\Csharp\Balkana\Balkana\bin\Debug\net6.0\AutoMapper.dll
+G:\Programming\Csharp\Balkana\Balkana\bin\Debug\net6.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll

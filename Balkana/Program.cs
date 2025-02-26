@@ -1,5 +1,8 @@
+using Balkana;
 using Balkana.Data;
+using Balkana.Data.Infrastructure;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,9 +19,27 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+void ConfigureServices(IServiceCollection services)
+{
+    services.AddDbContext<ApplicationDbContext>(options => options
+    .UseSqlServer(connectionString));
+
+    services.AddDatabaseDeveloperPageExceptionFilter();
+
+    services.AddAutoMapper(typeof(Startup));
+
+    services.AddControllersWithViews(options =>
+    {
+        options.Filters.Add<AutoValidateAntiforgeryTokenAttribute>();
+    });
+
+    //services.AddTransient<>
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseMigrationsEndPoint();
 }
 else
@@ -28,6 +49,7 @@ else
     app.UseHsts();
 }
 
+app.PrepareDatabase();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
@@ -42,3 +64,18 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 app.Run();
+
+//namespace Balkana
+//{
+//    public class Program
+//    {
+//        public static void Main(string[] args)
+//            => CreateHostBuilder(args).Build().Run();
+
+//        public static IHostBuilder CreateHostBuilder(string[] args)
+//            => Host
+//            .CreateDefaultBuilder(args)
+//            .ConfigureWebHostDefaults(webBuilder => webBuilder
+//            .UseStartup<Startup>());
+//    }
+//}
