@@ -1,5 +1,6 @@
 ﻿using Balkana.Data;
 using Balkana.Data.Infrastructure;
+using Balkana.Services.Teams;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,7 +27,7 @@ namespace Balkana
                 options.Filters.Add<AutoValidateAntiforgeryTokenAttribute>();
             });
 
-            //services.AddTransient<>
+            services.AddTransient<ITeamService, TeamService>();
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {

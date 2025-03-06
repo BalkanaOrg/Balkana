@@ -1,0 +1,43 @@
+﻿@model PlayerFormModel
+@{
+    ViewData["Title"] = "Add Player";
+}
+
+<div class="row">
+    <div class="col-lg-6 offset-lg-3 col-sm-12 col-xl-6">
+        <h2 class="text-center">Add a player</h2>
+        <form method="post">
+
+            <div class="form-group">
+                <label asp-for="Nickname"></label>
+                <input asp-for="Nickname" class="form-control" placeholder="e.g. Meally">
+                <span asp-validation-for="Nickname" class="small text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="FirstName"></label>
+                <input asp-for="FirstName" class="form-control" placeholder="e.g. Kris">
+                <span asp-validation-for="FirstName" class="small text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="LastName"></label>
+                <input asp-for="LastName" class="form-control" placeholder="e.g. Ivanov">
+                <span asp-validation-for="LastName" class="small text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="NationalityId"></label>
+                <select asp-for="NationalityId" class="form-control">
+                    @foreach (var nationality in Model.Nationalities)
+                    {
+                        <option value="@nationality.Id">@nationality.Name</option>
+                    }
+                </select>
+            </div>
+
+            <input class="btn btn-primary float-right" type="submit" value="Save" />
+        </form>
+
+    </div>
+</div>

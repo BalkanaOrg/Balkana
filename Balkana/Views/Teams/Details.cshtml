@@ -1,0 +1,28 @@
+﻿@model TeamDetailsServiceModel
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    ViewData["Title"] = Model.Tag;
+}
+
+<div class="row justify-content-center">
+    <h2>[@Model.Tag] @Model.FullName</h2>
+</div>
+
+<table class="col-12 text-center">
+    <tr>
+
+        <td class="col-4">
+            <img src="@Model.LogoURL" alt="@Model.FullName" width="50px"/><br />
+            <p><b>@Model.FullName</b></p>
+        </td>
+
+        <td class="col-9">
+            <textarea readonly rows="8" cols="80" style="resize:none; border:none;">
+                @Model.YearFounded
+            </textarea>
+        </td>
+
+    </tr>
+</table>

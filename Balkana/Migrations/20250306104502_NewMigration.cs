@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Balkana.Migrations
 {
-    public partial class ForcedRefresh : Migration
+    public partial class NewMigration : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -100,7 +100,8 @@ namespace Balkana.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     FullName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Tag = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LogoURL = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -248,6 +249,28 @@ namespace Balkana.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Players",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nickname = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    NationalityId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Players", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Players_Nationalities_NationalityId",
+                        column: x => x.NationalityId,
+                        principalTable: "Nationalities",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Tournaments",
                 columns: table => new
                 {
@@ -268,7 +291,7 @@ namespace Balkana.Migrations
                         column: x => x.OrganizerId,
                         principalTable: "Organizer",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -284,34 +307,65 @@ namespace Balkana.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Pictures", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Pictures_Players_PlayerId",
+                        column: x => x.PlayerId,
+                        principalTable: "Players",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Players",
+                name: "PlayerStatistics_CS2",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Nickname = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
-                    FirstName = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
-                    NationalityId = table.Column<int>(type: "int", nullable: false),
-                    PlayerPictureId = table.Column<int>(type: "int", nullable: true)
+                    PlayerId = table.Column<int>(type: "int", nullable: false),
+                    MatchId = table.Column<int>(type: "int", nullable: false),
+                    TsideRoundsWon = table.Column<int>(type: "int", nullable: false),
+                    CTsideRoundsWon = table.Column<int>(type: "int", nullable: false),
+                    Kills = table.Column<int>(type: "int", nullable: false),
+                    Assists = table.Column<int>(type: "int", nullable: false),
+                    Deaths = table.Column<int>(type: "int", nullable: false),
+                    KAST = table.Column<int>(type: "int", nullable: false),
+                    HSkills = table.Column<int>(type: "int", nullable: false),
+                    HLTV2 = table.Column<int>(type: "int", nullable: false),
+                    HLTV1 = table.Column<int>(type: "int", nullable: false),
+                    UD = table.Column<int>(type: "int", nullable: false),
+                    FK = table.Column<int>(type: "int", nullable: false),
+                    FD = table.Column<int>(type: "int", nullable: false),
+                    TK = table.Column<int>(type: "int", nullable: false),
+                    TD = table.Column<int>(type: "int", nullable: false),
+                    WallbangKills = table.Column<int>(type: "int", nullable: false),
+                    CollateralKills = table.Column<int>(type: "int", nullable: false),
+                    NoScopeKills = table.Column<int>(type: "int", nullable: false),
+                    _5k = table.Column<int>(type: "int", nullable: false),
+                    _4k = table.Column<int>(type: "int", nullable: false),
+                    _3k = table.Column<int>(type: "int", nullable: false),
+                    _2k = table.Column<int>(type: "int", nullable: false),
+                    _1k = table.Column<int>(type: "int", nullable: false),
+                    _1v5 = table.Column<int>(type: "int", nullable: false),
+                    _1v4 = table.Column<int>(type: "int", nullable: false),
+                    _1v3 = table.Column<int>(type: "int", nullable: false),
+                    _1v2 = table.Column<int>(type: "int", nullable: false),
+                    _1v1 = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Players", x => x.Id);
+                    table.PrimaryKey("PK_PlayerStatistics_CS2", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Players_Nationalities_NationalityId",
-                        column: x => x.NationalityId,
-                        principalTable: "Nationalities",
+                        name: "FK_PlayerStatistics_CS2_Matches_MatchId",
+                        column: x => x.MatchId,
+                        principalTable: "Matches",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Players_Pictures_PlayerPictureId",
-                        column: x => x.PlayerPictureId,
-                        principalTable: "Pictures",
-                        principalColumn: "Id");
+                        name: "FK_PlayerStatistics_CS2_Players_PlayerId",
+                        column: x => x.PlayerId,
+                        principalTable: "Players",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -349,7 +403,7 @@ namespace Balkana.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Tag = table.Column<string>(type: "nvarchar(5)", maxLength: 5, nullable: false),
+                    Tag = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: false),
                     FullName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     yearFounded = table.Column<int>(type: "int", nullable: false),
                     LogoURL = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -524,9 +578,14 @@ namespace Balkana.Migrations
                 column: "NationalityId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Players_PlayerPictureId",
-                table: "Players",
-                column: "PlayerPictureId");
+                name: "IX_PlayerStatistics_CS2_MatchId",
+                table: "PlayerStatistics_CS2",
+                column: "MatchId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PlayerStatistics_CS2_PlayerId",
+                table: "PlayerStatistics_CS2",
+                column: "PlayerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PlayerTeamTransfers_PlayerId",
@@ -619,14 +678,6 @@ namespace Balkana.Migrations
                 column: "OrganizerId");
 
             migrationBuilder.AddForeignKey(
-                name: "FK_Pictures_Players_PlayerId",
-                table: "Pictures",
-                column: "PlayerId",
-                principalTable: "Players",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
-
-            migrationBuilder.AddForeignKey(
                 name: "FK_PlayerTeamTransfers_Teams_TeamId",
                 table: "PlayerTeamTransfers",
                 column: "TeamId",
@@ -637,10 +688,6 @@ namespace Balkana.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Pictures_Players_PlayerId",
-                table: "Pictures");
-
             migrationBuilder.DropForeignKey(
                 name: "FK_PlayerTeamTransfers_Players_PlayerId",
                 table: "PlayerTeamTransfers");
@@ -669,6 +716,12 @@ namespace Balkana.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "Pictures");
+
+            migrationBuilder.DropTable(
+                name: "PlayerStatistics_CS2");
+
+            migrationBuilder.DropTable(
                 name: "Series");
 
             migrationBuilder.DropTable(
@@ -694,9 +747,6 @@ namespace Balkana.Migrations
 
             migrationBuilder.DropTable(
                 name: "Nationalities");
-
-            migrationBuilder.DropTable(
-                name: "Pictures");
 
             migrationBuilder.DropTable(
                 name: "TeamPosition");

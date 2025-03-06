@@ -1,6 +1,8 @@
 using Balkana;
 using Balkana.Data;
 using Balkana.Data.Infrastructure;
+using Balkana.Services.Players;
+using Balkana.Services.Teams;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +18,7 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
+ConfigureServices(builder.Services);
 
 var app = builder.Build();
 
@@ -32,6 +35,9 @@ void ConfigureServices(IServiceCollection services)
     {
         options.Filters.Add<AutoValidateAntiforgeryTokenAttribute>();
     });
+
+    services.AddTransient<ITeamService, TeamService>();
+    services.AddTransient<IPlayerService, PlayerService>();
 
     //services.AddTransient<>
 }

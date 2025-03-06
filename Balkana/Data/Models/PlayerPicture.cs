@@ -14,7 +14,5 @@
         public Player Player { get; set; }
 
         public DateTime dateChanged { get; set; } = DateTime.Now;
-
-        public IEnumerable<Player> Players { get; init; } = new List<Player>();
     }
 }

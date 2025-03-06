@@ -20,6 +20,7 @@
         public DbSet<Player> Players { get; init; }
         public DbSet<PlayerTeamTransfer> PlayerTeamTransfers { get; init; }
         public DbSet<PlayerPicture> Pictures { get; init; }
+        public DbSet<PlayerStatistic_CS2> PlayerStatistics_CS2 { get; init; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -110,7 +111,8 @@
                 .Entity<PlayerPicture>()
                 .HasOne(c => c.Player)
                 .WithMany(c => c.PlayerPictures)
-                .HasForeignKey(c=>c.PlayerId);
+                .HasForeignKey(c => c.PlayerId)
+                .OnDelete(DeleteBehavior.Restrict);
             //Player to nationality
             builder.Entity<Player>()
                 .HasOne(c => c.Nationality)
@@ -123,6 +125,27 @@
                 .HasOne(c => c.Tournament)
                 .WithMany(c => c.Series)
                 .HasForeignKey(c => c.TournamentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            //Per Player Statistic for CS2
+            builder
+                .Entity<PlayerStatistic_CS2>()
+                .HasOne(c=>c.Player)
+                .WithMany(c=>c.Stats_CS)
+                .HasForeignKey(c=>c.PlayerId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder
+                .Entity<PlayerStatistic_CS2>()
+                .HasOne(c=>c.Match)
+                .WithMany(c=>c.Stats_CS2)
+                .HasForeignKey(c=>c.MatchId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder
+                .Entity<Tournament>()
+                .HasOne(c=>c.Organizer)
+                .WithMany(c=>c.Tournaments)
+                .HasForeignKey(c=>c.OrganizerId)
                 .OnDelete(DeleteBehavior.Restrict);
             base.OnModelCreating(builder);
         }

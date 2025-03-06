@@ -1,0 +1,8 @@
+﻿@model IEnumerable<PlayerServiceModel>
+@{
+    int accordionCount = 0;
+}
+@foreach (var player in Model)
+{
+    <li class="list-group-item"><a asp-controller="Players" asp-action="Profile" asp-route-id="@player.Id" asp-route-information="@player.GetInformation()" style="text-decoration:none;">@player.Nickname</a></li>
+}

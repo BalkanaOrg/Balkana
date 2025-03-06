@@ -4,6 +4,7 @@ namespace Balkana.Data.Models
 {
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
+    using System.Diagnostics.CodeAnalysis;
     using static DataConstants;
 
     public class Player
@@ -30,7 +31,8 @@ namespace Balkana.Data.Models
         [ForeignKey("NationalityId")]
         public Nationality Nationality { get; set; }
 
-        public IEnumerable<PlayerPicture> PlayerPictures { get; init; }
+        public ICollection<PlayerPicture> PlayerPictures { get; init; }
+        public ICollection<PlayerStatistic_CS2> Stats_CS { get; init; }
         public ICollection<PlayerTeamTransfer> Transfers { get; set; }
     }
 }

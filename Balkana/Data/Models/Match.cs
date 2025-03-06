@@ -14,5 +14,6 @@ namespace Balkana.Data.Models
         public bool isPlayed { get; set; } = false;
 
         public ICollection<Series> Series { get; set; }
+        public IEnumerable<PlayerStatistic_CS2> Stats_CS2 { get; init; }
     }
 }

@@ -15,6 +15,8 @@
         [Required]
         public string Description { get; set; }
 
+        public string LogoURL { get; set; }
+
         public IEnumerable<Tournament> Tournaments { get; init; }
     }
 }

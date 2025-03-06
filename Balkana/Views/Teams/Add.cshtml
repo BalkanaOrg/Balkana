@@ -1,0 +1,38 @@
+﻿@model TeamFormModel
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    ViewData["Title"] = "Add Team";
+}
+@*<div class="row">
+    <div class="col-lg-6 offset-lg-3 col-sm-12 col-xl-6">
+        <h2 class="text-center">Add a region</h2>
+        <form method="post">
+
+            <div class="form-group">
+                <label asp-for="Name"></label>
+                <input asp-for="Name" class="form-control" placeholder="e.g. Mirage, Inferno, etc.">
+                <span asp-validation-for="Name" class="small text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="PictureURL"></label>
+                <input asp-for="PictureURL" class="form-control" placeholder="Link to a picture">
+                <span asp-validation-for="PictureURL" class="small text-danger"></span>
+            </div>
+
+            <div class="form-check form-switch">
+                <input asp-for="isActiveDuty" class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" checked>
+                <label class="form-check-label" for="flexSwitchCheckChecked">Is it active duty?</label>
+                <span asp-validation-for="isActiveDuty" class="small text-danger"></span>
+            </div>
+
+            <input class="btn btn-primary float-right" type="submit" value="Save" />
+        </form>
+
+    </div>
+</div>*@
+<div class="row">
+    <partial name="_TeamFormPartial" model="@Model" />
+</div>

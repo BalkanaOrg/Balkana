@@ -2,13 +2,15 @@
 
 namespace Balkana.Data.Models
 {
-    public class PlayerStatistic
+    public class PlayerStatistic_CS2
     {
         public int Id { get; set; }
         [Required]
         public int PlayerId { get; set; }
+        public Player Player { get; set; }
         [Required]
         public int MatchId { get; set; }
+        public Match Match { get; set; }
         public int TsideRoundsWon { get; set; }
         public int CTsideRoundsWon { get; set; }
         public int Kills { get; set; }

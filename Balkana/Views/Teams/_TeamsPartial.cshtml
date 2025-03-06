@@ -1,0 +1,19 @@
+﻿@model IEnumerable<TeamServiceModel>
+@{
+    int accordionCount = 0;
+}
+@foreach(var team in Model)
+{
+    
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse-@accordionCount" aria-expanded="false" aria-controls="flush-collapse-@accordionCount">
+                <a asp-controller="Teams" asp-action="Details" asp-route-id="@team.Id" asp-route-information="@team.GetInformation()" style="text-decoration:none;"><img class="card-img-top mw-50 mt-3" src="@team.LogoURL" alt="[@team.Tag] @team.FullName" style="width:50px; height:auto;">@team.Tag</a>
+            </button>
+        </h2>
+        <div id="flush-collapse-@accordionCount" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+            <div class="accordion-body">Tova e otbor @team.FullName i ppc tuka trqbva da izlqzat i igrachite</div>
+        </div>
+    </div>
+    accordionCount++;
+}

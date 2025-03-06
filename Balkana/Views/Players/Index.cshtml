@@ -1,0 +1,36 @@
+﻿@model AllPlayersQueryModel
+@{
+    ViewData["Title"] = "All Players";
+}
+
+<form method="get">
+    <div class="form-group col-md-4">
+        <label asp-for="SearchTerm">Search by Tag or Name</label>
+        <input asp-for="SearchTerm" class="form-control" placeholder="DIV, MASE, etc...">
+    </div>
+    @*<div class="justify-content-center">
+        @*Game selection
+        <div class="btn-group d-flex justify-content-center">
+
+            @foreach (var nat in Model.Nationalities)
+            {
+                <a class="btn btn-primary" asp-for="@nat" asp-route-game="@nat" value="@nat">@nat</a>
+            }
+
+            <a href="#" class="btn btn-primary">League of Legends</a>
+            <a href="#" class="btn btn-primary">Rainbow Six Siege</a>
+
+        </div>
+    </div>*@
+
+
+
+    @*Teams control*@
+    <ul class="list-group">
+        <partial name="_PlayersPartial" model="@Model.Players" />
+    </ul>
+</form>
+@if (!Model.Players.Any())
+{
+    <h2 class="text-center">No teams found by the given criteria!</h2>
+}
