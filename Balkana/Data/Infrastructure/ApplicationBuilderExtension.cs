@@ -23,6 +23,7 @@ namespace Balkana.Data.Infrastructure
             AddDefaultPlayer(services);
             AddDefaultPlayerPfp(services);
             AddInitialGames(services);
+            AddTeamPositions(services);
 
             return app;
         }
@@ -112,6 +113,38 @@ namespace Balkana.Data.Infrastructure
                 //    PlayerId = 1,
                 //    dateChanged = DateTime.Now
                 //}
+            });
+            data.SaveChanges();
+        }
+
+        public static void AddTeamPositions(IServiceProvider services)
+        {
+            var data = services.GetRequiredService<ApplicationDbContext>();
+            if (data.Positions.Any())
+            {
+                return;
+            }
+
+            data.Positions.AddRange(new[]
+            {
+                new TeamPosition { Name="Rifler", Icon="", GameId=1},
+                new TeamPosition { Name="AWPer", Icon="", GameId=1},
+                new TeamPosition { Name="Anchor", Icon="", GameId=1},
+                new TeamPosition { Name="Support", Icon="", GameId=1},
+                new TeamPosition { Name="IGL", Icon="", GameId=1},
+                new TeamPosition { Name="Lurker", Icon="", GameId=1},
+                new TeamPosition { Name="Head Coach", Icon="", GameId=1},
+                new TeamPosition { Name="Coach", Icon="", GameId=1},
+                new TeamPosition { Name="Analyst", Icon="", GameId=1},
+                new TeamPosition { Name="Top laner", Icon="", GameId=4},
+                new TeamPosition { Name="Jungler", Icon="", GameId=4},
+                new TeamPosition { Name="Mid laner", Icon="", GameId=4},
+                new TeamPosition { Name="ADC", Icon="", GameId=4},
+                new TeamPosition { Name="Support", Icon="", GameId=4},
+                new TeamPosition { Name="Head Coach", Icon="", GameId=4},
+                new TeamPosition { Name="Coach", Icon="", GameId=4},
+                new TeamPosition { Name="Analyst", Icon="", GameId=4},
+                new TeamPosition { Name="Positional Coach", Icon="", GameId=4},
             });
             data.SaveChanges();
         }

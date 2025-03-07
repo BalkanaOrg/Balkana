@@ -16,13 +16,15 @@
     </tr>*@
     @foreach (var tr in Model)
     {
-        <tr>
+
+        <tr onclick="window.location.href='details/@tr.Id'">
             <th scope="col">@tr.Id</th>
-            <th>@tr.GameName</th>
+            <th><img src="@tr.GameName" width="30px" height="30px"/></th>
             <th>@tr.PlayerUsername</th>
             <th>@tr.TeamFullName</th>
             <th>@tr.TransferDate</th>
             <th>@tr.Position</th>
             <th>✍</th>
         </tr>
+        
     }

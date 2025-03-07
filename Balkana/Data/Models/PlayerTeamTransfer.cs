@@ -19,7 +19,5 @@ namespace Balkana.Data.Models
         public int PositionId { get; set; }
         [ForeignKey("PositionId")]
         public TeamPosition TeamPosition { get; set; }
-
-        public IEnumerable<Team> Teams { get; init; } = new List<Team>();
     }
 }

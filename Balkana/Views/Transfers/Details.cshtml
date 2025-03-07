@@ -1,0 +1,20 @@
+﻿@model TransferDetailsServiceModel
+    
+@{
+    ViewData["Title"] = Model.Id;
+}
+<div class="row justify-content-center">
+    <h2>[@Model.GameName] @Model.PlayerUsername</h2>
+</div>
+
+<table class="col-12 text-center">
+    <tr>
+
+        <td class="col-9">
+            <textarea readonly rows="8" cols="80" style="resize:none; border:none;">
+                @Model.TransferDate
+            </textarea>
+        </td>
+
+    </tr>
+</table>

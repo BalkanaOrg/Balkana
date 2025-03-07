@@ -12,12 +12,14 @@ namespace Balkana.Services.Transfers
     public class TransferService : ITransferService
     {
         private readonly ApplicationDbContext data;
-        private readonly AutoMapper.IConfigurationProvider mapper;
+        private readonly IMapper mapper;
+        private readonly AutoMapper.IConfigurationProvider con;
 
         public TransferService(ApplicationDbContext data, IMapper mapper)
         {
             this.data = data;
-            this.mapper = mapper.ConfigurationProvider;
+            this.mapper = mapper;
+            this.con = mapper.ConfigurationProvider;
         }
 
         public TransferQueryServiceModel All(
@@ -93,44 +95,92 @@ namespace Balkana.Services.Transfers
         }
 
         public TransferDetailsServiceModel Details(int id)
-                => this.data
-                .PlayerTeamTransfers
-                .Where(c => c.Id == id)
-                .ProjectTo<TransferDetailsServiceModel>(this.mapper)
-                .FirstOrDefault();
+        {
+            var transfer = this.data.PlayerTeamTransfers
+                .FirstOrDefault(c => c.Id == id);
+
+            return transfer == null ? null : this.mapper.Map<TransferDetailsServiceModel>(transfer);
+        }
+                //=> this.data.PlayerTeamTransfers
+                //.Where(c => c.Id == id)
+                //.ProjectTo<TransferDetailsServiceModel>(this.mapper)
+                //.FirstOrDefault();
 
         public IEnumerable<TransfersServiceModel> GetTransfers(IQueryable<PlayerTeamTransfer> transfers)
             => transfers
-                .ProjectTo<TransfersServiceModel>(this.mapper)
+                .ProjectTo<TransfersServiceModel>(this.con)
                 .ToList();
 
+        
+
+        
+
+        
+
+        //all teams
+        public IEnumerable<string> GetAllTeams(int gameId)
+            => this.data
+                .Teams
+                .Where(c=>c.GameId==gameId)
+                .Select(c=>c.FullName)
+                .ToList();
+
+        public IEnumerable<string> GetAllTeams()
+            => this.data
+                .Teams
+                .Select(c=>c.FullName)
+                .ToList();
         public bool TeamExists(int teamId)
             => this.data
             .Teams
             .Any(c => c.Id == teamId);
 
-        public IEnumerable<TransferTeamsServiceModel> AllTeams(int gameId)
+        public IEnumerable<TransferTeamsServiceModel> AllTeams()
             => this.data
             .Teams
-            .Where(c => c.GameId == gameId)
-            .ProjectTo<TransferTeamsServiceModel>(this.mapper)
+            .ProjectTo<TransferTeamsServiceModel>(this.con)
             .ToList();
+        
 
+        //All players
+        public IEnumerable<string> GetAllPlayers(int gameId)
+            => this.data
+                .PlayerTeamTransfers
+                .Where(c=>c.Team.GameId==gameId)
+                .Select(c=>c.Player.Nickname)
+                .ToList();
+        public IEnumerable<string> GetAllPlayers()
+            => this.data
+                .PlayerTeamTransfers
+                .Select(c=>c.Player.Nickname)
+                .ToList();
         public bool PlayerExists(int playerId)
             => this.data
             .Players
             .Any(c => c.Id == playerId);
 
-        public IEnumerable<TransferPlayersServiceModel> AllPlayers(int gameId)
+        public IEnumerable<TransferPlayersServiceModel> AllPlayers()
             => this.data
-            .PlayerTeamTransfers
-            .Where(c => c.Team.GameId == gameId)
+            .Players
             .Select(a => new TransferPlayersServiceModel
             {
-                Id = a.Player.Id,
-                Nickname = a.Player.Nickname
+                Id = a.Id,
+                Nickname = a.Nickname
             })
-            .ProjectTo<TransferPlayersServiceModel>(this.mapper)
+            .ToList();
+
+
+        //all games
+        public IEnumerable<string> GetAllGames()
+            =>this.data
+                .Games
+                .Select(c=>c.FullName)
+                .ToList();
+
+        public IEnumerable<TeamGameServiceModel> AllGames()
+            => this.data
+            .Games
+            .ProjectTo<TeamGameServiceModel>(this.con)
             .ToList();
 
         public bool GameExists(int gameId)
@@ -138,29 +188,58 @@ namespace Balkana.Services.Transfers
             .Games
             .Any(c=>c.Id == gameId);
 
-        public IEnumerable<TeamGameServiceModel> AllGames()
-            => this.data
-            .Games
-            .ProjectTo<TeamGameServiceModel>(this.mapper)
-            .ToList();
 
-        public IEnumerable<string> GetAllTeams(int gameId)
-            => this.data
-                .Teams
-                .Where(c=>c.GameId==gameId)
-                .Select(c=>c.FullName)
-                .ToList();
-        public IEnumerable<string> GetAllPlayers(int gameId)
+        //Team positions
+        public IEnumerable<string> GetAllPositions(int gameId)
             => this.data
                 .PlayerTeamTransfers
-                .Where(c=>c.Team.GameId==gameId)
-                .Select(c=>c.Player.Nickname)
+                .Where(c => c.Team.GameId == gameId)
+                .Select(c => c.Player.Nickname)
                 .ToList();
-        public IEnumerable<string> GetAllGames()
-            =>this.data
-                .Games
-                .Select(c=>c.FullName)
+        public IEnumerable<string> GetAllPositions()
+            => this.data
+                .Positions
+                .Select(c => c.Name)
                 .ToList();
+        public IEnumerable<TransferPositionsServiceModel> AllPositions()
+            => this.data
+            .Positions
+            .Select(a => new TransferPositionsServiceModel
+            {
+                Id = a.Id,
+                Name = a.Name,
+                IconUrl = a.Icon,
+                GameId = a.GameId
+            })
+            .ToList();
 
+        public bool PositionExists(int id)
+            => this.data
+            .Positions
+            .Any(c => c.Id == id);
+
+
+        //all transfers
+        public IEnumerable<int> GetAllTransfers(int id)
+            => this.data
+                .PlayerTeamTransfers
+                .Where(c => c.Id == id)
+                .Select(c => c.Id)
+                .ToList();
+        public IEnumerable<int> GetAllTransfers()
+            => this.data
+                .PlayerTeamTransfers
+                .Select(c => c.Id)
+                .ToList();
+        public IEnumerable<TransferPositionsServiceModel> AllTransfers()
+            => this.data
+            .PlayerTeamTransfers
+            .ProjectTo<TransferPositionsServiceModel>(this.con)
+            .ToList();
+
+        public bool TransferExists(int id)
+            => this.data
+            .PlayerTeamTransfers
+            .Any(c => c.Id == id);
     }
 }

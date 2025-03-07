@@ -41,21 +41,41 @@ namespace Balkana.Data.Infrastructure
 
             //Transfers
             this.CreateMap<Player, TransferPlayersServiceModel>()
-                .ForMember(c=>c.Id, cfg=> cfg.MapFrom(cfg => cfg.Id));
+                .ForMember(c => c.Id, cfg => cfg.MapFrom(cfg => cfg.Id))
+                .ForMember(c => c.Nickname, cfg => cfg.MapFrom(cfg => cfg.Nickname));
             this.CreateMap<Team, TransferTeamsServiceModel>()
                 .ForMember(c=>c.Id, cfg=> cfg.MapFrom(cfg => cfg.Id));
             this.CreateMap<PlayerTeamTransfer, TransfersServiceModel>()
                 .ForMember(c => c.Id, cfg => cfg.MapFrom(cfg => cfg.Id));
             this.CreateMap<TeamPosition, TransferPositionsServiceModel>()
                 .ForMember(c => c.Id, cfg => cfg.MapFrom(cfg => cfg.Id));
+            
+            this.CreateMap<PlayerTeamTransfer, TransferPlayersServiceModel>()
+                .ForMember(c => c.Id, cfg => cfg.MapFrom(c => c.Player.Id))
+                .ForMember(c => c.Nickname, cfg => cfg.MapFrom(c => c.Player.Nickname));
+            this.CreateMap<TransfersServiceModel, TransferDetailsServiceModel>();
+            this.CreateMap<PlayerTeamTransfer, TransferDetailsServiceModel>(); 
+
+
+            //TransfersServiceModel
             this.CreateMap<Player, TransfersServiceModel>()
+                .ForMember(c=>c.PlayerId, cfg=>cfg.MapFrom(cfg=>cfg.Id))
                 .ForMember(c=>c.PlayerUsername, cfg=>cfg.MapFrom(cfg=>cfg.Nickname));
             this.CreateMap<Team, TransfersServiceModel>()
-                .ForMember(c=>c.TeamFullName, cfg=>cfg.MapFrom(cfg=>cfg.FullName));
+                .ForMember(c=>c.TeamFullName, cfg=>cfg.MapFrom(cfg=>cfg.FullName))
+                .ForMember(c=>c.TeamId, cfg=>cfg.MapFrom(cfg=>cfg.Id));
             this.CreateMap<TeamPosition, TransfersServiceModel>()
                 .ForMember(c=>c.Position, cfg=>cfg.MapFrom(cfg=>cfg.Name));
             this.CreateMap<Game, TransfersServiceModel>()
-                .ForMember(c=>c.GameName, cfg=>cfg.MapFrom(cfg=>cfg.ShortName));
+                .ForMember(c=>c.GameName, cfg=>cfg.MapFrom(cfg=>cfg.IconURL));
+
+            this.CreateMap<PlayerTeamTransfer, TransfersServiceModel>()
+                .ForMember(c => c.Id, cfg => cfg.MapFrom(src => src.Id))
+                .ForMember(c => c.GameName, cfg => cfg.MapFrom(src => src.Team.Game.IconURL)) // Ensure navigation property exists
+                .ForMember(c => c.PlayerUsername, cfg => cfg.MapFrom(src => src.Player.Nickname))
+                .ForMember(c => c.TeamFullName, cfg => cfg.MapFrom(src => src.Team.FullName))
+                .ForMember(c => c.TransferDate, cfg => cfg.MapFrom(src => src.TransferDate))
+                .ForMember(c => c.Position, cfg => cfg.MapFrom(src => src.TeamPosition.Name));
         }
     }
 }

@@ -13,5 +13,6 @@ namespace Balkana.Data.Models
         public string IconURL { get; set; }
 
         public IEnumerable<Team> Teams { get; init; } = new List<Team>();
+        public IEnumerable<TeamPosition> Positions { get; init; } = new List<TeamPosition>();
     }
 }

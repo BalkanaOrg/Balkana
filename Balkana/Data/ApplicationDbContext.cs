@@ -29,6 +29,12 @@
                 .Entity<csMap>();
             builder
                 .Entity<Game>();
+            builder
+                .Entity<TeamPosition>()
+                .HasOne(c=>c.Game)
+                .WithMany(c=>c.Positions)
+                .HasForeignKey(c=>c.GameId)
+                .OnDelete(DeleteBehavior.Restrict);
             //Team to Game (CS2, LoL, etc.)
             builder
                 .Entity<Team>()

@@ -3,6 +3,7 @@ using Balkana.Data;
 using Balkana.Data.Infrastructure;
 using Balkana.Services.Players;
 using Balkana.Services.Teams;
+using Balkana.Services.Transfers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +39,7 @@ void ConfigureServices(IServiceCollection services)
 
     services.AddTransient<ITeamService, TeamService>();
     services.AddTransient<IPlayerService, PlayerService>();
+    services.AddTransient<ITransferService, TransferService>();
 
     //services.AddTransient<>
 }

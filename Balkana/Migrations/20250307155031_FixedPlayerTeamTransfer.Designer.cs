@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Balkana.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250306120156_NewMigration2")]
-    partial class NewMigration2
+    [Migration("20250307155031_FixedPlayerTeamTransfer")]
+    partial class FixedPlayerTeamTransfer
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -327,9 +327,6 @@ namespace Balkana.Migrations
                     b.Property<int>("TeamId")
                         .HasColumnType("int");
 
-                    b.Property<int>("TeamPositionId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("TransferDate")
                         .HasColumnType("datetime2");
 
@@ -337,9 +334,9 @@ namespace Balkana.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.HasIndex("TeamId");
+                    b.HasIndex("PositionId");
 
-                    b.HasIndex("TeamPositionId");
+                    b.HasIndex("TeamId");
 
                     b.ToTable("PlayerTeamTransfers");
                 });
@@ -444,9 +441,6 @@ namespace Balkana.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("PlayerTeamTransferId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Tag")
                         .IsRequired()
                         .HasMaxLength(7)
@@ -459,8 +453,6 @@ namespace Balkana.Migrations
 
                     b.HasIndex("GameId");
 
-                    b.HasIndex("PlayerTeamTransferId");
-
                     b.ToTable("Teams");
                 });
 
@@ -472,6 +464,9 @@ namespace Balkana.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<int>("GameId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Icon")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -482,7 +477,9 @@ namespace Balkana.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TeamPosition");
+                    b.HasIndex("GameId");
+
+                    b.ToTable("Positions");
                 });
 
             modelBuilder.Entity("Balkana.Data.Models.Tournament", b =>
@@ -785,16 +782,16 @@ namespace Balkana.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Balkana.Data.Models.TeamPosition", "TeamPosition")
+                        .WithMany("Transfers")
+                        .HasForeignKey("PositionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Balkana.Data.Models.Team", "Team")
                         .WithMany("Transfers")
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Balkana.Data.Models.TeamPosition", "TeamPosition")
-                        .WithMany("Transfer")
-                        .HasForeignKey("TeamPositionId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Player");
@@ -907,9 +904,16 @@ namespace Balkana.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Balkana.Data.Models.PlayerTeamTransfer", null)
-                        .WithMany("Teams")
-                        .HasForeignKey("PlayerTeamTransferId");
+                    b.Navigation("Game");
+                });
+
+            modelBuilder.Entity("Balkana.Data.Models.TeamPosition", b =>
+                {
+                    b.HasOne("Balkana.Data.Models.Game", "Game")
+                        .WithMany("Positions")
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Game");
                 });
@@ -978,6 +982,8 @@ namespace Balkana.Migrations
 
             modelBuilder.Entity("Balkana.Data.Models.Game", b =>
                 {
+                    b.Navigation("Positions");
+
                     b.Navigation("Teams");
                 });
 
@@ -1007,11 +1013,6 @@ namespace Balkana.Migrations
                     b.Navigation("Transfers");
                 });
 
-            modelBuilder.Entity("Balkana.Data.Models.PlayerTeamTransfer", b =>
-                {
-                    b.Navigation("Teams");
-                });
-
             modelBuilder.Entity("Balkana.Data.Models.Team", b =>
                 {
                     b.Navigation("SeriesAsTeam1");
@@ -1023,7 +1024,7 @@ namespace Balkana.Migrations
 
             modelBuilder.Entity("Balkana.Data.Models.TeamPosition", b =>
                 {
-                    b.Navigation("Transfer");
+                    b.Navigation("Transfers");
                 });
 
             modelBuilder.Entity("Balkana.Data.Models.Tournament", b =>

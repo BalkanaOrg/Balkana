@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Balkana.Data;
 using Balkana.Data.Models;
+using Balkana.Models.Transfers;
 using Balkana.Services.Transfers;
 using Balkana.Services.Transfers.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -13,33 +14,38 @@ namespace Balkana.Controllers
         private readonly ApplicationDbContext data;
         private readonly ITransferService transfers;
         private readonly IMapper mapper;
+        private readonly ILogger<TransfersController> _logger;
 
-        public TransfersController(ApplicationDbContext data, ITransferService transfers, IMapper mapper)
+        public TransfersController(ApplicationDbContext data, ITransferService transfers, IMapper mapper, ILogger<TransfersController> logger)
         {
             this.data = data;
             this.transfers = transfers;
             this.mapper = mapper;
+            this._logger = logger;
         }
 
-        public IActionResult Index()
+        public IActionResult Index([FromQuery] AllTransfersQueryModel query)
         {
-            return View();
-        }
+            var queryResult = this.transfers.All(
+                query.Game,
+                query.SearchTerm,
+                query.CurrentPage,
+                AllTransfersQueryModel.TransfersPerPage
+                );
 
+            var transferPositions = this.transfers.GetAllPositions();
+            var transferPlayers = this.transfers.GetAllPlayers();
+            var transferTeams = this.transfers.GetAllTeams();
+            var transferGames = this.transfers.GetAllGames();
+            var transfers = this.transfers.GetAllTransfers();
 
-        [HttpGet]
-        public JsonResult GetTeamsByGame(int gameId)
-        {
-            var teams = data.PlayerTeamTransfers
-                .Where(ptt => ptt.Team.GameId == gameId)
-                .Select(ptt => new
-                {
-                    id = ptt.Team.Id,
-                    nickname = ptt.Team.yearFounded
-                })
-                .ToList();
-
-            return Json(teams);
+            query.Transfers = queryResult.Transfers;
+            query.Games = transferGames;
+            query.Players = transferPlayers;
+            query.Teams = transferTeams;
+            query.Positions = transferPositions;
+            query.TotalTransfers = queryResult.TotalTransfers;
+            return View(query);
         }
 
         public IActionResult Add()
@@ -47,16 +53,23 @@ namespace Balkana.Controllers
             return View(new TransferFormModel
             {
                 TransferGames = this.transfers.AllGames(),
-                TransferPositions = this.transfers.AllPo(),
+                TransferPositions = this.transfers.AllPositions(),
                 TransferPlayers = this.transfers.AllPlayers(),
                 TransferTeams = this.transfers.AllTeams()
             });
         }
 
         [HttpPost]
-        public IActionResult Add(TransferFormModel model)
+        public IActionResult Add([FromForm] TransferFormModel model)
         {
-            if(!this.transfers.PlayerExists(model.PlayerId))
+            Console.WriteLine("Received TransferFormModel:");
+            Console.WriteLine($"PlayerId: {model.PlayerId}");
+            Console.WriteLine($"TeamId: {model.TeamId}");
+            Console.WriteLine($"GameId: {model.GameId}");
+            Console.WriteLine($"PositionId: {model.PositionId}");
+            Console.WriteLine($"TransferDate: {model.TransferDate}");
+
+            if (!this.transfers.PlayerExists(model.PlayerId))
             {
                 this.ModelState.AddModelError(nameof(model.PlayerId), "Player doesn't exist.");
             }
@@ -68,13 +81,24 @@ namespace Balkana.Controllers
             {
                 this.ModelState.AddModelError(nameof(model.GameId), "Game doesn't exist.");
             }
+            if(!this.transfers.PositionExists(model.PositionId))
+            {
+                this.ModelState.AddModelError(nameof(model.PositionId), "Position doesn't exist.");
+            }
 
-            if (ModelState.ErrorCount > 1)
+            if (!ModelState.IsValid)
             {
                 model.TransferGames = this.transfers.AllGames();
-                model.TransferTeams = this.transfers.AllTeams(model.GameId);
-                model.TransferPlayers = this.transfers.AllPlayers(model.GameId);
-                model.TransferGames = this.transfers.AllGames();
+                model.TransferTeams = this.transfers.AllTeams();
+                model.TransferPlayers = this.transfers.AllPlayers();
+                model.TransferPositions = this.transfers.AllPositions();
+                foreach (var entry in ModelState)
+                {
+                    foreach (var error in entry.Value.Errors)
+                    {
+                        _logger.LogError($"❌ Error in {entry.Key}: {error.ErrorMessage}");
+                    }
+                }
 
                 return View(model);
 

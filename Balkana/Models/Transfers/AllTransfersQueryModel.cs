@@ -26,6 +26,9 @@ namespace Balkana.Models.Transfers
         public int TotalTransfers { get; set; }
 
         public IEnumerable<string> Games { get; set; }
+        public IEnumerable<string> Positions { get; set; }
+        public IEnumerable<string> Players { get; set; }
+        public IEnumerable<string> Teams { get; set; }
         public IEnumerable<TransfersServiceModel> Transfers { get; set; }
     }
 }

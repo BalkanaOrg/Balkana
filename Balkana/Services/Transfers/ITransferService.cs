@@ -36,12 +36,20 @@ namespace Balkana.Services.Transfers
         bool PositionExists(int positionId);
 
         public IEnumerable<string> GetAllTeams();
-        public IEnumerable<string> GetAllTeamsById(int gameId);
-        public IEnumerable<TransferTeamsServiceModel> AllTeams(int gameId);
+        public IEnumerable<string> GetAllTeams(int gameId);
+        public IEnumerable<TransferTeamsServiceModel> AllTeams();
 
         public IEnumerable<string> GetAllPlayers();
-        public IEnumerable<string> GetAllPlayersById(int gameId);
-        public IEnumerable<TransferPlayersServiceModel> AllPlayers(int gameId);
+        public IEnumerable<string> GetAllPlayers(int gameId);
+        public IEnumerable<TransferPlayersServiceModel> AllPlayers();
+
+        public IEnumerable<int> GetAllTransfers();
+        public IEnumerable<int> GetAllTransfers(int gameId);
+        public IEnumerable<TransferPositionsServiceModel> AllTransfers();
+
+        public IEnumerable<string> GetAllPositions();
+        public IEnumerable<string> GetAllPositions(int gameId);
+        public IEnumerable<TransferPositionsServiceModel> AllPositions();
 
         public IEnumerable<string> GetAllGames();
         public IEnumerable<TeamGameServiceModel> AllGames();
