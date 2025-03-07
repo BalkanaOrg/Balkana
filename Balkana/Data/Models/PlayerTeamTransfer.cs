@@ -17,7 +17,7 @@ namespace Balkana.Data.Models
         public DateTime TransferDate { get; set; }
 
         public int PositionId { get; set; }
-        [ForeignKey("TeamPositionId")]
+        [ForeignKey("PositionId")]
         public TeamPosition TeamPosition { get; set; }
 
         public IEnumerable<Team> Teams { get; init; } = new List<Team>();

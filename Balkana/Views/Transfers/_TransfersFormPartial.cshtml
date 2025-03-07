@@ -1,0 +1,77 @@
+﻿@model TransferFormModel
+
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+<form method="post">
+    <div class="form-group">
+        <label asp-for="GameId">Game</label>
+        <select asp-for="GameId" class="form-control" id="gameSelect">
+            @foreach (var game in Model.TransferGames)
+            {
+                <option value="@game.Id">@game.FullName</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="TeamId">Region</label>
+        <select asp-for="TeamId" class="form-control" id="playerSelect">
+                <option disabled value="">Please select a game first</option>
+        </select>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#gameSelect").change(function () {
+                var gameId = $(this).val();
+
+                if (gameId) {
+                    $.ajax({
+                        url: '/Players/GetTeamsByGame',  // The controller action
+                        type: 'GET',
+                        data: { gameId: gameId },
+                        success: function (teams) {
+                            var playerSelect = $("#playerSelect");
+                            playerSelect.empty();
+                            playerSelect.append('<option disabled value="">Please select a game first</option>');
+
+                            $.each(teams, function (index, team) {
+                                playerSelect.append('<option value="' + team.id + '"><b>[' + team.tag + ']</b> ' + team.fullname + '</option>');
+                            });
+                        }
+                    });
+                } else {
+                    $("#playerSelect").empty().append('<option disabled value="">Please select a game first</option>');
+                }
+            });
+        });
+    </script>
+
+
+    <div class="form-group">
+        <label asp-for="GameId">Game</label>
+        <select asp-for="GameId" class="form-control" id="gameSelect">
+            @foreach (var p in Model.TransferPlayers)
+            {
+                <option value="@p.">@p.Nickname</option>
+            }
+        </select>
+    </div>
+
+
+
+    <div class="form-group">
+        <label asp-for="PositionId">Game</label>
+        <select asp-for="PositionId" class="form-control" id="gameSelect">
+            @foreach (var pos in Model.TransferPositions)
+            {
+                <option value="@pos.Id">@pos.Name</option>
+            }
+        </select>
+    </div>
+</form>

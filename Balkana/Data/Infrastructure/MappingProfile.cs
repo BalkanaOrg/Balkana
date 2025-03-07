@@ -4,6 +4,7 @@ using Balkana.Data.Services.Maps;
 using Balkana.Models.Players;
 using Balkana.Services.Players.Models;
 using Balkana.Services.Teams.Models;
+using Balkana.Services.Transfers.Models;
 
 namespace Balkana.Data.Infrastructure
 {
@@ -29,6 +30,7 @@ namespace Balkana.Data.Infrastructure
             this.CreateMap<Team, TeamDetailsServiceModel>()
                 .ForMember(c => c.FullName, cfg => cfg.MapFrom(c => c.Game.FullName));
 
+            //Players
             this.CreateMap<Player, PlayerServiceModel>()
                 .ForMember(c=>c.Id, cfg=>cfg.MapFrom(cfg => cfg.Id));
             this.CreateMap<Player, PlayerDetailsServiceModel>()
@@ -36,6 +38,24 @@ namespace Balkana.Data.Infrastructure
             this.CreateMap<Nationality, PlayerNationalityServiceModel>()
                 .ForMember(c => c.Id, cfg => cfg.MapFrom(cfg => cfg.Id));
             this.CreateMap<PlayerPicture, PlayerPictureServiceModel>();
+
+            //Transfers
+            this.CreateMap<Player, TransferPlayersServiceModel>()
+                .ForMember(c=>c.Id, cfg=> cfg.MapFrom(cfg => cfg.Id));
+            this.CreateMap<Team, TransferTeamsServiceModel>()
+                .ForMember(c=>c.Id, cfg=> cfg.MapFrom(cfg => cfg.Id));
+            this.CreateMap<PlayerTeamTransfer, TransfersServiceModel>()
+                .ForMember(c => c.Id, cfg => cfg.MapFrom(cfg => cfg.Id));
+            this.CreateMap<TeamPosition, TransferPositionsServiceModel>()
+                .ForMember(c => c.Id, cfg => cfg.MapFrom(cfg => cfg.Id));
+            this.CreateMap<Player, TransfersServiceModel>()
+                .ForMember(c=>c.PlayerUsername, cfg=>cfg.MapFrom(cfg=>cfg.Nickname));
+            this.CreateMap<Team, TransfersServiceModel>()
+                .ForMember(c=>c.TeamFullName, cfg=>cfg.MapFrom(cfg=>cfg.FullName));
+            this.CreateMap<TeamPosition, TransfersServiceModel>()
+                .ForMember(c=>c.Position, cfg=>cfg.MapFrom(cfg=>cfg.Name));
+            this.CreateMap<Game, TransfersServiceModel>()
+                .ForMember(c=>c.GameName, cfg=>cfg.MapFrom(cfg=>cfg.ShortName));
         }
     }
 }

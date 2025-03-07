@@ -19,6 +19,7 @@
         public DbSet<Match> Matches { get; init; }
         public DbSet<Player> Players { get; init; }
         public DbSet<PlayerTeamTransfer> PlayerTeamTransfers { get; init; }
+        public DbSet<TeamPosition> Positions { get; init; }
         public DbSet<PlayerPicture> Pictures { get; init; }
         public DbSet<PlayerStatistic_CS2> PlayerStatistics_CS2 { get; init; }
 
@@ -47,6 +48,12 @@
                 .HasOne(c=> c.Team)
                 .WithMany(c => c.Transfers)
                 .HasForeignKey(c => c.TeamId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder
+                .Entity<PlayerTeamTransfer>()
+                .HasOne(c=> c.TeamPosition)
+                .WithMany(c => c.Transfers)
+                .HasForeignKey(c => c.PositionId)
                 .OnDelete(DeleteBehavior.Restrict);
             builder
                 .Entity<Series>()

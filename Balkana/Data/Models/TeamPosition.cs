@@ -11,6 +11,6 @@ namespace Balkana.Data.Models
 
         public string Icon { get; set; }
 
-        public ICollection<PlayerTeamTransfer> Transfer { get; set; }
+        public ICollection<PlayerTeamTransfer> Transfers { get; set; }
     }
 }
