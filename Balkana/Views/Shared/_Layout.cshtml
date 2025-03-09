@@ -55,6 +55,8 @@
                                 <li><a class="dropdown-item" href="#">Tournaments</a></li>
                                 <li><a class="dropdown-item" asp-controller="Teams" asp-action="Index">Teams</a></li>
                                 <li><a class="dropdown-item" asp-controller="Players" asp-action="Index">Players</a></li>
+                                <li><a class="dropdown-item" asp-controller="Organizers" asp-action="Index">Organizers</a></li>
+                                <li><a class="dropdown-item" asp-controller="Transfers" asp-action="Index">Transfers</a></li>
                                 <li><a class="dropdown-item" href="#">Statistics</a></li>
                                 <form class="" role="search">
                                     <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
@@ -108,7 +110,7 @@
                 </div>
         </nav>
     </header>
-    <div class="container w-90 bg-black text-white-50">
+    <div class="container text-white-50">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>

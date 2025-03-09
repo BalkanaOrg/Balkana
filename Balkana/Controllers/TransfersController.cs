@@ -118,6 +118,9 @@ namespace Balkana.Controllers
         public IActionResult Details(int id)
         {
             var transfer = this.transfers.Details(id);
+            transfer.Players = this.transfers.AllPlayers();
+            transfer.Teams = this.transfers.AllTeams();
+            transfer.Games = this.transfers.AllGames();
             return View(transfer);
         }
 

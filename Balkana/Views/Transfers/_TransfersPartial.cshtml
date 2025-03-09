@@ -17,7 +17,7 @@
     @foreach (var tr in Model)
     {
 
-        <tr onclick="window.location.href='details/@tr.Id'">
+        <tr onclick="window.location.href='transfers/details/@tr.Id'">
             <th scope="col">@tr.Id</th>
             <th><img src="@tr.GameName" width="30px" height="30px"/></th>
             <th>@tr.PlayerUsername</th>

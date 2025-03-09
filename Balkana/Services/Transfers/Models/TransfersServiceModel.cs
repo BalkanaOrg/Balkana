@@ -1,4 +1,6 @@
-﻿namespace Balkana.Services.Transfers.Models
+﻿using Balkana.Data.Models;
+
+namespace Balkana.Services.Transfers.Models
 {
     public class TransfersServiceModel :ITransfersModel
     {

@@ -269,7 +269,7 @@ namespace Balkana.Data.Infrastructure
                 {
                     FullName = "Counter-Strike",
                     ShortName = "CS2",
-                    IconURL = "https://static.wikia.nocookie.net/logopedia/images/4/49/Counter-Strike_2_%28Icon%29.png/revision/latest?cb=20230330015359"
+                    IconURL = "https://static.wikia.nocookie.net/logopedia/images/4/49/Counter-Strike_2_%28Icon%29.png"
                 },
                 new Game
                 {
@@ -281,7 +281,7 @@ namespace Balkana.Data.Infrastructure
                 {
                     FullName = "Fortnite",
                     ShortName = "FN",
-                    IconURL = "https://preview.redd.it/d1qbfa9zqwn61.png?width=640&crop=smart&auto=webp&s=386aa51786fc010ab2b34b3e6fed1c3fce8fa68b"
+                    IconURL = "https://preview.redd.it/d1qbfa9zqwn61.png"
                 },
                 new Game
                 {

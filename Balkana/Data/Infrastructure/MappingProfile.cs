@@ -2,6 +2,7 @@
 using Balkana.Data.Models;
 using Balkana.Data.Services.Maps;
 using Balkana.Models.Players;
+using Balkana.Services.Organizers.Models;
 using Balkana.Services.Players.Models;
 using Balkana.Services.Teams.Models;
 using Balkana.Services.Transfers.Models;
@@ -76,6 +77,24 @@ namespace Balkana.Data.Infrastructure
                 .ForMember(c => c.TeamFullName, cfg => cfg.MapFrom(src => src.Team.FullName))
                 .ForMember(c => c.TransferDate, cfg => cfg.MapFrom(src => src.TransferDate))
                 .ForMember(c => c.Position, cfg => cfg.MapFrom(src => src.TeamPosition.Name));
+            this.CreateMap<Player, TransferDetailsServiceModel>()
+                .ForMember(c=>c.PlayerId, cfg=>cfg.MapFrom(src=>src.Id));
+            this.CreateMap<Team, TransferDetailsServiceModel>()
+                .ForMember(c=>c.TeamId, cfg=>cfg.MapFrom(src=>src.Id));
+            this.CreateMap<TeamPosition, TransferDetailsServiceModel>()
+                .ForMember(c=>c.Position, cfg=>cfg.MapFrom(src=>src.Name));
+            this.CreateMap<Game, TransferDetailsServiceModel>()
+                .ForMember(c=>c.GameName, cfg=>cfg.MapFrom(src=>src.IconURL));
+
+            //Organizers
+            this.CreateMap<Organizer, OrganizerServiceModel>()
+                .ForMember(c => c.Id, cfg => cfg.MapFrom(cfg => cfg.Id))
+                .ForMember(c => c.FullName, cfg => cfg.MapFrom(cfg => cfg.FullName))
+                .ForMember(c => c.Tag, cfg => cfg.MapFrom(cfg => cfg.Tag))
+                .ForMember(c => c.Description, cfg => cfg.MapFrom(cfg => cfg.Description))
+                .ForMember(c => c.LogoURL, cfg => cfg.MapFrom(cfg => cfg.LogoURL));
+            this.CreateMap<OrganizerServiceModel, OrganizerDetailsServiceModel>();
+            this.CreateMap<Organizer, OrganizerDetailsServiceModel>();
         }
     }
 }

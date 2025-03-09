@@ -1,0 +1,21 @@
+﻿@model OrganizerDetailsServiceModel
+@{
+    ViewBag.Title = Model.FullName;
+}
+
+<table class="col-12 text-center">
+    <tr>
+
+        <td class="col-4">
+            <img src="@Model.LogoURL" alt="@Model.FullName" /><br />
+            <p><b>@Model.FullName</b></p>
+        </td>
+
+        <td class="col-9">
+            <textarea readonly rows="8" cols="80" style="resize:none; border:none;">
+                @Model.Description
+            </textarea>
+        </td>
+
+    </tr>
+</table>

@@ -21,6 +21,7 @@
         public DbSet<PlayerTeamTransfer> PlayerTeamTransfers { get; init; }
         public DbSet<TeamPosition> Positions { get; init; }
         public DbSet<PlayerPicture> Pictures { get; init; }
+        public DbSet<Organizer> Organizers { get; init; }
         public DbSet<PlayerStatistic_CS2> PlayerStatistics_CS2 { get; init; }
 
         protected override void OnModelCreating(ModelBuilder builder)

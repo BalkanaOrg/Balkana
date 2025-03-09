@@ -94,17 +94,18 @@ namespace Balkana.Services.Transfers
             return true;
         }
 
-        public TransferDetailsServiceModel Details(int id)
-        {
-            var transfer = this.data.PlayerTeamTransfers
-                .FirstOrDefault(c => c.Id == id);
+        //public TransferDetailsServiceModel Details(int id)
+        //{
+        //    var transfer = this.data.PlayerTeamTransfers
+        //        .FirstOrDefault(c => c.Id == id);
 
-            return transfer == null ? null : this.mapper.Map<TransferDetailsServiceModel>(transfer);
-        }
-                //=> this.data.PlayerTeamTransfers
-                //.Where(c => c.Id == id)
-                //.ProjectTo<TransferDetailsServiceModel>(this.mapper)
-                //.FirstOrDefault();
+        //    return transfer == null ? null : this.mapper.Map<TransferDetailsServiceModel>(transfer);
+        //}
+        public TransferDetailsServiceModel Details(int id)
+            => this.data.PlayerTeamTransfers
+            .Where(c => c.Id == id)
+            .ProjectTo<TransferDetailsServiceModel>(this.con)
+            .FirstOrDefault();
 
         public IEnumerable<TransfersServiceModel> GetTransfers(IQueryable<PlayerTeamTransfer> transfers)
             => transfers
