@@ -11,6 +11,7 @@ namespace Balkana.Data.Models
         [Required]
         public int MatchId { get; set; }
         public Match Match { get; set; }
+        public int Damage { get; set; }
         public int TsideRoundsWon { get; set; }
         public int CTsideRoundsWon { get; set; }
         public int Kills { get; set; }

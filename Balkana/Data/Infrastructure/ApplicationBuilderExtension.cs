@@ -24,6 +24,8 @@ namespace Balkana.Data.Infrastructure
             AddDefaultPlayerPfp(services);
             AddInitialGames(services);
             AddTeamPositions(services);
+            AddTestTeams(services);
+            TestTransfers(services);
 
             return app;
         }
@@ -250,7 +252,70 @@ namespace Balkana.Data.Infrastructure
                     FirstName = "Random",
                     LastName = "Randomov",
                     NationalityId = 1,
-                    Nickname = "Random Guy"
+                    Nickname = "Player 1"
+                },
+                new Player
+                {
+                    FirstName = "Random",
+                    LastName = "Randomov",
+                    NationalityId = 1,
+                    Nickname = "Player 2"
+                },
+                new Player
+                {
+                    FirstName = "Random",
+                    LastName = "Randomov",
+                    NationalityId = 1,
+                    Nickname = "Player 3"
+                },
+                new Player
+                {
+                    FirstName = "Random",
+                    LastName = "Randomov",
+                    NationalityId = 1,
+                    Nickname = "Player 4"
+                },
+                new Player
+                {
+                    FirstName = "Random",
+                    LastName = "Randomov",
+                    NationalityId = 1,
+                    Nickname = "Player 5"
+                },
+                new Player
+                {
+                    FirstName = "Random",
+                    LastName = "Randomov",
+                    NationalityId = 1,
+                    Nickname = "Player 6"
+                },
+                new Player
+                {
+                    FirstName = "Random",
+                    LastName = "Randomov",
+                    NationalityId = 1,
+                    Nickname = "Player 7"
+                },
+                new Player
+                {
+                    FirstName = "Random",
+                    LastName = "Randomov",
+                    NationalityId = 1,
+                    Nickname = "Player 8"
+                },
+                new Player
+                {
+                    FirstName = "Random",
+                    LastName = "Randomov",
+                    NationalityId = 1,
+                    Nickname = "Player 9"
+                },
+                new Player
+                {
+                    FirstName = "Random",
+                    LastName = "Randomov",
+                    NationalityId = 1,
+                    Nickname = "Player 10"
                 }
             });
             data.SaveChanges();
@@ -289,6 +354,118 @@ namespace Balkana.Data.Infrastructure
                     ShortName = "LoL",
                     IconURL = "https://brand.riotgames.com/static/a91000434ed683358004b85c95d43ce0/8a20a/lol-logo.png"
                 }
+            });
+            data.SaveChanges();
+        }
+        private static void AddTestTeams(IServiceProvider services)
+        {
+            var data = services.GetRequiredService<ApplicationDbContext>();
+            if (data.Teams.Any())
+            {
+                return;
+            }
+
+            data.Teams.AddRange(new[]
+            {
+                new Team
+                {
+                    FullName = "Test 1",
+                    Tag = "T1",
+                    GameId = 1,
+                    LogoURL = "https://i.imgur.com/IEl6MYC.png",
+                    yearFounded = 2025
+                },
+                new Team
+                {
+                    FullName = "Test 2",
+                    Tag = "T2",
+                    GameId = 1,
+                    LogoURL = "https://i.imgur.com/gc0dGxD.png",
+                    yearFounded = 2025
+                }
+            });
+            data.SaveChanges();
+        }
+        private static void TestTransfers(IServiceProvider services)
+        {
+            var data = services.GetRequiredService<ApplicationDbContext>();
+            if (data.PlayerTeamTransfers.Any())
+            {
+                return;
+            }
+
+            data.PlayerTeamTransfers.AddRange(new[]
+            {
+                new PlayerTeamTransfer
+                {
+                    PlayerId = 1,
+                    TeamId = 1,
+                    PositionId = 1,
+                    TransferDate = DateTime.Now,
+                },
+                new PlayerTeamTransfer
+                {
+                    PlayerId = 2,
+                    TeamId = 1,
+                    PositionId = 1,
+                    TransferDate = DateTime.Now,
+                },
+                new PlayerTeamTransfer
+                {
+                    PlayerId = 3,
+                    TeamId = 1,
+                    PositionId = 1,
+                    TransferDate = DateTime.Now,
+                },
+                new PlayerTeamTransfer
+                {
+                    PlayerId = 4,
+                    TeamId = 1,
+                    PositionId = 1,
+                    TransferDate = DateTime.Now,
+                },
+                new PlayerTeamTransfer
+                {
+                    PlayerId = 5,
+                    TeamId = 1,
+                    PositionId = 1,
+                    TransferDate = DateTime.Now,
+                },
+                new PlayerTeamTransfer
+                {
+                    PlayerId = 6,
+                    TeamId = 2,
+                    PositionId = 1,
+                    TransferDate = DateTime.Now,
+                },
+                new PlayerTeamTransfer
+                {
+                    PlayerId = 7,
+                    TeamId = 2,
+                    PositionId = 1,
+                    TransferDate = DateTime.Now,
+                },
+                new PlayerTeamTransfer
+                {
+                    PlayerId = 8,
+                    TeamId = 2,
+                    PositionId = 1,
+                    TransferDate = DateTime.Now,
+                },
+                new PlayerTeamTransfer
+                {
+                    PlayerId = 9,
+                    TeamId = 2,
+                    PositionId = 1,
+                    TransferDate = DateTime.Now,
+                },
+                new PlayerTeamTransfer
+                {
+                    PlayerId = 10, 
+                    TeamId = 2,
+                    PositionId = 1,
+                    TransferDate = DateTime.Now,
+                },
             });
             data.SaveChanges();
         }

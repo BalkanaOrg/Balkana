@@ -1,0 +1,26 @@
+﻿@model MatchStatisticViewModel
+
+<h2>@Model.MatchName</h2>
+
+<form asp-action="SaveStats" method="post">
+    <input type="hidden" asp-for="MatchId" />
+
+    <h4>Select Players in Order</h4>
+    <div class="row">
+        @for (int i = 0; i < 10; i++)
+        {
+            <div class="col-md-2">
+                <label>Player @(i + 1)</label>
+                <select asp-for="SelectedPlayerIds[i]" asp-items="Model.AvailablePlayers" class="form-control">
+                    <option value="">Select Player</option>
+                </select>
+            </div>
+        }
+    </div>
+
+    <h4 class="mt-3">Paste Stats (Each Line: Kills, Deaths, Assists)</h4>
+    <textarea asp-for="BulkStats" class="form-control" rows="10"
+              placeholder="Paste from Excel:&#10;5,3,2&#10;10,1,5&#10;..."></textarea>
+
+    <button type="submit" class="btn btn-success mt-3">Save Statistics</button>
+</form>

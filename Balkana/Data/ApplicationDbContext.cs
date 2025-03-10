@@ -17,6 +17,7 @@
         public DbSet<Nationality> Nationalities { get; init; }
         public DbSet<Tournament> Tournaments { get; init; }
         public DbSet<Match> Matches { get; init; }
+        public DbSet<Series> Series { get; init; }
         public DbSet<Player> Players { get; init; }
         public DbSet<PlayerTeamTransfer> PlayerTeamTransfers { get; init; }
         public DbSet<TeamPosition> Positions { get; init; }
@@ -62,6 +63,8 @@
                 .WithMany(c => c.Transfers)
                 .HasForeignKey(c => c.PositionId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            //Series
             builder
                 .Entity<Series>()
                 .HasOne(c => c.TeamA)
@@ -73,50 +76,6 @@
                 .HasOne(c => c.TeamB)
                 .WithMany(c => c.SeriesAsTeam2)
                 .HasForeignKey(c => c.TeamBId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            //tuka shte si ebe mamata
-            builder
-                .Entity<Series>()
-                .HasOne(c => c.Match1)
-                .WithMany()
-                .HasForeignKey(c => c.Match1Id)
-                .OnDelete(DeleteBehavior.Restrict);
-            builder
-                .Entity<Series>()
-                .HasOne(c => c.Match2)
-                .WithMany()
-                .HasForeignKey(c => c.Match2Id)
-                .OnDelete(DeleteBehavior.Restrict);
-            builder
-                .Entity<Series>()
-                .HasOne(c => c.Match3)
-                .WithMany()
-                .HasForeignKey(c => c.Match3Id)
-                .OnDelete(DeleteBehavior.Restrict);
-            builder
-                .Entity<Series>()
-                .HasOne(c => c.Match4)
-                .WithMany()
-                .HasForeignKey(c => c.Match4Id)
-                .OnDelete(DeleteBehavior.Restrict);
-            builder
-                .Entity<Series>()
-                .HasOne(c => c.Match5)
-                .WithMany()
-                .HasForeignKey(c => c.Match5Id)
-                .OnDelete(DeleteBehavior.Restrict);
-            builder
-                .Entity<Series>()
-                .HasOne(c => c.Match6)
-                .WithMany()
-                .HasForeignKey(c => c.Match6Id)
-                .OnDelete(DeleteBehavior.Restrict);
-            builder
-                .Entity<Series>()
-                .HasOne(c => c.Match7)
-                .WithMany()
-                .HasForeignKey(c => c.Match7Id)
                 .OnDelete(DeleteBehavior.Restrict);
 
 

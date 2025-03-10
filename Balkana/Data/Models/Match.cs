@@ -10,10 +10,11 @@ namespace Balkana.Data.Models
         public int MapId { get; set; }
         public csMap Map { get; set; }
 
-        [Required]
-        public bool isPlayed { get; set; } = false;
+        public string VOD { get; set; }
 
-        public ICollection<Series> Series { get; set; }
+        public int SeriesId { get; set; }
+        public Series Series { get; set; }
+
         public IEnumerable<PlayerStatistic_CS2> Stats_CS2 { get; init; }
     }
 }

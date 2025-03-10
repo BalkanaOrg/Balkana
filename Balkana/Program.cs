@@ -1,6 +1,7 @@
 using Balkana;
 using Balkana.Data;
 using Balkana.Data.Infrastructure;
+using Balkana.Services.Matches;
 using Balkana.Services.Organizers;
 using Balkana.Services.Players;
 using Balkana.Services.Teams;
@@ -42,6 +43,8 @@ void ConfigureServices(IServiceCollection services)
     services.AddTransient<IPlayerService, PlayerService>();
     services.AddTransient<ITransferService, TransferService>();
     services.AddTransient<IOrganizerService, OrganizerService>();
+    services.AddTransient<IMatchService, MatchService>();
+    //services.AddTransient<ISeriesS, MatchService>();
 
     //services.AddTransient<>
 }

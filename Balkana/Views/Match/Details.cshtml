@@ -1,0 +1,41 @@
+﻿@model object // Can be a common base type, or you can use a dynamic view model if needed.
+
+@if (Model is MatchDetailsViewModel matchDetails)
+{
+    <!-- Display Match Details -->
+    <h2>Match Details</h2>
+    <p><strong>Series:</strong> @matchDetails.SeriesName</p>
+    <p><strong>Match Date:</strong> @matchDetails.MatchDate</p>
+
+    <h3>Player Statistics</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th>Kills</th>
+                <th>Deaths</th>
+                <th>Assists</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var stat in matchDetails.PlayerStats)
+            {
+                <tr>
+                    <td>@stat.Nickname</td>
+                    <td>@stat.Kills</td>
+                    <td>@stat.Deaths</td>
+                    <td>@stat.Assists</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else if (Model is MatchCreateViewModel createModel)
+{
+    <!-- Create Match Form -->
+    <h2>Create a Match</h2>
+    <form asp-controller="Match" asp-action="Create" method="post">
+
+        <button type="submit" class="btn btn-primary mt-2">Create Match</button>
+    </form>
+}

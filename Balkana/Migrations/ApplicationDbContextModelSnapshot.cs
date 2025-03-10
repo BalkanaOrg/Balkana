@@ -17,35 +17,10 @@ namespace Balkana.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.15")
+                .HasAnnotation("ProductVersion", "7.0.17")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
-
-            modelBuilder.Entity("Balkana.Data.Models.csMap", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
-
-                    b.Property<string>("PictureURL")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("isActiveDuty")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("csMaps");
-                });
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("Balkana.Data.Models.Game", b =>
                 {
@@ -53,7 +28,7 @@ namespace Balkana.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -78,17 +53,23 @@ namespace Balkana.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("MapId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("isPlayed")
-                        .HasColumnType("bit");
+                    b.Property<int>("SeriesId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("VOD")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("MapId");
+
+                    b.HasIndex("SeriesId");
 
                     b.ToTable("Matches");
                 });
@@ -99,7 +80,7 @@ namespace Balkana.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("FlagURL")
                         .IsRequired()
@@ -121,7 +102,7 @@ namespace Balkana.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -152,7 +133,7 @@ namespace Balkana.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -185,7 +166,7 @@ namespace Balkana.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("PictureURL")
                         .IsRequired()
@@ -210,7 +191,7 @@ namespace Balkana.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Assists")
                         .HasColumnType("int");
@@ -219,6 +200,9 @@ namespace Balkana.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("CollateralKills")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Damage")
                         .HasColumnType("int");
 
                     b.Property<int>("Deaths")
@@ -314,7 +298,7 @@ namespace Balkana.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("PlayerId")
                         .HasColumnType("int");
@@ -345,36 +329,15 @@ namespace Balkana.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DatePlayed")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("GameId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Match1Id")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Match2Id")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Match3Id")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Match4Id")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Match5Id")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Match6Id")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Match7Id")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("MatchId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("StreamLink")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -387,28 +350,9 @@ namespace Balkana.Migrations
                     b.Property<int>("TournamentId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("isLive")
-                        .HasColumnType("bit");
-
                     b.HasKey("Id");
 
                     b.HasIndex("GameId");
-
-                    b.HasIndex("Match1Id");
-
-                    b.HasIndex("Match2Id");
-
-                    b.HasIndex("Match3Id");
-
-                    b.HasIndex("Match4Id");
-
-                    b.HasIndex("Match5Id");
-
-                    b.HasIndex("Match6Id");
-
-                    b.HasIndex("Match7Id");
-
-                    b.HasIndex("MatchId");
 
                     b.HasIndex("TeamAId");
 
@@ -425,7 +369,7 @@ namespace Balkana.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("FullName")
                         .IsRequired()
@@ -460,7 +404,7 @@ namespace Balkana.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("GameId")
                         .HasColumnType("int");
@@ -486,7 +430,7 @@ namespace Balkana.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -516,6 +460,31 @@ namespace Balkana.Migrations
                     b.HasIndex("OrganizerId");
 
                     b.ToTable("Tournaments");
+                });
+
+            modelBuilder.Entity("Balkana.Data.Models.csMap", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
+
+                    b.Property<string>("PictureURL")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("isActiveDuty")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("csMaps");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -551,7 +520,7 @@ namespace Balkana.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
                         .HasColumnType("nvarchar(max)");
@@ -641,7 +610,7 @@ namespace Balkana.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
                         .HasColumnType("nvarchar(max)");
@@ -728,7 +697,15 @@ namespace Balkana.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Balkana.Data.Models.Series", "Series")
+                        .WithMany("Matches")
+                        .HasForeignKey("SeriesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Map");
+
+                    b.Navigation("Series");
                 });
 
             modelBuilder.Entity("Balkana.Data.Models.Player", b =>
@@ -807,52 +784,6 @@ namespace Balkana.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Balkana.Data.Models.Match", "Match1")
-                        .WithMany()
-                        .HasForeignKey("Match1Id")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Balkana.Data.Models.Match", "Match2")
-                        .WithMany()
-                        .HasForeignKey("Match2Id")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Balkana.Data.Models.Match", "Match3")
-                        .WithMany()
-                        .HasForeignKey("Match3Id")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Balkana.Data.Models.Match", "Match4")
-                        .WithMany()
-                        .HasForeignKey("Match4Id")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Balkana.Data.Models.Match", "Match5")
-                        .WithMany()
-                        .HasForeignKey("Match5Id")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Balkana.Data.Models.Match", "Match6")
-                        .WithMany()
-                        .HasForeignKey("Match6Id")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Balkana.Data.Models.Match", "Match7")
-                        .WithMany()
-                        .HasForeignKey("Match7Id")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Balkana.Data.Models.Match", null)
-                        .WithMany("Series")
-                        .HasForeignKey("MatchId");
-
                     b.HasOne("Balkana.Data.Models.Team", "TeamA")
                         .WithMany("SeriesAsTeam1")
                         .HasForeignKey("TeamAId")
@@ -872,20 +803,6 @@ namespace Balkana.Migrations
                         .IsRequired();
 
                     b.Navigation("Game");
-
-                    b.Navigation("Match1");
-
-                    b.Navigation("Match2");
-
-                    b.Navigation("Match3");
-
-                    b.Navigation("Match4");
-
-                    b.Navigation("Match5");
-
-                    b.Navigation("Match6");
-
-                    b.Navigation("Match7");
 
                     b.Navigation("TeamA");
 
@@ -987,8 +904,6 @@ namespace Balkana.Migrations
 
             modelBuilder.Entity("Balkana.Data.Models.Match", b =>
                 {
-                    b.Navigation("Series");
-
                     b.Navigation("Stats_CS2");
                 });
 
@@ -1009,6 +924,11 @@ namespace Balkana.Migrations
                     b.Navigation("Stats_CS");
 
                     b.Navigation("Transfers");
+                });
+
+            modelBuilder.Entity("Balkana.Data.Models.Series", b =>
+                {
+                    b.Navigation("Matches");
                 });
 
             modelBuilder.Entity("Balkana.Data.Models.Team", b =>
