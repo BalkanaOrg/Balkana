@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <Folder Include="Migrations\" />
-    <Folder Include="Views\Series\" />
+    <Folder Include="Services\Series\Models\" />
   </ItemGroup>
 
 </Project>

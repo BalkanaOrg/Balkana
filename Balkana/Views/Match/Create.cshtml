@@ -1,0 +1,22 @@
+﻿@model MatchCreateViewModel
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<h2>Create a Match</h2>
+<form asp-controller="Match" asp-action="Create" method="post">
+    <label>Series:</label>
+    <select asp-for="@Model.SeriesId" asp-items="@Model.SeriesList" class="form-control"></select>
+
+    @*<label>Match Date:</label>
+    <input asp-for="@Model.SeriesList" type="datetime-local" class="form-control" />*@
+    <label></label>
+    <select asp-for="@Model.MapId" asp-items="@Model.MapsList" class="form-control"></select>
+
+    <label asp-for="@Model.VOD">VOD</label>
+    <input asp-for="@Model.VOD" class="form-control" placeholder="YouTube link with a timestamp.">
+    <span asp-validation-for="@Model.VOD" class="small text-danger"></span>
+
+    <button type="submit" class="btn btn-primary mt-2">Create Match</button>
+</form>

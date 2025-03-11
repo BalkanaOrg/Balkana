@@ -1,9 +1,12 @@
 using Balkana;
 using Balkana.Data;
 using Balkana.Data.Infrastructure;
+using Balkana.Data.Repositories;
+using Balkana.Services;
 using Balkana.Services.Matches;
 using Balkana.Services.Organizers;
 using Balkana.Services.Players;
+using Balkana.Services.Series;
 using Balkana.Services.Teams;
 using Balkana.Services.Transfers;
 using Microsoft.AspNetCore.Identity;
@@ -22,6 +25,11 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 ConfigureServices(builder.Services);
+builder.Services.AddScoped<SeriesService>();
+
+//builder.Services.AddScoped<ISeriesRepository, SeriesRepository>();
+//builder.Services.AddScoped<ISeriesService, SeriesService>();
+
 
 var app = builder.Build();
 

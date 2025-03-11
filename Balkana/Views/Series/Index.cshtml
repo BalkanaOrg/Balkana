@@ -1,0 +1,37 @@
+﻿@model IEnumerable<Balkana.Data.Models.Series>
+
+<h2>Series List</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-success">Create New Series</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Teams</th>
+            <th>Game</th>
+            <th>Tournament</th>
+            <th>Date Played</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var series in Model)
+        {
+            <tr>
+                <td>@series.Name</td>
+                <td>@series.TeamA?.FullName vs @series.TeamB?.FullName</td>
+                <td>@series.Game?.FullName</td>
+                <td>@series.Tournament?.FullName</td>
+                <td>@series.DatePlayed.ToShortDateString()</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@series.Id" class="btn btn-primary">Edit</a>
+                    <a asp-action="Details" asp-route-id="@series.Id" class="btn btn-info">Details</a>
+                    <a asp-action="Delete" asp-route-id="@series.Id" class="btn btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

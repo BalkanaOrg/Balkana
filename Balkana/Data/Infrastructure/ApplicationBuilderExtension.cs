@@ -24,6 +24,8 @@ namespace Balkana.Data.Infrastructure
             AddDefaultPlayerPfp(services);
             AddInitialGames(services);
             AddTeamPositions(services);
+            AddDefaultOrganizer(services);
+            AddDefaultTournament(services);
             AddTestTeams(services);
             TestTransfers(services);
 
@@ -115,6 +117,63 @@ namespace Balkana.Data.Infrastructure
                 //    PlayerId = 1,
                 //    dateChanged = DateTime.Now
                 //}
+            });
+            data.SaveChanges();
+        }
+
+        private static void AddDefaultOrganizer(IServiceProvider services)
+        {
+            var data = services.GetRequiredService<ApplicationDbContext>();
+            if (data.Organizers.Any())
+            {
+                return;
+            }
+
+            data.Organizers.AddRange(new[]
+            {
+                new Organizer
+                {
+                    FullName = "Balkana",
+                    Tag = "Balkana",
+                    Description = "#1 burner of money.",
+                    LogoURL = "https://i.imgur.com/sfnTpvc.png"
+                },
+                new Organizer
+                {
+                    FullName = "Electronic Sports League",
+                    Tag = "ESL",
+                    Description = "SAUDI MONEY BABYYYY",
+                    LogoURL = "https://cdn.freebiesupply.com/logos/large/2x/esl-1-logo-svg-vector.svg"
+                }
+                //new PlayerPicture
+                //{
+                //    PictureURL = "https://i.imgur.com/ZizgQGH.png",
+                //    PlayerId = 1,
+                //    dateChanged = DateTime.Now
+                //}
+            });
+            data.SaveChanges();
+        }
+
+        private static void AddDefaultTournament(IServiceProvider services)
+        {
+            var data = services.GetRequiredService<ApplicationDbContext>();
+            if (data.Tournaments.Any())
+            {
+                return;
+            }
+
+            data.Tournaments.AddRange(new[]
+            {
+                new Tournament
+                {
+                    FullName = "Balkana Invitational Season VI",
+                    ShortName = "BI6",
+                    Description = "Burner of money.",
+                    OrganizerId = 1,
+                    StartDate = DateTime.Now,
+                    EndDate = DateTime.Now
+                }
             });
             data.SaveChanges();
         }

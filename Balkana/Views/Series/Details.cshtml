@@ -1,0 +1,18 @@
+﻿@model Balkana.Data.Models.Series
+
+@{
+    ViewData["Title"] = "Series Details";
+}
+
+<h2>Series Details</h2>
+
+<div>
+    <h4>@Model.Name</h4>
+    <p><strong>Teams:</strong> @Model.TeamA?.FullName vs @Model.TeamB?.FullName</p>
+    <p><strong>Game:</strong> @Model.Game?.FullName</p>
+    <p><strong>Tournament:</strong> @Model.Tournament?.FullName</p>
+    <p><strong>Date Played:</strong> @Model.DatePlayed.ToShortDateString()</p>
+
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>

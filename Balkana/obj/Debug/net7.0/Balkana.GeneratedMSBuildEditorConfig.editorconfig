@@ -44,6 +44,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWFwc1xBZGQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[G:/Programming/Csharp/Balkana/Balkana/Views/Match/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWF0Y2hcQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [G:/Programming/Csharp/Balkana/Balkana/Views/Match/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWF0Y2hcRGV0YWlscy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
@@ -90,6 +94,26 @@ build_metadata.AdditionalFiles.CssScope =
 
 [G:/Programming/Csharp/Balkana/Balkana/Views/Players/_PlayersPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUGxheWVyc1xfUGxheWVyc1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[G:/Programming/Csharp/Balkana/Balkana/Views/Series/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2VyaWVzXENyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[G:/Programming/Csharp/Balkana/Balkana/Views/Series/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2VyaWVzXERlbGV0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[G:/Programming/Csharp/Balkana/Balkana/Views/Series/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2VyaWVzXERldGFpbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[G:/Programming/Csharp/Balkana/Balkana/Views/Series/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2VyaWVzXEVkaXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[G:/Programming/Csharp/Balkana/Balkana/Views/Series/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2VyaWVzXEluZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [G:/Programming/Csharp/Balkana/Balkana/Views/Shared/Error.cshtml]

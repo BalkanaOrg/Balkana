@@ -1,0 +1,42 @@
+﻿@model Balkana.Data.Models.Series
+
+@{
+    ViewData["Title"] = "Create Series";
+}
+
+<h2>Create New Series</h2>
+
+<form asp-action="Create">
+    <div class="form-group">
+        <label asp-for="Name" class="control-label"></label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="TeamAId" class="control-label">Team A</label>
+        <select asp-for="TeamAId" class="form-control" asp-items="ViewBag.TeamAId"></select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="TeamBId" class="control-label">Team B</label>
+        <select asp-for="TeamBId" class="form-control" asp-items="ViewBag.TeamBId"></select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="GameId" class="control-label">Game</label>
+        <select asp-for="GameId" class="form-control" asp-items="ViewBag.GameId"></select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="TournamentId" class="control-label">Tournament</label>
+        <select asp-for="TournamentId" class="form-control" asp-items="ViewBag.TournamentId"></select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="DatePlayed" class="control-label"></label>
+        <input asp-for="DatePlayed" class="form-control" type="date" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Create</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

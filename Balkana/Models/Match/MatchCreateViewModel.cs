@@ -2,10 +2,12 @@
 
 namespace Balkana.Models.Match
 {
-    public class MatchCreateViewModel
+    public class MatchCreateViewModel : MatchBaseViewModel
     {
         public int SeriesId { get; set; }
         public List<SelectListItem> SeriesList { get; set; } = new List<SelectListItem>();
-        public DateTime MatchDate { get; set; }
+        public int MapId { get; set; }
+        public List<SelectListItem> MapsList { get; set; } = new List<SelectListItem>();
+        public string VOD { get; set; }
     }
 }

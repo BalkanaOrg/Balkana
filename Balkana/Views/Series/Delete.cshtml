@@ -1,0 +1,21 @@
+﻿@model Balkana.Data.Models.Series
+
+@{
+    ViewData["Title"] = "Delete Series";
+}
+
+<h2>Are you sure you want to delete this series?</h2>
+
+<div>
+    <h4>@Model.Name</h4>
+    <p><strong>Teams:</strong> @Model.TeamA?.FullName vs @Model.TeamB?.FullName</p>
+    <p><strong>Game:</strong> @Model.Game?.FullName</p>
+    <p><strong>Tournament:</strong> @Model.Tournament?.FullName</p>
+    <p><strong>Date Played:</strong> @Model.DatePlayed.ToShortDateString()</p>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>

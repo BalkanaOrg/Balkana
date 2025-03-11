@@ -1,41 +1,99 @@
-﻿@model object // Can be a common base type, or you can use a dynamic view model if needed.
+﻿@model MatchDetailsViewModel
 
-@if (Model is MatchDetailsViewModel matchDetails)
-{
-    <!-- Display Match Details -->
-    <h2>Match Details</h2>
-    <p><strong>Series:</strong> @matchDetails.SeriesName</p>
-    <p><strong>Match Date:</strong> @matchDetails.MatchDate</p>
+<h2>Match Details</h2>
+<p><strong>Series:</strong> @Model.MatchId</p>
+<p><strong>Match Date:</strong> @Model.MatchDate</p>
 
-    <h3>Player Statistics</h3>
-    <table class="table">
-        <thead>
+<h3>Player Statistics</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Player</th>
+            <th>Kills</th>
+            <th>Assists</th>
+            <th>Deaths</th>
+            <th>Damage</th>
+            <th>KAST</th>
+            <th>HS</th>
+            <th>HLTV2</th>
+            <th>HLTV1</th>
+            <th>UD</th>
+            <th>FK</th>
+            <th>FD</th>
+            <th>TK</th>
+            <th>TD</th>
+            <th>WB</th>
+            <th>CK</th>
+            <th>NSK</th>
+            <th>5k</th>
+            <th>4k</th>
+            <th>3k</th>
+            <th>2k</th>
+            <th>1v5</th>
+            <th>1v4</th>
+            <th>1v3</th>
+            <th>1v2</th>
+            <th>1v1</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var stat in Model.PlayerStats)
+        {
             <tr>
-                <th>Player</th>
-                <th>Kills</th>
-                <th>Deaths</th>
-                <th>Assists</th>
+                <td>@stat.Kills</td>
+                <td>@stat.Assists</td>
+                <td>@stat.Deaths</td>
+                <td>@stat.Damage</td>
+                <td>@stat.KAST</td>
+                <td>@stat.HSkills</td>
+                <td>@stat.HLTV2</td>
+                <td>@stat.HLTV1</td>
+                <td>@stat.UD</td>
+                <td>@stat.FK</td>
+                <td>@stat.FD</td>
+                <td>@stat.TK</td>
+                <td>@stat.TD</td>
+                <td>@stat.WallbangKills</td>
+                <td>@stat.CollateralKills</td>
+                <td>@stat.NoScopeKills</td>
+                <td>@stat._5k</td>
+                <td>@stat._4k</td>
+                <td>@stat._3k</td>
+                <td>@stat._2k</td>
+                <td>@stat._1v5</td>
+                <td>@stat._1v4</td>
+                <td>@stat._1v3</td>
+                <td>@stat._1v2</td>
+                <td>@stat._1v1</td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach (var stat in matchDetails.PlayerStats)
-            {
-                <tr>
-                    <td>@stat.Nickname</td>
-                    <td>@stat.Kills</td>
-                    <td>@stat.Deaths</td>
-                    <td>@stat.Assists</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else if (Model is MatchCreateViewModel createModel)
-{
-    <!-- Create Match Form -->
-    <h2>Create a Match</h2>
-    <form asp-controller="Match" asp-action="Create" method="post">
+        }
+    </tbody>
+</table>
+<hr>
 
-        <button type="submit" class="btn btn-primary mt-2">Create Match</button>
-    </form>
-}
+<h3>Add Player Statistics (Bulk Input)</h3>
+<form asp-action="SaveStats" method="post">
+    <input type="hidden" name="MatchId" value="@Model.MatchId" />
+
+    <div class="mb-3">
+        <label for="BulkStats" class="form-label">Enter Player Stats (10 lines, space-separated values):</label>
+        <textarea id="BulkStats" name="BulkStats" class="form-control" rows="10"></textarea>
+        <small class="text-muted">Each line should contain 26 space-separated values.</small>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Select Players (In Order of BulkStats Entry)</label>
+        @for (int i = 0; i < 10; i++)
+        {
+            <select name="SelectedPlayerIds[@i]" class="form-select">
+                <option value="0">-- Select Player --</option>
+                @foreach (var player in Model.PlayersList)
+                {
+                    <option value="@player.Value">@player.Text</option>
+                }
+            </select>
+        }
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Stats</button>
+</form>
