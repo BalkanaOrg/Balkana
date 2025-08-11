@@ -136,8 +136,8 @@ namespace Balkana.Controllers
         [HttpPost]
         public IActionResult SaveStats(MatchStatisticViewModel model)
         {
-            if (!ModelState.IsValid)
-                return View("Details", model);
+            // if (!ModelState.IsValid)
+            //     return View("Details", model);
 
             var match = data.Matches.Include(m => m.Stats_CS2).FirstOrDefault(m => m.Id == model.MatchId);
 
@@ -148,7 +148,7 @@ namespace Balkana.Controllers
             if (statLines == null || statLines.Length != 10) // Ensure exactly 10 players
             {
                 ModelState.AddModelError("BulkStats", "You must provide exactly 10 rows of stats.");
-                return View("Details", model);
+                // return View("Details", model);
             }
 
             for (int i = 0; i < 10; i++)
@@ -157,14 +157,14 @@ namespace Balkana.Controllers
                 if (playerId == 0)
                 {
                     ModelState.AddModelError($"SelectedPlayerIds[{i}]", "Select a valid player.");
-                    return View("Details", model);
+                    // return View("Details", model);
                 }
                 var statParts = statLines[i].Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
                 if (statParts.Length != 26 || !statParts.All(s => int.TryParse(s, out _)))
                 {
                     ModelState.AddModelError("BulkStats", $"Invalid format on line {i + 1}.");
-                    return View("Details", model);
+                    // return View("Details", model);
                 }
 
                 var existingStat = data.PlayerStatistics_CS2.FirstOrDefault(s => s.MatchId == model.MatchId && s.PlayerId == playerId);
