@@ -1,7 +1,7 @@
 {
   "version": 3,
   "targets": {
-    "net9.0": {
+    "net7.0": {
       "AutoMapper/12.0.1": {
         "type": "package",
         "dependencies": {
@@ -3784,7 +3784,7 @@
     }
   },
   "projectFileDependencyGroups": {
-    "net9.0": [
+    "net7.0": [
       "AutoMapper.Extensions.Microsoft.DependencyInjection >= 12.0.1",
       "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore >= 6.0.15",
       "Microsoft.AspNetCore.Identity.EntityFrameworkCore >= 6.0.15",
@@ -3802,24 +3802,24 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/mnt/storage/Programming/Balkana/Balkana/Balkana.csproj",
+      "projectUniqueName": "/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
       "projectName": "Balkana",
-      "projectPath": "/mnt/storage/Programming/Balkana/Balkana/Balkana.csproj",
+      "projectPath": "/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
       "packagesPath": "/home/moh4o/.nuget/packages/",
-      "outputPath": "/mnt/storage/Programming/Balkana/Balkana/obj/",
+      "outputPath": "/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/moh4o/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
-        "net9.0"
+        "net7.0"
       ],
       "sources": {
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
-        "net9.0": {
-          "targetAlias": "net9.0",
+        "net7.0": {
+          "targetAlias": "net7.0",
           "projectReferences": {}
         }
       },
@@ -3827,17 +3827,11 @@
         "warnAsError": [
           "NU1605"
         ]
-      },
-      "restoreAuditProperties": {
-        "enableAudit": "true",
-        "auditLevel": "low",
-        "auditMode": "direct"
-      },
-      "SdkAnalysisLevel": "9.0.100"
+      }
     },
     "frameworks": {
-      "net9.0": {
-        "targetAlias": "net9.0",
+      "net7.0": {
+        "targetAlias": "net7.0",
         "dependencies": {
           "AutoMapper.Extensions.Microsoft.DependencyInjection": {
             "target": "Package",
@@ -3892,7 +3886,7 @@
         "downloadDependencies": [
           {
             "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[9.0.5, 9.0.5]"
+            "version": "[7.0.20, 7.0.20]"
           }
         ],
         "frameworkReferences": {
@@ -3903,7 +3897,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.106/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/7.0.120/RuntimeIdentifierGraph.json"
       }
     }
   }

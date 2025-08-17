@@ -9,197 +9,193 @@ build_property.EnforceExtendedAnalyzerRules =
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = Balkana
 build_property.RootNamespace = Balkana
-build_property.ProjectDir = /mnt/storage/Programming/Balkana/Balkana/
-build_property.EnableComHosting = 
-build_property.EnableGeneratedComInterfaceComImportInterop = 
-build_property.RazorLangVersion = 9.0
+build_property.ProjectDir = /run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/
+build_property.RazorLangVersion = 7.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = /mnt/storage/Programming/Balkana/Balkana
+build_property.MSBuildProjectDirectory = /run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana
 build_property._RazorSourceGeneratorDebug = 
-build_property.EffectiveAnalysisLevelStyle = 9.0
-build_property.EnableCodeStyleSeverity = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Areas/Identity/Pages/_ViewStart.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Areas/Identity/Pages/_ViewStart.cshtml]
 build_metadata.AdditionalFiles.TargetPath = QXJlYXMvSWRlbnRpdHkvUGFnZXMvX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Home/Index.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Home/Privacy.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Home/Privacy.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9Qcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Info/Balkana.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Info/Balkana.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSW5mby9CYWxrYW5hLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Info/ContentCreators.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Info/ContentCreators.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSW5mby9Db250ZW50Q3JlYXRvcnMuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Info/Tournaments.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Info/Tournaments.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSW5mby9Ub3VybmFtZW50cy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Maps/Add.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Maps/Add.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvTWFwcy9BZGQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Match/Create.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Match/Create.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvTWF0Y2gvQ3JlYXRlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Match/Details.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Match/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvTWF0Y2gvRGV0YWlscy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Match/MatchStatistics.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Match/MatchStatistics.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvTWF0Y2gvTWF0Y2hTdGF0aXN0aWNzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Organizers/Add.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Organizers/Add.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvT3JnYW5pemVycy9BZGQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Organizers/Details.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Organizers/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvT3JnYW5pemVycy9EZXRhaWxzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Organizers/Index.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Organizers/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvT3JnYW5pemVycy9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Organizers/_OrganizersFormPartial.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Organizers/_OrganizersFormPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvT3JnYW5pemVycy9fT3JnYW5pemVyc0Zvcm1QYXJ0aWFsLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Organizers/_OrganizersPartial.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Organizers/_OrganizersPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvT3JnYW5pemVycy9fT3JnYW5pemVyc1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Players/Add.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Players/Add.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUGxheWVycy9BZGQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Players/Index.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Players/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUGxheWVycy9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Players/Profile.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Players/Profile.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUGxheWVycy9Qcm9maWxlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Players/_PlayersFormPartial.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Players/_PlayersFormPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUGxheWVycy9fUGxheWVyc0Zvcm1QYXJ0aWFsLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Players/_PlayersPartial.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Players/_PlayersPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUGxheWVycy9fUGxheWVyc1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Series/Create.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Series/Create.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2VyaWVzL0NyZWF0ZS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Series/Delete.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Series/Delete.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2VyaWVzL0RlbGV0ZS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Series/Details.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Series/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2VyaWVzL0RldGFpbHMuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Series/Edit.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Series/Edit.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2VyaWVzL0VkaXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Series/Index.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Series/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2VyaWVzL0luZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Shared/Error.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Shared/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL0Vycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Shared/_LoginPartial.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Shared/_LoginPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19Mb2dpblBhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Shared/_ValidationScriptsPartial.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Stats/Add.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Stats/Add.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU3RhdHMvQWRkLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Teams/Add.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Teams/Add.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVGVhbXMvQWRkLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Teams/Details.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Teams/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVGVhbXMvRGV0YWlscy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Teams/Index.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Teams/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVGVhbXMvSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Teams/_TeamFormPartial.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Teams/_TeamFormPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVGVhbXMvX1RlYW1Gb3JtUGFydGlhbC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Teams/_TeamsPartial.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Teams/_TeamsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVGVhbXMvX1RlYW1zUGFydGlhbC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Tournaments/Add.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Tournaments/Add.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVG91cm5hbWVudHMvQWRkLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Tournaments/Details.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Tournaments/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVG91cm5hbWVudHMvRGV0YWlscy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Tournaments/Index.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Tournaments/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVG91cm5hbWVudHMvSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Transfers/Add.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Transfers/Add.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVHJhbnNmZXJzL0FkZC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Transfers/Details.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Transfers/Details.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVHJhbnNmZXJzL0RldGFpbHMuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Transfers/Edit.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Transfers/Edit.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVHJhbnNmZXJzL0VkaXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Transfers/Index.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Transfers/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVHJhbnNmZXJzL0luZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Transfers/_TransfersFormPartial.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Transfers/_TransfersFormPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVHJhbnNmZXJzL19UcmFuc2ZlcnNGb3JtUGFydGlhbC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Transfers/_TransfersPartial.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Transfers/_TransfersPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVHJhbnNmZXJzL19UcmFuc2ZlcnNQYXJ0aWFsLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/_ViewImports.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/_ViewImports.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvX1ZpZXdJbXBvcnRzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/_ViewStart.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/_ViewStart.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/mnt/storage/Programming/Balkana/Balkana/Views/Shared/_Layout.cshtml]
+[/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Views/Shared/_Layout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19MYXlvdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = b-g8v745i272

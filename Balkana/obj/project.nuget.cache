@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "4JNjbeS3pfk=",
+  "dgSpecHash": "nH4rhotfP4JM36TptGoFQGMNjpoc4ZU2+3sK4Zcilq54/aOnoUKvd9GDVDB/lbrpkrVhs+X4JXIKZ8id2NB7Lw==",
   "success": true,
-  "projectFilePath": "/mnt/storage/Programming/Balkana/Balkana/Balkana.csproj",
+  "projectFilePath": "/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
   "expectedPackageFiles": [
     "/home/moh4o/.nuget/packages/automapper/12.0.1/automapper.12.0.1.nupkg.sha512",
     "/home/moh4o/.nuget/packages/automapper.extensions.microsoft.dependencyinjection/12.0.1/automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",
@@ -77,7 +77,7 @@
     "/home/moh4o/.nuget/packages/system.text.json/7.0.0/system.text.json.7.0.0.nupkg.sha512",
     "/home/moh4o/.nuget/packages/system.threading.tasks.extensions/4.5.4/system.threading.tasks.extensions.4.5.4.nupkg.sha512",
     "/home/moh4o/.nuget/packages/system.windows.extensions/6.0.0/system.windows.extensions.6.0.0.nupkg.sha512",
-    "/home/moh4o/.nuget/packages/microsoft.aspnetcore.app.ref/9.0.5/microsoft.aspnetcore.app.ref.9.0.5.nupkg.sha512"
+    "/home/moh4o/.nuget/packages/microsoft.aspnetcore.app.ref/7.0.20/microsoft.aspnetcore.app.ref.7.0.20.nupkg.sha512"
   ],
   "logs": []
 }
