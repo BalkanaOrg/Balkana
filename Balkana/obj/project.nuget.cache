@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "nH4rhotfP4JM36TptGoFQGMNjpoc4ZU2+3sK4Zcilq54/aOnoUKvd9GDVDB/lbrpkrVhs+X4JXIKZ8id2NB7Lw==",
+  "dgSpecHash": "u4hrYj0tYjWD9WDVYvsQxWiBeR1pp1Vn7QEEDO0r1NXnkZIWwL0m1PEGEFlRqCNa79J5tmssLQTU+cYx3epSwA==",
   "success": true,
-  "projectFilePath": "/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
+  "projectFilePath": "/mnt/storage/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
   "expectedPackageFiles": [
     "/home/moh4o/.nuget/packages/automapper/12.0.1/automapper.12.0.1.nupkg.sha512",
     "/home/moh4o/.nuget/packages/automapper.extensions.microsoft.dependencyinjection/12.0.1/automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",

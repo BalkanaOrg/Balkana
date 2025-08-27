@@ -3802,11 +3802,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
+      "projectUniqueName": "/mnt/storage/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
       "projectName": "Balkana",
-      "projectPath": "/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
+      "projectPath": "/mnt/storage/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
       "packagesPath": "/home/moh4o/.nuget/packages/",
-      "outputPath": "/run/media/moh4o/Games/Programming/Csharp/Balkana/Balkana/obj/",
+      "outputPath": "/mnt/storage/Programming/Csharp/Balkana/Balkana/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/moh4o/.nuget/NuGet/NuGet.Config"
