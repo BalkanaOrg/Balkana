@@ -9,7 +9,7 @@
 <div>
     <h4>@Model.Name</h4>
     <p><strong>Teams:</strong> @Model.TeamA?.FullName vs @Model.TeamB?.FullName</p>
-    <p><strong>Game:</strong> @Model.Game?.FullName</p>
+    <p><strong>Game:</strong> @Model.Tournament.Game?.FullName</p>
     <p><strong>Tournament:</strong> @Model.Tournament?.FullName</p>
     <p><strong>Date Played:</strong> @Model.DatePlayed.ToShortDateString()</p>
 

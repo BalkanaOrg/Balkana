@@ -1,0 +1,32 @@
+﻿@model IEnumerable<MatchHistoryViewModel>
+
+<h2>Match History</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Match ID</th>
+            <th>Status</th>
+            <th>Import</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var match in Model)
+        {
+            <tr style="background-color:@(match.ExistsInDb ? "lightgreen" : "salmon")">
+                <td>@match.MatchId</td>
+                <td>@(match.ExistsInDb ? "In DB" : "Not in DB")</td>
+                <td>
+                    @if (!match.ExistsInDb)
+                    {
+                        <form method="post" asp-action="ImportMatch">
+                            <input type="hidden" name="game" value="@match.Source" />
+                            <input type="hidden" name="matchId" value="@match.MatchId" />
+                            <button type="submit" class="btn btn-primary">Import</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

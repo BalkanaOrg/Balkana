@@ -3,6 +3,7 @@
     using AutoMapper;
     using AutoMapper.QueryableExtensions;
     using Balkana.Data;
+    using Balkana.Data.Models;
     using Balkana.Services.Stats.Models;
 
     public class StatService : IStatService
@@ -19,7 +20,7 @@
 
         public StatsDetailsServiceModel Details(int id)
             => this.data
-            .PlayerStatistics_CS2
+            .PlayerStats.OfType<PlayerStatistic_CS2>()
             .Where(x => x.Id == id)
             .ProjectTo<StatsDetailsServiceModel>(this.mapper)
             .FirstOrDefault();

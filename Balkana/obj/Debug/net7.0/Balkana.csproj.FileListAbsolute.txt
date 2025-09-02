@@ -74,9 +74,14 @@ G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\staticwebassets.developme
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\scopedcss\bundle\Balkana.styles.css
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\scopedcss\projectbundle\Balkana.bundle.scp.css
-G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\Balkana.csproj.CopyComplete
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\Balkana.dll
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\refint\Balkana.dll
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\Balkana.pdb
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\Balkana.genruntimeconfig.cache
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\ref\Balkana.dll
+G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\Balkana.sourcelink.json
+G:\Programming\Csharp\Balkana\Balkana\bin\Debug\net7.0\Balkana.staticwebassets.endpoints.json
+G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\staticwebassets.build.endpoints.json
+G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\staticwebassets\msbuild.Balkana.Microsoft.AspNetCore.StaticWebAssetEndpoints.props
+G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\Balkana.csproj.Up2Date
+G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\staticwebassets.upToDateCheck.txt

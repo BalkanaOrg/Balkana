@@ -13,7 +13,7 @@ namespace Balkana.Data.Infrastructure
     {
         public MappingProfile() 
         {
-            this.CreateMap<csMap, csMapServiceModel>();
+            this.CreateMap<GameMap, csMapServiceModel>();
 
 
             //Teams

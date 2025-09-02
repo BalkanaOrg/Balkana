@@ -31,7 +31,7 @@ namespace Balkana.Controllers
                     Value = s.Id.ToString(),
                     Text = s.Name
                 }).ToList();
-                var mapsList = data.csMaps.Select(s => new SelectListItem
+                var mapsList = data.GameMaps.Select(s => new SelectListItem
                 {
                     Value = s.Id.ToString(),
                     Text = s.Name
@@ -43,8 +43,8 @@ namespace Balkana.Controllers
 
             var match = data.Matches
                 .Include(s => s.Series)
-                .Include(c => c.Stats_CS2)
-                .ThenInclude(s => s.Player)
+                .Include(c => c.PlayerStats.OfType<PlayerStatistic_CS2>())
+                //.ThenInclude(s => s.Player)
                 .FirstOrDefault(c => c.Id == id);
 
             if (match == null) return NotFound();
@@ -62,9 +62,9 @@ namespace Balkana.Controllers
             {
                 MatchId = match.Id,
                 SeriesName = match.Series.Name,
-                PlayerStats = match.Stats_CS2.Select(stat => new PlayerStatViewModel
+                PlayerStats = match.PlayerStats.OfType<PlayerStatistic_CS2>().Select(stat => new PlayerStatViewModel
                 {
-                    Nickname = stat.Player.Nickname,
+                    Nickname = "MatchController.cs line 67",//stat.Player.Nickname,
                     Damage = stat.Damage,
                     Kills = stat.Kills,
                     Assists = stat.Assists,
@@ -112,7 +112,7 @@ namespace Balkana.Controllers
                     Value = s.Id.ToString(),
                     Text = s.Name
                 }).ToList();
-                model.MapsList = data.csMaps.Select(s => new SelectListItem
+                model.MapsList = data.GameMaps.Select(s => new SelectListItem
                 {
                     Value = s.Id.ToString(),
                     Text = s.Name
@@ -120,11 +120,10 @@ namespace Balkana.Controllers
                 return View("Create", model);
             }
 
-            var match = new Match
+            var match = new MatchCS
             {
                 SeriesId = model.SeriesId,
-                MapId = model.MapId,
-                VOD = model.VOD
+                MapId = model.MapId
             };
 
             data.Matches.Add(match);
@@ -139,7 +138,7 @@ namespace Balkana.Controllers
             if (!ModelState.IsValid)
                 return View("Details", model);
 
-            var match = data.Matches.Include(m => m.Stats_CS2).FirstOrDefault(m => m.Id == model.MatchId);
+            var match = data.Matches.Include(m => m.PlayerStats.OfType<PlayerStatistic_CS2>()).FirstOrDefault(m => m.Id == model.MatchId);
 
             if (match == null) return NotFound();
 
@@ -167,7 +166,7 @@ namespace Balkana.Controllers
                     return View("Details", model);
                 }
 
-                var existingStat = data.PlayerStatistics_CS2.FirstOrDefault(s => s.MatchId == model.MatchId && s.PlayerId == playerId);
+                var existingStat = data.PlayerStats.OfType<PlayerStatistic_CS2>().FirstOrDefault(s => s.MatchId == model.MatchId);// && s.PlayerId == playerId);
 
                 if (existingStat != null)
                 {
@@ -200,10 +199,10 @@ namespace Balkana.Controllers
                 }
                 else
                 {
-                    data.PlayerStatistics_CS2.Add(new PlayerStatistic_CS2
+                    data.PlayerStats.Add(new PlayerStatistic_CS2
                     {
                         MatchId = model.MatchId,
-                        PlayerId = playerId,
+                        //PlayerId = playerId,
                         Kills = int.Parse(statParts[0]),
                         Assists = int.Parse(statParts[1]),
                         Deaths = int.Parse(statParts[2]),

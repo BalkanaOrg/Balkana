@@ -1,5 +1,41 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model Balkana.Data.Models.Tournament
+
 @{
+    ViewData["Title"] = "Tournament Details";
+}
+
+<h2>@Model.FullName (@Model.ShortName)</h2>
+
+<div>
+    <dl class="row">
+        <dt class="col-sm-3">Organizer</dt>
+        <dd class="col-sm-9">@Model.Organizer?.FullName</dd>
+
+        <dt class="col-sm-3">Game</dt>
+        <dd class="col-sm-9">@Model.Game?.FullName</dd>
+
+        <dt class="col-sm-3">Description</dt>
+        <dd class="col-sm-9">@Model.Description</dd>
+
+        <dt class="col-sm-3">Start Date</dt>
+        <dd class="col-sm-9">@Model.StartDate.ToShortDateString()</dd>
+
+        <dt class="col-sm-3">End Date</dt>
+        <dd class="col-sm-9">@Model.EndDate.ToShortDateString()</dd>
+    </dl>
+</div>
+
+<h4>Series</h4>
+@if (Model.Series != null && Model.Series.Any())
+{
+    <ul>
+        @foreach (var s in Model.Series)
+        {
+            <li>@s.Name</li>
+        }
+    </ul>
+}
+else
+{
+    <p>No series added yet.</p>
 }

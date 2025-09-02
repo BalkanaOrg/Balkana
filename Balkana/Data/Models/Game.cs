@@ -12,7 +12,8 @@ namespace Balkana.Data.Models
         [Required]
         public string IconURL { get; set; }
 
-        public IEnumerable<Team> Teams { get; init; } = new List<Team>();
-        public IEnumerable<TeamPosition> Positions { get; init; } = new List<TeamPosition>();
+        public ICollection<Team> Teams { get; init; } = new List<Team>();
+        public ICollection<TeamPosition> Positions { get; init; } = new List<TeamPosition>();
+        public ICollection<Tournament> Tournaments{ get; init; } = new List<Tournament>();
     }
 }

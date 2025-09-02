@@ -23,7 +23,7 @@ namespace Balkana.Controllers
             var series = _context.Series
                 .Include(s => s.TeamA)
                 .Include(s => s.TeamB)
-                .Include(s => s.Game)
+                .Include(s => s.Tournament.Game)
                 .Include(s => s.Tournament);
             return View(await series.ToListAsync());
         }
@@ -36,7 +36,7 @@ namespace Balkana.Controllers
             var series = await _context.Series
                 .Include(s => s.TeamA)
                 .Include(s => s.TeamB)
-                .Include(s => s.Game)
+                .Include(s => s.Tournament.Game)
                 .Include(s => s.Tournament)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
@@ -74,13 +74,17 @@ namespace Balkana.Controllers
         {
             if (id == null) return NotFound();
 
-            var series = await _context.Series.FindAsync(id);
+            var series = await _context.Series
+                .Include(s => s.Tournament)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
             if (series == null) return NotFound();
 
             ViewData["TeamAId"] = new SelectList(_context.Teams, "Id", "FullName", series.TeamAId);
             ViewData["TeamBId"] = new SelectList(_context.Teams, "Id", "FullName", series.TeamBId);
-            ViewData["GameId"] = new SelectList(_context.Games, "Id", "FullName", series.GameId);
+            ViewData["GameId"] = new SelectList(_context.Games, "Id", "FullName", series.Tournament.GameId);
             ViewData["TournamentId"] = new SelectList(_context.Tournaments, "Id", "FullName", series.TournamentId);
+
             return View(series);
         }
 
@@ -108,7 +112,7 @@ namespace Balkana.Controllers
             var series = await _context.Series
                 .Include(s => s.TeamA)
                 .Include(s => s.TeamB)
-                .Include(s => s.Game)
+                .Include(s => s.Tournament.Game)
                 .Include(s => s.Tournament)
                 .FirstOrDefaultAsync(m => m.Id == id);
 

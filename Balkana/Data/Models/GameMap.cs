@@ -4,7 +4,7 @@
     using System.ComponentModel.DataAnnotations;
     using static DataConstants;
 
-    public class csMap
+    public class GameMap
     {
         public int Id { get; set; }
         [Required]
@@ -14,5 +14,8 @@
         [Required]
         public string PictureURL { get; set; }
         public bool isActiveDuty { get; set; } = true;
+
+        public int GameId { get; set; }
+        public Game Game { get; set; }
     }
 }

@@ -4,6 +4,7 @@ using Balkana.Data.Infrastructure;
 using Balkana.Data.Repositories;
 using Balkana.Services;
 using Balkana.Services.Matches;
+using Balkana.Services.Matches.Models;
 using Balkana.Services.Organizers;
 using Balkana.Services.Players;
 using Balkana.Services.Series;
@@ -26,6 +27,19 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 builder.Services.AddControllersWithViews();
 ConfigureServices(builder.Services);
 builder.Services.AddScoped<SeriesService>();
+
+
+builder.Services.AddHttpClient<RiotMatchImporter>(client =>
+{
+    client.BaseAddress = new Uri("https://europe.api.riotgames.com/"); // adjust for your region
+    client.DefaultRequestHeaders.Add("X-Riot-Token", builder.Configuration["Riot:ApiKey"]);
+});
+
+builder.Services.AddHttpClient<FaceitMatchImporter>(client =>
+{
+    client.BaseAddress = new Uri("https://open.faceit.com/data/v4/");
+    client.DefaultRequestHeaders.Add("Authorization", "Bearer " + builder.Configuration["Faceit:ApiKey"]);
+});
 
 //builder.Services.AddScoped<ISeriesRepository, SeriesRepository>();
 //builder.Services.AddScoped<ISeriesService, SeriesService>();
@@ -52,9 +66,28 @@ void ConfigureServices(IServiceCollection services)
     services.AddTransient<ITransferService, TransferService>();
     services.AddTransient<IOrganizerService, OrganizerService>();
     services.AddTransient<IMatchService, MatchService>();
+
+    // Add HttpClient for our importers
+    builder.Services.AddHttpClient<RiotMatchImporter>();
+    builder.Services.AddHttpClient<FaceitMatchImporter>();
+
+    // Also register the service dictionary
+    builder.Services.AddScoped(provider => new Dictionary<string, IMatchImporter>
+    {
+        ["RIOT"] = provider.GetRequiredService<RiotMatchImporter>(),
+        ["FACEIT"] = provider.GetRequiredService<FaceitMatchImporter>()
+    });
+
+    builder.Services.AddScoped<MatchHistoryService>();
     //services.AddTransient<ISeriesS, MatchService>();
 
     //services.AddTransient<>
+
+    builder.Services.AddHttpClient("faceit", c =>
+    {
+        c.BaseAddress = new Uri("https://open.faceit.com/data/v4/");
+        c.DefaultRequestHeaders.Add("Authorization", "Bearer " + "moq kluch");
+    });
 }
 
 // Configure the HTTP request pipeline.

@@ -47,6 +47,89 @@ namespace Balkana.Migrations
                     b.ToTable("Games");
                 });
 
+            modelBuilder.Entity("Balkana.Data.Models.GameMap", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("GameId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
+
+                    b.Property<string>("PictureURL")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("isActiveDuty")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameId");
+
+                    b.ToTable("GameMaps");
+                });
+
+            modelBuilder.Entity("Balkana.Data.Models.GameProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UUID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayerId");
+
+                    b.HasIndex("UUID", "Provider")
+                        .IsUnique();
+
+                    b.ToTable("GameProfiles");
+                });
+
+            modelBuilder.Entity("Balkana.Data.Models.ItemReference", b =>
+                {
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PatchVersion")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable("Items");
+                });
+
             modelBuilder.Entity("Balkana.Data.Models.Match", b =>
                 {
                     b.Property<int>("Id")
@@ -55,23 +138,57 @@ namespace Balkana.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("MapId")
-                        .HasColumnType("int");
+                    b.Property<string>("ExternalMatchId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MatchType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("PlayedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("SeriesId")
                         .HasColumnType("int");
 
-                    b.Property<string>("VOD")
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("TeamAId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TeamASourceSlot")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("TeamBId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TeamBSourceSlot")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MapId");
-
                     b.HasIndex("SeriesId");
 
+                    b.HasIndex("TeamAId");
+
+                    b.HasIndex("TeamBId");
+
+                    b.HasIndex("ExternalMatchId", "Source")
+                        .IsUnique();
+
                     b.ToTable("Matches");
+
+                    b.HasDiscriminator<string>("MatchType").HasValue("Match");
+
+                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("Balkana.Data.Models.Nationality", b =>
@@ -185,7 +302,7 @@ namespace Balkana.Migrations
                     b.ToTable("Pictures");
                 });
 
-            modelBuilder.Entity("Balkana.Data.Models.PlayerStatistic_CS2", b =>
+            modelBuilder.Entity("Balkana.Data.Models.PlayerStatistic", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -193,103 +310,36 @@ namespace Balkana.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Assists")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CTsideRoundsWon")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CollateralKills")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Damage")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Deaths")
-                        .HasColumnType("int");
-
-                    b.Property<int>("FD")
-                        .HasColumnType("int");
-
-                    b.Property<int>("FK")
-                        .HasColumnType("int");
-
-                    b.Property<int>("HLTV1")
-                        .HasColumnType("int");
-
-                    b.Property<int>("HLTV2")
-                        .HasColumnType("int");
-
-                    b.Property<int>("HSkills")
-                        .HasColumnType("int");
-
-                    b.Property<int>("KAST")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Kills")
-                        .HasColumnType("int");
+                    b.Property<bool>("IsWinner")
+                        .HasColumnType("bit");
 
                     b.Property<int>("MatchId")
                         .HasColumnType("int");
 
-                    b.Property<int>("NoScopeKills")
-                        .HasColumnType("int");
+                    b.Property<string>("PlayerUUID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PlayerId")
-                        .HasColumnType("int");
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("TD")
-                        .HasColumnType("int");
+                    b.Property<string>("StatType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("TK")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TsideRoundsWon")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UD")
-                        .HasColumnType("int");
-
-                    b.Property<int>("WallbangKills")
-                        .HasColumnType("int");
-
-                    b.Property<int>("_1k")
-                        .HasColumnType("int");
-
-                    b.Property<int>("_1v1")
-                        .HasColumnType("int");
-
-                    b.Property<int>("_1v2")
-                        .HasColumnType("int");
-
-                    b.Property<int>("_1v3")
-                        .HasColumnType("int");
-
-                    b.Property<int>("_1v4")
-                        .HasColumnType("int");
-
-                    b.Property<int>("_1v5")
-                        .HasColumnType("int");
-
-                    b.Property<int>("_2k")
-                        .HasColumnType("int");
-
-                    b.Property<int>("_3k")
-                        .HasColumnType("int");
-
-                    b.Property<int>("_4k")
-                        .HasColumnType("int");
-
-                    b.Property<int>("_5k")
-                        .HasColumnType("int");
+                    b.Property<string>("Team")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("MatchId");
 
-                    b.HasIndex("PlayerId");
+                    b.ToTable("PlayerStats");
 
-                    b.ToTable("PlayerStatistics_CS2");
+                    b.HasDiscriminator<string>("StatType").HasValue("PlayerStatistic");
+
+                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("Balkana.Data.Models.PlayerTeamTransfer", b =>
@@ -334,9 +384,6 @@ namespace Balkana.Migrations
                     b.Property<DateTime>("DatePlayed")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("GameId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -351,8 +398,6 @@ namespace Balkana.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("GameId");
 
                     b.HasIndex("TeamAId");
 
@@ -444,6 +489,9 @@ namespace Balkana.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int>("GameId")
+                        .HasColumnType("int");
+
                     b.Property<int>("OrganizerId")
                         .HasColumnType("int");
 
@@ -457,34 +505,11 @@ namespace Balkana.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("GameId");
+
                     b.HasIndex("OrganizerId");
 
                     b.ToTable("Tournaments");
-                });
-
-            modelBuilder.Entity("Balkana.Data.Models.csMap", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
-
-                    b.Property<string>("PictureURL")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("isActiveDuty")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("csMaps");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -689,23 +714,283 @@ namespace Balkana.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Balkana.Data.Models.Match", b =>
+            modelBuilder.Entity("Balkana.Data.Models.MatchCS", b =>
                 {
-                    b.HasOne("Balkana.Data.Models.csMap", "Map")
+                    b.HasBaseType("Balkana.Data.Models.Match");
+
+                    b.Property<string>("CompetitionType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MapId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("MapId");
+
+                    b.HasDiscriminator().HasValue("CS");
+                });
+
+            modelBuilder.Entity("Balkana.Data.Models.MatchLoL", b =>
+                {
+                    b.HasBaseType("Balkana.Data.Models.Match");
+
+                    b.Property<string>("GameMode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GameVersion")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MapId")
+                        .HasColumnType("int");
+
+                    b.ToTable("Matches", t =>
+                        {
+                            t.Property("MapId")
+                                .HasColumnName("MatchLoL_MapId");
+                        });
+
+                    b.HasDiscriminator().HasValue("LoL");
+                });
+
+            modelBuilder.Entity("Balkana.Data.Models.PlayerStatistic_CS2", b =>
+                {
+                    b.HasBaseType("Balkana.Data.Models.PlayerStatistic");
+
+                    b.Property<int>("Assists")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CTsideRoundsWon")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CollateralKills")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Damage")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Deaths")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FD")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FK")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Flashes")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HLTV1")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HLTV2")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HLTV3")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HSkills")
+                        .HasColumnType("int");
+
+                    b.Property<int>("KAST")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Kills")
+                        .HasColumnType("int");
+
+                    b.Property<int>("KnifeKills")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NoScopeKills")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PistolKills")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PlayerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoundsPlayed")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SniperKills")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TD")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TK")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TsideRoundsWon")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UD")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UtilityUsage")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WallbangKills")
+                        .HasColumnType("int");
+
+                    b.Property<int>("_1k")
+                        .HasColumnType("int");
+
+                    b.Property<int>("_1v1")
+                        .HasColumnType("int");
+
+                    b.Property<int>("_1v2")
+                        .HasColumnType("int");
+
+                    b.Property<int>("_1v3")
+                        .HasColumnType("int");
+
+                    b.Property<int>("_1v4")
+                        .HasColumnType("int");
+
+                    b.Property<int>("_1v5")
+                        .HasColumnType("int");
+
+                    b.Property<int>("_2k")
+                        .HasColumnType("int");
+
+                    b.Property<int>("_3k")
+                        .HasColumnType("int");
+
+                    b.Property<int>("_4k")
+                        .HasColumnType("int");
+
+                    b.Property<int>("_5k")
+                        .HasColumnType("int");
+
+                    b.HasIndex("PlayerId");
+
+                    b.HasDiscriminator().HasValue("CS");
+                });
+
+            modelBuilder.Entity("Balkana.Data.Models.PlayerStatistic_LoL", b =>
+                {
+                    b.HasBaseType("Balkana.Data.Models.PlayerStatistic");
+
+                    b.Property<int?>("Assists")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ChampionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ChampionName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CreepScore")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Deaths")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GoldEarned")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Item0")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Item1")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Item2")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Item3")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Item4")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Item5")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Item6")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Kills")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Lane")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("TotalDamageToChampions")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TotalDamageToObjectives")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VisionScore")
+                        .HasColumnType("int");
+
+                    b.ToTable("PlayerStats", t =>
+                        {
+                            t.Property("Assists")
+                                .HasColumnName("PlayerStatistic_LoL_Assists");
+
+                            t.Property("Deaths")
+                                .HasColumnName("PlayerStatistic_LoL_Deaths");
+
+                            t.Property("Kills")
+                                .HasColumnName("PlayerStatistic_LoL_Kills");
+                        });
+
+                    b.HasDiscriminator().HasValue("LoL");
+                });
+
+            modelBuilder.Entity("Balkana.Data.Models.GameMap", b =>
+                {
+                    b.HasOne("Balkana.Data.Models.Game", "Game")
                         .WithMany()
-                        .HasForeignKey("MapId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.Navigation("Game");
+                });
+
+            modelBuilder.Entity("Balkana.Data.Models.GameProfile", b =>
+                {
+                    b.HasOne("Balkana.Data.Models.Player", "Player")
+                        .WithMany("GameProfiles")
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Player");
+                });
+
+            modelBuilder.Entity("Balkana.Data.Models.Match", b =>
+                {
                     b.HasOne("Balkana.Data.Models.Series", "Series")
                         .WithMany("Matches")
                         .HasForeignKey("SeriesId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.Navigation("Map");
+                    b.HasOne("Balkana.Data.Models.Team", "TeamA")
+                        .WithMany()
+                        .HasForeignKey("TeamAId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Balkana.Data.Models.Team", "TeamB")
+                        .WithMany()
+                        .HasForeignKey("TeamBId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Series");
+
+                    b.Navigation("TeamA");
+
+                    b.Navigation("TeamB");
                 });
 
             modelBuilder.Entity("Balkana.Data.Models.Player", b =>
@@ -713,7 +998,7 @@ namespace Balkana.Migrations
                     b.HasOne("Balkana.Data.Models.Nationality", "Nationality")
                         .WithMany("Players")
                         .HasForeignKey("NationalityId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Nationality");
@@ -724,29 +1009,21 @@ namespace Balkana.Migrations
                     b.HasOne("Balkana.Data.Models.Player", "Player")
                         .WithMany("PlayerPictures")
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Player");
                 });
 
-            modelBuilder.Entity("Balkana.Data.Models.PlayerStatistic_CS2", b =>
+            modelBuilder.Entity("Balkana.Data.Models.PlayerStatistic", b =>
                 {
                     b.HasOne("Balkana.Data.Models.Match", "Match")
-                        .WithMany("Stats_CS2")
+                        .WithMany("PlayerStats")
                         .HasForeignKey("MatchId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Balkana.Data.Models.Player", "Player")
-                        .WithMany("Stats_CS")
-                        .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Match");
-
-                    b.Navigation("Player");
                 });
 
             modelBuilder.Entity("Balkana.Data.Models.PlayerTeamTransfer", b =>
@@ -754,19 +1031,19 @@ namespace Balkana.Migrations
                     b.HasOne("Balkana.Data.Models.Player", "Player")
                         .WithMany("Transfers")
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Balkana.Data.Models.TeamPosition", "TeamPosition")
                         .WithMany("Transfers")
                         .HasForeignKey("PositionId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Balkana.Data.Models.Team", "Team")
                         .WithMany("Transfers")
                         .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Player");
@@ -778,31 +1055,23 @@ namespace Balkana.Migrations
 
             modelBuilder.Entity("Balkana.Data.Models.Series", b =>
                 {
-                    b.HasOne("Balkana.Data.Models.Game", "Game")
-                        .WithMany()
-                        .HasForeignKey("GameId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Balkana.Data.Models.Team", "TeamA")
                         .WithMany("SeriesAsTeam1")
                         .HasForeignKey("TeamAId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Balkana.Data.Models.Team", "TeamB")
                         .WithMany("SeriesAsTeam2")
                         .HasForeignKey("TeamBId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Balkana.Data.Models.Tournament", "Tournament")
                         .WithMany("Series")
                         .HasForeignKey("TournamentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
-
-                    b.Navigation("Game");
 
                     b.Navigation("TeamA");
 
@@ -816,7 +1085,7 @@ namespace Balkana.Migrations
                     b.HasOne("Balkana.Data.Models.Game", "Game")
                         .WithMany("Teams")
                         .HasForeignKey("GameId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Game");
@@ -827,7 +1096,7 @@ namespace Balkana.Migrations
                     b.HasOne("Balkana.Data.Models.Game", "Game")
                         .WithMany("Positions")
                         .HasForeignKey("GameId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Game");
@@ -835,11 +1104,19 @@ namespace Balkana.Migrations
 
             modelBuilder.Entity("Balkana.Data.Models.Tournament", b =>
                 {
+                    b.HasOne("Balkana.Data.Models.Game", "Game")
+                        .WithMany("Tournaments")
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("Balkana.Data.Models.Organizer", "Organizer")
                         .WithMany("Tournaments")
                         .HasForeignKey("OrganizerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("Game");
 
                     b.Navigation("Organizer");
                 });
@@ -849,7 +1126,7 @@ namespace Balkana.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -858,7 +1135,7 @@ namespace Balkana.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -867,7 +1144,7 @@ namespace Balkana.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -876,13 +1153,13 @@ namespace Balkana.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -891,8 +1168,27 @@ namespace Balkana.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Balkana.Data.Models.MatchCS", b =>
+                {
+                    b.HasOne("Balkana.Data.Models.GameMap", "Map")
+                        .WithMany()
+                        .HasForeignKey("MapId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Map");
+                });
+
+            modelBuilder.Entity("Balkana.Data.Models.PlayerStatistic_CS2", b =>
+                {
+                    b.HasOne("Balkana.Data.Models.Player", null)
+                        .WithMany("Stats_CS")
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.NoAction);
                 });
 
             modelBuilder.Entity("Balkana.Data.Models.Game", b =>
@@ -900,11 +1196,13 @@ namespace Balkana.Migrations
                     b.Navigation("Positions");
 
                     b.Navigation("Teams");
+
+                    b.Navigation("Tournaments");
                 });
 
             modelBuilder.Entity("Balkana.Data.Models.Match", b =>
                 {
-                    b.Navigation("Stats_CS2");
+                    b.Navigation("PlayerStats");
                 });
 
             modelBuilder.Entity("Balkana.Data.Models.Nationality", b =>
@@ -919,6 +1217,8 @@ namespace Balkana.Migrations
 
             modelBuilder.Entity("Balkana.Data.Models.Player", b =>
                 {
+                    b.Navigation("GameProfiles");
+
                     b.Navigation("PlayerPictures");
 
                     b.Navigation("Stats_CS");

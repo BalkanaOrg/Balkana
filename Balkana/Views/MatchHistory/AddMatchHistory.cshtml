@@ -1,0 +1,31 @@
+﻿@using Balkana.Data.DTOs
+@model ICollection<ExternalMatchSummary>
+
+<table class="table">
+    <tr>
+        <th>MatchId</th>
+        <th>Source</th>
+        <th>Played At</th>
+        <th>Status</th>
+        <th></th>
+    </tr>
+    @foreach (var match in Model)
+    {
+        <tr style="background-color:@(match.ExistsInDb ? "lightgreen" : "salmon")">
+            <td>@match.ExternalMatchId</td>
+            <td>@match.Source</td>
+            <td>@match.PlayedAt</td>
+            <td>@(match.ExistsInDb ? "In DB" : "Not in DB")</td>
+            <td>
+                @if (!match.ExistsInDb)
+                {
+                    <form asp-action="Import" method="post">
+                        <input type="hidden" name="source" value="@match.Source" />
+                        <input type="hidden" name="matchId" value="@match.ExternalMatchId" />
+                        <button type="submit" class="btn btn-primary">Add to DB</button>
+                    </form>
+                }
+            </td>
+        </tr>
+    }
+</table>

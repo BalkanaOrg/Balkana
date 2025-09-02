@@ -178,7 +178,7 @@
     },
     {
       "Id": "G:\\Programming\\Csharp\\Balkana\\Balkana\\obj\\Debug\\net7.0\\scopedcss\\projectbundle\\Balkana.bundle.scp.css",
-      "PackagePath": "staticwebassets\\Balkana.bundle.scp.css"
+      "PackagePath": "staticwebassets\\Balkana.ugclj17cqn.bundle.scp.css"
     },
     {
       "Id": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\Balkana.png",
@@ -423,6 +423,10 @@
     {
       "Id": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\lib\\jquery\\dist\\jquery.min.map",
       "PackagePath": "staticwebassets\\lib\\jquery\\dist\\jquery.min.map"
+    },
+    {
+      "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.Balkana.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
     },
     {
       "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.Balkana.Microsoft.AspNetCore.StaticWebAssets.props",

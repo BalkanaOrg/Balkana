@@ -1,0 +1,37 @@
+﻿@using Balkana.Data.DTOs
+@model ICollection<ExternalMatchSummary>
+
+<h2>Match History (@ViewBag.Source)</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Match Id</th>
+            <th>Source</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var match in Model)
+        {
+            <tr style="background-color:@(match.ExistsInDb ? "lightgreen" : "salmon")">
+                <td>@match.ExternalMatchId</td>
+                <td>@match.Source</td>
+                <td>@match.PlayedAt</td>
+                <td>@(match.ExistsInDb ? "Already in DB" : "Not in DB")</td>
+                <td>
+                    @if (!match.ExistsInDb)
+                    {
+                        <form asp-action="Import" method="get">
+                            <input type="hidden" name="source" value="@match.Source" />
+                            <input type="hidden" name="matchId" value="@match.ExternalMatchId" />
+                            <button type="submit" class="btn btn-primary">Import</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

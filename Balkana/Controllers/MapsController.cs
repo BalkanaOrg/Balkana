@@ -26,14 +26,14 @@ namespace Balkana.Controllers
             {
                 return View(map);
             }
-            var mapData = new csMap
+            var mapData = new GameMap
             {
                 Name = map.Name,
                 PictureURL = map.PictureURL,
                 isActiveDuty = map.isActiveDuty
             };
 
-            this.data.csMaps.Add(mapData);
+            this.data.GameMaps.Add(mapData);
             this.data.SaveChanges();
 
             return RedirectToAction("Index", "Home");

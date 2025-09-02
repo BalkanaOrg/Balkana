@@ -1,0 +1,44 @@
+﻿@model MatchImportViewModel
+
+<h2>Import Match (@Model.Source)</h2>
+
+<form asp-action="ImportMatch" method="post">
+    <input type="hidden" asp-for="MatchId" />
+    <input type="hidden" asp-for="Source" />
+    <input type="hidden" asp-for="ProfileId" />
+
+    <div class="form-group">
+        <label for="SelectedTournamentId">Tournament</label>
+        <select asp-for="SelectedTournamentId" asp-items="Model.Tournaments" class="form-control" id="tournamentDropdown">
+            <option value="">-- Select Tournament --</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="SelectedSeriesId">Series</label>
+        <select asp-for="SelectedSeriesId" class="form-control" id="seriesDropdown">
+            <option value="">-- Select Series --</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-success">Import</button>
+</form>
+
+@section Scripts {
+    <script>
+        $("#tournamentDropdown").change(function () {
+            var tid = $(this).val();
+            $("#seriesDropdown").empty();
+            if (tid) {
+                $.getJSON('/MatchHistory/GetSeries?tournamentId=' + tid, function (data) {
+                    $.each(data, function (i, item) {
+                        $("#seriesDropdown").append($('<option>', {
+                            value: item.id,
+                            text: item.text
+                        }));
+                    });
+                });
+            }
+        });
+    </script>
+}

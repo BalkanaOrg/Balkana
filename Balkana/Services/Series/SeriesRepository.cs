@@ -17,7 +17,7 @@ namespace Balkana.Data.Repositories
             return await _context.Series
                 .Include(s => s.TeamA)
                 .Include(s => s.TeamB)
-                .Include(s => s.Game)
+                .Include(s => s.Tournament.Game)
                 .Include(s => s.Tournament)
                 .Include(s => s.Matches)
                 .ToListAsync();
@@ -28,7 +28,7 @@ namespace Balkana.Data.Repositories
             return await _context.Series
                 .Include(s => s.TeamA)
                 .Include(s => s.TeamB)
-                .Include(s => s.Game)
+                .Include(s => s.Tournament.Game)
                 .Include(s => s.Tournament)
                 .Include(s => s.Matches)
                 .FirstOrDefaultAsync(s => s.Id == id);

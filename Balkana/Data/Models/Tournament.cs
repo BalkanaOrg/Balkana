@@ -23,7 +23,10 @@
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
-        public IEnumerable<Series> Series { get; init; }
+        public int GameId { get; set; }
+        public Game Game { get; set; }
+
+        public ICollection<Series> Series { get; init; }
 
     }
 }

@@ -17,6 +17,6 @@
 
         public string LogoURL { get; set; }
 
-        public IEnumerable<Tournament> Tournaments { get; init; }
+        public ICollection<Tournament> Tournaments { get; init; }
     }
 }

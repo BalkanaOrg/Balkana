@@ -15,6 +15,6 @@ namespace Balkana.Data.Models
         [Required]
         public string FlagURL { get; set; } //or emoji, idk
 
-        public IEnumerable<Player> Players { get; set; }
+        public ICollection<Player> Players { get; set; }
     }
 }
