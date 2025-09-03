@@ -1,4 +1,7 @@
-﻿namespace Balkana.Services.Teams.Models
+﻿using Balkana.Data.Models;
+using Balkana.Services.Players.Models;
+
+namespace Balkana.Services.Teams.Models
 {
     public class TeamServiceModel : ITeamModel
     {
@@ -8,5 +11,7 @@
         public string LogoURL { get; init; }
         public int YearFounded { get; init; }
         public string GameName { get; init; }
+
+        public IEnumerable<PlayerServiceModel> Players { get; set; } = new List<PlayerServiceModel>();
     }
 }

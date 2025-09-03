@@ -8,6 +8,7 @@
     using Balkana.Services.Teams.Models;
     using Balkana.Models.Teams;
     using Balkana.Data.Models;
+    using Balkana.Services.Players.Models;
 
     public class TeamService : ITeamService
     {
@@ -113,20 +114,70 @@
                 .Any(c=>c.Id == gameId);
 
         //THIS NEEDS TO BE REWORKED ASAP (Показва всички играчи, независимо дали са всео ще в отбора или не)
+        //public IEnumerable<TeamStaffServiceModel> AllPlayers(int teamId)
+        //{
+        //    var latestTransfers = this.data.PlayerTeamTransfers
+        //        .Where(ptt => ptt.TeamId == teamId &&
+        //            ptt.TransferDate == this.data.PlayerTeamTransfers
+        //                .Where(inner => inner.PlayerId == ptt.PlayerId)
+        //                .Max(inner => inner.TransferDate)) // only latest transfer per player
+        //        .ProjectTo<TeamStaffServiceModel>(this.mapper)
+        //        .ToList();
+
+        //    return latestTransfers;
+        //}
+
         public IEnumerable<TeamStaffServiceModel> AllPlayers(int teamId)
-            => this.data
-                .PlayerTeamTransfers
-                .Where(c=>c.TeamId == teamId)
-                .ProjectTo<TeamStaffServiceModel>(this.mapper)
+        {
+            var defaultPic = "https://media.istockphoto.com/id/1618846975/photo/smile-black-woman-and-hand-pointing-in-studio-for-news-deal-or-coming-soon-announcement-on.jpg?s=612x612&w=0&k=20&c=LUvvJu4sGaIry5WLXmfQV7RStbGG5hEQNo8hEFxZSGY=";
+
+            var latestTransfers = this.data.PlayerTeamTransfers
+                .Where(ptt => ptt.TeamId == teamId &&
+                    ptt.TransferDate == this.data.PlayerTeamTransfers
+                        .Where(inner => inner.PlayerId == ptt.PlayerId)
+                        .Max(inner => inner.TransferDate))
+                .Select(ptt => new TeamStaffServiceModel
+                {
+                    Id = ptt.Player.Id,
+                    Nickname = ptt.Player.Nickname,
+                    FirstName = ptt.Player.FirstName,
+                    LastName = ptt.Player.LastName,
+                    PositionId = ptt.PositionId,
+
+                    // 👇 Take latest PlayerPicture OR default
+                    PictureUrl = ptt.Player.PlayerPictures
+                        .OrderByDescending(pic => pic.dateChanged)
+                        .Select(pic => pic.PictureURL)
+                        .FirstOrDefault() ?? defaultPic
+                })
                 .ToList();
 
-
-
-
+            return latestTransfers;
+        }
 
         private IEnumerable<TeamServiceModel> GetTeams(IQueryable<Team> teamQuery)
-            => teamQuery
+        {
+            var defaultPic = "https://media.istockphoto.com/id/1618846975/photo/smile-black-woman-and-hand-pointing-in-studio-for-news-deal-or-coming-soon-announcement-on.jpg?s=612x612&w=0&k=20&c=LUvvJu4sGaIry5WLXmfQV7RStbGG5hEQNo8hEFxZSGY=";
+
+            var teams = teamQuery
                 .ProjectTo<TeamServiceModel>(this.mapper)
                 .ToList();
+
+            foreach (var team in teams)
+            {
+                team.Players = this.AllPlayers(team.Id)
+                    .Select(p => new PlayerServiceModel   // ✅ use PlayerServiceModel
+                    {
+                        Id = p.Id,
+                        Nickname = p.Nickname,
+                        FirstName = p.FirstName,
+                        LastName = p.LastName,
+                        PictureUrl = p.PictureUrl ?? defaultPic
+                    })
+                    .ToList();
+            }
+
+            return teams;
+        }
     }
 }

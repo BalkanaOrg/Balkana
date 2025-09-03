@@ -47,6 +47,11 @@
                 .HasValue<MatchCS>("CS")
                 .HasValue<MatchLoL>("LoL");
 
+            modelBuilder.Entity<Trophy>()
+                .HasDiscriminator<string>("TrophyType")
+                .HasValue<TrophyTournament>("Tournament")
+                .HasValue<TrophyAward>("Player");
+
             // PlayerStatistic inheritance mapping (TPH)
             modelBuilder.Entity<PlayerStatistic>()
                 .HasDiscriminator<string>("StatType")
@@ -54,6 +59,11 @@
                 .HasValue<PlayerStatistic_LoL>("LoL");
 
             // Relationships
+            modelBuilder.Entity<TrophyTournament>()
+                .HasOne(tt => tt.Tournament)
+                .WithMany(t => t.Trophies)
+                .HasForeignKey(tt => tt.TournamentId);
+
             // Team → Game
             modelBuilder.Entity<Team>()
                 .HasOne(t => t.Game)

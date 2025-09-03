@@ -11,8 +11,8 @@
         public int Deaths { get; set; }
         public int KAST { get; set; }
         public int HSkills { get; set; }
-        public int HLTV2 { get; set; }
-        public int HLTV1 { get; set; }
+        public double HLTV2 { get; set; }
+        public double HLTV1 { get; set; }
         public int UD { get; set; }
         public int FK { get; set; }
         public int FD { get; set; }

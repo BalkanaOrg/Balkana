@@ -11,5 +11,6 @@
         public int PictureId { get; init; }
         public int PositionId { get; init; }
         public int NationalityId { get; init; }
+        public string PictureUrl { get; set; }
     }
 }

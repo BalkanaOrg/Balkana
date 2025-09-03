@@ -17,7 +17,7 @@ namespace Balkana.Services.Matches.Models
             _db = db;
         }
 
-        public async Task<Match> ImportMatchAsync(string matchId, ApplicationDbContext db)
+        public async Task<List<Match>> ImportMatchAsync(string matchId, ApplicationDbContext db)
         {
             // fetch from Riot API
             var response = await _http.GetFromJsonAsync<RiotMatchDto>(
@@ -29,10 +29,10 @@ namespace Balkana.Services.Matches.Models
             var bluePuuids = response.info.participants.Where(p => p.teamId == 100).Select(p => p.puuid).ToList();
             var redPuuids = response.info.participants.Where(p => p.teamId == 200).Select(p => p.puuid).ToList();
 
-            var dbBlueTeam = _db.Teams.Include(t => t.Transfers).ThenInclude(tr => tr.Player)
+            var dbBlueTeam = db.Teams.Include(t => t.Transfers).ThenInclude(tr => tr.Player)
                 .FirstOrDefault(t => t.Transfers.Any(tr => tr.Player.GameProfiles.Any(gp => bluePuuids.Contains(gp.UUID))));
 
-            var dbRedTeam = _db.Teams.Include(t => t.Transfers).ThenInclude(tr => tr.Player)
+            var dbRedTeam = db.Teams.Include(t => t.Transfers).ThenInclude(tr => tr.Player)
                 .FirstOrDefault(t => t.Transfers.Any(tr => tr.Player.GameProfiles.Any(gp => redPuuids.Contains(gp.UUID))));
 
             var match = new MatchLoL
@@ -44,10 +44,47 @@ namespace Balkana.Services.Matches.Models
                 TeamA = dbBlueTeam,
                 TeamASourceSlot = "Blue",
                 TeamB = dbRedTeam,
-                TeamBSourceSlot = "Red"
+                TeamBSourceSlot = "Red",
+                PlayerStats = new List<PlayerStatistic>()
             };
 
-            return match;
+            // Add player stats
+            foreach (var participant in response.info.participants)
+            {
+                var stat = new PlayerStatistic_LoL
+                {
+                    Match = match,
+                    PlayerUUID = participant.puuid,
+                    Source = "RIOT",
+
+                    Kills = participant.kills,
+                    Deaths = participant.deaths,
+                    Assists = participant.assists,
+
+                    ChampionId = participant.championId,
+                    ChampionName = participant.championName,
+                    Lane = participant.teamPosition,
+
+                    GoldEarned = participant.goldEarned,
+                    CreepScore = participant.totalMinionsKilled + participant.neutralMinionsKilled,
+                    VisionScore = participant.visionScore,
+
+                    TotalDamageToChampions = participant.totalDamageDealtToChampions,
+                    TotalDamageToObjectives = participant.damageDealtToObjectives,
+
+                    Item0 = participant.item0,
+                    Item1 = participant.item1,
+                    Item2 = participant.item2,
+                    Item3 = participant.item3,
+                    Item4 = participant.item4,
+                    Item5 = participant.item5,
+                    Item6 = participant.item6
+                };
+
+                match.PlayerStats.Add(stat);
+            }
+
+            return new List<Match> { match };
         }
 
         public async Task<ICollection<ExternalMatchSummary>> GetMatchHistoryAsync(string profileId)

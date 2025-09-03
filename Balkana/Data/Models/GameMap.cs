@@ -7,6 +7,8 @@
     public class GameMap
     {
         public int Id { get; set; }
+
+        public string DisplayName { get; set; }
         [Required]
         [MaxLength(defaultStringMaxLength)]
         [MinLength(defaultStringMinLength)]

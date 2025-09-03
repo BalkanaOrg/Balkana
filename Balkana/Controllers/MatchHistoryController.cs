@@ -38,7 +38,7 @@ namespace Balkana.Controllers
                 Tournaments = _db.Tournaments
                     .Include(t => t.Game)
                     .Where(t => (source == "RIOT" && t.Game.ShortName == "LoL") ||
-                                (source == "FACEIT" && t.Game.ShortName == "CS"))
+                                (source == "FACEIT" && t.Game.ShortName == "CS2"))
                     .Select(t => new SelectListItem
                     {
                         Value = t.Id.ToString(),
@@ -73,21 +73,21 @@ namespace Balkana.Controllers
             var series = await _db.Series.FindAsync(model.SelectedSeriesId);
             if (series == null)
             {
-                // either redirect back with error or assign a default series
                 ModelState.AddModelError("", "Invalid series selected.");
                 return View("Import", model);
             }
 
-
             var importer = _importers[model.Source]; // "RIOT" or "FACEIT"
-            var history = await importer.GetMatchHistoryAsync(model.ProfileId);
 
-            // Pick the correct matchId (ideally pass from Index -> Import view -> ImportMatch)
-            var match = await importer.ImportMatchAsync(model.MatchId, _db);
+            // Get one or more matches (per map in FACEIT BO3/BO5)
+            var matches = await importer.ImportMatchAsync(model.MatchId, _db);
 
-            match.SeriesId = model.SelectedSeriesId;
+            foreach (var match in matches)
+            {
+                match.SeriesId = model.SelectedSeriesId;
+                _db.Matches.Add(match);
+            }
 
-            _db.Matches.Add(match);
             await _db.SaveChangesAsync();
 
             return RedirectToAction("Details", "Series", new { id = model.SelectedSeriesId });

@@ -17,6 +17,8 @@ namespace Balkana.Data.Models
 
         public DateTime DatePlayed { get; set; }
 
+        public bool isFinished { get; set; } = false;
+
         public ICollection<Match> Matches { get; set; } = new List<Match>();
     }
 }

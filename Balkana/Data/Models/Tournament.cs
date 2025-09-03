@@ -26,7 +26,8 @@
         public int GameId { get; set; }
         public Game Game { get; set; }
 
-        public ICollection<Series> Series { get; init; }
+        public ICollection<Series> Series { get; set; }
+        public ICollection<TrophyTournament> Trophies { get; set; }
 
     }
 }

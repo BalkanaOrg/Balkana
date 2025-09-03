@@ -6,7 +6,7 @@ namespace Balkana.Services.Matches
 {
     public interface IMatchImporter
     {
-        Task<Match> ImportMatchAsync(string externalMatchId, ApplicationDbContext db);
+        Task<List<Match>> ImportMatchAsync(string externalMatchId, ApplicationDbContext db);
 
         Task<ICollection<ExternalMatchSummary>> GetMatchHistoryAsync(string profileId);
     }

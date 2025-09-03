@@ -4,6 +4,7 @@ using Balkana.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Balkana.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250902103850_PlayerStatisticUpdate4")]
+    partial class PlayerStatisticUpdate4
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -54,10 +57,6 @@ namespace Balkana.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("DisplayName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("GameId")
                         .HasColumnType("int");
@@ -401,9 +400,6 @@ namespace Balkana.Migrations
                     b.Property<int>("TournamentId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("isFinished")
-                        .HasColumnType("bit");
-
                     b.HasKey("Id");
 
                     b.HasIndex("TeamAId");
@@ -517,42 +513,6 @@ namespace Balkana.Migrations
                     b.HasIndex("OrganizerId");
 
                     b.ToTable("Tournaments");
-                });
-
-            modelBuilder.Entity("Balkana.Data.Models.Trophy", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("AwardDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("AwardType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("IconURL")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TrophyType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Trophy");
-
-                    b.HasDiscriminator<string>("TrophyType").HasValue("Trophy");
-
-                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -989,33 +949,6 @@ namespace Balkana.Migrations
                     b.HasDiscriminator().HasValue("LoL");
                 });
 
-            modelBuilder.Entity("Balkana.Data.Models.TrophyAward", b =>
-                {
-                    b.HasBaseType("Balkana.Data.Models.Trophy");
-
-                    b.Property<string>("AwardReason")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AwardedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasDiscriminator().HasValue("Player");
-                });
-
-            modelBuilder.Entity("Balkana.Data.Models.TrophyTournament", b =>
-                {
-                    b.HasBaseType("Balkana.Data.Models.Trophy");
-
-                    b.Property<int>("TournamentId")
-                        .HasColumnType("int");
-
-                    b.HasIndex("TournamentId");
-
-                    b.HasDiscriminator().HasValue("Tournament");
-                });
-
             modelBuilder.Entity("Balkana.Data.Models.GameMap", b =>
                 {
                     b.HasOne("Balkana.Data.Models.Game", "Game")
@@ -1261,17 +1194,6 @@ namespace Balkana.Migrations
                         .OnDelete(DeleteBehavior.NoAction);
                 });
 
-            modelBuilder.Entity("Balkana.Data.Models.TrophyTournament", b =>
-                {
-                    b.HasOne("Balkana.Data.Models.Tournament", "Tournament")
-                        .WithMany("Trophies")
-                        .HasForeignKey("TournamentId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Tournament");
-                });
-
             modelBuilder.Entity("Balkana.Data.Models.Game", b =>
                 {
                     b.Navigation("Positions");
@@ -1329,8 +1251,6 @@ namespace Balkana.Migrations
             modelBuilder.Entity("Balkana.Data.Models.Tournament", b =>
                 {
                     b.Navigation("Series");
-
-                    b.Navigation("Trophies");
                 });
 #pragma warning restore 612, 618
         }

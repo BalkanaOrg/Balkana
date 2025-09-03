@@ -7,5 +7,7 @@
         public string FirstName { get; init; }
         public string LastName { get; init; }
         public int NationalityId { get; init; }
+
+        public string PictureUrl { get; set; }
     }
 }

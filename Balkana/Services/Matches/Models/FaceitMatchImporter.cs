@@ -19,7 +19,7 @@ namespace Balkana.Services.Matches.Models
             _hubId = config["Faceit:HubId"];
         }
 
-        public async Task<Match> ImportMatchAsync(string matchId, ApplicationDbContext db)
+        public async Task<List<Match>> ImportMatchAsync(string matchId, ApplicationDbContext db)
         {
             // 1. Get base match info
             var response = await _http.GetFromJsonAsync<FaceItMatchDto>($"matches/{matchId}");
@@ -29,66 +29,94 @@ namespace Balkana.Services.Matches.Models
             var statsResponse = await _http.GetFromJsonAsync<FaceItMatchStatsDto>($"matches/{matchId}/stats");
             if (statsResponse == null || statsResponse.rounds == null) return null;
 
-            var round = statsResponse.rounds.First(); // usually only one round in FACEIT hub matches
-            var teamStats = round.teams;
+            var matches = new List<Match>();
 
-            // 3. Resolve teams from DB
-            var dbTeam1 = await ResolveTeamAsync(db, teamStats[0].players.Select(p => p.player_id));
-            var dbTeam2 = await ResolveTeamAsync(db, teamStats[1].players.Select(p => p.player_id));
+            // 3. Resolve teams once (same across maps)
+            var firstRound = statsResponse.rounds.First();
+            var firstTeamStats = firstRound.teams;
 
-            var match = new MatchCS
+            var dbTeam1 = await ResolveTeamAsync(db, firstTeamStats[0].players.Select(p => p.player_id));
+            var dbTeam2 = await ResolveTeamAsync(db, firstTeamStats[1].players.Select(p => p.player_id));
+
+            // 4. Loop over each map
+            foreach (var round in statsResponse.rounds)
             {
-                ExternalMatchId = response.match_id,
-                Source = "FACEIT",
-                PlayedAt = DateTimeOffset.FromUnixTimeSeconds(response.started_at).UtcDateTime,
-                IsCompleted = response.status == "FINISHED",
-                CompetitionType = response.competition_name,
-                MapId = await ResolveMapAsync(db, response),
-                TeamA = dbTeam1,
-                TeamASourceSlot = "Team1",
-                TeamB = dbTeam2,
-                TeamBSourceSlot = "Team2",
-                PlayerStats = new List<PlayerStatistic>(new List<PlayerStatistic_CS2>()) // Explicit conversion
-            };
+                var teamStats = round.teams;
+                var totalRounds = int.Parse(round.round_stats.Rounds ?? "0");
 
-            var totalRounds = int.Parse(round.round_stats?.Rounds ?? "0");
-            // 4. Attach player stats
-            foreach (var team in teamStats)
-            {
-                foreach (var player in team.players)
+                var match = new MatchCS
                 {
-                    match.PlayerStats.Add(new PlayerStatistic_CS2
-                    {
-                        Match = match,
-                        MatchId = match.Id, // will be set once saved
-                        PlayerUUID = player.player_id,  // ✅ store raw UUID
-                        Source = "FACEIT",
-                        Team = team.team_id,           // FACEIT provides team_id (can be "faction1"/"faction2")
-                        //IsWinner = team.team_stats.GetValueOrDefault("Team Win", "0") == "1",
+                    ExternalMatchId = $"{response.match_id}-{round.round_stats.Map}",
+                    Source = "FACEIT",
+                    PlayedAt = DateTimeOffset.FromUnixTimeSeconds(response.started_at).UtcDateTime,
+                    IsCompleted = response.status == "FINISHED",
+                    CompetitionType = response.competition_name,
 
-                        Kills = int.Parse(player.player_stats.GetValueOrDefault("Kills", "0")),
-                        Deaths = int.Parse(player.player_stats.GetValueOrDefault("Deaths", "0")),
-                        Assists = int.Parse(player.player_stats.GetValueOrDefault("Assists", "0")),
-                        HSkills = int.Parse(player.player_stats.GetValueOrDefault("Headshots", "0")),
-                        Damage = int.Parse(player.player_stats.GetValueOrDefault("Damage", "0")),
-                        RoundsPlayed = totalRounds,
-                        FK = int.Parse(player.player_stats.GetValueOrDefault("First Kills", "0")),
-                        FD = int.Parse(player.player_stats.GetValueOrDefault("First Deaths", "0")),
-                        _2k = int.Parse(player.player_stats.GetValueOrDefault("Double Kills", "0")),
-                        _3k = int.Parse(player.player_stats.GetValueOrDefault("Triple Kills", "0")),
-                        _4k = int.Parse(player.player_stats.GetValueOrDefault("Quatro Kills", "0")),
-                        _5k = int.Parse(player.player_stats.GetValueOrDefault("Penta Kills", "0")),
-                        SniperKills = int.Parse(player.player_stats.GetValueOrDefault("Sniper Kills", "0")),
-                        PistolKills = int.Parse(player.player_stats.GetValueOrDefault("Pistol Kills", "0")),
-                        KnifeKills = int.Parse(player.player_stats.GetValueOrDefault("Knife Kills", "0")),
-                        UtilityUsage = int.Parse(player.player_stats.GetValueOrDefault("Utility Count", "0")),
-                        Flashes = int.Parse(player.player_stats.GetValueOrDefault("Flash Successes", "0")),
-                        // etc. add the rest if Faceit API returns them
-                    });
+                    MapId = await ResolveMapAsync(db, round.round_stats.Map),
+
+                    TeamA = dbTeam1,
+                    TeamASourceSlot = "Team1",
+                    TeamB = dbTeam2,
+                    TeamBSourceSlot = "Team2",
+                    PlayerStats = new List<PlayerStatistic>()
+                };
+
+                // Add per-player stats for this map
+                foreach (var team in teamStats)
+                {
+                    foreach (var player in team.players)
+                    {
+                        int kills = int.Parse(player.player_stats.GetValueOrDefault("Kills", "0"));
+                        int deaths = int.Parse(player.player_stats.GetValueOrDefault("Deaths", "0"));
+                        int assists = int.Parse(player.player_stats.GetValueOrDefault("Assists", "0"));
+
+                        int _2k = int.Parse(player.player_stats.GetValueOrDefault("Double Kills", "0"));
+                        int _3k = int.Parse(player.player_stats.GetValueOrDefault("Triple Kills", "0"));
+                        int _4k = int.Parse(player.player_stats.GetValueOrDefault("Quadro Kills", "0"));
+                        int _5k = int.Parse(player.player_stats.GetValueOrDefault("Penta Kills", "0"));
+
+                        int oneK = Math.Max(0, kills - (_2k + _3k + _4k + _5k));
+
+                        int roundsPlayed = totalRounds > 0 ? totalRounds : 1;
+                        double kd = deaths > 0 ? (double)kills / deaths : kills;  // avoid div by 0
+                        double kr = (double)kills / roundsPlayed;
+                        double rating = (0.0073 * kills) + (0.3591 * kd) + (0.5329 * kr);
+
+                        match.PlayerStats.Add(new PlayerStatistic_CS2
+                        {
+                            Match = match,
+                            MatchId = match.Id, // will be set once saved
+                            PlayerUUID = player.player_id,
+                            Source = "FACEIT",
+                            Team = team.team_id,
+                            RoundsPlayed = totalRounds,
+
+                            Kills = int.Parse(player.player_stats.GetValueOrDefault("Kills", "0")),
+                            Deaths = int.Parse(player.player_stats.GetValueOrDefault("Deaths", "0")),
+                            Assists = int.Parse(player.player_stats.GetValueOrDefault("Assists", "0")),
+                            HSkills = int.Parse(player.player_stats.GetValueOrDefault("Headshots", "0")),
+                            Damage = int.Parse(player.player_stats.GetValueOrDefault("Damage", "0")),
+                            FK = int.Parse(player.player_stats.GetValueOrDefault("First Kills", "0")),
+                            FD = int.Parse(player.player_stats.GetValueOrDefault("First Deaths", "0")),
+                            HLTV1 = rating,
+                            _1k = oneK,
+                            _2k = _2k,
+                            _3k = _3k,
+                            _4k = _4k,
+                            _5k = _5k,
+                            SniperKills = int.Parse(player.player_stats.GetValueOrDefault("Sniper Kills", "0")),
+                            PistolKills = int.Parse(player.player_stats.GetValueOrDefault("Pistol Kills", "0")),
+                            KnifeKills = int.Parse(player.player_stats.GetValueOrDefault("Knife Kills", "0")),
+                            UtilityUsage = int.Parse(player.player_stats.GetValueOrDefault("Utility Count", "0")),
+                            Flashes = int.Parse(player.player_stats.GetValueOrDefault("Flash Successes", "0")),
+                        });
+                    }
                 }
+
+                matches.Add(match);
             }
 
-            return match;
+            return matches;
         }
 
         public async Task<ICollection<ExternalMatchSummary>> GetMatchHistoryAsync(string _)
@@ -103,19 +131,22 @@ namespace Balkana.Services.Matches.Models
             {
                 ExternalMatchId = m.match_id,
                 Source = "FACEIT",
-                PlayedAt = DateTimeOffset.FromUnixTimeSeconds(m.started_at).UtcDateTime
+                PlayedAt = DateTimeOffset.FromUnixTimeSeconds(m.started_at).UtcDateTime,
             }).ToList();
         }
 
-        private async Task<int> ResolveMapAsync(ApplicationDbContext db, FaceItMatchDto response)
+        private async Task<int> ResolveMapAsync(ApplicationDbContext db, string mapName)
         {
-            var mapId = response.voting?.map?.pick?.FirstOrDefault();
-            if (string.IsNullOrEmpty(mapId))
-                throw new Exception($"Match {response.match_id} has no map defined.");
+            if (string.IsNullOrWhiteSpace(mapName))
+                return 0;
 
-            var map = await db.GameMaps.FirstOrDefaultAsync(m => m.Name == mapId);
+            var normalized = mapName.ToLower().Trim();
+
+            var map = await db.GameMaps
+                .FirstOrDefaultAsync(m => m.Name.ToLower() == normalized);
+
             if (map == null)
-                throw new Exception($"Map '{mapId}' for match {response.match_id} does not exist in DB.");
+                throw new InvalidOperationException($"Map '{mapName}' not found in database.");
 
             return map.Id;
         }
