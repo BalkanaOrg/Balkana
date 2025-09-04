@@ -9,6 +9,7 @@
     using Balkana.Models.Teams;
     using Balkana.Data.Models;
     using Balkana.Services.Players.Models;
+    using Microsoft.EntityFrameworkCore;
 
     public class TeamService : ITeamService
     {
@@ -159,25 +160,39 @@
         {
             var defaultPic = "https://media.istockphoto.com/id/1618846975/photo/smile-black-woman-and-hand-pointing-in-studio-for-news-deal-or-coming-soon-announcement-on.jpg?s=612x612&w=0&k=20&c=LUvvJu4sGaIry5WLXmfQV7RStbGG5hEQNo8hEFxZSGY=";
 
+            // Load teams in memory first
             var teams = teamQuery
-                .ProjectTo<TeamServiceModel>(this.mapper)
+                .AsNoTracking()
                 .ToList();
 
-            foreach (var team in teams)
+            // Map teams to service models
+            var teamModels = teams.Select(team =>
             {
-                team.Players = this.AllPlayers(team.Id)
-                    .Select(p => new PlayerServiceModel   // ✅ use PlayerServiceModel
-                    {
-                        Id = p.Id,
-                        Nickname = p.Nickname,
-                        FirstName = p.FirstName,
-                        LastName = p.LastName,
-                        PictureUrl = p.PictureUrl ?? defaultPic
-                    })
-                    .ToList();
-            }
+                var model = new TeamServiceModel
+                {
+                    Id = team.Id,
+                    FullName = team.FullName,
+                    Tag = team.Tag,
+                    LogoURL = team.LogoURL,
+                    yearFounded = team.yearFounded,
+                    GameId = team.GameId,
+                    Players = this.AllPlayers(team.Id)
+                        .Take(5) // max 5 players for HLTV-style grid
+                        .Select(p => new PlayerServiceModel
+                        {
+                            Id = p.Id,
+                            Nickname = p.Nickname,
+                            FirstName = p.FirstName,
+                            LastName = p.LastName,
+                            PictureUrl = p.PictureUrl ?? defaultPic
+                        })
+                        .ToList()
+                };
 
-            return teams;
+                return model;
+            }).ToList();
+
+            return teamModels;
         }
     }
 }

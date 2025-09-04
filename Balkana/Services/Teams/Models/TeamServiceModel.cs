@@ -9,6 +9,8 @@ namespace Balkana.Services.Teams.Models
         public string FullName { get; init; }
         public string Tag { get; init; }
         public string LogoURL { get; init; }
+        public int GameId { get; init; }
+        public int yearFounded { get; init; }
         public int YearFounded { get; init; }
         public string GameName { get; init; }
 

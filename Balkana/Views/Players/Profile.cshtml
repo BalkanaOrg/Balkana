@@ -1,27 +1,112 @@
 ﻿@model PlayerDetailsServiceModel
-@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
 @{
     ViewData["Title"] = Model.Nickname;
 }
 
-<div class="row justify-content-center">
-    <h2>@Model.Nickname</h2>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-4 text-center">
+            <img src="@Model.PictureUrl"
+                 alt="@Model.Nickname"
+                 class="rounded-circle shadow"
+                 style="width:200px; height:200px; object-fit:cover;" />
+
+            <h2 class="mt-3">@Model.Nickname</h2>
+            <p class="text-muted">@Model.FirstName @Model.LastName</p>
+
+            <div class="d-flex align-items-center justify-content-center mt-2">
+                <img src="@Model.FlagUrl" alt="@Model.NationalityName"
+                     style="width:30px; height:20px; object-fit:cover; margin-right:8px;" />
+                <span>@Model.NationalityName</span>
+            </div>
+        </div>
+
+    </div>
+
+    <hr />
+
+    <div class="btn-group mt-4">
+        <a asp-action="Profile" asp-route-id="@Model.Id" asp-route-information="@Model.GetInformation()"
+           class="btn btn-primary">Overview</a>
+
+        <a asp-action="Stats" asp-route-id="@Model.Id"
+           class="btn btn-outline-primary">Stats</a>
+    </div>
+
+    <hr />
+
+    <div class="player-trophies">
+        @foreach (var trophy in Model.Trophies)
+        {
+            <img src="@trophy.IconURL" title="@trophy.Description" class="trophy-icon" />
+        }
+
+        @if (Model.MVPs.Any())
+        {
+            <div class="stacked-trophy">
+                <img src="@Model.MVPs.First().IconURL" class="trophy-icon" title="MVPs: @string.Join(", ", Model.MVPs.Select(m => m.Description))" />
+                @if (Model.MVPs.Count > 1)
+                {
+                    <span class="trophy-count">@Model.MVPs.Count</span>
+                }
+            </div>
+        }
+
+        @if (Model.EVPs.Any())
+        {
+            <div class="stacked-trophy">
+                <img src="@Model.EVPs.First().IconURL" class="trophy-icon" title="EVPs: @string.Join(", ", Model.EVPs.Select(m => m.Description))" />
+                @if (Model.EVPs.Count > 1)
+                {
+                    <span class="trophy-count">@Model.EVPs.Count</span>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-8 offset-md-2">
+            <h4>Profile Pictures History</h4>
+            <div class="d-flex flex-wrap gap-3 mt-2">
+                @foreach (var pic in Model.PlayerPictures)
+                {
+                    <div class="text-center">
+                        <img src="@pic.PictureUrl" alt="Old picture"
+                             class="rounded shadow-sm"
+                             style="width:100px; height:100px; object-fit:cover;" />
+                        <div class="small text-muted">@pic.DateChanged.ToShortDateString()</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </div>
 
-<table class="col-12 text-center">
-    <tr>
+<style>
+    .player-trophies {
+        display: flex;
+        gap: 8px;
+    }
 
-        <td class="col-4">
-            <p><b>@Model.FirstName</b> @Model.LastName</p>
-        </td>
+    .trophy-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+    }
 
-        <td class="col-9">
-            <textarea readonly rows="8" cols="80" style="resize:none; border:none;">
-                @Model.NationalityId 
-            </textarea>
-        </td>
+    .stacked-trophy {
+        position: relative;
+        display: inline-block;
+    }
 
-    </tr>
-</table>
+    .trophy-count {
+        position: absolute;
+        bottom: -5px;
+        right: -5px;
+        background-color: #222;
+        color: #fff;
+        font-size: 12px;
+        border-radius: 50%;
+        padding: 2px 5px;
+    }
+</style>

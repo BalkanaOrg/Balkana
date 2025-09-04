@@ -27,6 +27,10 @@ namespace Balkana.Services.Players
 
         PlayerDetailsServiceModel Profile(int playerId);
 
+        PlayerStatsServiceModel Stats(int id, string? gameFilter = null);
+
+        public PlayerDetailsServiceModel GetPlayerProfile(int playerId);
+
         public IEnumerable<PlayerNationalityServiceModel> GetNationalities();
 
         bool PictureExists(int pictureId);

@@ -88,12 +88,23 @@ namespace Balkana.Controllers
         {
             var player = this.players.Profile(id);
 
+            if (player == null) return NotFound();
+
             if (information != player.GetInformation())
             {
                 return BadRequest();
             }
 
-            return View(player);
+            return View(player); // Bio page
+        }
+
+        public IActionResult Stats(int id, string? game = null)
+        {
+            var stats = this.players.Stats(id, game);
+
+            if (stats == null) return NotFound();
+
+            return View(stats); // Stats page
         }
     }
 }

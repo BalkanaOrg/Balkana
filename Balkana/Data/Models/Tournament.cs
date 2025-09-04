@@ -23,11 +23,15 @@
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
+        public decimal PrizePool { get; set; } = 0;
+
         public int GameId { get; set; }
         public Game Game { get; set; }
 
-        public ICollection<Series> Series { get; set; }
-        public ICollection<TrophyTournament> Trophies { get; set; }
+        public ICollection<Series> Series { get; set; } = new List<Series>();
+        public ICollection<TrophyTournament> Trophies { get; set; } = new List<TrophyTournament>();
+        public ICollection<TournamentSocials> Socials { get; set; } = new List<TournamentSocials>();
+        public ICollection<TournamentTeam> TournamentTeams { get; set; } = new List<TournamentTeam>();
 
     }
 }

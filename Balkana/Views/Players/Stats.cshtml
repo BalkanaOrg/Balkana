@@ -1,0 +1,136 @@
+﻿@model PlayerStatsServiceModel
+
+<div class="container mt-4">
+    <h2>@Model.Nickname - Stats</h2>
+
+    <div class="btn-group mb-3">
+        @foreach (var game in Model.GamesPlayed)
+        {
+            <a asp-action="Stats" asp-route-id="@Model.PlayerId" asp-route-game="@game"
+               class="btn @(game == Model.SelectedGame ? "btn-primary" : "btn-outline-primary")">
+                @game
+            </a>
+        }
+    </div>
+
+    @foreach (var series in Model.SeriesStats.OrderByDescending(s => s.StartedAt))
+    {
+        <div class="bg-dark card mb-3 shadow-sm text-white-50">
+            <div class="card-header">
+                <strong>@series.TournamentName</strong> (Started: @series.StartedAt.ToShortDateString())
+            </div>
+            <div class="card-body">
+                <table class="table table-sm text-white">
+                    <thead>
+                        @if (Model.SelectedGame == "FACEIT")
+                        {
+                            <tr>
+                                <th>Date</th>
+                                <th>Opponent</th>
+                                <th>Result</th>
+                                <th>K</th>
+                                <th>D</th>
+                                <th>A</th>
+                                <th>HLTV1</th>
+                                <th>KPR</th>
+                                <th>DPR</th>
+                                <th>ADR</th>
+                                <th>Damage</th>
+                                <th>HS%</th>
+                            </tr>
+                        }
+                        else if (Model.SelectedGame == "RIOT")
+                        {
+                            <tr>
+                                <th>Date</th>
+                                <th>Opponent</th>
+                                <th>Result</th>
+                                <th>Champion</th>
+                                <th>K</th>
+                                <th>A</th>
+                                <th>D</th>
+                                <th>CS</th>
+                                <th>Vision</th>
+                                <th>I1</th>
+                                <th>I2</th>
+                                <th>I3</th>
+                                <th>I4</th>
+                                <th>I5</th>
+                                <th>I6</th>
+                                <th>Ward</th>
+                            </tr>
+                        }
+                    </thead>
+                    <tbody>
+                        @foreach (var match in series.Matches)
+                        {
+                            if (Model.SelectedGame == "FACEIT" && match.CS2Stats != null)
+                            {
+                                <tr>
+                                    <td>@match.PlayedAt.ToShortDateString()</td>
+                                    <td>@match.Opponent</td>
+                                    <td>@(match.IsWinner ? "W" : "L")</td>
+                                    <td>@match.CS2Stats.Kills</td>
+                                    <td>@match.CS2Stats.Deaths</td>
+                                    <td>@match.CS2Stats.Assists</td>
+                                    <td>@Math.Round(match.CS2Stats.HLTV1, 2)</td>
+                                    <td>@Math.Round(((double)match.CS2Stats.Kills / @match.CS2Stats.RoundsPlayed), 2)</td>
+                                    <td>@Math.Round(((double)match.CS2Stats.Deaths / @match.CS2Stats.RoundsPlayed), 2)</td>
+                                    <td>@Math.Round(((double)match.CS2Stats.Damage / @match.CS2Stats.RoundsPlayed), 0)</td>
+                                    <td>@match.CS2Stats.Damage</td>
+                                    <td>@((int)Math.Round((double)(100 * @match.CS2Stats.HSkills) / @match.CS2Stats.Kills))</td>
+                                </tr>
+                            }
+                            else if (Model.SelectedGame == "RIOT" && match.LoLStats != null)
+                            {
+                                <tr>
+                                    <td>@match.PlayedAt.ToShortDateString()</td>
+                                    <td>@match.Opponent</td>
+                                    <td>@(match.IsWinner ? "W" : "L")</td>
+                                    <td>
+                                        <img src="https://ddragon.leagueoflegends.com/cdn/13.20.1/img/champion/@(match.LoLStats.ChampionName).png"
+                                             title="@match.LoLStats.ChampionName"
+                                             style="width:32px;height:32px;" />
+                                    </td>
+                                    <td>@match.LoLStats.Kills</td>
+                                    <td>@match.LoLStats.Assists</td>
+                                    <td>@match.LoLStats.Deaths</td>
+                                    <td>@match.LoLStats.CreepScore</td>
+                                    <td>@match.LoLStats.VisionScore</td>
+
+                                    @foreach (var itemId in match.LoLItems)
+                                    {
+                                        <td>
+                                            @if (itemId > 0)
+                                            {
+                                            <img src="https://ddragon.leagueoflegends.com/cdn/13.20.1/img/item/@(itemId).png"
+                                                 title="@GetItemName(itemId)"
+                                                 style="width:24px;height:24px;margin-right:2px;" />
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@functions {
+    private string GetItemName(int itemId)
+    {
+        // For demo, return ID as string; ideally, load item names from DDragon JSON once and cache them
+        return ItemCache.ContainsKey(itemId) ? ItemCache[itemId] : $"Item {itemId}";
+    }
+
+    // Example cache (populate on app start)
+    private static readonly Dictionary<int, string> ItemCache = new()
+    {
+        { 1001, "Boots of Speed" },
+        { 2003, "Health Potion" },
+        // ... add all needed items
+    };
+}

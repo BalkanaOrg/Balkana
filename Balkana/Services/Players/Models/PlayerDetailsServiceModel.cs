@@ -2,6 +2,12 @@
 {
     public class PlayerDetailsServiceModel : PlayerServiceModel
     {
-        public IEnumerable<PlayerPictureServiceModel> PlayerPictures;
+        // ✅ Player has many pictures, but we’ll mainly show the latest
+        public IEnumerable<PlayerPictureServiceModel> PlayerPictures { get; set; }
+            = new List<PlayerPictureServiceModel>();
+
+        // ✅ Nationality info
+        public string NationalityName { get; set; }
+        public string FlagUrl { get; set; }
     }
 }

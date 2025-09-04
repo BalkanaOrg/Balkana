@@ -9,6 +9,7 @@ namespace Balkana.Services.Players
     using Balkana.Models.Players;
     using Balkana.Services.Players.Models;
     using Balkana.Services.Teams;
+    using Microsoft.EntityFrameworkCore;
 
     public class PlayerService : IPlayerService
     {
@@ -48,11 +49,206 @@ namespace Balkana.Services.Players
         }
 
         public PlayerDetailsServiceModel Profile(int id)
-            => this.data
-            .Players
-            .Where(c => c.Id == id)
-            .ProjectTo<PlayerDetailsServiceModel>(this.mapper)
+        {
+            var defaultPic = "https://media.istockphoto.com/id/1618846975/photo/smile-black-woman-and-hand-pointing-in-studio-for-news-deal-or-coming-soon-announcement-on.jpg?s=612x612&w=0&k=20&c=LUvvJu4sGaIry5WLXmfQV7RStbGG5hEQNo8hEFxZSGY=";
+
+            return this.data.Players
+                .Where(p => p.Id == id)
+                .Select(p => new PlayerDetailsServiceModel
+                {
+                    Id = p.Id,
+                    Nickname = p.Nickname,
+                    FirstName = p.FirstName,
+                    LastName = p.LastName,
+                    NationalityId = p.NationalityId,
+                    NationalityName = p.Nationality.Name,
+                    FlagUrl = p.Nationality.FlagURL,
+
+                    PictureUrl = p.PlayerPictures
+                        .OrderByDescending(pic => pic.dateChanged)
+                        .Select(pic => pic.PictureURL)
+                        .FirstOrDefault() ?? defaultPic,
+
+                    PlayerPictures = p.PlayerPictures
+                        .OrderByDescending(pic => pic.dateChanged)
+                        .Select(pic => new PlayerPictureServiceModel
+                        {
+                            Id = pic.Id,
+                            PictureUrl = pic.PictureURL,
+                            DateChanged = pic.dateChanged
+                        }),
+                    Trophies = p.PlayerTrophies
+                    .Where(pt => pt.Trophy.AwardType != "MVP" && pt.Trophy.AwardType != "EVP")
+                    .Select(pt => new PlayerTrophyServiceModel
+                    {
+                        Id = pt.Trophy.Id,
+                        Description = pt.Trophy.Description,
+                        IconURL = pt.Trophy.IconURL,
+                        AwardDate = pt.Trophy.AwardDate
+                    }).ToList(),
+
+                    MVPs = p.PlayerTrophies
+                    .Where(pt => pt.Trophy.AwardType == "MVP")
+                    .Select(pt => new PlayerTrophyServiceModel
+                    {
+                        Id = pt.Trophy.Id,
+                        Description = pt.Trophy.Description,
+                        IconURL = pt.Trophy.IconURL,
+                        AwardDate = pt.Trophy.AwardDate
+                    }).ToList(),
+
+                    EVPs = p.PlayerTrophies
+                    .Where(pt => pt.Trophy.AwardType == "EVP")
+                    .Select(pt => new PlayerTrophyServiceModel
+                    {
+                        Id = pt.Trophy.Id,
+                        Description = pt.Trophy.Description,
+                        IconURL = pt.Trophy.IconURL,
+                        AwardDate = pt.Trophy.AwardDate
+                    }).ToList()
+                        .ToList()
+                })
+                .FirstOrDefault();
+        }
+
+        public PlayerStatsServiceModel Stats(int id, string? gameFilter = null)
+        {
+            var player = this.data.Players
+                .Include(p => p.GameProfiles)
+                .FirstOrDefault(p => p.Id == id);
+
+            if (player == null) return null;
+
+            var playerUUIDs = player.GameProfiles.Select(g => g.UUID).ToList();
+
+            // Find all stats across games
+            var statsQuery = this.data.Set<PlayerStatistic>()
+                .Include(s => s.Match).ThenInclude(m => m.Series)
+                .Where(s => playerUUIDs.Contains(s.PlayerUUID));
+
+            if (!string.IsNullOrEmpty(gameFilter))
+                statsQuery = statsQuery.Where(s => s.Source == gameFilter);
+
+            var stats = statsQuery.ToList();
+
+            // Detect games played
+            var gamesPlayed = stats.Select(s => s.Source).Distinct().ToList();
+
+            // Default filter = game with most matches
+            if (string.IsNullOrEmpty(gameFilter))
+            {
+                gameFilter = stats
+                    .GroupBy(s => s.Source)
+                    .OrderByDescending(g => g.Count())
+                    .FirstOrDefault()?.Key;
+            }
+
+            // Filter again with final choice
+            var filtered = this.data.PlayerStats
+                // join with GameProfile to resolve PlayerId from PlayerUUID
+                .Join(
+                    this.data.GameProfiles,
+                    stats => stats.PlayerUUID,
+                    profile => profile.UUID,
+                    (stats, profile) => new { Stats = stats, PlayerId = profile.PlayerId }
+                )
+                // filter by the actual player Id
+                .Where(x => x.PlayerId == id)
+                .Select(x => x.Stats)
+                // include related navigation properties
+                .Include(s => s.Match)
+                    .ThenInclude(m => m.Series)
+                        .ThenInclude(se => se.Tournament)
+                .ToList();
+
+            var result = new PlayerStatsServiceModel
+            {
+                PlayerId = player.Id,
+                Nickname = player.Nickname,
+                GamesPlayed = gamesPlayed,
+                SelectedGame = gameFilter,
+                SeriesStats = filtered
+                    .GroupBy(s => s.Match.SeriesId)
+                    .Select(g => new PlayerSeriesStatsServiceModel
+                    {
+                        SeriesId = g.Key,
+                        TournamentName = g.First().Match.Series.Tournament.FullName,
+                        StartedAt = g.First().Match.Series.DatePlayed,
+                        Matches = g.Select(s => new PlayerMatchStatsServiceModel
+                        {
+                            MatchId = s.MatchId,
+                            PlayedAt = s.Match.PlayedAt,
+                            //Opponent = (s.Match.TeamAId == s.Match.TeamBId ? "Unknown" :
+                            //            s.Match.TeamA.Players.Any(p => p.Id == id) ?
+                            //                s.Match.TeamB.FullName : s.Match.TeamA.FullName),
+                            IsWinner = s.IsWinner,
+                            CS2Stats = s as PlayerStatistic_CS2,
+                            LoLStats = s as PlayerStatistic_LoL
+                        }).ToList()
+                    }).ToList()
+            };
+
+            return result;
+        }
+
+        public PlayerDetailsServiceModel GetPlayerProfile(int playerId)
+        {
+            var player = this.data.Players
+            .Where(p => p.Id == playerId)
+            .Include(p => p.PlayerTrophies)                 // ✅ Include PlayerTrophies
+                .ThenInclude(pt => pt.Trophy)              // ✅ Include the Trophy itself
+            .Select(p => new PlayerDetailsServiceModel
+            {
+                Id = p.Id,
+                Nickname = p.Nickname,
+                FirstName = p.FirstName,
+                LastName = p.LastName,
+                PictureUrl = p.PlayerPictures
+                    .OrderByDescending(pic => pic.dateChanged)
+                    .Select(pic => pic.PictureURL)
+                    .FirstOrDefault(),
+
+                Trophies = p.PlayerTrophies
+                    .Where(pt => pt.Trophy.AwardType != "MVP" && pt.Trophy.AwardType != "EVP")
+                    .Select(pt => new PlayerTrophyServiceModel
+                    {
+                        Id = pt.Trophy.Id,
+                        Description = pt.Trophy.Description,
+                        IconURL = pt.Trophy.IconURL,
+                        AwardDate = pt.Trophy.AwardDate
+                    }).ToList(),
+
+                MVPs = p.PlayerTrophies
+                    .Where(pt => pt.Trophy.AwardType == "MVP")
+                    .Select(pt => new PlayerTrophyServiceModel
+                    {
+                        Id = pt.Trophy.Id,
+                        Description = pt.Trophy.Description,
+                        IconURL = pt.Trophy.IconURL,
+                        AwardDate = pt.Trophy.AwardDate
+                    }).ToList(),
+
+                EVPs = p.PlayerTrophies
+                    .Where(pt => pt.Trophy.AwardType == "EVP")
+                    .Select(pt => new PlayerTrophyServiceModel
+                    {
+                        Id = pt.Trophy.Id,
+                        Description = pt.Trophy.Description,
+                        IconURL = pt.Trophy.IconURL,
+                        AwardDate = pt.Trophy.AwardDate
+                    }).ToList()
+            })
             .FirstOrDefault();
+
+            var test = this.data.PlayerTrophies
+    .Include(pt => pt.Trophy)
+    .Where(pt => pt.PlayerId == playerId)
+    .ToList();
+
+            Console.WriteLine($"Found {test.Count} trophies for player {playerId}");
+
+            return player;
+        }
 
         public int Create(string nickname, string firstname, string lastname, int nationalityid)
         {

@@ -6,6 +6,6 @@
 
         public int GameId { get; init; }
 
-        public IEnumerable<TeamStaffServiceModel> Players;
+        public IEnumerable<TeamStaffServiceModel> Players { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "0maQmOa+qlTtssm1Tt95fudWpiW66ytk1+1QuN9UdEw=",
+  "Hash": "mQ5AXypUgG6UPwFo93ugweSaXVeI7CPRXeEvJBOgDKk=",
   "Source": "Balkana",
   "BasePath": "_content/Balkana",
   "Mode": "Default",
@@ -2278,8 +2278,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "wviojybp0o",
-      "Integrity": "nCAsQeUjQgp/Tn1jE1Emp8MhiITOsOv1m+0I5mtVIzM=",
+      "Fingerprint": "ac5cmbrfv8",
+      "Integrity": "CvgM48MjIFZKUVzcc4hQfYj5bQCVHQp5xrgAEkqcH+c=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\css\\site.css"
@@ -2304,6 +2304,27 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\favicon.ico"
+    },
+    {
+      "Identity": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\js\\script.js",
+      "SourceId": "Balkana",
+      "SourceType": "Discovered",
+      "ContentRoot": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\",
+      "BasePath": "_content/Balkana",
+      "RelativePath": "js/script#[.{fingerprint}]?.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "vor4ilxv81",
+      "Integrity": "L/s2jIikpsd0LNxAodGYqb8DFibzUQ2fYwDIfxSXyHM=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\script.js"
     },
     {
       "Identity": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\js\\site.js",
@@ -6396,6 +6417,51 @@
       ]
     },
     {
+      "Route": "css/site.ac5cmbrfv8.css",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\site.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "21377"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"CvgM48MjIFZKUVzcc4hQfYj5bQCVHQp5xrgAEkqcH+c=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 04 Sep 2025 06:31:24 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "ac5cmbrfv8"
+        },
+        {
+          "Name": "label",
+          "Value": "css/site.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-CvgM48MjIFZKUVzcc4hQfYj5bQCVHQp5xrgAEkqcH+c="
+        }
+      ]
+    },
+    {
       "Route": "css/site.css",
       "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\site.css",
       "Selectors": [],
@@ -6406,7 +6472,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "896"
+          "Value": "21377"
         },
         {
           "Name": "Content-Type",
@@ -6414,11 +6480,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"nCAsQeUjQgp/Tn1jE1Emp8MhiITOsOv1m+0I5mtVIzM=\""
+          "Value": "\"CvgM48MjIFZKUVzcc4hQfYj5bQCVHQp5xrgAEkqcH+c=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sun, 17 Aug 2025 16:57:14 GMT"
+          "Value": "Thu, 04 Sep 2025 06:31:24 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -6428,52 +6494,7 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-nCAsQeUjQgp/Tn1jE1Emp8MhiITOsOv1m+0I5mtVIzM="
-        }
-      ]
-    },
-    {
-      "Route": "css/site.wviojybp0o.css",
-      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\site.css",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "896"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"nCAsQeUjQgp/Tn1jE1Emp8MhiITOsOv1m+0I5mtVIzM=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Sun, 17 Aug 2025 16:57:14 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "fingerprint",
-          "Value": "wviojybp0o"
-        },
-        {
-          "Name": "label",
-          "Value": "css/site.css"
-        },
-        {
-          "Name": "integrity",
-          "Value": "sha256-nCAsQeUjQgp/Tn1jE1Emp8MhiITOsOv1m+0I5mtVIzM="
+          "Value": "sha256-CvgM48MjIFZKUVzcc4hQfYj5bQCVHQp5xrgAEkqcH+c="
         }
       ]
     },
@@ -9760,6 +9781,88 @@
         {
           "Name": "integrity",
           "Value": "sha256-+UW802wgVfnjaSbdwyHLlU7AVplb0WToOlvN1CnzIac="
+        }
+      ]
+    },
+    {
+      "Route": "js/script.js",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\js\\script.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "15109"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"L/s2jIikpsd0LNxAodGYqb8DFibzUQ2fYwDIfxSXyHM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 04 Sep 2025 06:13:18 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-L/s2jIikpsd0LNxAodGYqb8DFibzUQ2fYwDIfxSXyHM="
+        }
+      ]
+    },
+    {
+      "Route": "js/script.vor4ilxv81.js",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\js\\script.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "15109"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"L/s2jIikpsd0LNxAodGYqb8DFibzUQ2fYwDIfxSXyHM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 04 Sep 2025 06:13:18 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "vor4ilxv81"
+        },
+        {
+          "Name": "label",
+          "Value": "js/script.js"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-L/s2jIikpsd0LNxAodGYqb8DFibzUQ2fYwDIfxSXyHM="
         }
       ]
     },

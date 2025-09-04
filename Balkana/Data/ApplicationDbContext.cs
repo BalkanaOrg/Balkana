@@ -3,7 +3,7 @@
     using Balkana.Data.Models;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
-    
+
     public class ApplicationDbContext : IdentityDbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
@@ -27,10 +27,22 @@
         public DbSet<Tournament> Tournaments { get; set; }
         public DbSet<Series> Series { get; set; }
 
+        public DbSet<PlayerSocials> PlayerSocials { get; set; }
+        public DbSet<TeamSocials> TeamSocials { get; set; }
+        public DbSet<TournamentSocials> TournamentSocials { get; set; }
+
+        public DbSet<Trophy> Trophies { get; set; }
+        public DbSet<TrophyTournament> TrophyTournaments { get; set; }
+        public DbSet<TrophyAward> TrophyAwards { get; set; }
+        public DbSet<PlayerTrophy> PlayerTrophies { get; set; }
+        public DbSet<TeamTrophy> TeamTrophies { get; set; }
+
         // Match hierarchy
         public DbSet<Match> Matches { get; set; }
         public DbSet<MatchCS> MatchesCS { get; set; }
         public DbSet<MatchLoL> MatchesLoL { get; set; }
+
+        public DbSet<TournamentTeam> TournamentTeams { get; set; }
 
         // Player statistics hierarchy
         public DbSet<PlayerStatistic> PlayerStats { get; set; }
@@ -40,6 +52,26 @@
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<TournamentTeam>()
+                .HasKey(tt => new { tt.TournamentId, tt.TeamId });
+
+            modelBuilder.Entity<TournamentTeam>()
+                .HasOne(tt => tt.Tournament)
+                .WithMany(t => t.TournamentTeams)
+                .HasForeignKey(tt => tt.TournamentId);
+
+            modelBuilder.Entity<TournamentTeam>()
+                .HasOne(tt => tt.Team)
+                .WithMany(t => t.TournamentTeams)
+                .HasForeignKey(tt => tt.TeamId);
+
+            modelBuilder.Entity<Series>()
+                .HasOne(s => s.NextSeries)
+                .WithMany()
+                .HasForeignKey(s => s.NextSeriesId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .IsRequired(false);
 
             // Match inheritance mapping (TPH)
             modelBuilder.Entity<Match>()
@@ -111,7 +143,7 @@
                 .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Series>()
-                .HasMany(s=>s.Matches)
+                .HasMany(s => s.Matches)
                 .WithOne(m => m.Series)
                 .HasForeignKey(m => m.SeriesId)
                 .OnDelete(DeleteBehavior.NoAction);
@@ -163,7 +195,7 @@
                 .HasNoKey();
 
             modelBuilder.Entity<Series>()
-                .HasOne(s=>s.Tournament)
+                .HasOne(s => s.Tournament)
                 .WithMany(t => t.Series)
                 .HasForeignKey(s => s.TournamentId)
                 .OnDelete(DeleteBehavior.NoAction);
@@ -179,6 +211,38 @@
                 .WithMany(t => t.SeriesAsTeam2)
                 .HasForeignKey(s => s.TeamBId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            //SOCIALS
+            modelBuilder.Entity<PlayerSocials>()
+                .HasOne(ps => ps.Player)
+                .WithMany(p => p.Socials)
+                .HasForeignKey(ps => ps.PlayerId);
+            modelBuilder.Entity<TeamSocials>()
+                .HasOne(ts => ts.Team)
+                .WithMany(t => t.Socials)
+                .HasForeignKey(ts => ts.TeamId);
+            modelBuilder.Entity<TournamentSocials>()
+                .HasOne(ts => ts.Tournament)
+                .WithMany(t => t.Socials)
+                .HasForeignKey(ts => ts.TournamentId);
+
+            //TROPHIES RELATIONS
+            modelBuilder.Entity<PlayerTrophy>()
+                .HasOne(ta => ta.Player)
+                .WithMany(p => p.PlayerTrophies)
+                .HasForeignKey(ta => ta.PlayerId);
+            modelBuilder.Entity<PlayerTrophy>()
+                .HasOne(ta => ta.Trophy)
+                .WithMany(t => t.PlayerTrophies)
+                .HasForeignKey(ta => ta.TrophyId);
+            modelBuilder.Entity<TeamTrophy>()
+                .HasOne(ta => ta.Team)
+                .WithMany(t => t.TeamTrophies)
+                .HasForeignKey(ta => ta.TeamId);
+            modelBuilder.Entity<TeamTrophy>()
+                .HasOne(ta => ta.Trophy)
+                .WithMany(t => t.TeamTrophies)
+                .HasForeignKey(ta => ta.TrophyId);
 
             foreach (var fk in modelBuilder.Model.GetEntityTypes()
              .SelectMany(e => e.GetForeignKeys()))

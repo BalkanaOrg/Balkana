@@ -29,6 +29,7 @@ namespace Balkana.Data.Infrastructure
             AddTestSeries(services);
             TestTransfers(services);
             AddOriginalMaps(services);
+            AddTrophies(services);
 
             return app;
         }
@@ -826,6 +827,83 @@ namespace Balkana.Data.Infrastructure
                     TeamId = 2,
                     PositionId = 1,
                     TransferDate = DateTime.Now,
+                },
+            });
+            data.SaveChanges();
+        }
+        private static void AddTrophies(IServiceProvider services)
+        {
+            var data = services.GetRequiredService<ApplicationDbContext>();
+            if (data.Trophies.Any())
+            {
+                return;
+            }
+
+            data.Trophies.AddRange(new[]
+            {
+                new TrophyTournament
+                {
+                    AwardType = "Trophy",
+                    Description = "Winner of Balkana Invitational Season III",
+                    IconURL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSH2wuwu0bRlPLic52NbVE71BDSQdPMcqBpHw&s",
+                    TournamentId = 1,
+                    AwardDate = new DateTime(2024,8,9),
+                },
+                new TrophyTournament
+                {
+                    AwardType = "Trophy",
+                    Description = "Winner of Balkana Invitational Season IV",
+                    IconURL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSH2wuwu0bRlPLic52NbVE71BDSQdPMcqBpHw&s",
+                    TournamentId = 1,
+                    AwardDate = new DateTime(2024,9,29),
+                },
+                new TrophyTournament
+                {
+                    AwardType = "Trophy",
+                    Description = "Winner of Balkana Invitational Season V",
+                    IconURL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSH2wuwu0bRlPLic52NbVE71BDSQdPMcqBpHw&s",
+                    TournamentId = 1,
+                    AwardDate = new DateTime(2024,11,30),
+                },
+                new TrophyTournament
+                {
+                    AwardType = "Trophy",
+                    Description = "Winner of Balkana Invitational Season VI",
+                    IconURL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSH2wuwu0bRlPLic52NbVE71BDSQdPMcqBpHw&s",
+                    TournamentId = 1,
+                    AwardDate = new DateTime(2025,2,2),
+                },
+                new TrophyTournament
+                {
+                    AwardType = "Trophy",
+                    Description = "Winner of Balkana Invitational Season VII",
+                    IconURL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSH2wuwu0bRlPLic52NbVE71BDSQdPMcqBpHw&s",
+                    TournamentId = 1,
+                    AwardDate = new DateTime(2025,3,15),
+                },
+                new TrophyTournament
+                {
+                    AwardType = "Trophy",
+                    Description = "Winner of Balkana Invitational Season VIII",
+                    IconURL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSH2wuwu0bRlPLic52NbVE71BDSQdPMcqBpHw&s",
+                    TournamentId = 1,
+                    AwardDate = new DateTime(2025,7,27),
+                },
+                new TrophyTournament
+                {
+                    AwardType = "MVP",
+                    Description = "MVP of Balkana Invitational Season III",
+                    IconURL = "https://i.imgur.com/VEvcsmv.png",
+                    TournamentId = 1,
+                    AwardDate = new DateTime(2024,8,9),
+                },
+                new TrophyTournament
+                {
+                    AwardType = "EVP",
+                    Description = "EVP of Balkana Invitational Season VI",
+                    IconURL = "https://i.imgur.com/EmdO0lj.png",
+                    TournamentId = 1,
+                    AwardDate = new DateTime(2024,8,9),
                 },
             });
             data.SaveChanges();

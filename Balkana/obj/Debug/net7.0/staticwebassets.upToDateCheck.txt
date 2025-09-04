@@ -45,6 +45,7 @@ C:\Users\1bulg\.nuget\packages\bootstrap\5.3.3\contentFiles\any\any\wwwroot\js\b
 wwwroot\Balkana.png
 wwwroot\css\site.css
 wwwroot\favicon.ico
+wwwroot\js\script.js
 wwwroot\js\site.js
 wwwroot\lib\bootstrap\dist\css\bootstrap.css
 wwwroot\lib\bootstrap\dist\css\bootstrap.css.map

@@ -14,7 +14,7 @@ namespace Balkana.Data.Models
         [ForeignKey("TeamId")]
         public Team Team { get; set; }
         [Required]
-        public DateTime TransferDate { get; set; }
+        public DateTime TransferDate { get; set; } = DateTime.Now;
 
         public int PositionId { get; set; }
         [ForeignKey("PositionId")]

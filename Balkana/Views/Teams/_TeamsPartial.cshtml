@@ -36,24 +36,26 @@
                     <div class="row row-cols-2 row-cols-sm-3 row-cols-md-5 g-3">
                         @foreach (var player in team.Players.Take(5))   // 👈 max 5 players
                         {
-                            <div class="col text-center">
-                                <img src="@player.PictureUrl"
-                                     alt="@player.Nickname"
-                                     class="rounded-circle mb-2 border border-light"
-                                     style="width:80px; height:80px; object-fit:cover;" />
-                                <div>
-                                    <strong class="text-light">@player.Nickname</strong>
+                            <a asp-controller="Players" asp-action="Profile" asp-route-id="@player.Id" asp-route-information="@player.GetInformation()" style="text-decoration:none;">
+                                <div class="col text-center">
+                                    <img src="@player.PictureUrl"
+                                         alt="@player.Nickname"
+                                         class="rounded-circle mb-2 border border-light"
+                                         style="width:80px; height:80px; object-fit:cover;" />
+                                    <div>
+                                        <strong class="text-light">@player.Nickname</strong>
+                                    </div>
+                                    <div class="text-white small">
+                                        @player.FirstName @player.LastName
+                                    </div>
                                 </div>
-                                <div class="text-black small">
-                                    @player.FirstName @player.LastName
-                                </div>
-                            </div>
+                            </a>
                         }
                     </div>
                 }
                 else
                 {
-                    <span class="text-black">No players currently in this team.</span>
+                    <span class="text-white">No players currently in this team.</span>
                 }
             </div>
         </div>

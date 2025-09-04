@@ -2,12 +2,87 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core </a>.<img src="https://flagicons.lipis.dev/flags/4x3/bg.svg" width="15px" /></p>
-    <img src="./Balkana.png"  class="w-100"/><br />
-    <img src="./Balkana.png"  class="w-100"/><br />
-    <img src="./Balkana.png"  class="w-100"/><br />
-    <img src="./Balkana.png"  class="w-100"/><br />
-    <img src="./Balkana.png"  class="w-100"/><br />
-</div>
+<!-- Hero Section -->
+<section class="hero" id="home">
+    <div class="hero-content">
+        <div class="tournament-date">15 JULY - 30 AUGUST 2025</div>
+        <h1 class="hero-title">BALKANA<br></h1>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <span class="stat-number">1000+</span>
+                <div class="stat-label">Players</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">$500K</span>
+                <div class="stat-label">Prize Pool</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">4</span>
+                <div class="stat-label">Games</div>
+            </div>
+        </div>
+
+        <p class="hero-description">
+            The ultimate Balkan gaming championship featuring the region's best players competing across multiple titles for glory and massive prizes.
+        </p>
+
+        <button class="cta-button" onclick="scrollToGames()">Join Tournament</button>
+    </div>
+</section>
+
+<!-- Games Section -->
+<section class="games-section" id="games">
+    <h2 class="section-title">Featured Games</h2>
+
+    <div class="games-grid">
+        <div class="game-card">
+            <div class="game-logo">LoL</div>
+            <h6 class="game-title">League of Legends</h6>
+            <div class="game-prize">$150,000 Prize Pool</div>
+            <p class="game-description">
+                Battle on the Rift in the most popular MOBA. 5v5 strategic gameplay with over 160 champions to master.
+            </p>
+            <button class="register-btn">Register Now</button>
+        </div>
+
+        <div class="game-card">
+            <div class="game-logo">CS</div>
+            <h6 class="game-title">Counter-Strike</h6>
+            <div class="game-prize">$125,000 Prize Pool</div>
+            <p class="game-description">
+                Tactical FPS at its finest. Precise aim, perfect teamwork, and strategic execution determine victory.
+            </p>
+            <button class="register-btn">Register Now</button>
+        </div>
+
+        <div class="game-card">
+            <div class="game-logo">VAL</div>
+            <h6 class="game-title">Valorant</h6>
+            <div class="game-prize">$125,000 Prize Pool</div>
+            <p class="game-description">
+                Character-based tactical shooter. Unique abilities meet precise gunplay in intense 5v5 matches.
+            </p>
+            <button class="register-btn">Register Now</button>
+        </div>
+
+        <div class="game-card">
+            <div class="game-logo">FN</div>
+            <h6 class="game-title">Fortnite</h6>
+            <div class="game-prize">$100,000 Prize Pool</div>
+            <p class="game-description">
+                Build, shoot, survive. The battle royale that revolutionized gaming with creative building mechanics.
+            </p>
+            <button class="register-btn">Register Now</button>
+        </div>
+    </div>
+</section>
+
+<!-- News Section -->
+<section class="news-section" id="news">
+    <div class="news-header">
+        <h2 class="news-title">Latest Tournament News</h2>
+        <a href="#" class="see-all">See All News →</a>
+    </div>
+    <p class="news-subtitle">Stay on top of the action! Get the latest updates, match results, and player highlights.</p>
+</section>

@@ -28,8 +28,8 @@ namespace Balkana.Data.Infrastructure
                 .ForMember(c => c.TeamId, cfg => cfg.MapFrom(c => c.TeamId));
             this.CreateMap<Player, PlayerTeamTransfer>()
                 .ForMember(c => c.PlayerId, cfg => cfg.MapFrom(c => c.Id));
-            this.CreateMap<Team, TeamDetailsServiceModel>()
-                .ForMember(c => c.FullName, cfg => cfg.MapFrom(c => c.Game.FullName));
+            //this.CreateMap<Team, TeamDetailsServiceModel>()
+            //    .ForMember(c => c.FullName, cfg => cfg.MapFrom(c => c.Game.FullName));
 
             //Players
             this.CreateMap<Player, PlayerServiceModel>()
@@ -95,6 +95,29 @@ namespace Balkana.Data.Infrastructure
                 .ForMember(c => c.LogoURL, cfg => cfg.MapFrom(cfg => cfg.LogoURL));
             this.CreateMap<OrganizerServiceModel, OrganizerDetailsServiceModel>();
             this.CreateMap<Organizer, OrganizerDetailsServiceModel>();
+
+            this.CreateMap<Team, TeamDetailsServiceModel>()
+            .ForMember(dest => dest.Players, opt => opt.MapFrom(src =>
+                src.Transfers.Select(tr => new TeamStaffServiceModel
+                {
+                    Id = tr.Id,
+                    PlayerId = tr.Player.Id,
+                    Nickname = tr.Player.Nickname,
+                    FirstName = tr.Player.FirstName,
+                    LastName = tr.Player.LastName,
+                    TeamId = tr.TeamId,
+                    PositionId = tr.PositionId,
+                    NationalityId = tr.Player.NationalityId,
+                    PictureId = tr.Player.PlayerPictures
+                        .OrderByDescending(pp => pp.dateChanged)
+                        .Select(pp => pp.Id)
+                        .FirstOrDefault(),
+                    PictureUrl = tr.Player.PlayerPictures
+                        .OrderByDescending(pp => pp.dateChanged)
+                        .Select(pp => pp.PictureURL)
+                        .FirstOrDefault()
+                })
+            ));
         }
     }
 }

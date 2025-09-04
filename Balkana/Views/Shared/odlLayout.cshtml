@@ -1,0 +1,284 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Balkana</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Balkana.styles.css" asp-append-version="true" />
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.6.0/uicons-brands/css/uicons-brands.css'>
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    @* <style>
+        .dropdown-toggle-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .dropdown-toggle-left::after {
+            order: -1; /* Moves the arrow to the left */
+            margin-right: 8px; /* Adds spacing between arrow and text */
+            margin-left: 0;
+        }
+    </style> *@
+</head>
+    <body class="bg-black text-white scrollbar" id="style-3">
+    <header class="d-flex fw-bold justify-content-center bg-balkana sticky-top align-middle">
+        <nav class="navbar navbar-expand-lg">
+        @*PC Perspective*@
+            <div class="container-fluid d-none d-lg-block fs-4">
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" data-bs-theme="dark">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle dropdown-toggle-left" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                About us
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="Info" asp-action="Balkana">About Balkana</a></li>
+                                <li><a class="dropdown-item" asp-controller="Info" asp-action="Tournaments">Our Tournaments</a></li>
+                                <li><a class="dropdown-item" asp-controller="Info" asp-action="ContentCreators">Our Streamers</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item d-none d-lg-block">
+                            <a class="nav-link active" aria-current="page" asp-controller="Home" asp-action="Index"><img src="~/Balkana.png" width="40" height="40" class="" /></a>
+                        </li>
+                        <li class="nav-item d-block d-md-none">
+                            <a class="nav-link active" aria-current="page">Home</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Esports
+                            </a>
+                            <ul class="dropdown-menu justify-content-center">
+                                <li><a class="dropdown-item" href="#">Tournaments</a></li>
+                                <li><a class="dropdown-item" asp-controller="Teams" asp-action="Index">Teams</a></li>
+                                <li><a class="dropdown-item" asp-controller="Players" asp-action="Index">Players</a></li>
+                                <li><a class="dropdown-item" asp-controller="Organizers" asp-action="Index">Organizers</a></li>
+                                <li><a class="dropdown-item" asp-controller="Transfers" asp-action="Index">Transfers</a></li>
+                                <li><a class="dropdown-item" href="#">Statistics</a></li>
+                                <form class="" role="search">
+                                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                                </form>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        @*Mobile perspective*@
+            <div class="container-fluid d-block d-md-none">
+                <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
+                    <img src="~/Balkana.png" width="30" height="30" class="" />
+                </button>
+                <a class="navbar-brand" href="">@ViewData["Title"]</a>
+                <div class="offcanvas offcanvas-end bg-dark" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+                    <div class="offcanvas-header">
+                        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Offcanvas</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                    </div>
+                    <div class="offcanvas-body ">
+                        <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">About Balkana</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">Our Tournaments</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">Our Streamers</a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Esports
+                                </a>
+                                <ul class="dropdown-menu justify-content-center">
+                                    <li><a class="dropdown-item" href="#">Tournaments</a></li>
+                                    <li><a class="dropdown-item" href="#">Teams</a></li>
+                                    <li><a class="dropdown-item" href="#">Players</a></li>
+                                    <li><a class="dropdown-item" href="#">Statistics</a></li>
+                                    <form class="" role="search">
+                                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                                    </form>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+        </nav>
+    </header>
+    <div class="container text-white-50">
+        <main role="main" class="pb-3">
+        @RenderBody()
+        </main>
+    </div>
+
+@*<footer class="border-top footer text-muted position-sticky">
+        <div class="container">
+            &copy; 2025 - Balkana - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <symbol id="instagram" viewBox="0 0 16 16">
+        </div>
+
+    </footer>*@
+    <footer class="text-center text-lg-start text-white bg-balkana fw-bold"
+            style="">
+        <!-- Grid container -->
+<div class="container p-4 pb-0">
+    <!-- Section: Links -->
+    <section class="">
+        <!--Grid row-->
+        <div class="row">
+            <!-- Grid column -->
+            <div class="col-md-3 col-lg-3 col-xl-3 mx-auto mt-3">
+                <h6 class="text-uppercase mb-4 font-weight-bold">
+                    Balkana.org
+                </h6>
+                <p>
+                    Videbimus invicem in Balcania
+                </p>
+            </div>
+            <!-- Grid column -->
+
+            <hr class="w-100 clearfix d-md-none" />
+
+            <!-- Grid column -->
+            <div class="col-md-2 col-lg-2 col-xl-2 mx-auto mt-3">
+                <h6 class="text-uppercase mb-4 font-weight-bold">Take a look!</h6>
+                <p>
+                    <a class="text-white">Tournaments</a>
+                </p>
+                <p>
+                    <a class="text-white">Streamers</a>
+                </p>
+                <p>
+                    <a class="text-white">Teams</a>
+                </p>
+                <p>
+                    <a class="text-white">Players</a>
+                </p>
+            </div>
+            <!-- Grid column -->
+
+            <hr class="w-100 clearfix d-md-none" />
+
+            <!-- Grid column -->
+            <hr class="w-100 clearfix d-md-none" />
+
+            <!-- Grid column -->
+            <div class="col-md-4 col-lg-3 col-xl-3 mx-auto mt-3">
+                <h6 class="text-uppercase mb-4 font-weight-bold">Contact</h6>
+                <p><i class="fas fa-home mr-3"></i> Sofia, Bulgaria</p>
+                <p><i class="fas fa-envelope mr-3"></i> promotions@balkana.org</p>
+                <p><i class="fas fa-phone mr-3"></i> +359 88 maikata na rosen </p>
+            </div>
+            <!-- Grid column -->
+            <!-- Grid column -->
+            <div class="col-md-3 col-lg-2 col-xl-2 mx-auto mt-3">
+                <h6 class="text-uppercase mb-4 font-weight-bold">Follow us!</h6>
+
+                <!-- YouTube -->
+                <a class="btn btn-primary btn-floating m-1 socials"
+                   style="background-color: #FF0000"
+                   href="https://www.youtube.com/@@BalkanaOrg"
+                   role="button"
+                   target=”_blank”>
+                    <i class="bi bi-youtube"></i>
+                </a>
+                <!-- Twitch -->
+                <a class="btn btn-primary btn-floating m-1 socials"
+                   style="background-color: #6441a5"
+                   href="https://www.twitch.tv/balkanaorg"
+                   role="button"
+                   target=”_blank”>
+                    <i class="bi bi-twitch"></i>
+                </a>
+                <!-- TikTok -->
+                <a class="btn btn-primary btn-floating m-1 socials"
+                   style="background-color: #000000"
+                   href="https://www.tiktok.com/@@balkanaorg"
+                   role="button"
+                   target=”_blank”>
+                    <i class="bi bi-tiktok"></i>
+                </a>
+
+                <!-- Twitter -->
+                <a class="btn btn-primary btn-floating m-1 socials"
+                   style="background-color: #55acee"
+                   href="https://x.com/BalkanaOrg"
+                   role="button"
+                   target=”_blank”>
+                    <i class="bi bi-twitter"></i>
+                </a>
+
+                <!-- Discord -->
+                <a class="btn btn-primary btn-floating m-1 socials"
+                   style="background-color: #7289da"
+                   href="https://discord.gg/balkana"
+                   role="button"
+                   target=”_blank”>
+                    <i class="bi bi-discord"></i>
+                </a>
+
+                <!-- Instagram -->
+                <a class="btn btn-primary btn-floating m-1 socials"
+                   style="background: #833ab4; background: linear-gradient(to right,#833ab4,#fd1d1d,#fcb045);"
+                   href="https://www.instagram.com/balkana_org/"
+                   role="button"
+                   target=”_blank”>
+                    <i class="bi bi-instagram"></i>
+                </a>
+
+                <!-- Linkedin -->
+                <a class="btn btn-primary btn-floating m-1 socials"
+                   style="background-color: #0082ca"
+                   href="https://www.linkedin.com/company/balkana"
+                   role="button"
+                   target=”_blank”>
+                    <i class="bi bi-linkedin"></i>
+                </a>
+
+
+
+                <!-- Steam -->
+                <a class="btn btn-primary btn-floating m-1 socials"
+                   style="background: linear-gradient(#171a21,#1b2838,#2a475e,#2a475e,#66c0f4);"
+                   href="https://steamcommunity.com/groups/balkana"
+                   role="button"
+                   target=”_blank”>
+                    <i class="bi bi-steam"></i>
+                </a>
+
+
+                <!-- Facebook -->
+                <a class="btn btn-primary btn-floating m-1 socials"
+                   style="background-color: #3b5998"
+                   href="https://www.facebook.com/groups/1342441640541608"
+                   role="button"
+                   target=”_blank”>
+                    <i class="bi bi-facebook"></i>
+                </a>
+            </div>
+        </div>
+        <!--Grid row-->
+    </section>
+    <!-- Section: Links -->
+</div>
+<!-- Grid container -->
+<!-- Copyright -->
+<div class="text-center p-3"
+     style="background-color: rgba(0, 0, 0, 0.2)">
+    © 2025 Balkana
+</div>
+<!-- Copyright -->
+    </footer>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
