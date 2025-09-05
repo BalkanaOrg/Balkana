@@ -26,3 +26,7 @@
 
     </tr>
 </table>
+@foreach (var player in Model.Players)
+{
+    <td>@player.Nickname</td>
+}

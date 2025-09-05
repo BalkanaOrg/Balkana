@@ -3,6 +3,22 @@
   "WorkspaceRootPath": "G:\\Programming\\Csharp\\Balkana\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|g:\\programming\\csharp\\balkana\\balkana\\views\\teams\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|solutionrelative:balkana\\views\\teams\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|g:\\programming\\csharp\\balkana\\balkana\\services\\teams\\models\\teamstaffservicemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|solutionrelative:balkana\\services\\teams\\models\\teamstaffservicemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|g:\\programming\\csharp\\balkana\\balkana\\views\\teams\\add.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|solutionrelative:balkana\\views\\teams\\add.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|g:\\programming\\csharp\\balkana\\balkana\\views\\teams\\_teamspartial.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|solutionrelative:balkana\\views\\teams\\_teamspartial.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|g:\\programming\\csharp\\balkana\\balkana\\views\\teams\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|solutionrelative:balkana\\views\\teams\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
@@ -31,20 +47,8 @@
       "RelativeMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|solutionrelative:balkana\\models\\teams\\allteamsquerymodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|g:\\programming\\csharp\\balkana\\balkana\\services\\teams\\models\\teamservicemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|solutionrelative:balkana\\services\\teams\\models\\teamservicemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|g:\\programming\\csharp\\balkana\\balkana\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|solutionrelative:balkana\\views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|g:\\programming\\csharp\\balkana\\balkana\\views\\teams\\_teamspartial.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|solutionrelative:balkana\\views\\teams\\_teamspartial.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|g:\\programming\\csharp\\balkana\\balkana\\views\\teams\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|solutionrelative:balkana\\views\\teams\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|g:\\programming\\csharp\\balkana\\balkana\\views\\players\\profile.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
@@ -135,14 +139,6 @@
       "RelativeMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|solutionrelative:balkana\\data\\infrastructure\\mappingprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|g:\\programming\\csharp\\balkana\\balkana\\services\\teams\\models\\teamdetailsservicemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|solutionrelative:balkana\\services\\teams\\models\\teamdetailsservicemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|g:\\programming\\csharp\\balkana\\balkana\\services\\teams\\models\\teamstaffservicemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|solutionrelative:balkana\\services\\teams\\models\\teamstaffservicemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|g:\\programming\\csharp\\balkana\\balkana\\services\\players\\playerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{AD3401C2-2670-4D98-9AE9-EE6DDC5BCB2E}|Balkana\\Balkana.csproj|solutionrelative:balkana\\services\\players\\playerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -214,37 +210,36 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 7,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 2,
+              "Title": "Add.cshtml",
+              "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Views\\Teams\\Add.cshtml",
+              "RelativeDocumentMoniker": "Balkana\\Views\\Teams\\Add.cshtml",
+              "ToolTip": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Views\\Teams\\Add.cshtml",
+              "RelativeToolTip": "Balkana\\Views\\Teams\\Add.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-09-05T07:05:12.903Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
               "Title": "ITeamService.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Services\\Teams\\ITeamService.cs",
               "RelativeDocumentMoniker": "Balkana\\Services\\Teams\\ITeamService.cs",
-              "ToolTip": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Services\\Teams\\ITeamService.cs*",
-              "RelativeToolTip": "Balkana\\Services\\Teams\\ITeamService.cs*",
+              "ToolTip": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Services\\Teams\\ITeamService.cs",
+              "RelativeToolTip": "Balkana\\Services\\Teams\\ITeamService.cs",
               "ViewState": "AgIAAA8AAAAAAAAAAAAAACEAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-05T06:18:20.933Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-05T06:18:20.933Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "TeamServiceModel.cs",
-              "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Services\\Teams\\Models\\TeamServiceModel.cs",
-              "RelativeDocumentMoniker": "Balkana\\Services\\Teams\\Models\\TeamServiceModel.cs",
-              "ToolTip": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Services\\Teams\\Models\\TeamServiceModel.cs",
-              "RelativeToolTip": "Balkana\\Services\\Teams\\Models\\TeamServiceModel.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAtAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-05T06:11:32.79Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 10,
               "Title": "AllTeamsQueryModel.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Models\\Teams\\AllTeamsQueryModel.cs",
               "RelativeDocumentMoniker": "Balkana\\Models\\Teams\\AllTeamsQueryModel.cs",
@@ -252,25 +247,24 @@
               "RelativeToolTip": "Balkana\\Models\\Teams\\AllTeamsQueryModel.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAA7AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-05T06:11:13.098Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-05T06:11:13.098Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 0,
               "Title": "Details.cshtml",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Views\\Teams\\Details.cshtml",
               "RelativeDocumentMoniker": "Balkana\\Views\\Teams\\Details.cshtml",
               "ToolTip": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Views\\Teams\\Details.cshtml",
               "RelativeToolTip": "Balkana\\Views\\Teams\\Details.cshtml",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAABYAAAAYAAAAAAAAAA==",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAABoAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2025-09-05T06:01:18.541Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 5,
               "Title": "Index.cshtml",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Views\\Players\\Index.cshtml",
               "RelativeDocumentMoniker": "Balkana\\Views\\Players\\Index.cshtml",
@@ -278,12 +272,11 @@
               "RelativeToolTip": "Balkana\\Views\\Players\\Index.cshtml",
               "ViewState": "AgIAAAMAAAAAAAAAAAAAAB0AAABBAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-09-05T05:57:19.443Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-05T05:57:19.443Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 6,
               "Title": "Index.cshtml",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Views\\Series\\Index.cshtml",
               "RelativeDocumentMoniker": "Balkana\\Views\\Series\\Index.cshtml",
@@ -291,12 +284,11 @@
               "RelativeToolTip": "Balkana\\Views\\Series\\Index.cshtml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-09-05T05:57:09.092Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-05T05:57:09.092Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 13,
               "Title": "rankings.css",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\rankings.css",
               "RelativeDocumentMoniker": "Balkana\\wwwroot\\css\\rankings.css",
@@ -304,12 +296,11 @@
               "RelativeToolTip": "Balkana\\wwwroot\\css\\rankings.css",
               "ViewState": "AgIAAEACAAAAAAAAAADwv2wCAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
-              "WhenOpened": "2025-09-05T05:50:03.062Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-05T05:50:03.062Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 4,
               "Title": "Index.cshtml",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Views\\Teams\\Index.cshtml",
               "RelativeDocumentMoniker": "Balkana\\Views\\Teams\\Index.cshtml",
@@ -322,7 +313,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 24,
+              "DocumentIndex": 25,
               "Title": "TransfersController.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Controllers\\TransfersController.cs",
               "RelativeDocumentMoniker": "Balkana\\Controllers\\TransfersController.cs",
@@ -330,12 +321,11 @@
               "RelativeToolTip": "Balkana\\Controllers\\TransfersController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-04T09:52:05.373Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-04T09:52:05.373Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 26,
               "Title": "Program.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Program.cs",
               "RelativeDocumentMoniker": "Balkana\\Program.cs",
@@ -343,12 +333,11 @@
               "RelativeToolTip": "Balkana\\Program.cs",
               "ViewState": "AgIAAD8AAAAAAAAAAAAawFIAAABCAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-04T08:00:39.245Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-04T08:00:39.245Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 27,
               "Title": "AddTeams.cshtml",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Views\\Tournaments\\AddTeams.cshtml",
               "RelativeDocumentMoniker": "Balkana\\Views\\Tournaments\\AddTeams.cshtml",
@@ -356,12 +345,11 @@
               "RelativeToolTip": "Balkana\\Views\\Tournaments\\AddTeams.cshtml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAA0AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-09-04T09:02:58.725Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-04T09:02:58.725Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
+              "DocumentIndex": 28,
               "Title": "TeamSelectItem.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Models\\Tournaments\\TeamSelectItem.cs",
               "RelativeDocumentMoniker": "Balkana\\Models\\Tournaments\\TeamSelectItem.cs",
@@ -369,12 +357,11 @@
               "RelativeToolTip": "Balkana\\Models\\Tournaments\\TeamSelectItem.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-04T09:02:00.247Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-04T09:02:00.247Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 22,
               "Title": "TournamentTeamsViewModel.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Models\\Tournaments\\TournamentTeamsViewModel.cs",
               "RelativeDocumentMoniker": "Balkana\\Models\\Tournaments\\TournamentTeamsViewModel.cs",
@@ -382,12 +369,11 @@
               "RelativeToolTip": "Balkana\\Models\\Tournaments\\TournamentTeamsViewModel.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-04T09:01:33.178Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-04T09:01:33.178Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 24,
               "Title": "Index.cshtml",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Views\\Tournaments\\Index.cshtml",
               "RelativeDocumentMoniker": "Balkana\\Views\\Tournaments\\Index.cshtml",
@@ -395,12 +381,11 @@
               "RelativeToolTip": "Balkana\\Views\\Tournaments\\Index.cshtml",
               "ViewState": "AgIAACoAAAAAAAAAAAAiwDgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-09-04T08:43:55.796Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-04T08:43:55.796Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 14,
               "Title": "Details.cshtml",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Views\\Tournaments\\Details.cshtml",
               "RelativeDocumentMoniker": "Balkana\\Views\\Tournaments\\Details.cshtml",
@@ -408,12 +393,11 @@
               "RelativeToolTip": "Balkana\\Views\\Tournaments\\Details.cshtml",
               "ViewState": "AgIAANgAAAAAAAAAAAAmwOkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-09-04T08:17:14.181Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-04T08:17:14.181Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 20,
               "Title": "tournament.css",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\tournament.css",
               "RelativeDocumentMoniker": "Balkana\\wwwroot\\css\\tournament.css",
@@ -421,12 +405,11 @@
               "RelativeToolTip": "Balkana\\wwwroot\\css\\tournament.css",
               "ViewState": "AgIAACAAAAAAAAAAAAAcwDsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
-              "WhenOpened": "2025-09-04T13:33:32.842Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-04T13:33:32.842Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 15,
               "Title": "TournamentsController.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Controllers\\TournamentsController.cs",
               "RelativeDocumentMoniker": "Balkana\\Controllers\\TournamentsController.cs",
@@ -434,12 +417,11 @@
               "RelativeToolTip": "Balkana\\Controllers\\TournamentsController.cs",
               "ViewState": "AgIAACUAAAAAAAAAAAD4vzwAAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-04T08:15:25.881Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-04T08:15:25.881Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 30,
+              "DocumentIndex": 31,
               "Title": "BracketDto.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Data\\DTOs\\Bracket\\BracketDto.cs",
               "RelativeDocumentMoniker": "Balkana\\Data\\DTOs\\Bracket\\BracketDto.cs",
@@ -447,12 +429,11 @@
               "RelativeToolTip": "Balkana\\Data\\DTOs\\Bracket\\BracketDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-04T08:14:54.898Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-04T08:14:54.898Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 7,
               "Title": "TeamsController.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Controllers\\TeamsController.cs",
               "RelativeDocumentMoniker": "Balkana\\Controllers\\TeamsController.cs",
@@ -460,12 +441,11 @@
               "RelativeToolTip": "Balkana\\Controllers\\TeamsController.cs",
               "ViewState": "AgIAABcAAAAAAAAAAAAmwCgAAAA+AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-04T08:03:21.469Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-04T08:03:21.469Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 32,
+              "DocumentIndex": 33,
               "Title": "MappingProfile.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Data\\Infrastructure\\MappingProfile.cs",
               "RelativeDocumentMoniker": "Balkana\\Data\\Infrastructure\\MappingProfile.cs",
@@ -477,19 +457,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 33,
-              "Title": "TeamDetailsServiceModel.cs",
-              "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Services\\Teams\\Models\\TeamDetailsServiceModel.cs",
-              "RelativeDocumentMoniker": "Balkana\\Services\\Teams\\Models\\TeamDetailsServiceModel.cs",
-              "ToolTip": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Services\\Teams\\Models\\TeamDetailsServiceModel.cs",
-              "RelativeToolTip": "Balkana\\Services\\Teams\\Models\\TeamDetailsServiceModel.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAABHAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-04T06:45:18.873Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 8,
               "Title": "TeamService.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Services\\Teams\\TeamService.cs",
               "RelativeDocumentMoniker": "Balkana\\Services\\Teams\\TeamService.cs",
@@ -497,12 +465,11 @@
               "RelativeToolTip": "Balkana\\Services\\Teams\\TeamService.cs",
               "ViewState": "AgIAALIAAAAAAAAAAAAqwMgAAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-04T06:40:12.933Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-04T06:40:12.933Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 37,
+              "DocumentIndex": 36,
               "Title": "PlayerPicture.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Data\\Models\\PlayerPicture.cs",
               "RelativeDocumentMoniker": "Balkana\\Data\\Models\\PlayerPicture.cs",
@@ -514,7 +481,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 17,
               "Title": "Player.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Data\\Models\\Player.cs",
               "RelativeDocumentMoniker": "Balkana\\Data\\Models\\Player.cs",
@@ -522,12 +489,11 @@
               "RelativeToolTip": "Balkana\\Data\\Models\\Player.cs",
               "ViewState": "AgIAABEAAAAAAAAAAAAIwC0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-04T06:41:55.674Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-04T06:41:55.674Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 34,
+              "DocumentIndex": 1,
               "Title": "TeamStaffServiceModel.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Services\\Teams\\Models\\TeamStaffServiceModel.cs",
               "RelativeDocumentMoniker": "Balkana\\Services\\Teams\\Models\\TeamStaffServiceModel.cs",
@@ -535,11 +501,12 @@
               "RelativeToolTip": "Balkana\\Services\\Teams\\Models\\TeamStaffServiceModel.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAuAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-04T06:41:04.876Z"
+              "WhenOpened": "2025-09-04T06:41:04.876Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 38,
+              "DocumentIndex": 37,
               "Title": "Index.cshtml",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Views\\Home\\Index.cshtml",
               "RelativeDocumentMoniker": "Balkana\\Views\\Home\\Index.cshtml",
@@ -551,7 +518,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 40,
+              "DocumentIndex": 39,
               "Title": "script.js",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\js\\script.js",
               "RelativeDocumentMoniker": "Balkana\\wwwroot\\js\\script.js",
@@ -563,7 +530,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 31,
+              "DocumentIndex": 32,
               "Title": "odlLayout.cshtml",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Views\\Shared\\odlLayout.cshtml",
               "RelativeDocumentMoniker": "Balkana\\Views\\Shared\\odlLayout.cshtml",
@@ -575,7 +542,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 11,
               "Title": "_Layout.cshtml",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Views\\Shared\\_Layout.cshtml",
               "RelativeDocumentMoniker": "Balkana\\Views\\Shared\\_Layout.cshtml",
@@ -583,12 +550,11 @@
               "RelativeToolTip": "Balkana\\Views\\Shared\\_Layout.cshtml",
               "ViewState": "AgIAADYAAAAAAAAAAAAAAEMAAAB5AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-09-04T06:07:07.699Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-04T06:07:07.699Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 39,
+              "DocumentIndex": 38,
               "Title": "site.css",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\site.css",
               "RelativeDocumentMoniker": "Balkana\\wwwroot\\css\\site.css",
@@ -600,7 +566,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 21,
               "Title": "DoubleEliminationBracketService.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Services\\Bracket\\DoubleEliminationBracketService.cs",
               "RelativeDocumentMoniker": "Balkana\\Services\\Bracket\\DoubleEliminationBracketService.cs",
@@ -608,12 +574,11 @@
               "RelativeToolTip": "Balkana\\Services\\Bracket\\DoubleEliminationBracketService.cs",
               "ViewState": "AgIAAF8AAAAAAAAAAAAiwGoAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T13:55:15.253Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T13:55:15.253Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 42,
+              "DocumentIndex": 41,
               "Title": "BracketType.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Data\\Models\\BracketType.cs",
               "RelativeDocumentMoniker": "Balkana\\Data\\Models\\BracketType.cs",
@@ -625,7 +590,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 35,
+              "DocumentIndex": 34,
               "Title": "PlayerService.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Services\\Players\\PlayerService.cs",
               "RelativeDocumentMoniker": "Balkana\\Services\\Players\\PlayerService.cs",
@@ -637,7 +602,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 23,
               "Title": "ApplicationDbContext.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Data\\ApplicationDbContext.cs",
               "RelativeDocumentMoniker": "Balkana\\Data\\ApplicationDbContext.cs",
@@ -645,12 +610,11 @@
               "RelativeToolTip": "Balkana\\Data\\ApplicationDbContext.cs",
               "ViewState": "AgIAAIsAAAAAAAAAAAD4v5gAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T13:30:16.968Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T13:30:16.968Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 43,
+              "DocumentIndex": 42,
               "Title": "TournamentTeam.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Data\\Models\\TournamentTeam.cs",
               "RelativeDocumentMoniker": "Balkana\\Data\\Models\\TournamentTeam.cs",
@@ -662,7 +626,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 41,
+              "DocumentIndex": 40,
               "Title": "BracketService.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Services\\Bracket\\BracketService.cs",
               "RelativeDocumentMoniker": "Balkana\\Services\\Bracket\\BracketService.cs",
@@ -674,7 +638,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 36,
+              "DocumentIndex": 35,
               "Title": "TeamPosition.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Data\\Models\\TeamPosition.cs",
               "RelativeDocumentMoniker": "Balkana\\Data\\Models\\TeamPosition.cs",
@@ -686,7 +650,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 18,
               "Title": "PlayerTeamTransfer.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Data\\Models\\PlayerTeamTransfer.cs",
               "RelativeDocumentMoniker": "Balkana\\Data\\Models\\PlayerTeamTransfer.cs",
@@ -694,12 +658,11 @@
               "RelativeToolTip": "Balkana\\Data\\Models\\PlayerTeamTransfer.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T12:54:34.261Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T12:54:34.261Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 16,
               "Title": "Team.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Data\\Models\\Team.cs",
               "RelativeDocumentMoniker": "Balkana\\Data\\Models\\Team.cs",
@@ -707,12 +670,11 @@
               "RelativeToolTip": "Balkana\\Data\\Models\\Team.cs",
               "ViewState": "AgIAAA4AAAAAAAAAAAAIwCoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T12:54:23.477Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T12:54:23.477Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 44,
+              "DocumentIndex": 43,
               "Title": "MatchLoL.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Data\\Models\\MatchLoL.cs",
               "RelativeDocumentMoniker": "Balkana\\Data\\Models\\MatchLoL.cs",
@@ -724,7 +686,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 45,
+              "DocumentIndex": 44,
               "Title": "MatchCS.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Data\\Models\\MatchCS.cs",
               "RelativeDocumentMoniker": "Balkana\\Data\\Models\\MatchCS.cs",
@@ -736,7 +698,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 46,
+              "DocumentIndex": 45,
               "Title": "Match.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Data\\Models\\Match.cs",
               "RelativeDocumentMoniker": "Balkana\\Data\\Models\\Match.cs",
@@ -748,7 +710,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 29,
+              "DocumentIndex": 30,
               "Title": "Series.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Data\\Models\\Series.cs",
               "RelativeDocumentMoniker": "Balkana\\Data\\Models\\Series.cs",
@@ -756,12 +718,11 @@
               "RelativeToolTip": "Balkana\\Data\\Models\\Series.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T12:53:59.31Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T12:53:59.31Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 19,
               "Title": "Tournament.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Data\\Models\\Tournament.cs",
               "RelativeDocumentMoniker": "Balkana\\Data\\Models\\Tournament.cs",
@@ -769,12 +730,11 @@
               "RelativeToolTip": "Balkana\\Data\\Models\\Tournament.cs",
               "ViewState": "AgIAAA8AAAAAAAAAAAAAAAUAAAAbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T12:53:51.727Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T12:53:51.727Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 47,
+              "DocumentIndex": 46,
               "Title": "Organizer.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Data\\Models\\Organizer.cs",
               "RelativeDocumentMoniker": "Balkana\\Data\\Models\\Organizer.cs",
@@ -786,7 +746,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 48,
+              "DocumentIndex": 47,
               "Title": "Stats.cshtml",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Views\\Players\\Stats.cshtml",
               "RelativeDocumentMoniker": "Balkana\\Views\\Players\\Stats.cshtml",
@@ -798,7 +758,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 12,
               "Title": "Profile.cshtml",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Views\\Players\\Profile.cshtml",
               "RelativeDocumentMoniker": "Balkana\\Views\\Players\\Profile.cshtml",
@@ -806,25 +766,24 @@
               "RelativeToolTip": "Balkana\\Views\\Players\\Profile.cshtml",
               "ViewState": "AgIAAA8AAAAAAAAAAAAAAA0AAAAxAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-09-03T12:38:56.466Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T12:38:56.466Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 3,
               "Title": "_TeamsPartial.cshtml",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Views\\Teams\\_TeamsPartial.cshtml",
               "RelativeDocumentMoniker": "Balkana\\Views\\Teams\\_TeamsPartial.cshtml",
               "ToolTip": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Views\\Teams\\_TeamsPartial.cshtml",
               "RelativeToolTip": "Balkana\\Views\\Teams\\_TeamsPartial.cshtml",
-              "ViewState": "AgIAAEgAAAAAAAAAAAAAAFkAAABJAAAAAAAAAA==",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAAAAAAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2025-09-03T12:38:15.763Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 49,
+              "DocumentIndex": 48,
               "Title": "appsettings.json",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\appsettings.json",
               "RelativeDocumentMoniker": "Balkana\\appsettings.json",
@@ -836,7 +795,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 50,
+              "DocumentIndex": 49,
               "Title": "FaceitMatchImporter.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Services\\Matches\\Models\\FaceitMatchImporter.cs",
               "RelativeDocumentMoniker": "Balkana\\Services\\Matches\\Models\\FaceitMatchImporter.cs",
@@ -848,7 +807,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 28,
+              "DocumentIndex": 29,
               "Title": "MatchHistoryController.cs",
               "DocumentMoniker": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Controllers\\MatchHistoryController.cs",
               "RelativeDocumentMoniker": "Balkana\\Controllers\\MatchHistoryController.cs",
@@ -856,8 +815,7 @@
               "RelativeToolTip": "Balkana\\Controllers\\MatchHistoryController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-03T12:03:34.232Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-03T12:03:34.232Z"
             }
           ]
         }
