@@ -1,0 +1,18 @@
+# Visual Studio cache and settings
+.vs/
+*.db
+*.db-shm
+*.db-wal
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+
+# Other
+*.vsidx
+*.dtbcache
+*.futdcache.v2
