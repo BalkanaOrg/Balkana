@@ -11,7 +11,6 @@ namespace Balkana.Services.Teams.Models
         public string LogoURL { get; init; }
         public int GameId { get; init; }
         public int yearFounded { get; init; }
-        public int YearFounded { get; init; }
         public string GameName { get; init; }
 
         public IEnumerable<PlayerServiceModel> Players { get; set; } = new List<PlayerServiceModel>();

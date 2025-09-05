@@ -33,10 +33,14 @@ namespace Balkana.Controllers
                 AllTeamsQueryModel.TeamsPerPage);
 
             var teamGames = this.teams.GetAllGames();
+            var absoluteNumberTeams = this.teams.AbsoluteNumberOfTeams();
 
             query.Games = teamGames;
             query.TotalTeams = queryResult.TotalTeams;
             query.Teams = queryResult.Teams;
+            query.AbsoluteNumberOfTeams = absoluteNumberTeams;
+
+            query.SelectedGame = query.Game;
 
             return View(query);
         }

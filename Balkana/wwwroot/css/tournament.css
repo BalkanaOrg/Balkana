@@ -1,0 +1,59 @@
+﻿.bracket-container {
+    display: grid;
+    grid-template-columns: repeat(6, 220px); /* one column per round */
+    grid-auto-rows: min-content;
+    gap: 40px 40px;
+    padding: 20px;
+    overflow-x: auto;
+    background: #111;
+    color: #fff;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Each round is stacked vertically inside the column */
+.ub-round, .lb-round, .gf-bracket .round {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Matches */
+.match {
+    background: #222;
+    border: 2px solid #555;
+    border-radius: 5px;
+    padding: 5px 10px;
+    position: relative;
+    width: 200px;
+}
+
+/* Teams */
+.team {
+    padding: 2px 0;
+}
+
+.team-a {
+    font-weight: bold;
+}
+
+.team-b {
+    font-style: italic;
+}
+
+/* Round titles */
+.round-title {
+    font-weight: bold;
+    color: #ffcc00;
+    text-align: center;
+}
+
+/* Connectors (example, can be upgraded to curves later) */
+.match::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -40px;
+    width: 40px;
+    height: 2px;
+    background: #fff;
+}

@@ -459,10 +459,10 @@ namespace Balkana.Migrations
                     b.Property<int>("Round")
                         .HasColumnType("int");
 
-                    b.Property<int>("TeamAId")
+                    b.Property<int?>("TeamAId")
                         .HasColumnType("int");
 
-                    b.Property<int>("TeamBId")
+                    b.Property<int?>("TeamBId")
                         .HasColumnType("int");
 
                     b.Property<int>("TournamentId")
@@ -1328,14 +1328,12 @@ namespace Balkana.Migrations
                     b.HasOne("Balkana.Data.Models.Team", "TeamA")
                         .WithMany("SeriesAsTeam1")
                         .HasForeignKey("TeamAId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Balkana.Data.Models.Team", "TeamB")
                         .WithMany("SeriesAsTeam2")
                         .HasForeignKey("TeamBId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Balkana.Data.Models.Tournament", "Tournament")
                         .WithMany("Series")

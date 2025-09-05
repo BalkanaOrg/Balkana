@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "mQ5AXypUgG6UPwFo93ugweSaXVeI7CPRXeEvJBOgDKk=",
+  "Hash": "bZtXbXrChhhHWtwxidBgdQh7P9kO/qfJeuhEsWiEcy0=",
   "Source": "Balkana",
   "BasePath": "_content/Balkana",
   "Mode": "Default",
@@ -2264,6 +2264,27 @@
       "OriginalItemSpec": "wwwroot\\Balkana.png"
     },
     {
+      "Identity": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\rankings.css",
+      "SourceId": "Balkana",
+      "SourceType": "Discovered",
+      "ContentRoot": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\",
+      "BasePath": "_content/Balkana",
+      "RelativePath": "css/rankings#[.{fingerprint}]?.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "u4cxkwayc0",
+      "Integrity": "UhAMOX8pnG+nRs1pfXybTdMW78f+YV7hGVf9YIhd9eU=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\css\\rankings.css"
+    },
+    {
       "Identity": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\site.css",
       "SourceId": "Balkana",
       "SourceType": "Discovered",
@@ -2283,6 +2304,27 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\css\\site.css"
+    },
+    {
+      "Identity": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\tournament.css",
+      "SourceId": "Balkana",
+      "SourceType": "Discovered",
+      "ContentRoot": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\",
+      "BasePath": "_content/Balkana",
+      "RelativePath": "css/tournament#[.{fingerprint}]?.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "27kxjl90be",
+      "Integrity": "ftuYyNB+uZ0zZL3qcfQfMl6B0rdMfNLalfGSEgoF8mo=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\css\\tournament.css"
     },
     {
       "Identity": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\favicon.ico",
@@ -6417,6 +6459,88 @@
       ]
     },
     {
+      "Route": "css/rankings.css",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\rankings.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "12767"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"UhAMOX8pnG+nRs1pfXybTdMW78f+YV7hGVf9YIhd9eU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 05 Sep 2025 05:50:43 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-UhAMOX8pnG+nRs1pfXybTdMW78f+YV7hGVf9YIhd9eU="
+        }
+      ]
+    },
+    {
+      "Route": "css/rankings.u4cxkwayc0.css",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\rankings.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "12767"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"UhAMOX8pnG+nRs1pfXybTdMW78f+YV7hGVf9YIhd9eU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 05 Sep 2025 05:50:43 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "u4cxkwayc0"
+        },
+        {
+          "Name": "label",
+          "Value": "css/rankings.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-UhAMOX8pnG+nRs1pfXybTdMW78f+YV7hGVf9YIhd9eU="
+        }
+      ]
+    },
+    {
       "Route": "css/site.ac5cmbrfv8.css",
       "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\site.css",
       "Selectors": [],
@@ -6495,6 +6619,88 @@
         {
           "Name": "integrity",
           "Value": "sha256-CvgM48MjIFZKUVzcc4hQfYj5bQCVHQp5xrgAEkqcH+c="
+        }
+      ]
+    },
+    {
+      "Route": "css/tournament.27kxjl90be.css",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\tournament.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1108"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"ftuYyNB+uZ0zZL3qcfQfMl6B0rdMfNLalfGSEgoF8mo=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 04 Sep 2025 13:49:58 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "27kxjl90be"
+        },
+        {
+          "Name": "label",
+          "Value": "css/tournament.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-ftuYyNB+uZ0zZL3qcfQfMl6B0rdMfNLalfGSEgoF8mo="
+        }
+      ]
+    },
+    {
+      "Route": "css/tournament.css",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\tournament.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1108"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"ftuYyNB+uZ0zZL3qcfQfMl6B0rdMfNLalfGSEgoF8mo=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 04 Sep 2025 13:49:58 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-ftuYyNB+uZ0zZL3qcfQfMl6B0rdMfNLalfGSEgoF8mo="
         }
       ]
     },

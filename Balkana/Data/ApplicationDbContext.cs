@@ -124,16 +124,22 @@
                 .HasForeignKey(m => m.GameId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            modelBuilder.Entity<Team>()
-                .HasMany(t => t.SeriesAsTeam1)
-                .WithOne(s => s.TeamA)
-                .HasForeignKey(s => s.TeamAId)
-                .OnDelete(DeleteBehavior.NoAction);
+            //modelBuilder.Entity<Team>()
+            //    .HasMany(t => t.SeriesAsTeam1)
+            //    .WithOne(s => s.TeamA)
+            //    .HasForeignKey(s => s.TeamAId)
+            //    .OnDelete(DeleteBehavior.NoAction);
 
-            modelBuilder.Entity<Team>()
-                .HasMany(t => t.SeriesAsTeam2)
-                .WithOne(s => s.TeamB)
-                .HasForeignKey(s => s.TeamBId)
+            //modelBuilder.Entity<Team>()
+            //    .HasMany(t => t.SeriesAsTeam2)
+            //    .WithOne(s => s.TeamB)
+            //    .HasForeignKey(s => s.TeamBId)
+            //    .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Series>()
+                .HasMany(s => s.Matches)
+                .WithOne(m => m.Series)
+                .HasForeignKey(m => m.SeriesId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Series>()
@@ -143,10 +149,17 @@
                 .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Series>()
-                .HasMany(s => s.Matches)
-                .WithOne(m => m.Series)
-                .HasForeignKey(m => m.SeriesId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .HasOne(c=>c.TeamA)
+                .WithMany(t => t.SeriesAsTeam1)
+                .HasForeignKey(c => c.TeamAId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .IsRequired(false);
+            modelBuilder.Entity<Series>()
+                .HasOne(c=>c.TeamB)
+                .WithMany(t => t.SeriesAsTeam2)
+                .HasForeignKey(c => c.TeamBId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .IsRequired(false);
 
             modelBuilder.Entity<Match>()
                 .HasMany(m => m.PlayerStats)
@@ -198,18 +211,6 @@
                 .HasOne(s => s.Tournament)
                 .WithMany(t => t.Series)
                 .HasForeignKey(s => s.TournamentId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Series>()
-                .HasOne(s => s.TeamA)
-                .WithMany(t => t.SeriesAsTeam1)
-                .HasForeignKey(s => s.TeamAId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Series>()
-                .HasOne(s => s.TeamB)
-                .WithMany(t => t.SeriesAsTeam2)
-                .HasForeignKey(s => s.TeamBId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             //SOCIALS

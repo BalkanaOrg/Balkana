@@ -25,6 +25,8 @@
 
         public decimal PrizePool { get; set; } = 0;
 
+        //public string BannerUrl { get; set; }
+
         public int GameId { get; set; }
         public Game Game { get; set; }
 

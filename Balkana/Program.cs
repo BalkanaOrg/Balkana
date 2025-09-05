@@ -3,6 +3,7 @@ using Balkana.Data;
 using Balkana.Data.Infrastructure;
 using Balkana.Data.Repositories;
 using Balkana.Services;
+using Balkana.Services.Bracket;
 using Balkana.Services.Matches;
 using Balkana.Services.Matches.Models;
 using Balkana.Services.Organizers;
@@ -79,6 +80,7 @@ void ConfigureServices(IServiceCollection services)
     });
 
     builder.Services.AddScoped<MatchHistoryService>();
+    builder.Services.AddScoped<DoubleEliminationBracketService>();
     //services.AddTransient<ISeriesS, MatchService>();
 
     //services.AddTransient<>

@@ -1,0 +1,24 @@
+﻿@model Balkana.Models.Tournaments.TournamentTeamsViewModel
+
+@{
+    ViewData["Title"] = "Add Teams to Tournament";
+}
+
+<h2>Add Teams to @Model.TournamentName</h2>
+
+<form asp-action="AddTeams" method="post">
+    <input type="hidden" asp-for="TournamentId" />
+    <input type="hidden" asp-for="TournamentName" />
+
+    <div class="mb-3">
+        <label asp-for="SelectedTeamIds" class="form-label">Select Teams</label>
+        <select asp-for="SelectedTeamIds"
+                asp-items="@(new MultiSelectList(Model.AvailableTeams, "Id", "FullName", Model.SelectedTeamIds))"
+                class="form-control"
+                multiple>
+        </select>
+        <small class="form-text text-muted">Hold Ctrl (or Cmd) to select multiple teams.</small>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Teams</button>
+</form>

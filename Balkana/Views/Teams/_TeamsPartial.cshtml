@@ -2,7 +2,7 @@
 @{
     int accordionCount = 0;
 }
-@foreach (var team in Model)
+@* @foreach (var team in Model)
 {
     <div class="accordion-item bg-dark text-light border border-secondary">
         <h2 class="accordion-header">
@@ -61,4 +61,72 @@
         </div>
     </div>
     accordionCount++;
+} *@
+
+@{
+    int rank = 1;
+}
+@foreach (var team in Model)
+{
+    <div class="team-card" data-rank="@rank">
+        <!-- Rank Badge -->
+        <div class="rank-badge rank-@rank">
+            @rank
+        </div>
+
+        <!-- Team Content -->
+        <div class="team-content">
+            <div class="team-header">
+                <div class="team-logo-container">
+                    <img src="@team.LogoURL"
+                         alt="@team.FullName"
+                         class="team-logo"
+                         onerror="this.src='https://ui-avatars.com/api/?name=@team.Tag&background=8b0000&color=fff&size=64'" />
+                    <div class="logo-overlay"></div>
+                </div>
+
+                <div class="team-info">
+                    <h3 class="team-name">@team.FullName</h3>
+                    <p class="team-details">Founded @team.yearFounded</p>
+                </div>
+
+                <div class="team-points">
+                    <div class="points-value">@((2500 - (rank * 50)) + new Random().Next(-50, 50))</div>
+                    <div class="points-label">Points</div>
+                </div>
+            </div>
+
+            <!-- Team Stats -->
+            <div class="team-stats">
+                <div class="stat-item">
+                    <div class="stat-value wins">@(30 - rank + new Random().Next(0, 10))</div>
+                    <div class="stat-label">Wins</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value losses">@(10 + rank + new Random().Next(0, 8))</div>
+                    <div class="stat-label">Losses</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value winrate">@(85 - (rank * 3))%</div>
+                    <div class="stat-label">Win Rate</div>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="team-actions">
+                <a asp-controller="Teams"
+                   asp-action="Details"
+                   asp-route-id="@team.Id"
+                   asp-route-information="@team.GetInformation()"
+                   class="view-details-btn">
+                    View Details
+                </a>
+            </div>
+        </div>
+
+        <!-- Hover Effect Overlay -->
+        <div class="hover-overlay"></div>
+    </div>
+
+    rank++;
 }

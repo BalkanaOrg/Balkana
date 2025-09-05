@@ -31,6 +31,7 @@ namespace Balkana.Services.Teams
 
         bool GameExists(int gameId);
         public IEnumerable<string> GetAllGames();
+        public int AbsoluteNumberOfTeams();
         public IEnumerable<TeamGameServiceModel> AllGames();
         public IEnumerable<TeamStaffServiceModel> AllPlayers(int teamId);
     }

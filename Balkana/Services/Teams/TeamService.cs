@@ -194,5 +194,11 @@
 
             return teamModels;
         }
+
+        public int AbsoluteNumberOfTeams()
+        {
+            var count = this.data.Teams.Count();
+            return count;
+        }
     }
 }

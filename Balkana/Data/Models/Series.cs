@@ -11,10 +11,10 @@ namespace Balkana.Data.Models
         public int TournamentId { get; set; }
         public Tournament Tournament { get; set; }
 
-        public int TeamAId { get; set; }
-        public int TeamBId { get; set; }
-        public Team TeamA { get; set; }
-        public Team TeamB { get; set; }
+        public int? TeamAId { get; set; }
+        public int? TeamBId { get; set; }
+        public Team? TeamA { get; set; }
+        public Team? TeamB { get; set; }
 
         public DateTime DatePlayed { get; set; }
 

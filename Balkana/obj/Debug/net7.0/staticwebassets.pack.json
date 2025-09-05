@@ -185,8 +185,16 @@
       "PackagePath": "staticwebassets\\Balkana.png"
     },
     {
+      "Id": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\rankings.css",
+      "PackagePath": "staticwebassets\\css\\rankings.css"
+    },
+    {
       "Id": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\site.css",
       "PackagePath": "staticwebassets\\css\\site.css"
+    },
+    {
+      "Id": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\tournament.css",
+      "PackagePath": "staticwebassets\\css\\tournament.css"
     },
     {
       "Id": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\favicon.ico",

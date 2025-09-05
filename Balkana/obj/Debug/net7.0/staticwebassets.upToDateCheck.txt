@@ -43,7 +43,9 @@ C:\Users\1bulg\.nuget\packages\bootstrap\5.3.3\contentFiles\any\any\wwwroot\js\b
 C:\Users\1bulg\.nuget\packages\bootstrap\5.3.3\contentFiles\any\any\wwwroot\js\bootstrap.min.js
 C:\Users\1bulg\.nuget\packages\bootstrap\5.3.3\contentFiles\any\any\wwwroot\js\bootstrap.min.js.map
 wwwroot\Balkana.png
+wwwroot\css\rankings.css
 wwwroot\css\site.css
+wwwroot\css\tournament.css
 wwwroot\favicon.ico
 wwwroot\js\script.js
 wwwroot\js\site.js

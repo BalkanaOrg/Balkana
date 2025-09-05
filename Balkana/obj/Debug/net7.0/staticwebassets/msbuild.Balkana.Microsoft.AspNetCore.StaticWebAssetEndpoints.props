@@ -408,6 +408,18 @@
       <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"s35ty4nyc5"},{"Name":"integrity","Value":"sha256-GKEF18s44B5e0MolXAkpkqLiEbOVlKf6VyYr/G/E6pw="},{"Name":"label","Value":"_content/Balkana/css/bootstrap.css"}]]]></EndpointProperties>
       <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"281046"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u0022GKEF18s44B5e0MolXAkpkqLiEbOVlKf6VyYr/G/E6pw=\u0022"},{"Name":"Last-Modified","Value":"Wed, 21 Feb 2024 17:42:26 GMT"}]]]></ResponseHeaders>
     </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/Balkana/css/rankings.css">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\rankings.css'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-UhAMOX8pnG\u002BnRs1pfXybTdMW78f\u002BYV7hGVf9YIhd9eU="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"12767"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u0022UhAMOX8pnG\u002BnRs1pfXybTdMW78f\u002BYV7hGVf9YIhd9eU=\u0022"},{"Name":"Last-Modified","Value":"Fri, 05 Sep 2025 05:50:43 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/Balkana/css/rankings.u4cxkwayc0.css">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\rankings.css'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"u4cxkwayc0"},{"Name":"integrity","Value":"sha256-UhAMOX8pnG\u002BnRs1pfXybTdMW78f\u002BYV7hGVf9YIhd9eU="},{"Name":"label","Value":"_content/Balkana/css/rankings.css"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"12767"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u0022UhAMOX8pnG\u002BnRs1pfXybTdMW78f\u002BYV7hGVf9YIhd9eU=\u0022"},{"Name":"Last-Modified","Value":"Fri, 05 Sep 2025 05:50:43 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
     <StaticWebAssetEndpoint Include="_content/Balkana/css/site.ac5cmbrfv8.css">
       <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\site.css'))</AssetFile>
       <Selectors><![CDATA[[]]]></Selectors>
@@ -419,6 +431,18 @@
       <Selectors><![CDATA[[]]]></Selectors>
       <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-CvgM48MjIFZKUVzcc4hQfYj5bQCVHQp5xrgAEkqcH\u002Bc="}]]]></EndpointProperties>
       <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"21377"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u0022CvgM48MjIFZKUVzcc4hQfYj5bQCVHQp5xrgAEkqcH\u002Bc=\u0022"},{"Name":"Last-Modified","Value":"Thu, 04 Sep 2025 06:31:24 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/Balkana/css/tournament.27kxjl90be.css">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\tournament.css'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"27kxjl90be"},{"Name":"integrity","Value":"sha256-ftuYyNB\u002BuZ0zZL3qcfQfMl6B0rdMfNLalfGSEgoF8mo="},{"Name":"label","Value":"_content/Balkana/css/tournament.css"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"1108"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u0022ftuYyNB\u002BuZ0zZL3qcfQfMl6B0rdMfNLalfGSEgoF8mo=\u0022"},{"Name":"Last-Modified","Value":"Thu, 04 Sep 2025 13:49:58 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/Balkana/css/tournament.css">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\tournament.css'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-ftuYyNB\u002BuZ0zZL3qcfQfMl6B0rdMfNLalfGSEgoF8mo="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"1108"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u0022ftuYyNB\u002BuZ0zZL3qcfQfMl6B0rdMfNLalfGSEgoF8mo=\u0022"},{"Name":"Last-Modified","Value":"Thu, 04 Sep 2025 13:49:58 GMT"}]]]></ResponseHeaders>
     </StaticWebAssetEndpoint>
     <StaticWebAssetEndpoint Include="_content/Balkana/favicon.54sbpbij6u.ico">
       <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\favicon.ico'))</AssetFile>

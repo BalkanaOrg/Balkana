@@ -5011,6 +5011,88 @@
       ]
     },
     {
+      "Route": "css/rankings.css",
+      "AssetFile": "css/rankings.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "12767"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"UhAMOX8pnG+nRs1pfXybTdMW78f+YV7hGVf9YIhd9eU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 05 Sep 2025 05:50:43 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-UhAMOX8pnG+nRs1pfXybTdMW78f+YV7hGVf9YIhd9eU="
+        }
+      ]
+    },
+    {
+      "Route": "css/rankings.u4cxkwayc0.css",
+      "AssetFile": "css/rankings.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "12767"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"UhAMOX8pnG+nRs1pfXybTdMW78f+YV7hGVf9YIhd9eU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 05 Sep 2025 05:50:43 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "u4cxkwayc0"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-UhAMOX8pnG+nRs1pfXybTdMW78f+YV7hGVf9YIhd9eU="
+        },
+        {
+          "Name": "label",
+          "Value": "css/rankings.css"
+        }
+      ]
+    },
+    {
       "Route": "css/site.ac5cmbrfv8.css",
       "AssetFile": "css/site.css",
       "Selectors": [],
@@ -5089,6 +5171,88 @@
         {
           "Name": "integrity",
           "Value": "sha256-CvgM48MjIFZKUVzcc4hQfYj5bQCVHQp5xrgAEkqcH+c="
+        }
+      ]
+    },
+    {
+      "Route": "css/tournament.27kxjl90be.css",
+      "AssetFile": "css/tournament.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1108"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"ftuYyNB+uZ0zZL3qcfQfMl6B0rdMfNLalfGSEgoF8mo=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 04 Sep 2025 13:49:58 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "27kxjl90be"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-ftuYyNB+uZ0zZL3qcfQfMl6B0rdMfNLalfGSEgoF8mo="
+        },
+        {
+          "Name": "label",
+          "Value": "css/tournament.css"
+        }
+      ]
+    },
+    {
+      "Route": "css/tournament.css",
+      "AssetFile": "css/tournament.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1108"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"ftuYyNB+uZ0zZL3qcfQfMl6B0rdMfNLalfGSEgoF8mo=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 04 Sep 2025 13:49:58 GMT"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-ftuYyNB+uZ0zZL3qcfQfMl6B0rdMfNLalfGSEgoF8mo="
         }
       ]
     },
