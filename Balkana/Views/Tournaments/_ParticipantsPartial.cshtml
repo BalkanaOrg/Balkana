@@ -1,0 +1,39 @@
+﻿@using Balkana.Data.Models
+
+
+<h4>Participating Teams</h4>
+<div class="d-flex flex-wrap">
+    @foreach (var team in (List<Team>)ViewData["ParticipatingTeams"])
+    {
+        var players = team.Players.Take(5).ToList();
+        <a asp-controller="Teams"
+           asp-action="Details"
+           asp-route-id="@team.Id"
+           asp-route-information="@team.GetInformation()">
+            <div class="team-card m-2 position-relative text-center">
+
+                <img src="@team.LogoURL" class="team-logo card-img-top" alt="@team.FullName" />
+
+                <div class="team-players position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center">
+                    @if (players.Any())
+                    {
+                        @foreach (var p in players)
+                        {
+                            <a asp-controller="Players" asp-action="Profile" asp-route-id="@p.Id" asp-route-information="@p.GetInformation()" style="text-decoration:none;">
+                                <small class="player-name">@p.Nickname</small>
+                            </a>
+                        }
+                    }
+                    else
+                    {
+                        <small class="text-muted">No players</small>
+                    }
+                </div>
+
+                <div class="card-body p-1">
+                    <small>@team.FullName</small>
+                </div>
+            </div>
+        </a>
+    }
+</div>

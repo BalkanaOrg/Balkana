@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Balkana.Data.DTOs.Bracket;
 using Balkana.Models.Tournaments;
 using Balkana.Services.Bracket;
+using AutoMapper;
 
 namespace Balkana.Controllers
 {
@@ -12,11 +13,15 @@ namespace Balkana.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly DoubleEliminationBracketService bracketService;
+        private readonly IMapper mapper;
+        //private readonly ITournamentService tournaments;
 
-        public TournamentsController(ApplicationDbContext context, DoubleEliminationBracketService bracketService)
+        public TournamentsController(ApplicationDbContext context, DoubleEliminationBracketService bracketService, IMapper mapper)
         {
             _context = context;
             this.bracketService = bracketService;
+            //this.tournaments = tournaments;
+            this.mapper = mapper;
         }
 
         // GET: Tournament/Index
@@ -43,6 +48,8 @@ namespace Balkana.Controllers
                 .Include(t => t.Series).ThenInclude(s => s.TeamB)
                 .Include(t => t.Series).ThenInclude(s => s.NextSeries)
                 .FirstOrDefaultAsync(t => t.Id == id);
+
+
 
             if (tournament == null) return NotFound();   // move this up
 
@@ -242,7 +249,6 @@ namespace Balkana.Controllers
         {
             var tournament = await _context.Tournaments
                 .Include(t => t.TournamentTeams)
-                    .ThenInclude(tt => tt.Team)
                 .Include(t => t.Series)
                 .FirstOrDefaultAsync(t => t.Id == tournamentId);
 
@@ -253,17 +259,13 @@ namespace Balkana.Controllers
                 return RedirectToAction("Details", new { id = tournamentId });
             }
 
-            var teams = tournament.TournamentTeams
-                .OrderBy(tt => tt.Seed)
-                .Select(tt => tt.Team)
-                .ToList();
-
-            var series = bracketService.Generate8TeamDoubleElimination(teams, tournamentId, tournament.ShortName);
+            var service = new BracketService(_context, mapper);
+            var series = service.GenerateBracket(tournamentId);
 
             await _context.Series.AddRangeAsync(series);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "8-team double elimination bracket generated!";
+            TempData["Success"] = $"{tournament.Elimination} bracket generated!";
             return RedirectToAction("Details", new { id = tournamentId });
         }
     }

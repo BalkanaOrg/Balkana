@@ -8,167 +8,127 @@ namespace Balkana.Services.Bracket
     public class BracketService
     {
         private readonly ApplicationDbContext data;
-        private readonly AutoMapper.IConfigurationProvider mapper;
+        private readonly IMapper mapper;
 
         public BracketService(ApplicationDbContext data, IMapper mapper)
         {
-            this.mapper = mapper.ConfigurationProvider;
             this.data = data;
+            this.mapper = mapper;
         }
 
-        public List<Balkana.Data.Models.Series> GenerateBracket(List<Team> teams, int tournamentId)
+        public List<Balkana.Data.Models.Series> GenerateBracket(int tournamentId)
         {
-            int teamCount = teams.Count;
-            if (teamCount != 4 && teamCount != 8 && teamCount != 16 && teamCount != 32)
-                throw new InvalidOperationException("Unsupported team count");
+            var tournament = data.Tournaments
+                .Include(t => t.TournamentTeams).ThenInclude(tt => tt.Team)
+                .FirstOrDefault(t => t.Id == tournamentId);
 
-            // Sort by seed (assume you already assign `Seed` somewhere in Team)
-            var seededTeams = data.TournamentTeams
-                .Where(tt => tt.TournamentId == tournamentId)
+            if (tournament == null)
+                throw new Exception("Tournament not found");
+
+            var teams = tournament.TournamentTeams
                 .OrderBy(tt => tt.Seed)
-                .Select(tt => tt.Team)   // gets the actual Team entity
+                .Select(tt => tt.Team)
                 .ToList();
 
+            if (tournament.Elimination == EliminationType.Single)
+                return GenerateSingleElimination(teams, tournamentId, tournament.ShortName ?? $"Tournament {tournament.Id}");
+            else
+                return new DoubleEliminationBracketService(data, mapper)
+                    .GenerateDoubleElimination(teams, tournamentId);
+        }
+
+        private List<Balkana.Data.Models.Series> GenerateSingleElimination(List<Team> teams, int tournamentId, string shortName)
+        {
             var seriesList = new List<Balkana.Data.Models.Series>();
+
+            int teamCount = teams.Count;
+            int bracketSize = NextPowerOfTwo(teamCount); // e.g. 6 → 8, 10 → 16
+            int byes = bracketSize - teamCount;
+
+            // --- Rule: top seeds get byes directly into Round 2 ---
+            var autoQualified = teams.Take(byes).ToList(); // first N seeds get byes
+            var queue = new Queue<Team>(teams.Skip(byes)); // rest must play Round 1
+
             int round = 1;
-            int matchId = 1;
+            int matchNumber = 1;
 
-            // Round 1 (initial pairings)
-            for (int i = 0; i < teamCount / 2; i++)
+            // --- ROUND 1 (non-bye teams play) ---
+            int matchesInRound1 = (teamCount - byes) / 2;
+            for (int i = 0; i < matchesInRound1; i++)
             {
-                var teamA = seededTeams[i];
-                var teamB = seededTeams[teamCount - 1 - i];
+                var teamA = queue.Dequeue();
+                var teamB = queue.Dequeue();
 
-                seriesList.Add(new Balkana.Data.Models.Series
-                {
-                    Name = $"Round {round} - Match {matchId}",
-                    TournamentId = tournamentId,
-                    TeamAId = teamA.Id,
-                    TeamBId = teamB.Id,
-                    Round = round,
-                    Position = matchId
-                });
-
-                matchId++;
+                var match = NewSeries(
+                    $"{shortName} - Round {round} Match {matchNumber}",
+                    tournamentId,
+                    teamA,
+                    teamB,
+                    round,
+                    matchNumber,
+                    BracketType.Upper
+                );
+                seriesList.Add(match);
+                matchNumber++;
             }
 
-            // Generate next rounds dynamically
-            int matchesInRound = teamCount / 2;
-            while (matchesInRound > 1)
+            // --- SUBSEQUENT ROUNDS ---
+            int totalRounds = (int)Math.Log2(bracketSize);
+            for (int r = 2; r <= totalRounds; r++)
             {
-                round++;
-                matchesInRound /= 2;
+                int matchesInRound = bracketSize / (int)Math.Pow(2, r);
+
                 for (int i = 0; i < matchesInRound; i++)
                 {
-                    seriesList.Add(new Balkana.Data.Models.Series
+                    Team teamA = null;
+                    Team teamB = null;
+
+                    // Correct placement: distribute autoQualified seeds across different matches
+                    if (r == 2 && autoQualified.Count > 0)
                     {
-                        Name = $"Round {round} - Match {i + 1}",
-                        TournamentId = tournamentId,
-                        Round = round,
-                        Position = i + 1
-                    });
+                        // First bye goes into Semifinal 1, second into Semifinal 2, etc.
+                        var seed = autoQualified[0];
+                        autoQualified.RemoveAt(0);
+
+                        if (i % 2 == 0) teamA = seed; // odd semifinal → left slot
+                        else teamB = seed;            // even semifinal → right slot
+                    }
+
+                    var match = NewSeries(
+                        $"{shortName} - Round {r} Match {i + 1}",
+                        tournamentId,
+                        teamA,
+                        teamB,
+                        r,
+                        i + 1,
+                        BracketType.Upper
+                    );
+                    seriesList.Add(match);
                 }
-            }
-
-            // Link NextSeriesId
-            foreach (var s in seriesList.Where(s => s.Round < round))
-            {
-                int nextRound = s.Round + 1;
-                int targetMatch = (int)Math.Ceiling(s.Position / 2.0);
-
-                var nextSeries = seriesList.First(x => x.Round == nextRound && x.Position == targetMatch);
-                s.NextSeries = nextSeries;
-                s.NextSeriesId = nextSeries.Id;
             }
 
             return seriesList;
         }
-        public List<Balkana.Data.Models.Series> GenerateDoubleElimination(List<Team> teams, int tournamentId)
+
+        private Balkana.Data.Models.Series NewSeries(string name, int tournamentId, Team teamA, Team teamB, int round, int pos, BracketType bracket)
         {
-            int teamCount = teams.Count;
-            if (teamCount != 4 && teamCount != 8 && teamCount != 16)
-                throw new InvalidOperationException("Only 4, 8, or 16 teams supported for now");
-
-            var seededTeams = data.TournamentTeams
-            .Where(tt => tt.TournamentId == tournamentId)
-            .OrderBy(tt => tt.Seed)
-            .Select(tt => tt.Team)   // gets the actual Team entity
-            .ToList();
-            var seriesList = new List<Balkana.Data.Models.Series>();
-
-            // --- UPPER BRACKET ---
-            int round = 1;
-            int matchId = 1;
-
-            // First round UB pairings
-            for (int i = 0; i < teamCount / 2; i++)
+            return new Balkana.Data.Models.Series
             {
-                seriesList.Add(new Balkana.Data.Models.Series
-                {
-                    Name = $"UB Round {round} - Match {i + 1}",
-                    TournamentId = tournamentId,
-                    TeamAId = seededTeams[i].Id,
-                    TeamBId = seededTeams[teamCount - 1 - i].Id,
-                    Round = round,
-                    Position = i + 1,
-                    Bracket = BracketType.Upper
-                });
-            }
-
-            // Next UB rounds
-            int matchesInRound = teamCount / 2;
-            while (matchesInRound > 1)
-            {
-                round++;
-                matchesInRound /= 2;
-                for (int i = 0; i < matchesInRound; i++)
-                {
-                    seriesList.Add(new Balkana.Data.Models.Series
-                    {
-                        Name = $"UB Round {round} - Match {i + 1}",
-                        TournamentId = tournamentId,
-                        Round = round,
-                        Position = i + 1,
-                        Bracket = BracketType.Upper
-                    });
-                }
-            }
-
-            // --- LOWER BRACKET ---
-            // The LB gets complicated; losers from UB Round 1 drop here.
-            int lbRound = 1;
-            int lbMatches = teamCount / 2;
-            while (lbMatches > 0)
-            {
-                for (int i = 0; i < lbMatches; i++)
-                {
-                    seriesList.Add(new Balkana.Data.Models.Series
-                    {
-                        Name = $"LB Round {lbRound} - Match {i + 1}",
-                        TournamentId = tournamentId,
-                        Round = lbRound,
-                        Position = i + 1,
-                        Bracket = BracketType.Lower
-                    });
-                }
-
-                lbRound++;
-                lbMatches = (lbMatches == 1) ? 0 : lbMatches / 2;
-            }
-
-            // --- GRAND FINAL ---
-            seriesList.Add(new Balkana.Data.Models.Series
-            {
-                Name = "Grand Final",
+                Name = name,
                 TournamentId = tournamentId,
-                Round = 1,
-                Position = 1,
-                Bracket = BracketType.GrandFinal
-            });
+                TeamAId = teamA?.Id,
+                TeamBId = teamB?.Id,
+                Round = round,
+                Position = pos,
+                Bracket = bracket
+            };
+        }
 
-            // TODO: Wire up NextSeriesId for UB→UB, UB→LB, LB→LB, LB→GF
-
-            return seriesList;
+        private int NextPowerOfTwo(int n)
+        {
+            int p = 1;
+            while (p < n) p *= 2;
+            return p;
         }
     }
 }

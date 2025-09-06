@@ -8,11 +8,11 @@ namespace Balkana.Services.Bracket
     public class DoubleEliminationBracketService
     {
         private readonly ApplicationDbContext data;
-        private readonly AutoMapper.IConfigurationProvider mapper;
+        private readonly IMapper mapper;
 
         public DoubleEliminationBracketService(ApplicationDbContext data, IMapper mapper)
         {
-            this.mapper = mapper.ConfigurationProvider;
+            this.mapper = mapper;
             this.data = data;
         }
 

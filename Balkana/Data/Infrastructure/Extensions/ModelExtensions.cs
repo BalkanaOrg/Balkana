@@ -1,4 +1,5 @@
-﻿using Balkana.Services.Organizers.Models;
+﻿using Balkana.Data.Models;
+using Balkana.Services.Organizers.Models;
 using Balkana.Services.Players.Models;
 using Balkana.Services.Teams.Models;
 
@@ -14,5 +15,11 @@ namespace Balkana.Data.Infrastructure.Extensions
 
         public static string GetInformation(this IOrganizerModel org)
             => org.Tag + "-" + org.FullName;
+
+        public static string GetInformation(this Team team)
+            => team.Tag + "-" + team.FullName;
+
+        public static string GetInformation(this Player player)
+            => player.FirstName + "-" + player.Nickname + "-" + player.LastName;
     }
 }

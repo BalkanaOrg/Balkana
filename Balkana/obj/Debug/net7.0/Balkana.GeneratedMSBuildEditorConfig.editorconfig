@@ -196,6 +196,14 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVG91cm5hbWVudHNcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[G:/Programming/Csharp/Balkana/Balkana/Views/Tournaments/_BracketLayout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVG91cm5hbWVudHNcX0JyYWNrZXRMYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[G:/Programming/Csharp/Balkana/Balkana/Views/Tournaments/_ParticipantsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVG91cm5hbWVudHNcX1BhcnRpY2lwYW50c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [G:/Programming/Csharp/Balkana/Balkana/Views/Transfers/Add.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVHJhbnNmZXJzXEFkZC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 

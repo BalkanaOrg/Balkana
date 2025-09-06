@@ -65,69 +65,9 @@ else
         <button type="submit" class="btn btn-success mb-3">Generate Bracket</button>
     </form>
 }
-<h3>Bracket</h3>
-<div id="bracket-container" class="brackets-viewer" style="width: 100%; height: 800px;"></div>
+<partial name="_BracketLayout" model="Model" />
 
-<link rel="stylesheet" href="https://unpkg.com/brackets-viewer/dist/brackets-viewer.min.css" />
-<script src="https://unpkg.com/brackets-viewer/dist/brackets-viewer.min.js"></script>
-
-<script>
-    (async function() {
-        try {
-            const res = await fetch(`/api/tournaments/@Model.Id/bracket`);
-            const data = await res.json();
-            console.log("🎯 Bracket data:", data);
-            console.log("Participants:", data.participants);
-            console.log("Matches:", data.matches);
-
-            await bracketsViewer.render(
-                {
-                    stages: data.stages,
-                    matches: data.matches,
-                    matchGames: data.matchGames,
-                    participants: data.participants,
-                },
-                {
-                    selector: '#bracket-container',
-                    orientation: 'horizontal',
-                }
-            );
-
-        } catch (err) {
-            console.error("⚠️ Bracket rendering error:", err);
-        }
-    })();
-</script>
-
-<h4>Participating Teams</h4>
-<div class="d-flex flex-wrap">
-    @foreach (var team in (List<Team>)ViewData["ParticipatingTeams"])
-    {
-        var players = team.Players.Take(5).ToList();
-        <div class="team-card m-2 position-relative text-center">
-
-            <img src="@team.LogoURL" class="team-logo card-img-top" alt="@team.FullName" />
-
-            <div class="team-players position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center">
-                @if (players.Any())
-                {
-                    @foreach (var p in players)
-                    {
-                        <small class="player-name">@p.Nickname</small>
-                    }
-                }
-                else
-                {
-                    <small class="text-muted">No players</small>
-                }
-            </div>
-
-            <div class="card-body p-1">
-                <small>@team.FullName</small>
-            </div>
-        </div>
-    }
-</div>
+<partial name="_ParticipantsPartial" model="Model" />
 
 <style>
     /* Container adjustments */

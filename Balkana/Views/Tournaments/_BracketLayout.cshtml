@@ -1,0 +1,32 @@
+﻿<div id="bracket-container" class="brackets-viewer" style="width: 100%; height: 800px;"></div>
+
+<link rel="stylesheet" href="https://unpkg.com/brackets-viewer/dist/brackets-viewer.min.css" />
+<script src="https://unpkg.com/brackets-viewer/dist/brackets-viewer.min.js"></script>
+
+<script>
+    (async function() {
+        try {
+            const res = await fetch(`/api/tournaments/@Model.Id/bracket`);
+            const data = await res.json();
+            console.log("🎯 Bracket data:", data);
+            console.log("Participants:", data.participants);
+            console.log("Matches:", data.matches);
+
+            await bracketsViewer.render(
+                {
+                    stages: data.stages,
+                    matches: data.matches,
+                    matchGames: data.matchGames,
+                    participants: data.participants,
+                },
+                {
+                    selector: '#bracket-container',
+                    orientation: 'horizontal',
+                }
+            );
+
+        } catch (err) {
+            console.error("⚠️ Bracket rendering error:", err);
+        }
+    })();
+</script>

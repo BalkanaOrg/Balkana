@@ -25,7 +25,8 @@
 
         public decimal PrizePool { get; set; } = 0;
 
-        //public string BannerUrl { get; set; }
+        public string BannerUrl { get; set; }
+        public EliminationType Elimination { get; set; }  // single or double
 
         public int GameId { get; set; }
         public Game Game { get; set; }
@@ -34,6 +35,5 @@
         public ICollection<TrophyTournament> Trophies { get; set; } = new List<TrophyTournament>();
         public ICollection<TournamentSocials> Socials { get; set; } = new List<TournamentSocials>();
         public ICollection<TournamentTeam> TournamentTeams { get; set; } = new List<TournamentTeam>();
-
     }
 }
