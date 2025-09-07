@@ -10,15 +10,15 @@
 
         <div class="stats-container">
             <div class="stat-card">
-                <span class="stat-number">1000+</span>
+                <span class="stat-number">@ViewData["PlayerCount"]</span>
                 <div class="stat-label">Players</div>
             </div>
             <div class="stat-card">
-                <span class="stat-number">$500K</span>
-                <div class="stat-label">Prize Pool</div>
+                <span class="stat-number">€@ViewData["PrizePool"]</span>
+                <div class="stat-label">Total Prize Pool</div>
             </div>
             <div class="stat-card">
-                <span class="stat-number">4</span>
+                <span class="stat-number">@ViewData["GamesCount"]</span>
                 <div class="stat-label">Games</div>
             </div>
         </div>

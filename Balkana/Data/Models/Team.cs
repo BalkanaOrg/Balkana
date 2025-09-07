@@ -35,6 +35,7 @@
         public ICollection<TeamSocials> Socials { get; set; } = new List<TeamSocials>();
         public ICollection<TeamTrophy> TeamTrophies { get; set; } = new List<TeamTrophy>();
         public ICollection<TournamentTeam> TournamentTeams { get; set; } = new List<TournamentTeam>();
+        public ICollection<TournamentPlacement> Placements { get; set; } = new List<TournamentPlacement>();
 
         [NotMapped]
         public IEnumerable<Player> Players => Transfers?.Select(t => t.Player);

@@ -91,10 +91,29 @@
                     <i class="fi fi-rr-globe"></i>
                     <span>EN</span>
                 </div>
-                <button class="login-btn">
-                    <i class="fi fi-rr-user"></i>
-                    <span>Login</span>
-                </button>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <a asp-controller="Account" asp-action="Profile" class="login-btn">
+                        <img src="@(User.FindFirst("ProfilePictureUrl")?.Value ?? "https://i.imgur.com/ZizgQGH.png")"
+                             alt="Profile"
+                             class="rounded-full w-8 h-8 object-cover" 
+                             width="40px" height="40px"/>
+                        <span>@User.Identity.Name</span>
+                    </a>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="inline">
+                        <button type="submit" class="login-btn">
+                            <i class="fi fi-rr-exit"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" class="login-btn">
+                        <i class="fi fi-rr-user"></i>
+                        <span>Login</span>
+                    </a>
+                }
             </div>
         </div>
     </nav>

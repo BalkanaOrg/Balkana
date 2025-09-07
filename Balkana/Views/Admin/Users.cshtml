@@ -1,0 +1,39 @@
+﻿@using Microsoft.AspNetCore.Identity
+@model IEnumerable<Balkana.Data.Models.ApplicationUser>
+@inject UserManager<Balkana.Data.Models.ApplicationUser> UserManager
+
+<h2>Manage Users</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Roles</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.UserName</td>
+                <td>@user.Email</td>
+                <td>
+                    <!-- Show roles -->
+                    @string.Join(", ", await @UserManager.GetRolesAsync(user))
+                </td>
+                <td>
+                    <form asp-action="ChangeRole" method="post">
+                        <input type="hidden" name="userId" value="@user.Id" />
+                        <select name="role">
+                            <option>Member</option>
+                            <option>Moderator</option>
+                            <option>Administrator</option>
+                        </select>
+                        <button type="submit">Update</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,18 +1,19 @@
-﻿@using Balkana.Data.Models
+﻿@using Balkana.Data.DTOs.Bracket
+@using Balkana.Data.Models
 
 
 <h4>Participating Teams</h4>
 <div class="d-flex flex-wrap">
-    @foreach (var team in (List<Team>)ViewData["ParticipatingTeams"])
+    @foreach (var roster in (List<TournamentTeamRosterViewModel>)ViewData["ParticipatingTeams"])
     {
-        var players = team.Players.Take(5).ToList();
+        var players = roster.Players.Take(5).ToList();
         <a asp-controller="Teams"
            asp-action="Details"
-           asp-route-id="@team.Id"
-           asp-route-information="@team.GetInformation()">
+           asp-route-id="@roster.Team.Id"
+           asp-route-information="@roster.Team.GetInformation()">
             <div class="team-card m-2 position-relative text-center">
 
-                <img src="@team.LogoURL" class="team-logo card-img-top" alt="@team.FullName" />
+                <img src="@roster.Team.LogoURL" class="team-logo card-img-top" alt="@roster.Team.FullName" />
 
                 <div class="team-players position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center">
                     @if (players.Any())
@@ -31,7 +32,7 @@
                 </div>
 
                 <div class="card-body p-1">
-                    <small>@team.FullName</small>
+                    <small>@roster.Team.FullName</small>
                 </div>
             </div>
         </a>

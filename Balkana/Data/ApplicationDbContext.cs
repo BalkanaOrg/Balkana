@@ -1,10 +1,11 @@
 ﻿namespace Balkana.Data
 {
     using Balkana.Data.Models;
+    using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
 
-    public class ApplicationDbContext : IdentityDbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
@@ -48,6 +49,12 @@
         public DbSet<PlayerStatistic> PlayerStats { get; set; }
         public DbSet<PlayerStatistic_CS2> PlayerStatsCS { get; set; }
         public DbSet<PlayerStatistic_LoL> PlayerStatsLoL { get; set; }
+
+        // Tournament Core Player and Circuit Points
+        public DbSet<TournamentPlacement> TournamentPlacements { get; set; }
+        public DbSet<Core> Cores { get; set; }
+        public DbSet<CorePlayer> CorePlayers { get; set; }
+        public DbSet<CoreTournamentPoints> CoreTournamentPoints { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -244,6 +251,20 @@
                 .HasOne(ta => ta.Trophy)
                 .WithMany(t => t.TeamTrophies)
                 .HasForeignKey(ta => ta.TrophyId);
+
+            // Tournament and Seasonal Circuit Points
+            modelBuilder.Entity<CorePlayer>()
+            .HasKey(cp => new { cp.CoreId, cp.PlayerId });
+
+            modelBuilder.Entity<CorePlayer>()
+                .HasOne(cp => cp.Core)
+                .WithMany(c => c.Players)
+                .HasForeignKey(cp => cp.CoreId);
+
+            modelBuilder.Entity<CorePlayer>()
+                .HasOne(cp => cp.Player)
+                .WithMany()
+                .HasForeignKey(cp => cp.PlayerId);
 
             foreach (var fk in modelBuilder.Model.GetEntityTypes()
              .SelectMany(e => e.GetForeignKeys()))

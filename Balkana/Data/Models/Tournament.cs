@@ -35,5 +35,7 @@
         public ICollection<TrophyTournament> Trophies { get; set; } = new List<TrophyTournament>();
         public ICollection<TournamentSocials> Socials { get; set; } = new List<TournamentSocials>();
         public ICollection<TournamentTeam> TournamentTeams { get; set; } = new List<TournamentTeam>();
+        public ICollection<TournamentPlacement> Placements { get; set; } = new List<TournamentPlacement>();
+
     }
 }

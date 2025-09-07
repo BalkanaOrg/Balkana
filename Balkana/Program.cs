@@ -1,7 +1,9 @@
 using Balkana;
 using Balkana.Data;
 using Balkana.Data.Infrastructure;
+using Balkana.Data.Models;
 using Balkana.Data.Repositories;
+using Balkana.Data.Seed;
 using Balkana.Services;
 using Balkana.Services.Bracket;
 using Balkana.Services.Matches;
@@ -23,8 +25,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+//builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+//    .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
 ConfigureServices(builder.Services);
 builder.Services.AddScoped<SeriesService>();
@@ -48,6 +50,12 @@ builder.Services.AddHttpClient<FaceitMatchImporter>(client =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    await RoleSeeder.SeedRoles(roleManager);
+}
+
 void ConfigureServices(IServiceCollection services)
 {
     services.AddDbContext<ApplicationDbContext>(options => options
@@ -61,12 +69,24 @@ void ConfigureServices(IServiceCollection services)
     {
         options.Filters.Add<AutoValidateAntiforgeryTokenAttribute>();
     });
+    builder.Services.AddRazorPages();
 
     services.AddTransient<ITeamService, TeamService>();
     services.AddTransient<IPlayerService, PlayerService>();
     services.AddTransient<ITransferService, TransferService>();
     services.AddTransient<IOrganizerService, OrganizerService>();
     services.AddTransient<IMatchService, MatchService>();
+
+    //USER IDENTITY
+    builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+    {
+        options.Password.RequiredLength = 6;
+        options.Password.RequireDigit = true;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequireUppercase = false;
+    })
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
 
     // Add HttpClient for our importers
     builder.Services.AddHttpClient<RiotMatchImporter>();

@@ -59,14 +59,24 @@ namespace Balkana.Controllers
                 .ThenBy(s => s.Position)
                 .ToList();
 
-            ViewData["ParticipatingTeams"] = await _context.TournamentTeams
+            var participatingTeams = await _context.TournamentTeams
                 .Where(tt => tt.TournamentId == id)
                 .Include(tt => tt.Team)
-                    .ThenInclude(t => t.Transfers)         // Include the transfers
-                        .ThenInclude(tr => tr.Player)     // Include the players
+                    .ThenInclude(t => t.Transfers)
+                        .ThenInclude(tr => tr.Player)
                 .OrderBy(tt => tt.Seed)
-                .Select(tt => tt.Team)
+                .Select(tt => new TournamentTeamRosterViewModel
+                {
+                    Team = tt.Team,
+                    Players = tt.Team.Transfers
+                        .Where(tr => tr.TransferDate <= tournament.StartDate)
+                        .GroupBy(tr => tr.PlayerId)
+                        .Select(g => g.OrderByDescending(tr => tr.TransferDate).First().Player)
+                        .ToList()
+                })
                 .ToListAsync();
+
+            ViewData["ParticipatingTeams"] = participatingTeams;
 
             return View(tournament);
         }
@@ -268,5 +278,79 @@ namespace Balkana.Controllers
             TempData["Success"] = $"{tournament.Elimination} bracket generated!";
             return RedirectToAction("Details", new { id = tournamentId });
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Conclude(int id)
+        {
+            var tournament = await _context.Tournaments
+                .Include(t => t.TournamentTeams).ThenInclude(tt => tt.Team)
+                    .ThenInclude(t => t.Transfers).ThenInclude(tr => tr.Player)
+                .Include(t => t.Placements) // if you track placements
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (tournament == null) return NotFound();
+
+            // Example: placement → points mapping
+            var pointsMap = new Dictionary<int, int>
+            {
+                { 1, 500 }, // 1st place = 500 pts
+                { 2, 325 },
+                { 3, 200 },
+                { 4, 125 }
+                // expand as needed
+            };
+
+            foreach (var placement in tournament.Placements)
+            {
+                if (!pointsMap.TryGetValue(placement.Placement, out var points))
+                    continue;
+
+                placement.PointsAwarded = points;
+
+                // Get roster at tournament start
+                var roster = placement.Team.Transfers
+                    .Where(tr => tr.TransferDate <= tournament.StartDate)
+                    .GroupBy(tr => tr.PlayerId)
+                    .Select(g => g.OrderByDescending(tr => tr.TransferDate).First().Player)
+                    .ToList();
+
+                // Decide the "core" (for simplicity: top 3 players by presence)
+                var corePlayers = roster.Take(3).ToList();
+
+                // Find or create Core
+                var core = await _context.Cores
+                    .Include(c => c.Players)
+                    .FirstOrDefaultAsync(c =>
+                        corePlayers.All(cp => c.Players.Select(p => p.PlayerId).Contains(cp.Id))
+                        && c.Players.Count == corePlayers.Count);
+
+                if (core == null)
+                {
+                    core = new Core { Name = string.Join("/", corePlayers.Select(p => p.Nickname)) };
+                    _context.Cores.Add(core);
+                    await _context.SaveChangesAsync();
+
+                    foreach (var p in corePlayers)
+                    {
+                        _context.CorePlayers.Add(new CorePlayer { CoreId = core.Id, PlayerId = p.Id });
+                    }
+                }
+
+                // Award points
+                _context.CoreTournamentPoints.Add(new CoreTournamentPoints
+                {
+                    CoreId = core.Id,
+                    TournamentId = tournament.Id,
+                    Points = points
+                });
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Tournament '{tournament.FullName}' concluded and points awarded!";
+            return RedirectToAction("Details", new { id });
+        }
+
     }
 }
