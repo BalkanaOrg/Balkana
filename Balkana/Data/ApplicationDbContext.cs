@@ -63,6 +63,9 @@
         public DbSet<CommunityJoinRequest> CommunityJoinRequests { get; set; }
         public DbSet<CommunityTeamTransfer> CommunityTeamTransfers { get; set; }
 
+        //Articles
+        public DbSet<Article> Articles { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

@@ -1,0 +1,39 @@
+﻿@model IEnumerable<Balkana.Data.Models.Article>
+
+@{
+    ViewData["Title"] = "My Articles";
+}
+
+<h2 class="mb-4">My Articles</h2>
+
+<a class="btn btn-success mb-3" asp-action="Create">➕ New Article</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Published</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var article in Model)
+        {
+            <tr>
+                <td>@article.Title</td>
+                <td>@article.Status</td>
+                <td>@article.CreatedAt.ToString("yyyy-MM-dd")</td>
+                <td>@(article.PublishedAt?.ToString("yyyy-MM-dd") ?? "-")</td>
+                <td>
+                    <a class="btn btn-sm btn-primary" asp-action="Details" asp-route-id="@article.Id">View</a>
+                    @if (article.Status == "Draft")
+                    {
+                        <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@article.Id">Edit</a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
