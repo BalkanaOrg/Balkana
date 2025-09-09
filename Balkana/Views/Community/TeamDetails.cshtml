@@ -1,0 +1,28 @@
+﻿@model Balkana.Models.Community.CommunityTeamDetailsModel
+
+<h2>@Model.FullName (@Model.Tag)</h2>
+<img src="@Model.LogoUrl" alt="Logo" width="100" />
+
+<p><strong>Captain:</strong> @Model.CaptainName</p>
+<p><strong>Approved:</strong> @(Model.IsApproved ? "Yes" : "Pending")</p>
+
+<h3>Members</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Approved</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var m in Model.Members)
+        {
+            <tr>
+                <td>@m.Username</td>
+                <td>@m.Role</td>
+                <td>@(m.IsApproved ? "✅" : "❌")</td>
+            </tr>
+        }
+    </tbody>
+</table>

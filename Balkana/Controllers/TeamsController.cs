@@ -8,6 +8,7 @@ using Balkana.Services.Teams;
 using Balkana.Services.Teams.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Balkana.Controllers
 {
@@ -45,6 +46,7 @@ namespace Balkana.Controllers
             return View(query);
         }
 
+        [Authorize(Roles = "Administrator,Moderator")]
         public IActionResult Add()
         {
             //if(!this.User.IsAdmin())
@@ -58,6 +60,7 @@ namespace Balkana.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Administrator,Moderator")]
         public IActionResult Add(TeamFormModel team)
         {
             if(!this.teams.GameExists(team.GameId))

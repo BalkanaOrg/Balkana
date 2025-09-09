@@ -13,13 +13,14 @@ namespace Balkana.Controllers
         public MapsController(ApplicationDbContext data)
             => this.data = data;
 
-        //[Authorize]
+        [Authorize(Roles = "Administrator,Moderator")]
         public IActionResult Add()
         {
             return View(new AddMapFormModel());
         }
 
         [HttpPost]
+        [Authorize(Roles = "Administrator,Moderator")]
         public IActionResult Add(AddMapFormModel map)
         {
             if(ModelState.ErrorCount > 0)

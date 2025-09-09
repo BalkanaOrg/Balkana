@@ -4,18 +4,20 @@ namespace Balkana.Services.Transfers.Models
 {
     public class TransfersServiceModel :ITransfersModel
     {
-        public int Id { get; init; }
+        public int Id { get; set; }
 
-        public string PlayerUsername { get; init; }
-        public int PlayerId { get; init; }
+        public int PlayerId { get; set; }
+        public string PlayerUsername { get; set; }
 
-        public string TeamFullName { get; init; }
-        public int TeamId { get; init; }
+        public int TeamId { get; set; }
+        public string TeamFullName { get; set; }
 
-        public string GameName { get; init; }
+        public int GameId { get; set; }
+        public string GameName { get; set; }
 
-        public DateTime TransferDate { get; init; }
+        public DateTime TransferDate { get; set; }
 
-        public string Position { get; init; }
+        public int PositionId { get; set; }
+        public string Position { get; set; }
     }
 }

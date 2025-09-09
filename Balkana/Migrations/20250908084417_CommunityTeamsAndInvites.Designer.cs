@@ -4,6 +4,7 @@ using Balkana.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Balkana.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250908084417_CommunityTeamsAndInvites")]
+    partial class CommunityTeamsAndInvites
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -149,33 +152,6 @@ namespace Balkana.Migrations
                     b.ToTable("CommunityInvites");
                 });
 
-            modelBuilder.Entity("Balkana.Data.Models.CommunityJoinRequest", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CommunityTeamId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CommunityTeamId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("CommunityJoinRequests");
-                });
-
             modelBuilder.Entity("Balkana.Data.Models.CommunityTeam", b =>
                 {
                     b.Property<int>("Id")
@@ -188,6 +164,7 @@ namespace Balkana.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("ApprovedBy")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("ApprovedById")
@@ -220,8 +197,6 @@ namespace Balkana.Migrations
 
                     b.HasIndex("GameId");
 
-                    b.HasIndex("Tag", "GameId");
-
                     b.ToTable("CommunityTeams");
                 });
 
@@ -237,6 +212,7 @@ namespace Balkana.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("ApprovedBy")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("ApprovedById")
@@ -1510,25 +1486,6 @@ namespace Balkana.Migrations
                     b.Navigation("InviteeUser");
 
                     b.Navigation("InviterUser");
-                });
-
-            modelBuilder.Entity("Balkana.Data.Models.CommunityJoinRequest", b =>
-                {
-                    b.HasOne("Balkana.Data.Models.CommunityTeam", "CommunityTeam")
-                        .WithMany()
-                        .HasForeignKey("CommunityTeamId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Balkana.Data.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("CommunityTeam");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Balkana.Data.Models.CommunityTeam", b =>

@@ -1,0 +1,103 @@
+﻿@using Balkana.Data
+@using Balkana.Data.Models
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+@inject ApplicationDbContext Db
+
+@model Balkana.Models.Community.CommunityIndexViewModel
+
+<h2>Community Search</h2>
+
+<form method="get" asp-action="Index">
+    <input type="text" name="searchTerm" value="@Model.SearchTerm" placeholder="Search users or teams..." />
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
+
+<hr />
+
+<h3>Users</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Full Name</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var u in Model.Users)
+        {
+            <tr>
+                <td>@u.Username</td>
+                <td>@u.FullName</td>
+                <td>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        var currentUserId = UserManager.GetUserId(User);
+                        var isCaptain = Db.CommunityTeamMembers
+                        .Any(m => m.UserId == currentUserId && m.Role == CommunityMemberRole.Captain);
+
+                        if (isCaptain)
+                        {
+                            <form asp-action="Invite" method="post" class="d-inline">
+                                <input type="hidden" name="inviteeUserId" value="@u.UserId" />
+                                <input type="hidden" name="teamId" value="<!-- put teamId here -->" />
+                                <button type="submit" class="btn btn-sm btn-success">Invite to team</button>
+                            </form>
+                        }
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h3>Teams</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Logo</th>
+            <th>Tag</th>
+            <th>Full Name</th>
+            <th>Players</th>
+            <th>Substitutes</th>
+            <th>Coaches</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var t in Model.Teams)
+        {
+            var teamPlayers = Db.CommunityTeamMembers.Where(c => c.CommunityTeamId == t.Id && c.Role != CommunityMemberRole.Substitute && c.Role!= CommunityMemberRole.Coach).Count();
+            var coachCount = Db.CommunityTeamMembers.Where(c => c.CommunityTeamId == t.Id && c.Role == CommunityMemberRole.Coach).Count();
+            var substituteCount = Db.CommunityTeamMembers.Where(c => c.CommunityTeamId == t.Id && c.Role == CommunityMemberRole.Substitute).Count();
+            <tr onclick="window.location.href='@Url.Action("TeamDetails", "Community", new { id = t.Id })'">
+                <td><img src="@t.LogoUrl" width="40" /></td>
+                <td>@t.Tag</td>
+                <td>@t.FullName</td>
+                <td>@teamPlayers / 5</td>
+                <td>@substituteCount</td>
+                <td>@coachCount</td>
+                <td>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        var currentUserId = UserManager.GetUserId(User);
+                        var isMember = Db.CommunityTeamMembers
+                        .Any(m => m.CommunityTeamId == t.Id && m.UserId == currentUserId);
+
+                        var isCaptain = Db.CommunityTeamMembers
+                        .Any(m => m.CommunityTeamId == t.Id && m.UserId == currentUserId && m.Role == CommunityMemberRole.Captain);
+
+                        if (!isMember && !isCaptain)
+                        {
+                            <form asp-action="RequestJoin" method="post" class="d-inline">
+                                <input type="hidden" name="teamId" value="@t.Id" />
+                                <button type="submit" class="btn btn-sm btn-primary">Request to join</button>
+                            </form>
+                        }
+                    }
+                </td>
+            </tr>
+        }
+
+    </tbody>
+</table>

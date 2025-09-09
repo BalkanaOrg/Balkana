@@ -4,6 +4,7 @@ using Balkana.Data.Models;
 using Balkana.Models.Transfers;
 using Balkana.Services.Transfers;
 using Balkana.Services.Transfers.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,6 +49,7 @@ namespace Balkana.Controllers
             return View(query);
         }
 
+        [Authorize(Roles = "Administrator,Moderator")]
         public IActionResult Add()
         {
             return View(new TransferFormModel
@@ -60,6 +62,7 @@ namespace Balkana.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Administrator,Moderator")]
         public IActionResult Add([FromForm] TransferFormModel model)
         {
             Console.WriteLine("Received TransferFormModel:");
@@ -124,5 +127,97 @@ namespace Balkana.Controllers
             return View(transfer);
         }
 
+
+        [Authorize(Roles = "Administrator,Moderator")]
+        public IActionResult Edit(int id)
+        {
+            var transfer = this.transfers.Details(id);
+
+            if (transfer == null)
+            {
+                return NotFound();
+            }
+
+            var model = new TransferFormModel
+            {
+                PlayerId = transfer.PlayerId,
+                TeamId = transfer.TeamId,
+                GameId = transfer.GameId,
+                PositionId = transfer.PositionId,
+                TransferDate = transfer.TransferDate,
+
+                TransferGames = this.transfers.AllGames(),
+                TransferTeams = this.transfers.AllTeams(),
+                TransferPlayers = this.transfers.AllPlayers(),
+                TransferPositions = this.transfers.AllPositions()
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Administrator,Moderator")]
+        public IActionResult Edit(int id, TransferFormModel model)
+        {
+            if (!this.transfers.TransferExists(id))
+            {
+                return NotFound();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                model.TransferGames = this.transfers.AllGames();
+                model.TransferTeams = this.transfers.AllTeams();
+                model.TransferPlayers = this.transfers.AllPlayers();
+                model.TransferPositions = this.transfers.AllPositions();
+
+                return View(model);
+            }
+
+            var success = this.transfers.Edit(
+                id,
+                model.PlayerId,
+                model.TeamId,
+                model.TransferDate,
+                model.PositionId
+            );
+
+            if (!success)
+            {
+                return BadRequest();
+            }
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        [Authorize(Roles = "Administrator")]
+        public IActionResult Delete(int id)
+        {
+            var transfer = this.transfers.Details(id);
+
+            if (transfer == null)
+            {
+                return NotFound();
+            }
+
+            return View(transfer);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [Authorize(Roles = "Administrator")]
+        public IActionResult DeleteConfirmed(int id)
+        {
+            var transfer = data.PlayerTeamTransfers.Find(id);
+
+            if (transfer == null)
+            {
+                return NotFound();
+            }
+
+            data.PlayerTeamTransfers.Remove(transfer);
+            data.SaveChanges();
+
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

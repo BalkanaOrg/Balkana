@@ -1,0 +1,14 @@
+﻿@model Balkana.Models.Community.InviteUserModel
+
+<h2>Invite User</h2>
+
+<form asp-action="Invite" method="post">
+    <input type="hidden" asp-for="CommunityTeamId" />
+    <div class="form-group">
+        <label asp-for="InvitedUserId">User ID</label>
+        <input asp-for="InvitedUserId" class="form-control" />
+        <span asp-validation-for="InvitedUserId" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Send Invite</button>
+</form>

@@ -56,6 +56,13 @@
         public DbSet<CorePlayer> CorePlayers { get; set; }
         public DbSet<CoreTournamentPoints> CoreTournamentPoints { get; set; }
 
+        //Community
+        public DbSet<CommunityTeam> CommunityTeams { get; set; }
+        public DbSet<CommunityTeamMember> CommunityTeamMembers { get; set; }
+        public DbSet<CommunityInvite> CommunityInvites { get; set; }
+        public DbSet<CommunityJoinRequest> CommunityJoinRequests { get; set; }
+        public DbSet<CommunityTeamTransfer> CommunityTeamTransfers { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -265,6 +272,68 @@
                 .HasOne(cp => cp.Player)
                 .WithMany()
                 .HasForeignKey(cp => cp.PlayerId);
+
+
+            //Community
+            //modelBuilder.Entity<CommunityTeam>()
+            //    .HasOne(c=>c.ApprovedBy)
+
+
+            // Composite key for CommunityTeamMember
+            modelBuilder.Entity<CommunityTeamMember>()
+                .HasKey(ctm => new { ctm.CommunityTeamId, ctm.UserId });
+
+            modelBuilder.Entity<CommunityTeamMember>()
+                .HasOne(ctm => ctm.CommunityTeam)
+                .WithMany(ct => ct.Members)
+                .HasForeignKey(ctm => ctm.CommunityTeamId);
+
+            modelBuilder.Entity<CommunityTeamMember>()
+                .HasOne(ctm => ctm.User)
+                .WithMany() // not mapping back from ApplicationUser
+                .HasForeignKey(ctm => ctm.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Invite relationships
+            modelBuilder.Entity<CommunityInvite>()
+                .HasOne(i => i.CommunityTeam)
+                .WithMany(t => t.Invites)
+                .HasForeignKey(i => i.CommunityTeamId);
+
+            modelBuilder.Entity<CommunityInvite>()
+                .HasOne(i => i.InviterUser)
+                .WithMany()
+                .HasForeignKey(i => i.InviterUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<CommunityInvite>()
+                .HasOne(i => i.InviteeUser)
+                .WithMany()
+                .HasForeignKey(i => i.InviteeUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // CommunityTeamTransfer relationships
+            modelBuilder.Entity<CommunityTeamTransfer>()
+                .HasOne(ctt => ctt.CommunityTeam)
+                .WithMany(ct => ct.Transfers)
+                .HasForeignKey(ctt => ctt.CommunityTeamId);
+
+            modelBuilder.Entity<CommunityTeamTransfer>()
+                .HasOne(ctt => ctt.User)
+                .WithMany()
+                .HasForeignKey(ctt => ctt.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Join request relation
+            modelBuilder.Entity<CommunityJoinRequest>()
+                .HasOne(r => r.CommunityTeam)
+                .WithMany() // if you want, add a collection on CommunityTeam and use .WithMany(t=>t.JoinRequests)
+                .HasForeignKey(r => r.CommunityTeamId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // (optional) indexes / other constraints
+            modelBuilder.Entity<CommunityTeam>()
+                .HasIndex(ct => new { ct.Tag, ct.GameId });
 
             foreach (var fk in modelBuilder.Model.GetEntityTypes()
              .SelectMany(e => e.GetForeignKeys()))

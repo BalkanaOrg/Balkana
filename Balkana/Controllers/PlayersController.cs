@@ -43,7 +43,7 @@ namespace Balkana.Controllers
         }
 
 
-        //[Authorize]
+        [Authorize(Roles = "Administrator,Moderator")]
         public IActionResult Add()
         {
             Console.WriteLine("Rendering Add player form.");
@@ -53,7 +53,7 @@ namespace Balkana.Controllers
             });
         }
 
-        //[Authorize]
+        [Authorize(Roles = "Administrator,Moderator")]
         [HttpPost]
         public IActionResult Add(PlayerFormModel player)
         {

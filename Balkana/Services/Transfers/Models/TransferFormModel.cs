@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Balkana.Services.Transfers.Models
 {
-    public class TransferFormModel : ITransfersModel
+    public class TransferFormModel2 : ITransfersModel
     {
         public int PlayerId { get; init; }
 

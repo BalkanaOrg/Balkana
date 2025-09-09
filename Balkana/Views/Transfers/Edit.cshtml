@@ -1,6 +1,32 @@
-﻿@model TransferDetailsServiceModel
-@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@model Balkana.Models.Transfers.TransferFormModel
+
+<h2>Edit Transfer</h2>
+
+<form asp-action="Edit" method="post">
+    <div class="form-group">
+        <label>Player</label>
+        <select asp-for="PlayerId" asp-items="@(new SelectList(Model.TransferPlayers, "Id", "Nickname"))" class="form-control"></select>
+    </div>
+
+    <div class="form-group">
+        <label>Team</label>
+        <select asp-for="TeamId" asp-items="@(new SelectList(Model.TransferTeams, "Id", "FullName"))" class="form-control"></select>
+    </div>
+
+    <div class="form-group">
+        <label>Game</label>
+        <select asp-for="GameId" asp-items="@(new SelectList(Model.TransferGames, "Id", "FullName"))" class="form-control"></select>
+    </div>
+
+    <div class="form-group">
+        <label>Position</label>
+        <select asp-for="PositionId" asp-items="@(new SelectList(Model.TransferPositions, "Id", "Name"))" class="form-control"></select>
+    </div>
+
+    <div class="form-group">
+        <label>Date</label>
+        <input asp-for="TransferDate" type="date" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+</form>

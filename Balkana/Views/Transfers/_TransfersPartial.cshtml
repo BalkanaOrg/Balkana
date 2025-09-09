@@ -1,30 +1,33 @@
 ﻿@model IEnumerable<TransfersServiceModel>
-@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+
+
+@foreach (var tr in Model)
+{
+    <tr onclick="window.location.href='@Url.Action("Details", "Transfers", new { id = tr.Id })'">
+        <th>@tr.Id</th>
+        <th><img src="@tr.GameName" width="30px" height="30px" /></th>
+        <th>@tr.PlayerUsername</th>
+        <th>@tr.TeamFullName</th>
+        <th>@tr.TransferDate</th>
+        <th>@tr.Position</th>
+
+        @* Show edit link for mods & admins *@
+        @if (User.IsInRole("Administrator") || User.IsInRole("Moderator"))
+        {
+            <td>
+                <a asp-action="Edit" asp-route-id="@tr.Id" class="btn btn-warning btn-sm">✍ Edit</a>
+            </td>
+        }
+
+        @* Show delete button only for admins *@
+        @if (User.IsInRole("Administrator"))
+        {
+            <td>
+                <form asp-action="Delete" asp-route-id="@tr.Id" method="post"
+                      onsubmit="return confirm('Are you sure you want to delete this transfer?');">
+                    <button type="submit" class="btn btn-danger btn-sm">🗑 Delete</button>
+                </form>
+            </td>
+        }
+    </tr>
 }
-
-@*Foreach
-    <tr>
-        <th scope="col">#</th>
-        <th scope="col">Game Id</th>
-        <th scope="col">Player Id</th>
-        <th scope="col">Team Id</th>
-        <th scope="col">Transfer date</th>
-        <th scope="col">PositionId</th>
-    </tr>*@
-    @foreach (var tr in Model)
-    {
-
-        <tr onclick="window.location.href='transfers/details/@tr.Id'">
-            <th scope="col">@tr.Id</th>
-            <th><img src="@tr.GameName" width="30px" height="30px"/></th>
-            <th>@tr.PlayerUsername</th>
-            <th>@tr.TeamFullName</th>
-            <th>@tr.TransferDate</th>
-            <th>@tr.Position</th>
-            <th>✍</th>
-        </tr>
-        
-    }

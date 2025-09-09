@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Balkana.Data;
 using Balkana.Data.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Balkana.Controllers
 {
@@ -45,7 +46,7 @@ namespace Balkana.Controllers
             return View(series);
         }
 
-        // GET: Series/Create
+        [Authorize(Roles = "Administrator,Moderator")]
         public IActionResult Create()
         {
             ViewData["TeamAId"] = new SelectList(_context.Teams, "Id", "FullName");
@@ -58,6 +59,7 @@ namespace Balkana.Controllers
         // POST: Series/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Moderator")]
         public async Task<IActionResult> Create([Bind("Id,Name,TeamAId,TeamBId,GameId,TournamentId,DatePlayed")] Series series)
         {
             if (ModelState.ErrorCount<=4)
@@ -70,6 +72,7 @@ namespace Balkana.Controllers
         }
 
         // GET: Series/Edit/5
+        [Authorize(Roles = "Administrator,Moderator")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -91,6 +94,7 @@ namespace Balkana.Controllers
         // POST: Series/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Moderator")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,TeamAId,TeamBId,GameId,TournamentId,DatePlayed")] Series series)
         {
             if (id != series.Id) return NotFound();
@@ -105,6 +109,7 @@ namespace Balkana.Controllers
         }
 
         // GET: Series/Delete/5
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -124,6 +129,7 @@ namespace Balkana.Controllers
         // POST: Series/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var series = await _context.Series.FindAsync(id);

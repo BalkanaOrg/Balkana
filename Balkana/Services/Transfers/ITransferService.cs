@@ -34,6 +34,7 @@ namespace Balkana.Services.Transfers
         bool PlayerExists(int playerId);
         bool GameExists(int gameId);
         bool PositionExists(int positionId);
+        bool TransferExists(int id);
 
         public IEnumerable<string> GetAllTeams();
         public IEnumerable<string> GetAllTeams(int gameId);

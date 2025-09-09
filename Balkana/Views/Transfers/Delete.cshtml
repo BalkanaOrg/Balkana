@@ -1,0 +1,17 @@
+﻿@model Balkana.Services.Transfers.Models.TransferDetailsServiceModel
+
+<h2>Delete Transfer</h2>
+
+<p>Are you sure you want to delete this transfer?</p>
+
+<div>
+    <strong>@Model.PlayerUsername</strong> → <strong>@Model.TeamFullName</strong>
+    <br />
+    <small>@Model.GameName | @Model.Position | @Model.TransferDate</small>
+</div>
+
+<form asp-action="DeleteConfirmed" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

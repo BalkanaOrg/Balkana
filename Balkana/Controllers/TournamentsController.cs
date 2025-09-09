@@ -6,6 +6,7 @@ using Balkana.Data.DTOs.Bracket;
 using Balkana.Models.Tournaments;
 using Balkana.Services.Bracket;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Balkana.Controllers
 {
@@ -82,11 +83,13 @@ namespace Balkana.Controllers
         }
 
         // GET: Tournament/Add
+        [Authorize(Roles = "Administrator,Moderator")]
         public IActionResult Add() => View(new TournamentFormViewModel());
 
         // POST: Tournament/Add
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Moderator")]
         public async Task<IActionResult> Add(TournamentFormViewModel model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -218,6 +221,7 @@ namespace Balkana.Controllers
         // POST: /Tournaments/AddTeams
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Moderator")]
         public async Task<IActionResult> AddTeams(TournamentTeamsViewModel model)
         {
             if (!ModelState.IsValid)
@@ -281,6 +285,7 @@ namespace Balkana.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Moderator")]
         public async Task<IActionResult> Conclude(int id)
         {
             var tournament = await _context.Tournaments
