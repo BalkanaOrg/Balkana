@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="~/Balkana.styles.css" asp-append-version="true" />
     <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.6.0/uicons-brands/css/uicons-brands.css'>
     <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    <link rel='stylesheet' href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <!-- jQuery first -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -22,7 +23,6 @@
 
     <!-- Bootstrap JS -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.ckeditor.com/ckeditor5/41.3.1/classic/ckeditor.js"></script>
 
     <!-- Your custom scripts last -->
     <script src="~/js/script.js"></script>
@@ -89,8 +89,7 @@
             <!-- Bottom user actions -->
             <div class="nav-actions">
                 <div class="language-selector">
-                    <i class="fi fi-rr-globe"></i>
-                    <span>EN</span>
+                    <i class="fa fa-bell"></i>
                 </div>
                 @if (User.Identity.IsAuthenticated)
                 {

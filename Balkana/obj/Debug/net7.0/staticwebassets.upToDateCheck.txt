@@ -43,6 +43,7 @@ C:\Users\1bulg\.nuget\packages\bootstrap\5.3.3\contentFiles\any\any\wwwroot\js\b
 C:\Users\1bulg\.nuget\packages\bootstrap\5.3.3\contentFiles\any\any\wwwroot\js\bootstrap.min.js
 C:\Users\1bulg\.nuget\packages\bootstrap\5.3.3\contentFiles\any\any\wwwroot\js\bootstrap.min.js.map
 wwwroot\Balkana.png
+wwwroot\css\authentication.css
 wwwroot\css\rankings.css
 wwwroot\css\site.css
 wwwroot\css\tournament.css
@@ -106,3 +107,8 @@ wwwroot\lib\jquery-validation\LICENSE.md
 wwwroot\lib\jquery-validation-unobtrusive\jquery.validate.unobtrusive.js
 wwwroot\lib\jquery-validation-unobtrusive\jquery.validate.unobtrusive.min.js
 wwwroot\lib\jquery-validation-unobtrusive\LICENSE.txt
+wwwroot\uploads\55a38d4d-5a29-456a-b54f-0ed4af9b84b7.jpg
+wwwroot\uploads\7de4ffb7-4524-47b6-9f7f-a0ee88932a74.jpg
+wwwroot\uploads\c6ace688-241b-45d7-a5ce-83031f76f191.png
+wwwroot\uploads\d0884602-f954-4f22-8739-e52ebf4936a5.png
+wwwroot\uploads\test.txt

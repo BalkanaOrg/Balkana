@@ -185,6 +185,10 @@
       "PackagePath": "staticwebassets\\Balkana.png"
     },
     {
+      "Id": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\authentication.css",
+      "PackagePath": "staticwebassets\\css\\authentication.css"
+    },
+    {
       "Id": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\rankings.css",
       "PackagePath": "staticwebassets\\css\\rankings.css"
     },
@@ -435,6 +439,26 @@
     {
       "Id": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\lib\\jquery\\dist\\jquery.min.map",
       "PackagePath": "staticwebassets\\lib\\jquery\\dist\\jquery.min.map"
+    },
+    {
+      "Id": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\55a38d4d-5a29-456a-b54f-0ed4af9b84b7.jpg",
+      "PackagePath": "staticwebassets\\uploads\\55a38d4d-5a29-456a-b54f-0ed4af9b84b7.jpg"
+    },
+    {
+      "Id": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\7de4ffb7-4524-47b6-9f7f-a0ee88932a74.jpg",
+      "PackagePath": "staticwebassets\\uploads\\7de4ffb7-4524-47b6-9f7f-a0ee88932a74.jpg"
+    },
+    {
+      "Id": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\c6ace688-241b-45d7-a5ce-83031f76f191.png",
+      "PackagePath": "staticwebassets\\uploads\\c6ace688-241b-45d7-a5ce-83031f76f191.png"
+    },
+    {
+      "Id": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\d0884602-f954-4f22-8739-e52ebf4936a5.png",
+      "PackagePath": "staticwebassets\\uploads\\d0884602-f954-4f22-8739-e52ebf4936a5.png"
+    },
+    {
+      "Id": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\test.txt",
+      "PackagePath": "staticwebassets\\uploads\\test.txt"
     },
     {
       "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.Balkana.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",

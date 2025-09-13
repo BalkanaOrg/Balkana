@@ -3,35 +3,33 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Balkana.Controllers
 {
-    [Authorize(Roles = "Author,Moderator,Administrator")]
+    [Route("file")]
+    [IgnoreAntiforgeryToken]
     public class FileController : Controller
     {
         private readonly IWebHostEnvironment _env;
+        public FileController(IWebHostEnvironment env) => _env = env;
 
-        public FileController(IWebHostEnvironment env)
+        [HttpPost("upload")]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> Upload([FromForm] IFormFile upload)
         {
-            _env = env;
-        }
+            Console.WriteLine("_env.WebRootPath = " + _env.WebRootPath);
 
-        [HttpPost]
-        public async Task<IActionResult> Upload(IFormFile upload)
-        {
-            if (upload != null && upload.Length > 0)
-            {
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(upload.FileName);
-                var path = Path.Combine(_env.WebRootPath, "uploads", fileName);
+            if (upload == null || upload.Length == 0)
+                return BadRequest("No file uploaded");
 
-                using (var stream = new FileStream(path, FileMode.Create))
-                {
-                    await upload.CopyToAsync(stream);
-                }
+            var uploadsPath = Path.Combine(_env.WebRootPath, "uploads");
+            Directory.CreateDirectory(uploadsPath);
 
-                var url = "/uploads/" + fileName;
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(upload.FileName)}";
+            var filePath = Path.Combine(uploadsPath, fileName);
 
-                return Json(new { url });
-            }
+            await using (var stream = new FileStream(filePath, FileMode.Create))
+                await upload.CopyToAsync(stream);
 
-            return BadRequest();
+            var url = Url.Content($"~/uploads/{fileName}");
+            return Json(new { url });
         }
     }
 }

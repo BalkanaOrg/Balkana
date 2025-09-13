@@ -4,20 +4,6 @@
     ViewData["Title"] = "Write Article";
 }
 
-<style>
-    /* Light mode */
-    .ck-editor__editable_inline {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-    }
-
-    /* Dark mode (example) */
-    [data-bs-theme="dark"] .ck-editor__editable_inline {
-        background-color: #1e1e1e !important;
-        color: #e0e0e0 !important;
-    }
-</style>
-
 <h2 class="mb-4">Write a New Article</h2>
 
 <form asp-action="Create" method="post" enctype="multipart/form-data">
@@ -37,35 +23,50 @@
 </form>
 
 @section Scripts {
-    <script src="https://cdn.ckeditor.com/ckeditor5/41.3.1/classic/ckeditor.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.3.1/super-build/ckeditor.js"></script>
     <script>
-        ClassicEditor
+        CKEDITOR.ClassicEditor
             .create(document.querySelector('#editor'), {
+                simpleUpload: {
+                    uploadUrl: '/file/upload'
+                },
                 toolbar: [
                     'heading', '|',
-                    'bold', 'italic', 'underline', 'strikethrough', '|',
-                    'link', 'blockQuote', 'insertTable', '|',
-                    'undo', 'redo', 'bulletedList', 'numberedList', '|',
-                    'imageUpload'
+                    'bold', 'italic', 'link', '|',
+                    'bulletedList', 'numberedList', '|',
+                    'blockQuote', 'undo', 'redo', '|',
+                    'uploadImage', 'mediaEmbed'
                 ],
-                ckfinder: {
-                    uploadUrl: '/File/Upload'
-                },
-                mention: {
-                    feeds: [
-                        {
-                            marker: '@@',
-                            feed: async query => {
-                                const response = await fetch('/Article/GetMentions?query=' + query);
-                                return await response.json();
-                            },
-                            itemRenderer: item => `<span>@@${item.name}</span>`
-                        }
-                    ]
-                }
+                removePlugins: [
+                    // Collaboration (already removed)
+                    'RealTimeCollaborativeComments',
+                    'RealTimeCollaborativeTrackChanges',
+                    'RealTimeCollaborativeRevisionHistory',
+                    'PresenceList',
+                    'Comments',
+                    'TrackChanges',
+                    'TrackChangesData',
+                    'RevisionHistory',
+
+                    // Premium plugins throwing license errors
+                    'MultiLevelList',
+                    'TableOfContents',
+                    'FormatPainter',
+                    'PasteFromOfficeEnhanced',
+
+                    // Other non-essential
+                    'Pagination',
+                    'WProofreader',
+                    'MathType',
+                    'CaseChange',
+                    'SlashCommand',
+                    'Template',
+                    'DocumentOutline',
+                    'AIAssistant'
+                ]
             })
-            .catch(error => {
-                console.error(error);
-            });
+            .then(editor => console.log('Editor ready ✅', editor))
+            .catch(error => console.error('Editor init error ❌:', error));
     </script>
+
 }

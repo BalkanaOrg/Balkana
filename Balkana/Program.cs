@@ -17,6 +17,27 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+// At top of Program.cs (before builder.Build())
+AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+{
+    try
+    {
+        Console.WriteLine("UNHANDLED EXCEPTION (AppDomain): " + (e.ExceptionObject ?? "(null)"));
+        if (e.ExceptionObject is Exception ex) Console.WriteLine(ex.ToString());
+    }
+    catch { }
+};
+
+TaskScheduler.UnobservedTaskException += (sender, e) =>
+{
+    try
+    {
+        Console.WriteLine("UNOBSERVED TASK EXCEPTION: " + e.Exception?.ToString());
+    }
+    catch { }
+};
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -44,11 +65,33 @@ builder.Services.AddHttpClient<FaceitMatchImporter>(client =>
     client.DefaultRequestHeaders.Add("Authorization", "Bearer " + builder.Configuration["Faceit:ApiKey"]);
 });
 
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = null; // unlimited
+});
+
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
+
 //builder.Services.AddScoped<ISeriesRepository, SeriesRepository>();
 //builder.Services.AddScoped<ISeriesService, SeriesService>();
-
-
+builder.WebHost.UseUrls("https://localhost:7241");
 var app = builder.Build();
+
+app.Use(async (context, next) =>
+{
+    Console.WriteLine($"Incoming request: {context.Request.Method} {context.Request.Path}");
+    try
+    {
+        await next();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Middleware caught exception: " + ex);
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsync("Internal server error: " + ex.Message);
+    }
+});
 
 using (var scope = app.Services.CreateScope())
 {
@@ -125,6 +168,7 @@ else
     app.UseHsts();
 }
 
+app.MapControllers();
 app.PrepareDatabase();
 app.UseHttpsRedirection();
 app.UseStaticFiles();

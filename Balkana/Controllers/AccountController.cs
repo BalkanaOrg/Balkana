@@ -88,5 +88,15 @@ namespace Balkana.Controllers
 
             return RedirectToAction(nameof(HomeController.Index), "Home");
         }
+
+        private IActionResult Profile()
+        {
+            return View();
+        }
+
+        private IActionResult Profile(string id)
+        {
+            return View();
+        }
     }
 }

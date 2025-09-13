@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "bZtXbXrChhhHWtwxidBgdQh7P9kO/qfJeuhEsWiEcy0=",
+  "Hash": "qfieegmtO0xUxeV3eNMpoBItZztGyrAN8VFWIGceThY=",
   "Source": "Balkana",
   "BasePath": "_content/Balkana",
   "Mode": "Default",
@@ -2264,6 +2264,27 @@
       "OriginalItemSpec": "wwwroot\\Balkana.png"
     },
     {
+      "Identity": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\authentication.css",
+      "SourceId": "Balkana",
+      "SourceType": "Discovered",
+      "ContentRoot": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\",
+      "BasePath": "_content/Balkana",
+      "RelativePath": "css/authentication#[.{fingerprint}]?.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "ljsy1x37eu",
+      "Integrity": "AXp4Qsf/8Oknx+vD8/kOm7mllpbjCb9X9+aCKPHHb14=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\css\\authentication.css"
+    },
+    {
       "Identity": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\rankings.css",
       "SourceId": "Balkana",
       "SourceType": "Discovered",
@@ -3585,6 +3606,111 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\lib\\jquery-validation-unobtrusive\\LICENSE.txt"
+    },
+    {
+      "Identity": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\55a38d4d-5a29-456a-b54f-0ed4af9b84b7.jpg",
+      "SourceId": "Balkana",
+      "SourceType": "Discovered",
+      "ContentRoot": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\",
+      "BasePath": "_content/Balkana",
+      "RelativePath": "uploads/55a38d4d-5a29-456a-b54f-0ed4af9b84b7#[.{fingerprint}]?.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "bv5d6zfi4t",
+      "Integrity": "9wBy8T4tZDtYjUmy7zl8sai4+pdg/zk4FoMu3rWcO8w=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\55a38d4d-5a29-456a-b54f-0ed4af9b84b7.jpg"
+    },
+    {
+      "Identity": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\7de4ffb7-4524-47b6-9f7f-a0ee88932a74.jpg",
+      "SourceId": "Balkana",
+      "SourceType": "Discovered",
+      "ContentRoot": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\",
+      "BasePath": "_content/Balkana",
+      "RelativePath": "uploads/7de4ffb7-4524-47b6-9f7f-a0ee88932a74#[.{fingerprint}]?.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "bv5d6zfi4t",
+      "Integrity": "9wBy8T4tZDtYjUmy7zl8sai4+pdg/zk4FoMu3rWcO8w=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\7de4ffb7-4524-47b6-9f7f-a0ee88932a74.jpg"
+    },
+    {
+      "Identity": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\c6ace688-241b-45d7-a5ce-83031f76f191.png",
+      "SourceId": "Balkana",
+      "SourceType": "Discovered",
+      "ContentRoot": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\",
+      "BasePath": "_content/Balkana",
+      "RelativePath": "uploads/c6ace688-241b-45d7-a5ce-83031f76f191#[.{fingerprint}]?.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "2s0t5tmcwm",
+      "Integrity": "zj1IflEzBRbvnRwqgdyE9ZB4z7eNBuyGj7luKzIT1nA=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\c6ace688-241b-45d7-a5ce-83031f76f191.png"
+    },
+    {
+      "Identity": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\d0884602-f954-4f22-8739-e52ebf4936a5.png",
+      "SourceId": "Balkana",
+      "SourceType": "Discovered",
+      "ContentRoot": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\",
+      "BasePath": "_content/Balkana",
+      "RelativePath": "uploads/d0884602-f954-4f22-8739-e52ebf4936a5#[.{fingerprint}]?.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "fgzgf2dtot",
+      "Integrity": "gSERmGbGil3tfeJxJamRDHUzuVHC4mEIm4bQrz+tP6s=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\d0884602-f954-4f22-8739-e52ebf4936a5.png"
+    },
+    {
+      "Identity": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\test.txt",
+      "SourceId": "Balkana",
+      "SourceType": "Discovered",
+      "ContentRoot": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\",
+      "BasePath": "_content/Balkana",
+      "RelativePath": "uploads/test#[.{fingerprint}]?.txt",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "xpkzy76cyp",
+      "Integrity": "pZGm1Av0IEBKARczz7exkNYsZb8LzaMrV7J32a2fFG4=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\test.txt"
     }
   ],
   "Endpoints": [
@@ -3831,6 +3957,88 @@
         {
           "Name": "integrity",
           "Value": "sha256-osYUD2AuYjj2q4aPTWHppwfKrKdRfunH7ZqDfXhRWIw="
+        }
+      ]
+    },
+    {
+      "Route": "css/authentication.css",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\authentication.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "11570"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"AXp4Qsf/8Oknx+vD8/kOm7mllpbjCb9X9+aCKPHHb14=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 09 Sep 2025 18:46:15 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-AXp4Qsf/8Oknx+vD8/kOm7mllpbjCb9X9+aCKPHHb14="
+        }
+      ]
+    },
+    {
+      "Route": "css/authentication.ljsy1x37eu.css",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\css\\authentication.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "11570"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"AXp4Qsf/8Oknx+vD8/kOm7mllpbjCb9X9+aCKPHHb14=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 09 Sep 2025 18:46:15 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "ljsy1x37eu"
+        },
+        {
+          "Name": "label",
+          "Value": "css/authentication.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-AXp4Qsf/8Oknx+vD8/kOm7mllpbjCb9X9+aCKPHHb14="
         }
       ]
     },
@@ -14825,6 +15033,416 @@
         {
           "Name": "integrity",
           "Value": "sha256-bJBFwc85FxNITit+4+dmzq5fRpbBEauvU+1eI+EpziQ="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/55a38d4d-5a29-456a-b54f-0ed4af9b84b7.bv5d6zfi4t.jpg",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\55a38d4d-5a29-456a-b54f-0ed4af9b84b7.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "8295"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"9wBy8T4tZDtYjUmy7zl8sai4+pdg/zk4FoMu3rWcO8w=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 12 Sep 2025 13:05:10 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "bv5d6zfi4t"
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/55a38d4d-5a29-456a-b54f-0ed4af9b84b7.jpg"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-9wBy8T4tZDtYjUmy7zl8sai4+pdg/zk4FoMu3rWcO8w="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/55a38d4d-5a29-456a-b54f-0ed4af9b84b7.jpg",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\55a38d4d-5a29-456a-b54f-0ed4af9b84b7.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "8295"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"9wBy8T4tZDtYjUmy7zl8sai4+pdg/zk4FoMu3rWcO8w=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 12 Sep 2025 13:05:10 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-9wBy8T4tZDtYjUmy7zl8sai4+pdg/zk4FoMu3rWcO8w="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/7de4ffb7-4524-47b6-9f7f-a0ee88932a74.bv5d6zfi4t.jpg",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\7de4ffb7-4524-47b6-9f7f-a0ee88932a74.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "8295"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"9wBy8T4tZDtYjUmy7zl8sai4+pdg/zk4FoMu3rWcO8w=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 12 Sep 2025 13:09:54 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "bv5d6zfi4t"
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/7de4ffb7-4524-47b6-9f7f-a0ee88932a74.jpg"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-9wBy8T4tZDtYjUmy7zl8sai4+pdg/zk4FoMu3rWcO8w="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/7de4ffb7-4524-47b6-9f7f-a0ee88932a74.jpg",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\7de4ffb7-4524-47b6-9f7f-a0ee88932a74.jpg",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "8295"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/jpeg"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"9wBy8T4tZDtYjUmy7zl8sai4+pdg/zk4FoMu3rWcO8w=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 12 Sep 2025 13:09:54 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-9wBy8T4tZDtYjUmy7zl8sai4+pdg/zk4FoMu3rWcO8w="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/c6ace688-241b-45d7-a5ce-83031f76f191.2s0t5tmcwm.png",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\c6ace688-241b-45d7-a5ce-83031f76f191.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "170773"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"zj1IflEzBRbvnRwqgdyE9ZB4z7eNBuyGj7luKzIT1nA=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 12 Sep 2025 13:09:36 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "2s0t5tmcwm"
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/c6ace688-241b-45d7-a5ce-83031f76f191.png"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-zj1IflEzBRbvnRwqgdyE9ZB4z7eNBuyGj7luKzIT1nA="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/c6ace688-241b-45d7-a5ce-83031f76f191.png",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\c6ace688-241b-45d7-a5ce-83031f76f191.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "170773"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"zj1IflEzBRbvnRwqgdyE9ZB4z7eNBuyGj7luKzIT1nA=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 12 Sep 2025 13:09:36 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-zj1IflEzBRbvnRwqgdyE9ZB4z7eNBuyGj7luKzIT1nA="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/d0884602-f954-4f22-8739-e52ebf4936a5.fgzgf2dtot.png",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\d0884602-f954-4f22-8739-e52ebf4936a5.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "585181"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"gSERmGbGil3tfeJxJamRDHUzuVHC4mEIm4bQrz+tP6s=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 12 Sep 2025 13:09:47 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "fgzgf2dtot"
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/d0884602-f954-4f22-8739-e52ebf4936a5.png"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-gSERmGbGil3tfeJxJamRDHUzuVHC4mEIm4bQrz+tP6s="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/d0884602-f954-4f22-8739-e52ebf4936a5.png",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\d0884602-f954-4f22-8739-e52ebf4936a5.png",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "585181"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/png"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"gSERmGbGil3tfeJxJamRDHUzuVHC4mEIm4bQrz+tP6s=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 12 Sep 2025 13:09:47 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-gSERmGbGil3tfeJxJamRDHUzuVHC4mEIm4bQrz+tP6s="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/test.txt",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\test.txt",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "11"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/plain"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"pZGm1Av0IEBKARczz7exkNYsZb8LzaMrV7J32a2fFG4=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 11 Sep 2025 08:15:55 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-pZGm1Av0IEBKARczz7exkNYsZb8LzaMrV7J32a2fFG4="
+        }
+      ]
+    },
+    {
+      "Route": "uploads/test.xpkzy76cyp.txt",
+      "AssetFile": "G:\\Programming\\Csharp\\Balkana\\Balkana\\wwwroot\\uploads\\test.txt",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "11"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/plain"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"pZGm1Av0IEBKARczz7exkNYsZb8LzaMrV7J32a2fFG4=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 11 Sep 2025 08:15:55 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "xpkzy76cyp"
+        },
+        {
+          "Name": "label",
+          "Value": "uploads/test.txt"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-pZGm1Av0IEBKARczz7exkNYsZb8LzaMrV7J32a2fFG4="
         }
       ]
     }
