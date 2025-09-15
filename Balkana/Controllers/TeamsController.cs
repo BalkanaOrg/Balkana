@@ -17,12 +17,14 @@ namespace Balkana.Controllers
         private readonly ApplicationDbContext data;
         private readonly ITeamService teams;
         private readonly IMapper mapper;
+        private readonly IWebHostEnvironment env;
 
-        public TeamsController(ApplicationDbContext data, ITeamService teams, IMapper mapper)
+        public TeamsController(ApplicationDbContext data, ITeamService teams, IMapper mapper, IWebHostEnvironment env)
         {
             this.data = data;
             this.teams = teams;
             this.mapper = mapper;
+            this.env = env;
         }
 
         public IActionResult Index([FromQuery] AllTeamsQueryModel query)
@@ -61,31 +63,47 @@ namespace Balkana.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Administrator,Moderator")]
-        public IActionResult Add(TeamFormModel team)
+        public async Task<IActionResult> Add(TeamFormModel team)
         {
-            if(!this.teams.GameExists(team.GameId))
+            if (!this.teams.GameExists(team.GameId))
             {
                 this.ModelState.AddModelError(nameof(team.GameId), "Game doesn't exist.");
             }
 
-            if(ModelState.ErrorCount > 1)
+            if (!ModelState.IsValid)
             {
                 team.CategoriesGames = this.teams.AllGames();
-
                 return View(team);
+            }
+
+            string? logoPath = null;
+
+            if (team.LogoFile != null && team.LogoFile.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(env.WebRootPath, "uploads", "TeamLogos");
+                Directory.CreateDirectory(uploadsFolder);
+
+                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(team.LogoFile.FileName)}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await team.LogoFile.CopyToAsync(stream);
+                }
+
+                // relative path to store in DB
+                logoPath = $"/uploads/TeamLogos/{fileName}";
             }
 
             var teamId = this.teams.Create(
                 team.FullName,
                 team.Tag,
-                team.LogoURL,
+                logoPath ?? string.Empty,
                 team.YearFounded,
                 team.GameId);
 
-
             var tteam = this.teams.Details(teamId);
             string teamInformation = tteam.GetInformation();
-            //TempData[GlobalMessageKey] = "This team has been added to the database.";
 
             return RedirectToAction(nameof(Details), new { id = teamId, information = teamInformation });
         }

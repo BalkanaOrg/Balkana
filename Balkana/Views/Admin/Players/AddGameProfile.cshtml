@@ -1,0 +1,188 @@
+﻿@model Balkana.Models.Admin.AddGameProfileViewModel
+@{
+    ViewData["Title"] = "Add Game Profile";
+}
+
+<h2>Add Game Profile</h2>
+
+@Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+<form asp-controller="Admin" asp-action="AddGameProfile" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="form-group">
+        <label for="playerDropdown">Select Player</label>
+        <select id="playerDropdown" asp-for="SelectedPlayerId" class="form-control"></select>
+        <span asp-validation-for="SelectedPlayerId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="Provider">Select Provider</label>
+        <select asp-for="Provider" asp-items="Model.Providers" class="form-control"></select>
+        <span asp-validation-for="Provider" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="UUID">UUID</label>
+        <input asp-for="UUID" class="form-control" />
+        <span asp-validation-for="UUID" class="text-danger"></span>
+    </div>
+
+    <div class="card p-3 mt-3">
+        <h5>UUID Lookup Helper</h5>
+
+        <div class="row g-2">
+            <div class="col-md-3">
+                <select id="lookupProvider" class="form-select">
+                    <option value="FACEIT">FACEIT</option>
+                    <option value="RIOT">RIOT</option>
+                </select>
+            </div>
+
+            @* Faceit uses just nickname *@
+            <div class="col-md-3 provider-field provider-faceit">
+                <input type="text" id="faceitNickname" class="form-control" placeholder="FACEIT Nickname" />
+            </div>
+
+            @* Riot uses gameName + tagLine + region *@
+            <div class="col-md-3 provider-field provider-riot" style="display:none;">
+                <input type="text" id="riotGameName" class="form-control" placeholder="Riot Game Name" />
+            </div>
+            <div class="col-md-3 provider-field provider-riot" style="display:none;">
+                <input type="text" id="riotTagLine" class="form-control" placeholder="Tagline (e.g. EUW)" />
+            </div>
+            <div class="col-md-3 provider-field provider-riot" style="display:none;">
+                <select id="riotRegion" class="form-select">
+                    <option value="europe">Europe</option>
+                    <option value="americas">Americas</option>
+                    <option value="asia">Asia</option>
+                    <option value="sea">SEA</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <button type="button" id="btnLookup" class="btn btn-outline-info w-100">Lookup</button>
+            </div>
+        </div>
+
+        <small class="text-muted">This will query FACEIT or Riot API and fill the UUID field automatically.</small>
+    </div>
+    <div id="lookupResults" class="row mt-3"></div>
+    <button type="submit" class="btn btn-primary">Add</button>
+</form>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(function () {
+            // Preload selected player if coming from Players page
+            var selectedId = '@(Model.SelectedPlayerId?.ToString() ?? "")';
+            var selectedText = '@(Model.SelectedPlayerText ?? "")';
+            if (selectedId && selectedText) {
+                var option = new Option(selectedText, selectedId, true, true);
+                $('#playerDropdown').append(option).trigger('change');
+            }
+
+            // Init select2 for players
+            $('#playerDropdown').select2({
+                placeholder: "Search for a player...",
+                allowClear: true,
+                minimumInputLength: 2,
+                ajax: {
+                    url: '@Url.Action("SearchPlayers", "Admin")',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            term: params.term,
+                            page: params.page || 1,
+                            pageSize: 20
+                        };
+                    },
+                    processResults: function (data, params) {
+                        params.page = params.page || 1;
+                        return {
+                            results: data.results,
+                            pagination: {
+                                more: data.pagination ? data.pagination.more : false
+                            }
+                        };
+                    }
+                }
+            });
+
+            // Toggle provider-specific inputs
+            $("#lookupProvider").on("change", function () {
+                $(".provider-field").hide();
+                if ($(this).val() === "FACEIT") {
+                    $(".provider-faceit").show();
+                } else {
+                    $(".provider-riot").show();
+                }
+            }).trigger("change");
+
+            // Lookup handler
+            $("#btnLookup").on("click", function () {
+                var provider = $("#lookupProvider").val();
+                var url = "";
+
+                if (provider === "FACEIT") {
+                    var nickname = $("#faceitNickname").val();
+                    if (!nickname) { alert("Enter FACEIT nickname"); return; }
+                    url = '@Url.Action("LookupFaceit", "Admin")' + "?nickname=" + encodeURIComponent(nickname);
+                }
+                else if (provider === "RIOT") {
+                    var gameName = $("#riotGameName").val();
+                    var tagLine = $("#riotTagLine").val();
+                    var region = $("#riotRegion").val();
+                    if (!gameName || !tagLine) { alert("Enter Riot gameName + tagLine"); return; }
+                    url = '@Url.Action("LookupRiot", "Admin")'
+                        + "?gameName=" + encodeURIComponent(gameName)
+                        + "&tagLine=" + encodeURIComponent(tagLine)
+                        + "&region=" + encodeURIComponent(region);
+                }
+
+                $.getJSON(url)
+                    .done(function (data) {
+                        if (provider === "FACEIT") {
+                            var container = $("#lookupResults");
+                            container.empty();
+                            $.each(data, function (i, player) {
+                                var flagUrl = "https://flagicons.lipis.dev/flags/4x3/" + player.country.toLowerCase() + ".svg";
+                                var card = `                                
+                                    <li class="list-group-item d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center">
+                                        <img src="${player.avatar}" alt="avatar" class="rounded me-2" style="width:40px; height:40px; object-fit:cover;" />
+                                        <div>
+                                            <div><strong>${player.nickname}</strong></div>
+                                            <small class="text-muted">
+                                                <img src="${flagUrl}" width="24" height="18" class="me-2"/> ${player.country} • {player.game_player_name}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary select-faceit"
+                                            data-uuid="${player.player_id}">
+                                        Use
+                                    </button>
+                                </li>`;
+                                container.append(card);
+                            });
+
+                            // When "Use This" is clicked, populate UUID field
+                            $(".select-faceit").on("click", function () {
+                                $("#UUID").val($(this).data("uuid"));
+                            });
+                        }
+                        else if (provider === "RIOT") {
+                            $("#UUID").val(data.uuid);
+                        }
+                    })
+                .fail(function (xhr) { alert("Lookup failed: " + xhr.responseText); });
+            });
+        });
+    </script>
+}

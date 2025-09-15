@@ -16,10 +16,10 @@
         [StringLength(TeamTagMaxLength, MinimumLength = TeamTagMinLength)]
         public string Tag { get; init; }
 
-        [Required]
-        [Display(Name = "Image URL")]
-        [Url]
-        public string LogoURL { get; init; }
+        [Display(Name = "Team Logo")]
+        public IFormFile? LogoFile { get; init; }
+
+        public string? LogoPath { get; set; } // stored in DB (relative path)
 
         public int GameId { get; init; }
 

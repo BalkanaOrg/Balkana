@@ -16,7 +16,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Balkana")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+32510937d525d6632ab7b75db494dc7c53090c8d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8b48a590ea7496920f223a09482b31fd039192f6")]
 [assembly: System.Reflection.AssemblyProductAttribute("Balkana")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Balkana")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

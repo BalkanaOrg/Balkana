@@ -5,6 +5,7 @@ using Balkana.Data.Models;
 using Balkana.Data.Repositories;
 using Balkana.Data.Seed;
 using Balkana.Services;
+using Balkana.Services.Admin;
 using Balkana.Services.Bracket;
 using Balkana.Services.Matches;
 using Balkana.Services.Matches.Models;
@@ -134,6 +135,7 @@ void ConfigureServices(IServiceCollection services)
     // Add HttpClient for our importers
     builder.Services.AddHttpClient<RiotMatchImporter>();
     builder.Services.AddHttpClient<FaceitMatchImporter>();
+    builder.Services.AddHttpClient<IExternalApiService, ExternalApiService>();
 
     // Also register the service dictionary
     builder.Services.AddScoped(provider => new Dictionary<string, IMatchImporter>

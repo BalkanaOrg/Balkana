@@ -60,7 +60,7 @@ namespace Balkana.Controllers
                 .Select(s => new
                 {
                     id = s.Id,
-                    text = s.TeamA.FullName + " vs " + s.TeamB.FullName + " (" + s.DatePlayed.ToShortDateString() + ")"
+                    text = s.TeamA.FullName + " vs " + s.TeamB.FullName + " (" + s.DatePlayed.ToShortDateString() + ") " + s.Name
                 })
                 .ToList();
 

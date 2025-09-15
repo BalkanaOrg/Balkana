@@ -25,7 +25,9 @@
   <ItemGroup>
     <Folder Include="Migrations\" />
     <Folder Include="Services\Series\Models\" />
-    <Folder Include="wwwroot\uploads\" />
+    <Folder Include="wwwroot\uploads\News\" />
+    <Folder Include="wwwroot\uploads\PlayerProfiles\" />
+    <Folder Include="wwwroot\uploads\TeamLogos\" />
   </ItemGroup>
 
 </Project>

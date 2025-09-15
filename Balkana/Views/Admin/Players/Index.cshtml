@@ -1,0 +1,54 @@
+﻿@model Balkana.Models.Admin.PlayersListViewModel
+@{
+    ViewData["Title"] = "Players and Game Profiles";
+}
+
+<h2 class="mb-4">Players &amp; Game Profiles</h2>
+
+<table class="table table-bordered align-middle text-white">
+    <thead class="table-dark">
+        <tr>
+            <th>Nickname</th>
+            <th>Full Name</th>
+            <th>FACEIT</th>
+            <th>RIOT</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var player in Model.Players)
+        {
+            <tr>
+                <td>@player.Nickname</td>
+                <td>@player.FullName</td>
+
+                @* FACEIT column *@
+                <td>
+                    @if (player.GameProfiles.Contains("FACEIT"))
+                    {
+                        <span class="badge bg-success">Yes</span>
+                    }
+                    else
+                    {
+                        <a asp-controller="Admin" asp-action="AddGameProfile" asp-route-playerId="@player.PlayerId" class="btn btn-sm btn-outline-primary">
+                            Add
+                        </a>
+                    }
+                </td>
+
+                @* RIOT column *@
+                <td>
+                    @if (player.GameProfiles.Contains("RIOT"))
+                    {
+                        <span class="badge bg-success">Yes</span>
+                    }
+                    else
+                    {
+                        <a asp-action="AddGameProfile" asp-route-playerId="@player.PlayerId" class="btn btn-sm btn-outline-primary">
+                            Add
+                        </a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
