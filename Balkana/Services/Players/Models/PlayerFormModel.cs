@@ -1,5 +1,6 @@
 ﻿using Balkana.Models.Players;
 using Balkana.Services.Nationality;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System.ComponentModel.DataAnnotations;
 
 namespace Balkana.Services.Players.Models
@@ -27,6 +28,7 @@ namespace Balkana.Services.Players.Models
         [Display(Name = "Nationality")]
         public int NationalityId { get; init; }
 
+        [ValidateNever]
         public IEnumerable<PlayerNationalityServiceModel> Nationalities { get; set; }
     }
 }

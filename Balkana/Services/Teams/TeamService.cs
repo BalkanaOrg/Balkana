@@ -73,7 +73,7 @@
 
             return teamData.Id;
         }
-        public bool Edit(
+        public bool Update(
             int id,
             string fullname,
             string tag,

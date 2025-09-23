@@ -19,7 +19,7 @@ namespace Balkana.Services.Teams
             int yearFounded,
             int gameId);
     
-        bool Edit(
+        bool Update(
             int teamId,
             string teamFullName,
             string teamTag,
@@ -34,5 +34,6 @@ namespace Balkana.Services.Teams
         public int AbsoluteNumberOfTeams();
         public IEnumerable<TeamGameServiceModel> AllGames();
         public IEnumerable<TeamStaffServiceModel> AllPlayers(int teamId);
+        
     }
 }

@@ -64,11 +64,6 @@ G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\Balkana.MvcApplicationPar
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\Balkana.MvcApplicationPartsAssemblyInfo.cache
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\Balkana.RazorAssemblyInfo.cache
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\Balkana.RazorAssemblyInfo.cs
-G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\staticwebassets\msbuild.Balkana.Microsoft.AspNetCore.StaticWebAssets.props
-G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\staticwebassets\msbuild.build.Balkana.props
-G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\staticwebassets\msbuild.buildMultiTargeting.Balkana.props
-G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\staticwebassets\msbuild.buildTransitive.Balkana.props
-G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\staticwebassets.pack.json
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\staticwebassets.build.json
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\staticwebassets.development.json
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
@@ -82,6 +77,10 @@ G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\ref\Balkana.dll
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\Balkana.sourcelink.json
 G:\Programming\Csharp\Balkana\Balkana\bin\Debug\net7.0\Balkana.staticwebassets.endpoints.json
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\staticwebassets.build.endpoints.json
-G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\staticwebassets\msbuild.Balkana.Microsoft.AspNetCore.StaticWebAssetEndpoints.props
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\Balkana.csproj.Up2Date
 G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\staticwebassets.upToDateCheck.txt
+G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\rpswa.dswa.cache.json
+G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\rjimswa.dswa.cache.json
+G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\rjsmrazor.dswa.cache.json
+G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\rjsmcshtml.dswa.cache.json
+G:\Programming\Csharp\Balkana\Balkana\obj\Debug\net7.0\staticwebassets.build.json.cache

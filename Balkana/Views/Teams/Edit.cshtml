@@ -1,0 +1,48 @@
+﻿@model Balkana.Services.Teams.Models.TeamFormModel
+
+<h2>Edit Team</h2>
+
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="LogoPath" /> <!-- keep old logo if no upload -->
+
+    <div>
+        <label asp-for="FullName"></label>
+        <input asp-for="FullName" />
+        <span asp-validation-for="FullName"></span>
+    </div>
+
+    <div>
+        <label asp-for="Tag"></label>
+        <input asp-for="Tag" />
+        <span asp-validation-for="Tag"></span>
+    </div>
+
+    <div>
+        <label>Current Logo</label><br />
+        @if (!string.IsNullOrEmpty(Model.LogoPath))
+        {
+            <img src="@Model.LogoPath" alt="Team Logo" width="100" />
+        }
+        else
+        {
+            <span>No logo uploaded</span>
+        }
+    </div>
+
+    <div>
+        <label asp-for="LogoFile">Upload new logo (optional)</label>
+        <input asp-for="LogoFile" type="file" />
+    </div>
+
+    <div>
+        <label asp-for="GameId"></label>
+        <select asp-for="GameId" asp-items="@(new SelectList(Model.CategoriesGames, "Id", "Name"))"></select>
+    </div>
+
+    <div>
+        <label asp-for="YearFounded"></label>
+        <input asp-for="YearFounded" />
+    </div>
+
+    <button type="submit">Save Changes</button>
+</form>

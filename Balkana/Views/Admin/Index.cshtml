@@ -1,5 +1,10 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
+@{
+    ViewData["Title"] = "Admin Panel";
+}
+
+<a class="dropdown-item" asp-controller="Admin" asp-action="Players" asp-route-id="Index">All Players</a>
+<a class="dropdown-item" asp-controller="Admin" asp-action="AddPlayer">Add New Player</a>
+<a class="dropdown-item" asp-controller="Admin" asp-action="AddGameProfile">Add Game Profile</a>

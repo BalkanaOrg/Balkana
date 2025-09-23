@@ -1,7 +1,9 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @model IEnumerable<Balkana.Data.Models.ApplicationUser>
 @inject UserManager<Balkana.Data.Models.ApplicationUser> UserManager
-
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
 <h2>Manage Users</h2>
 <table>
     <thead>

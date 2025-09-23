@@ -1,4 +1,4 @@
-using Balkana;
+﻿using Balkana;
 using Balkana.Data;
 using Balkana.Data.Infrastructure;
 using Balkana.Data.Models;
@@ -14,9 +14,14 @@ using Balkana.Services.Players;
 using Balkana.Services.Series;
 using Balkana.Services.Teams;
 using Balkana.Services.Transfers;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+
+Environment.SetEnvironmentVariable("DOTNET_USE_POLLING_FILE_WATCHER", "1");
+
 
 // At top of Program.cs (before builder.Build())
 AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
@@ -37,6 +42,9 @@ TaskScheduler.UnobservedTaskException += (sender, e) =>
     }
     catch { }
 };
+
+Console.WriteLine("Runtime: " + System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription);
+Console.WriteLine("OS: " + System.Runtime.InteropServices.RuntimeInformation.OSDescription);
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -68,7 +76,16 @@ builder.Services.AddHttpClient<FaceitMatchImporter>(client =>
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    serverOptions.Limits.MaxRequestBodySize = null; // unlimited
+    serverOptions.Limits.MaxRequestBodySize = 104_857_600; // 100 MB
+    serverOptions.Limits.MaxRequestBufferSize = 104_857_600;
+    serverOptions.Limits.MaxRequestLineSize = 16_384;
+    serverOptions.Limits.MaxRequestHeadersTotalSize = 65_536;
+});
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 104_857_600; // 100 MB
+    options.BufferBody = true;
 });
 
 builder.Logging.AddConsole();
@@ -77,6 +94,16 @@ builder.Logging.SetMinimumLevel(LogLevel.Debug);
 //builder.Services.AddScoped<ISeriesRepository, SeriesRepository>();
 //builder.Services.AddScoped<ISeriesService, SeriesService>();
 builder.WebHost.UseUrls("https://localhost:7241");
+AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+{
+    Console.WriteLine("Unhandled exception: " + args.ExceptionObject.ToString());
+};
+TaskScheduler.UnobservedTaskException += (sender, args) =>
+{
+    Console.WriteLine("Unobserved task exception: " + args.Exception.ToString());
+    args.SetObserved();
+};
+
 var app = builder.Build();
 
 app.Use(async (context, next) =>
@@ -169,6 +196,17 @@ else
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+app.Use(async (context, next) =>
+{
+    Console.WriteLine($"Incoming request: {context.Request.Method} {context.Request.Path} - ContentLength: {context.Request.ContentLength} - ContentType: {context.Request.ContentType}");
+    try { await next(); }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Middleware caught exception: " + ex);
+        throw;
+    }
+});
 
 app.MapControllers();
 app.PrepareDatabase();

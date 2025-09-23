@@ -2,11 +2,14 @@
 using Balkana.Data.Models;
 using Balkana.Models.Admin;
 using Balkana.Services.Admin;
+using Balkana.Services.Players;
+using Balkana.Services.Players.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Balkana.Data.Infrastructure.Extensions;
 
 namespace Balkana.Controllers
 {
@@ -26,6 +29,8 @@ namespace Balkana.Controllers
             _roleManager = roleManager;
             _context = context;
         }
+
+        public IActionResult Index() => View();
 
         // List all users
         public IActionResult Users()
@@ -209,6 +214,47 @@ namespace Balkana.Controllers
             if (uuid == null) return NotFound("No Riot player found");
 
             return Json(new { uuid });
+        }
+
+        [HttpGet]
+        [Route("admin/players/add")]
+        public IActionResult AddPlayer([FromServices] IPlayerService players)
+        {
+            return View("Players/Add", new PlayerFormModel
+            {
+                Nationalities = players.GetNationalities()
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Route("admin/players/add")]
+        public IActionResult AddPlayer(
+            PlayerFormModel player,
+            [FromServices] IPlayerService players,
+            [FromServices] ApplicationDbContext data)
+        {
+            if (!data.Nationalities.Any(c => c.Id == player.NationalityId))
+            {
+                ModelState.AddModelError(nameof(player.NationalityId), "This nationality isn't registered in the Database.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                player.Nationalities = players.GetNationalities();
+                return View("Players/Add", player);
+            }
+
+            var playerId = players.Create(
+                player.Nickname,
+                player.FirstName,
+                player.LastName,
+                player.NationalityId);
+
+            var pplayer = players.Profile(playerId);
+            string playerInformation = pplayer.GetInformation();
+
+            return RedirectToAction("Profile", "Players", new { id = playerId, information = playerInformation });
         }
     }
 }
