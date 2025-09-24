@@ -38,7 +38,7 @@
     <Folder Include="Views\Admin\Tournaments\" />
     <Folder Include="Views\Admin\Transfers\" />
     <Folder Include="Views\Admin\Teams\" />
-    <Folder Include="wwwroot\uploads\News\" />
+    <Folder Include="wwwroot\uploads\News\Thumbnails\" />
     <Folder Include="wwwroot\uploads\PlayerProfiles\" />
     <Folder Include="wwwroot\uploads\TeamLogos\" />
   </ItemGroup>

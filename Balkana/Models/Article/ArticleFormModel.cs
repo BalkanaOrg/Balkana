@@ -1,12 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Balkana.Data.Models;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Balkana.Data.Models
+namespace Balkana.Models.Article
 {
-    public class Article
+    public class ArticleFormModel
     {
-        public int Id { get; set; }
-
         [Required, MaxLength(200)]
         public string Title { get; set; }
 
@@ -14,17 +14,24 @@ namespace Balkana.Data.Models
         public string Content { get; set; }
 
         [Required]
-        public string ThumbnailUrl { get; set; } 
+        public string ThumbnailUrl { get; set; }
+
+        [Display(Name = "Team Logo")]
+        public IFormFile? File { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [ValidateNever]
         public DateTime? PublishedAt { get; set; }
 
         // Draft, PendingReview, Published, Archived
         public string Status { get; set; } = "Draft";
 
         // Relation to User (Author)
+        [ValidateNever]
         public string AuthorId { get; set; }
-        [ForeignKey(nameof(AuthorId))]
+
+        [ValidateNever]
         public ApplicationUser Author { get; set; }
     }
 }

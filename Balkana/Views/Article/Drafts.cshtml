@@ -1,0 +1,36 @@
+﻿@model IEnumerable<Balkana.Data.Models.Article>
+
+@{
+    ViewData["Title"] = "Draft Articles";
+}
+
+<h2 class="mb-4">Draft Articles</h2>
+
+<a class="btn btn-success mb-3" asp-action="Create">➕ New Article</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Published by</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var article in Model)
+        {
+            <tr>
+                <td>@article.Title</td>
+                <td>@article.Status</td>
+                <td>@article.CreatedAt.ToString("yyyy-MM-dd")</td>
+                <td>@(article.Author.FirstName + " " + article.Author.LastName)</td>
+                <td>
+                    <a class="btn btn-sm btn-primary" asp-action="Details" asp-route-id="@article.Id">View</a>
+                    <a class="btn btn-sm btn-warning" asp-action="Publish" asp-route-id="@article.Id">Publish</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

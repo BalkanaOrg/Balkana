@@ -1,4 +1,5 @@
-﻿@{
+﻿@model List<Balkana.Data.Models.Article>
+@{
     ViewData["Title"] = "Home Page";
 }
 
@@ -82,7 +83,28 @@
 <section class="news-section" id="news">
     <div class="news-header">
         <h2 class="news-title">Latest Tournament News</h2>
-        <a href="#" class="see-all">See All News →</a>
+        <a href="/Article/Index" class="see-all">See All News →</a>
     </div>
     <p class="news-subtitle">Stay on top of the action! Get the latest updates, match results, and player highlights.</p>
+
+    <div class="news-grid">
+        @foreach (var article in Model)
+        {
+            <a href="/Article/Details/@article.Id" class="news-card">
+                <div class="news-card-thumb">
+                    <img src="@article.ThumbnailUrl" alt="@article.Title" />
+                </div>
+                <div class="news-card-content">
+                    <h3 class="news-card-title">@article.Title</h3>
+                    <p class="news-card-snippet">
+                        @article.Content.StripHtml(120)
+                    </p>
+                    <div class="news-card-footer">
+                        <span class="news-card-author">By @article.Author.FirstName @article.Author.LastName</span>
+                        <span class="news-card-date">@article.PublishedAt?.ToString("dd MMM yyyy")</span>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
 </section>

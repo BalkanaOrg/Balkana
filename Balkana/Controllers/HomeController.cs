@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using Balkana.Data;
+using Balkana.Data.Models;
 using Balkana.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
 namespace Balkana.Controllers
@@ -31,7 +33,8 @@ namespace Balkana.Controllers
             var games = data.Games.Count();
             ViewData["GamesCount"] = games;
 
-            return View();
+            var latestArticles = FetchLatestArticles();
+            return View(latestArticles);
         }
 
         public IActionResult Privacy()
@@ -43,6 +46,16 @@ namespace Balkana.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+        private List<Article> FetchLatestArticles()
+        {
+            return data.Articles
+                .Where(a => a.Status == "Published")
+                .Include(a => a.Author)
+                .OrderByDescending(a => a.PublishedAt)
+                .Take(4)
+                .ToList();
         }
     }
 }

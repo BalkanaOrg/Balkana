@@ -6,21 +6,89 @@
 
 <h2 class="mb-4">Latest Articles</h2>
 
-@foreach (var article in Model)
-{
-    <div class="card mb-4 shadow-sm">
-        <div class="card-body">
-            <h3 class="card-title">
-                <a asp-action="Details" asp-route-id="@article.Id">@article.Title</a>
-            </h3>
-            <p class="text-muted">
-                By @article.Author.FirstName @article.Author.LastName
-                on @article.PublishedAt?.ToString("MMMM dd, yyyy")
-            </p>
-            <p>
-                @Html.Raw(article.Content.Length > 300 ? article.Content.Substring(0, 300) + "..." : article.Content)
-            </p>
-            <a class="btn btn-outline-primary" asp-action="Details" asp-route-id="@article.Id">Read More</a>
-        </div>
-    </div>
-}
+<div class="articles-list">
+    @foreach (var article in Model)
+    {
+        <a asp-action="Details" asp-route-id="@article.Id" class="article-row">
+            <div class="article-thumb">
+                <img src="@article.ThumbnailUrl" alt="@article.Title" />
+            </div>
+
+            <div class="article-content">
+                <h3 class="article-title">@article.Title</h3>
+
+                <p class="article-snippet">
+                    @article.Content.StripHtml(600)
+                </p>
+
+                <div class="article-footer">
+                    <span class="article-author">By @article.Author.FirstName @article.Author.LastName</span>
+                    <span class="article-date">@article.PublishedAt?.ToString("dd MMM yyyy")</span>
+                </div>
+            </div>
+        </a>
+    }
+</div>
+
+<style>
+    .articles-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .article-row {
+        display: flex;
+        gap: 1.5rem;
+        background: #1e1e2f;
+        border-radius: 12px;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        padding: 1rem;
+    }
+
+        .article-row:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+        }
+
+    /* Thumbnail */
+    .article-thumb img {
+        width: 220px;
+        height: 140px;
+        object-fit: cover;
+        border-radius: 8px;
+        flex-shrink: 0;
+    }
+
+    /* Content */
+    .article-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        flex: 1;
+    }
+
+    .article-title {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.4rem;
+    }
+
+    .article-snippet {
+        flex-grow: 1;
+        font-size: 0.95rem;
+        opacity: 0.85;
+        margin-bottom: 0.75rem;
+    }
+
+    /* Footer */
+    .article-footer {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        opacity: 0.7;
+    }
+
+</style>

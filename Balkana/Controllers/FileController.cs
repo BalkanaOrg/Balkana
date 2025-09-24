@@ -19,7 +19,7 @@ namespace Balkana.Controllers
             if (upload == null || upload.Length == 0)
                 return BadRequest("No file uploaded");
 
-            var uploadsPath = Path.Combine(_env.WebRootPath, "uploads");
+            var uploadsPath = Path.Combine(_env.WebRootPath, "uploads", "News");
             Directory.CreateDirectory(uploadsPath);
 
             var fileName = $"{Guid.NewGuid()}{Path.GetExtension(upload.FileName)}";
@@ -28,7 +28,7 @@ namespace Balkana.Controllers
             await using (var stream = new FileStream(filePath, FileMode.Create))
                 await upload.CopyToAsync(stream);
 
-            var url = Url.Content($"~/uploads/{fileName}");
+            var url = Url.Content($"~/uploads/news/{fileName}");
             return Json(new { url });
         }
     }

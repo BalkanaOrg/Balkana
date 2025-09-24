@@ -6,7 +6,7 @@ namespace Balkana.Data.Seed
     {
         public static async Task SeedRoles(RoleManager<IdentityRole> roleManager)
         {
-            string[] roles = { "Member", "Author", "Moderator", "Administrator" };
+            string[] roles = { "Member", "Author", "Editor", "StoreManager", "Moderator", "Administrator" };
 
             foreach (var role in roles)
             {

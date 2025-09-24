@@ -1,4 +1,4 @@
-﻿@model Balkana.Data.Models.Article
+﻿@model Balkana.Models.Article.ArticleFormModel
 
 @{
     ViewData["Title"] = "Edit Article";
@@ -7,12 +7,17 @@
 <h2 class="mb-4">Edit Article</h2>
 
 <form asp-action="Edit" method="post" enctype="multipart/form-data">
-    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="ThumbnailUrl" />
 
     <div class="mb-3">
         <label asp-for="Title" class="form-label"></label>
         <input asp-for="Title" class="form-control" />
         <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="File"></label>
+        <input asp-for="File" type="file" class="form-control" />
     </div>
 
     <div class="mb-3">
@@ -25,35 +30,49 @@
 </form>
 
 @section Scripts {
-    <script src="https://cdn.ckeditor.com/ckeditor5/41.3.1/classic/ckeditor.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.3.1/super-build/ckeditor.js"></script>
     <script>
-        ClassicEditor
+        CKEDITOR.ClassicEditor
             .create(document.querySelector('#editor'), {
+                simpleUpload: {
+                    uploadUrl: '/file/upload'
+                },
                 toolbar: [
                     'heading', '|',
-                    'bold', 'italic', 'underline', 'strikethrough', '|',
-                    'link', 'blockQuote', 'insertTable', '|',
-                    'undo', 'redo', 'bulletedList', 'numberedList', '|',
-                    'imageUpload'
+                    'bold', 'italic', 'link', '|',
+                    'bulletedList', 'numberedList', '|',
+                    'blockQuote', 'undo', 'redo', '|',
+                    'uploadImage', 'mediaEmbed'
                 ],
-                ckfinder: {
-                    uploadUrl: '/File/Upload'
-                },
-                mention: {
-                    feeds: [
-                        {
-                            marker: '@@',
-                            feed: async query => {
-                                const response = await fetch(`/Article/GetMentions?query=${query}`);
-                                return await response.json();
-                            },
-                            itemRenderer: item => `<span>@@${item.name}</span>`
-                        }
-                    ]
-                }
+                removePlugins: [
+                    // Collaboration (already removed)
+                    'RealTimeCollaborativeComments',
+                    'RealTimeCollaborativeTrackChanges',
+                    'RealTimeCollaborativeRevisionHistory',
+                    'PresenceList',
+                    'Comments',
+                    'TrackChanges',
+                    'TrackChangesData',
+                    'RevisionHistory',
+
+                    // Premium plugins throwing license errors
+                    'MultiLevelList',
+                    'TableOfContents',
+                    'FormatPainter',
+                    'PasteFromOfficeEnhanced',
+
+                    // Other non-essential
+                    'Pagination',
+                    'WProofreader',
+                    'MathType',
+                    'CaseChange',
+                    'SlashCommand',
+                    'Template',
+                    'DocumentOutline',
+                    'AIAssistant'
+                ]
             })
-            .catch(error => {
-                console.error(error);
-            });
+            .then(editor => console.log('Editor ready ✅', editor))
+            .catch(error => console.error('Editor init error ❌:', error));
     </script>
 }
