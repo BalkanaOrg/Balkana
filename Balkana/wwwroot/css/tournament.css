@@ -1,59 +1,440 @@
-﻿.bracket-container {
-    display: grid;
-    grid-template-columns: repeat(6, 220px); /* one column per round */
-    grid-auto-rows: min-content;
-    gap: 40px 40px;
-    padding: 20px;
-    overflow-x: auto;
-    background: #111;
-    color: #fff;
-    font-family: 'Segoe UI', sans-serif;
+﻿.tournament-teams-container {
+    background: linear-gradient(135deg, #2d1b69 0%, #8b0000 100%);
+    min-height: 100vh;
+    padding: 40px 20px;
+    color: white;
 }
 
-/* Each round is stacked vertically inside the column */
-.ub-round, .lb-round, .gf-bracket .round {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+.teams-header {
+    text-align: center;
+    margin-bottom: 40px;
 }
 
-/* Matches */
-.match {
-    background: #222;
-    border: 2px solid #555;
-    border-radius: 5px;
-    padding: 5px 10px;
-    position: relative;
-    width: 200px;
-}
-
-/* Teams */
-.team {
-    padding: 2px 0;
-}
-
-.team-a {
+.teams-header h2 {
+    font-size: 2.5rem;
     font-weight: bold;
+    margin-bottom: 10px;
+    text-shadow: 0 4px 8px rgba(0,0,0,0.5);
 }
 
-.team-b {
+.tournament-name {
+    font-size: 1.3rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
     font-style: italic;
 }
 
-/* Round titles */
-.round-title {
+.teams-form-card {
+    max-width: 900px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.form-section {
+    margin-bottom: 40px;
+}
+
+.section-title {
+    font-size: 1.8rem;
     font-weight: bold;
-    color: #ffcc00;
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+.section-description {
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 30px;
+    font-size: 1.1rem;
+}
+
+.teams-selection {
+    margin-bottom: 30px;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #ffffff;
+    font-size: 1.1rem;
+}
+
+/* Custom Teams Selector */
+.teams-selector {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.search-box {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 12px 45px 12px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    color: white;
+    font-size: 1rem;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: #8b0000;
+    box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.search-box input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.2rem;
+}
+
+.teams-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    border-radius: 10px;
+}
+
+.teams-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.teams-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.teams-list::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #8b0000, #2d1b69);
+    border-radius: 10px;
+}
+
+.team-option {
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.team-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.team-checkbox:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.team-checkbox input[type="checkbox"] {
+    display: none;
+}
+
+.team-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+}
+
+.team-logo-small {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.team-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.team-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: white;
+    margin-bottom: 3px;
+}
+
+.team-subtitle {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.checkbox-indicator {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 6px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.team-checkbox input[type="checkbox"]:checked + .team-info + .checkbox-indicator {
+    background: linear-gradient(45deg, #8b0000, #2d1b69);
+    border-color: #8b0000;
+}
+
+.team-checkbox input[type="checkbox"]:checked + .team-info + .checkbox-indicator::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.team-checkbox input[type="checkbox"]:checked ~ .team-checkbox {
+    background: rgba(139, 0, 0, 0.2);
+    border-color: #8b0000;
+}
+
+.selection-summary {
+    text-align: center;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #ffffff;
+}
+
+.form-help {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 15px;
+    font-style: italic;
     text-align: center;
 }
 
-/* Connectors (example, can be upgraded to curves later) */
-.match::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: -40px;
-    width: 40px;
-    height: 2px;
-    background: #fff;
+/* Selected Teams Preview */
+.selected-teams-preview {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 25px;
+    margin-top: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: fadeIn 0.5s ease;
+}
+
+.selected-teams-preview h4 {
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+    color: #ffffff;
+    text-align: center;
+}
+
+.selected-teams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.selected-team-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.selected-team-card:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.selected-team-card .team-info {
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.selected-team-card .team-logo-small {
+    width: 60px;
+    height: 60px;
+}
+
+.selected-team-card .team-details {
+    align-items: center;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    padding-top: 30px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    margin-top: 30px;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 15px 40px;
+    border: none;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    min-width: 150px;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #8b0000, #2d1b69);
+    color: white;
+    box-shadow: 0 4px 15px rgba(139, 0, 0, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(139, 0, 0, 0.5);
+    color: white;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+    color: white;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.teams-form-card {
+    animation: slideInUp 0.6s ease;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .tournament-teams-container {
+        padding: 20px 15px;
+    }
+    
+    .teams-header h2 {
+        font-size: 2rem;
+    }
+    
+    .tournament-name {
+        font-size: 1.1rem;
+    }
+    
+    .teams-form-card {
+        padding: 25px 20px;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+    }
+    
+    .section-description {
+        font-size: 1rem;
+    }
+    
+    .team-info {
+        gap: 10px;
+    }
+    
+    .team-logo-small {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .team-name {
+        font-size: 1rem;
+    }
+    
+    .selected-teams-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn-primary, .btn-secondary {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .teams-header h2 {
+        font-size: 1.8rem;
+    }
+    
+    .teams-form-card {
+        margin: 0 10px;
+        padding: 20px 15px;
+    }
+    
+    .team-checkbox {
+        padding: 12px 15px;
+    }
+    
+    .teams-selector {
+        padding: 15px;
+    }
+    
+    .selected-teams-grid {
+        grid-template-columns: 1fr;
+    }
 }

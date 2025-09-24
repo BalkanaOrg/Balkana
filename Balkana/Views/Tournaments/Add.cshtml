@@ -4,50 +4,685 @@
     ViewData["Title"] = "Add Tournament";
 }
 
-<h2>Add Tournament</h2>
-
-<form asp-action="Add" method="post">
-    <div class="form-group">
-        <label asp-for="FullName"></label>
-        <input asp-for="FullName" class="form-control" />
-        <span asp-validation-for="FullName" class="text-danger"></span>
+<div class="tournament-form-container">
+    <div class="form-header">
+        <h2>Create New Tournament</h2>
+        <p>Design an exciting tournament experience for players</p>
     </div>
 
-    <div class="form-group">
-        <label asp-for="ShortName"></label>
-        <input asp-for="ShortName" class="form-control" />
-        <span asp-validation-for="ShortName" class="text-danger"></span>
-    </div>
+    <div class="form-card">
+        <form asp-action="Add" method="post" enctype="multipart/form-data" class="tournament-form">
+            
+            <!-- Tournament Image Upload Section -->
+            <div class="image-upload-section">
+                <h3 class="section-title">Tournament Image</h3>
+                <p class="section-description">Upload an eye-catching image to represent your tournament</p>
+                
+                <div class="image-upload-container">
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="tournamentImage" name="TournamentImage" accept="image/*" class="file-input" />
+                        <div class="upload-placeholder" id="uploadPlaceholder">
+                            <div class="upload-icon">📸</div>
+                            <div class="upload-text">
+                                <strong>Click to upload</strong> or drag and drop
+                            </div>
+                            <div class="upload-subtext">PNG, JPG, JPEG up to 10MB</div>
+                        </div>
+                        <div class="image-preview" id="imagePreview" style="display: none;">
+                            <img id="previewImg" src="" alt="Tournament Preview" />
+                            <div class="image-overlay">
+                                <button type="button" class="change-image-btn" id="changeImageBtn">Change Image</button>
+                                <button type="button" class="remove-image-btn" id="removeImageBtn">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="image-upload-info">
+                        <small>Recommended size: 1200x600px for best results</small>
+                    </div>
+                </div>
+            </div>
 
-    <div class="form-group">
-        <label asp-for="OrganizerId"></label>
-        <input asp-for="OrganizerId" class="form-control" />
-        <span asp-validation-for="OrganizerId" class="text-danger"></span>
-    </div>
+            <div class="form-content-grid">
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Basic Information</h3>
+                    
+                    <div class="form-group">
+                        <label asp-for="FullName" class="form-label">Tournament Name *</label>
+                        <input asp-for="FullName" class="form-control" placeholder="Enter full tournament name" required />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
 
-    <div class="form-group">
-        <label asp-for="GameId"></label>
-        <input asp-for="GameId" class="form-control" />
-        <span asp-validation-for="GameId" class="text-danger"></span>
-    </div>
+                    <div class="form-group">
+                        <label asp-for="ShortName" class="form-label">Short Name *</label>
+                        <input asp-for="ShortName" class="form-control" placeholder="e.g., WC2025" required />
+                        <span asp-validation-for="ShortName" class="text-danger"></span>
+                    </div>
 
-    <div class="form-group">
-        <label asp-for="Description"></label>
-        <textarea asp-for="Description" class="form-control"></textarea>
-        <span asp-validation-for="Description" class="text-danger"></span>
-    </div>
+                    <div class="form-group">
+                        <label asp-for="Description" class="form-label">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="4" placeholder="Describe your tournament, rules, and what makes it special..."></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                </div>
 
-    <div class="form-group">
-        <label asp-for="StartDate"></label>
-        <input asp-for="StartDate" class="form-control" type="date" />
-        <span asp-validation-for="StartDate" class="text-danger"></span>
-    </div>
+                <!-- Tournament Details -->
+                <div class="form-section">
+                    <h3 class="section-title">Tournament Details</h3>
+                    
+                    <div class="form-group">
+                        <label asp-for="OrganizerId" class="form-label">Organizer ID *</label>
+                        <input asp-for="OrganizerId" class="form-control" placeholder="Enter organizer ID" required />
+                        <span asp-validation-for="OrganizerId" class="text-danger"></span>
+                    </div>
 
-    <div class="form-group">
-        <label asp-for="EndDate"></label>
-        <input asp-for="EndDate" class="form-control" type="date" />
-        <span asp-validation-for="EndDate" class="text-danger"></span>
-    </div>
+                    <div class="form-group">
+                        <label asp-for="GameId" class="form-label">Game ID *</label>
+                        <input asp-for="GameId" class="form-control" placeholder="Enter game ID" required />
+                        <span asp-validation-for="GameId" class="text-danger"></span>
+                    </div>
 
-    <button type="submit" class="btn btn-success">Save</button>
-</form>
+                    <div class="form-group">
+                        <label for="PrizePool" class="form-label">Prize Pool</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input name="PrizePool" type="number" class="form-control" placeholder="0.00" step="0.01" min="0" />
+                        </div>
+                        <div class="form-help">Leave empty if prize pool is TBD</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dates Section -->
+            <div class="form-section full-width">
+                <h3 class="section-title">Tournament Schedule</h3>
+                
+                <div class="date-grid">
+                    <div class="form-group">
+                        <label asp-for="StartDate" class="form-label">Start Date *</label>
+                        <input asp-for="StartDate" class="form-control" type="date" required />
+                        <span asp-validation-for="StartDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="EndDate" class="form-label">End Date *</label>
+                        <input asp-for="EndDate" class="form-control" type="date" required />
+                        <span asp-validation-for="EndDate" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a asp-action="Index" class="btn-secondary">
+                    <span class="btn-icon">←</span>
+                    Cancel
+                </a>
+                <button type="submit" class="btn-primary">
+                    <span class="btn-icon">✓</span>
+                    Create Tournament
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Tournament Form CSS with Photo Upload */
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-3px);
+        color: white;
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .btn-icon {
+        font-size: 1.2rem;
+    }
+
+    @@keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(60px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .tournament-form-container {
+            padding: 20px 15px;
+        }
+        
+        .form-header h2 {
+            font-size: 2.2rem;
+        }
+        
+        .form-card {
+            padding: 30px 20px;
+        }
+        
+        .form-content-grid {
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+        
+        .date-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .btn-primary, .btn-secondary {
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .upload-area {
+            height: 250px;
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('tournamentImage');
+        const uploadArea = document.getElementById('uploadArea');
+        const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        const changeImageBtn = document.getElementById('changeImageBtn');
+        const removeImageBtn = document.getElementById('removeImageBtn');
+        
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+        
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('image/')) {
+                handleImageUpload(files[0]);
+            }
+        });
+        
+        // Click to upload
+        uploadArea.addEventListener('click', function() {
+            if (uploadPlaceholder.style.display !== 'none') {
+                fileInput.click();
+            }
+        });
+        
+        // File input change
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                handleImageUpload(e.target.files[0]);
+            }
+        });
+        
+        // Change image button
+        changeImageBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            fileInput.click();
+        });
+        
+        // Remove image button
+        removeImageBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            removeImage();
+        });
+        
+        function handleImageUpload(file) {
+            // Validate file size (10MB limit)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size must be less than 10MB');
+                return;
+            }
+            
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file');
+                return;
+            }
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                uploadPlaceholder.style.display = 'none';
+                imagePreview.style.display = 'flex';
+                
+                // Add animation
+                imagePreview.style.opacity = '0';
+                setTimeout(() => {
+                    imagePreview.style.opacity = '1';
+                }, 50);
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function removeImage() {
+            fileInput.value = '';
+            uploadPlaceholder.style.display = 'flex';
+            imagePreview.style.display = 'none';
+            previewImg.src = '';
+        }
+        
+        // Auto-generate short name from full name
+        document.querySelector('input[name="FullName"]').addEventListener('input', function(e) {
+            const fullName = e.target.value;
+            const shortNameInput = document.querySelector('input[name="ShortName"]');
+            
+            if (fullName && !shortNameInput.value) {
+                // Generate short name from first letters of words
+                const words = fullName.split(' ').filter(word => word.length > 0);
+                if (words.length > 1) {
+                    const shortName = words.map(word => word.charAt(0).toUpperCase()).join('');
+                    shortNameInput.value = shortName;
+                } else if (words.length === 1) {
+                    shortNameInput.value = words[0].substring(0, 3).toUpperCase();
+                }
+            }
+        });
+        
+        // Date validation
+        const startDateInput = document.querySelector('input[name="StartDate"]');
+        const endDateInput = document.querySelector('input[name="EndDate"]');
+        
+        startDateInput.addEventListener('change', function() {
+            endDateInput.min = this.value;
+            if (endDateInput.value && endDateInput.value < this.value) {
+                endDateInput.value = this.value;
+            }
+        });
+        
+        // Set minimum date to today
+        const today = new Date().toISOString().split('T')[0];
+        startDateInput.min = today;
+        endDateInput.min = today;
+    });
+</script>
+
+<style>
+tournament-form-container {
+        background: linear-gradient(135deg, #2d1b69 0%, #8b0000 100%);
+        min-height: 100vh;
+        padding: 40px 20px;
+        color: white;
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .form-header h2 {
+        font-size: 2.8rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+        text-shadow: 0 4px 8px rgba(0,0,0,0.5);
+        background: linear-gradient(45deg, #ffffff, #f0c040);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .form-header p {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0;
+    }
+
+    .form-card {
+        max-width: 1100px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(15px);
+        border-radius: 25px;
+        padding: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        animation: slideInUp 0.8s ease;
+    }
+
+    .image-upload-section {
+        margin-bottom: 40px;
+        text-align: center;
+    }
+
+    .image-upload-section .section-title {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #ffffff;
+    }
+
+    .image-upload-section .section-description {
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 25px;
+        font-size: 1.1rem;
+    }
+
+    .image-upload-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .upload-area {
+        position: relative;
+        width: 100%;
+        height: 300px;
+        border: 3px dashed rgba(255, 255, 255, 0.3);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.05);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .upload-area:hover {
+        border-color: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .upload-area.drag-over {
+        border-color: #8b0000;
+        background: rgba(139, 0, 0, 0.1);
+        transform: scale(1.02);
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .upload-placeholder {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        pointer-events: none;
+    }
+
+    .upload-icon {
+        font-size: 4rem;
+        margin-bottom: 15px;
+        opacity: 0.7;
+    }
+
+    .upload-text {
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+        color: white;
+    }
+
+    .upload-text strong {
+        color: #f0c040;
+    }
+
+    .upload-subtext {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .image-preview {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.8);
+        border-radius: 17px;
+        transition: opacity 0.3s ease;
+    }
+
+    .image-preview img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        border-radius: 15px;
+    }
+
+    .image-overlay {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .image-preview:hover .image-overlay {
+        opacity: 1;
+    }
+
+    .change-image-btn, .remove-image-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .change-image-btn {
+        background: linear-gradient(45deg, #2d1b69, #8b0000);
+        color: white;
+    }
+
+    .change-image-btn:hover {
+        background: linear-gradient(45deg, #8b0000, #2d1b69);
+        transform: translateY(-1px);
+    }
+
+    .remove-image-btn {
+        background: rgba(255, 59, 59, 0.9);
+        color: white;
+    }
+
+    .remove-image-btn:hover {
+        background: rgba(255, 59, 59, 1);
+        transform: translateY(-1px);
+    }
+
+    .image-upload-info {
+        margin-top: 10px;
+        text-align: center;
+    }
+
+    .image-upload-info small {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+        font-style: italic;
+    }
+
+    .form-content-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        margin-bottom: 40px;
+    }
+
+    .form-section {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-section.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .section-title {
+        font-size: 1.6rem;
+        font-weight: bold;
+        margin-bottom: 25px;
+        color: #ffffff;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        padding-bottom: 10px;
+        position: relative;
+    }
+
+    .section-title::before {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 60px;
+        height: 2px;
+        background: linear-gradient(90deg, #8b0000, #2d1b69);
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #ffffff;
+        font-size: 1rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 14px 18px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        color: white;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(5px);
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #8b0000;
+        box-shadow: 0 0 0 4px rgba(139, 0, 0, 0.2);
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 120px;
+        font-family: inherit;
+    }
+
+    .input-group {
+        display: flex;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .input-group-text {
+        background: rgba(139, 0, 0, 0.4);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-right: none;
+        color: white;
+        padding: 14px 18px;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .input-group .form-control {
+        border-radius: 0;
+        border-left: none;
+    }
+
+    .date-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+    }
+
+    .form-help {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin-top: 6px;
+        font-style: italic;
+    }
+
+    .text-danger {
+        color: #ff6b6b;
+        font-size: 0.85rem;
+        margin-top: 6px;
+        display: block;
+        font-weight: 500;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 25px;
+        justify-content: center;
+        padding-top: 30px;
+        border-top: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-primary, .btn-secondary {
+        padding: 16px 35px;
+        border: none;
+        border-radius: 30px;
+        font-weight: bold;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-align: center;
+        min-width: 180px;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-primary {
+        background: linear-gradient(45deg, #8b0000, #2d1b69);
+        color: white;
+        box-shadow: 0 6px 20px rgba(139, 0, 0, 0.4);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(139, 0, 0, 0.6);
+        color: white;
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+</style>
+    

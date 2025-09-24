@@ -1,0 +1,19 @@
+{
+    "sqltools.connections": [
+        {
+            "connectionTimeout": 15,
+            "mssqlOptions": {
+                "appName": "SQLTools",
+                "useUTC": true,
+                "encrypt": true,
+                "trustServerCertificate": false
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "driver": "MSSQL",
+            "connectString": "Server=localhost,1433;Database=BalkanaDb;User Id=sa;Password=SilnaParola123;TrustServerCertificate=True",
+            "name": "blkn"
+        }
+    ]
+}
