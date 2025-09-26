@@ -41,6 +41,7 @@
     <Folder Include="wwwroot\uploads\News\Thumbnails\" />
     <Folder Include="wwwroot\uploads\PlayerProfiles\" />
     <Folder Include="wwwroot\uploads\TeamLogos\" />
+    <Folder Include="wwwroot\uploads\Tournaments\Organizers\" />
   </ItemGroup>
 
 </Project>

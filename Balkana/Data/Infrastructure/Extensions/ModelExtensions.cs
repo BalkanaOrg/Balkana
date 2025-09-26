@@ -21,5 +21,8 @@ namespace Balkana.Data.Infrastructure.Extensions
 
         public static string GetInformation(this Player player)
             => player.FirstName + "-" + player.Nickname + "-" + player.LastName;
+
+        public static string GetInformation(this Organizer org)
+            => org.Tag + "-" + org.FullName;
     }
 }

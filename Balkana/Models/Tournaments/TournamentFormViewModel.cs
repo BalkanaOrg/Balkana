@@ -1,31 +1,43 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Balkana.Data.Models;
+using Balkana.Services.Tournaments.Models;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
 
 namespace Balkana.Models.Tournaments
 {
     public class TournamentFormViewModel
     {
+        public int Id { get; set; }
+
         [Required]
-        [StringLength(100, MinimumLength = 3)]
         public string FullName { get; set; }
 
         [Required]
-        [StringLength(20, MinimumLength = 2)]
         public string ShortName { get; set; }
-
         [Required]
         public int OrganizerId { get; set; }
-
         [Required]
         public string Description { get; set; }
-
         [Required]
-        [DataType(DataType.Date)]
-        public DateTime StartDate { get; set; }
+        public DateTime StartDate { get; set; } = DateTime.Now;
+        public DateTime EndDate { get; set; } = DateTime.Now;
 
-        [DataType(DataType.Date)]
-        public DateTime EndDate { get; set; }
+        [Display(Name = "Team Logo")]
+        public IFormFile? LogoFile { get; set; }
 
-        [Required]
+        public decimal PrizePool { get; set; } = 0;
+
+        public string? BannerUrl { get; set; }
+        public EliminationType EliminationType { get; set; }  // single or double
+
         public int GameId { get; set; }
+
+        public IEnumerable<TournamentGamesServiceModel>? Games { get; set; }
+        public IEnumerable<TournamentOrganizersServiceModel>? Organizers { get; set; }
+        public IEnumerable<SelectListItem>? EliminationTypes { get; set; }
+
+        public List<int> SelectedTeamIds { get; set; } = new();
+        public List<TeamSelectItem> AvailableTeams { get; set; } = new();
     }
 }

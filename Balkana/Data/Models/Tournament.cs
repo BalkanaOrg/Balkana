@@ -25,7 +25,7 @@
 
         public decimal PrizePool { get; set; } = 0;
 
-        public string BannerUrl { get; set; }
+        public string BannerUrl { get; set; } = "~/uploads/Tournaments/_default.png";
         public EliminationType Elimination { get; set; }  // single or double
 
         public int GameId { get; set; }

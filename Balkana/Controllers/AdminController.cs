@@ -256,5 +256,39 @@ namespace Balkana.Controllers
 
             return RedirectToAction("Profile", "Players", new { id = playerId, information = playerInformation });
         }
+
+        [HttpGet]
+        [Route("admin/faceit/index")]
+        public async Task<IActionResult> FaceitClubs()
+        {
+            var clubs = await _context.FaceitClubs.ToListAsync();
+            var vm = new FaceitClubsViewModel { Clubs = clubs };
+            return View("Faceit/Index", vm);
+        }
+
+        // GET: /Admin/Faceit/Add
+        [HttpGet]
+        [Route("admin/faceit/add")]
+        public IActionResult AddFaceitClub()
+        {
+            return View("Faceit/Add", new FaceitClub());
+        }
+
+        // POST: /Admin/Faceit/Add
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Route("admin/faceit/add")]
+        public async Task<IActionResult> AddFaceitClub(FaceitClub model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("Faceit/Add", model);
+            }
+
+            _context.FaceitClubs.Add(model);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index", "Admin"); // or maybe redirect to a list of clubs later
+        }
     }
 }

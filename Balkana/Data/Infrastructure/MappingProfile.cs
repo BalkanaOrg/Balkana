@@ -5,6 +5,7 @@ using Balkana.Models.Players;
 using Balkana.Services.Organizers.Models;
 using Balkana.Services.Players.Models;
 using Balkana.Services.Teams.Models;
+using Balkana.Services.Tournaments.Models;
 using Balkana.Services.Transfers.Models;
 
 namespace Balkana.Data.Infrastructure
@@ -118,6 +119,10 @@ namespace Balkana.Data.Infrastructure
                         .FirstOrDefault()
                 })
             ));
+
+            //Tournaments
+            CreateMap<Game, TournamentGamesServiceModel>();
+            CreateMap<Organizer, TournamentOrganizersServiceModel>();
         }
     }
 }

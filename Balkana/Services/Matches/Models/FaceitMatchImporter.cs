@@ -10,13 +10,17 @@ namespace Balkana.Services.Matches.Models
     {
         private readonly HttpClient _http;
         private readonly ApplicationDbContext _db;
-        private readonly string _hubId;
 
-        public FaceitMatchImporter(HttpClient http, ApplicationDbContext db, IConfiguration config)
+        public FaceitMatchImporter(HttpClient http, ApplicationDbContext db)
         {
             _http = http;
             _db = db;
-            _hubId = config["Faceit:HubId"];
+        }
+        private string _hubId;
+
+        public void SetHubId(string hubId)
+        {
+            _hubId = hubId;
         }
 
         public async Task<List<Match>> ImportMatchAsync(string matchId, ApplicationDbContext db)
@@ -127,11 +131,19 @@ namespace Balkana.Services.Matches.Models
 
             if (response?.items == null) return new List<ExternalMatchSummary>();
 
+            var matchIds = response.items.Select(m => m.match_id).ToList();
+
+            var existing = await _db.Matches
+                .Where(m => m.Source == "FACEIT" && matchIds.Any(id => m.ExternalMatchId.StartsWith(id)))
+                .Select(m => m.ExternalMatchId)
+                .ToListAsync();
+
             return response.items.Select(m => new ExternalMatchSummary
             {
                 ExternalMatchId = m.match_id,
                 Source = "FACEIT",
                 PlayedAt = DateTimeOffset.FromUnixTimeSeconds(m.started_at).UtcDateTime,
+                ExistsInDb = existing.Any(e => e.StartsWith(m.match_id))
             }).ToList();
         }
 

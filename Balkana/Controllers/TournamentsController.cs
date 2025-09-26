@@ -1,12 +1,16 @@
-﻿using Balkana.Data.Models;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Balkana.Data;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Balkana.Data.DTOs.Bracket;
+using Balkana.Data.Models;
 using Balkana.Models.Tournaments;
 using Balkana.Services.Bracket;
-using AutoMapper;
+using Balkana.Services.Teams.Models;
+using Balkana.Services.Tournaments.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace Balkana.Controllers
 {
@@ -15,14 +19,18 @@ namespace Balkana.Controllers
         private readonly ApplicationDbContext _context;
         private readonly DoubleEliminationBracketService bracketService;
         private readonly IMapper mapper;
+        private readonly AutoMapper.IConfigurationProvider con;
+        private readonly IWebHostEnvironment env;
         //private readonly ITournamentService tournaments;
 
-        public TournamentsController(ApplicationDbContext context, DoubleEliminationBracketService bracketService, IMapper mapper)
+        public TournamentsController(ApplicationDbContext context, DoubleEliminationBracketService bracketService, IMapper mapper, IWebHostEnvironment env)
         {
             _context = context;
             this.bracketService = bracketService;
             //this.tournaments = tournaments;
             this.mapper = mapper;
+            this.con= mapper.ConfigurationProvider;
+            this.env = env;
         }
 
         // GET: Tournament/Index
@@ -33,6 +41,7 @@ namespace Balkana.Controllers
                 .Include(t => t.Game)
                 .Include(t => t.TournamentTeams)
                     .ThenInclude(tt => tt.Team)
+                .OrderByDescending(c=>c.StartDate)
                 .ToListAsync();
 
             return View(tournaments);
@@ -84,7 +93,20 @@ namespace Balkana.Controllers
 
         // GET: Tournament/Add
         [Authorize(Roles = "Administrator,Moderator")]
-        public IActionResult Add() => View(new TournamentFormViewModel());
+        public IActionResult Add() 
+        {
+            var games = AllGames();
+            var organizers = AllOrganizers();
+            var eliminationTypes = AllEliminationTypes();
+
+            var vm = new TournamentFormViewModel
+            {
+                Games = games,
+                Organizers = organizers,
+                EliminationTypes = eliminationTypes
+            };
+            return View(vm);
+        } 
 
         // POST: Tournament/Add
         [HttpPost]
@@ -92,7 +114,78 @@ namespace Balkana.Controllers
         [Authorize(Roles = "Administrator,Moderator")]
         public async Task<IActionResult> Add(TournamentFormViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+            {
+                var vm = new TournamentFormViewModel
+                {
+                    Games = AllGames(),
+                    Organizers = AllOrganizers(),
+                    EliminationTypes = AllEliminationTypes()
+                };
+                return View(vm);
+            }
+
+            string? logoPath = null;
+
+            if (model.LogoFile != null && model.LogoFile.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(env.WebRootPath, "uploads", "Tournaments");
+                Directory.CreateDirectory(uploadsFolder);
+
+                var ext = Path.GetExtension(model.LogoFile.FileName);
+                var finalFileName = $"{Guid.NewGuid()}{ext}";
+                var finalPath = Path.Combine(uploadsFolder, finalFileName);
+
+                // write to temp first
+                var tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ext);
+
+                try
+                {
+                    Console.WriteLine($">>> Writing upload to temp: {tempFile}");
+                    await using (var tempStream = new FileStream(tempFile, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, useAsync: true))
+                    {
+                        await model.LogoFile.CopyToAsync(tempStream);
+                        await tempStream.FlushAsync();
+                    }
+
+                    // move to final destination atomically
+                    Console.WriteLine($">>> Moving temp file to final path: {finalPath}");
+                    if (System.IO.File.Exists(finalPath))
+                    {
+                        Console.WriteLine($">>> Final path already exists, deleting: {finalPath}");
+                        System.IO.File.Delete(finalPath);
+                    }
+                    System.IO.File.Move(tempFile, finalPath);
+
+                    logoPath = $"/uploads/Tournaments/{finalFileName}";
+                }
+                catch (IOException ioEx)
+                {
+                    Console.WriteLine("❌ IO Exception while saving file: " + ioEx);
+                    try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); } catch { }
+                    ModelState.AddModelError("", "File write error: " + ioEx.Message);
+                    var vm = new TournamentFormViewModel
+                    {
+                        Games = AllGames(),
+                        Organizers = AllOrganizers(),
+                        EliminationTypes = AllEliminationTypes()
+                    };
+                    return View(vm);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("❌ General Exception while saving file: " + ex);
+                    try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); } catch { }
+                    ModelState.AddModelError("", "Unexpected error while saving file.");
+                    var vm = new TournamentFormViewModel
+                    {
+                        Games = AllGames(),
+                        Organizers = AllOrganizers(),
+                        EliminationTypes = AllEliminationTypes()
+                    };
+                    return View(vm);
+                }
+            }
 
             var tournament = new Tournament
             {
@@ -101,6 +194,8 @@ namespace Balkana.Controllers
                 OrganizerId = model.OrganizerId,
                 Description = model.Description,
                 StartDate = model.StartDate,
+                BannerUrl = logoPath,
+                Elimination = model.EliminationType,
                 EndDate = model.EndDate,
                 GameId = model.GameId
             };
@@ -110,6 +205,93 @@ namespace Balkana.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
+        [Authorize(Roles = "Administrator,Moderator")]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var tournament = await _context.Tournaments
+                .Include(t => t.TournamentTeams)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (tournament == null) return NotFound();
+
+            var vm = new TournamentFormViewModel
+            {
+                Id = tournament.Id,
+                FullName = tournament.FullName,
+                ShortName = tournament.ShortName,
+                OrganizerId = tournament.OrganizerId,
+                Description = tournament.Description,
+                StartDate = tournament.StartDate,
+                EndDate = tournament.EndDate,
+                PrizePool = tournament.PrizePool,
+                BannerUrl = tournament.BannerUrl,
+                EliminationType = tournament.Elimination,
+                GameId = tournament.GameId,
+                Games = AllGames(),
+                Organizers = AllOrganizers(),
+                EliminationTypes = AllEliminationTypes(),
+                AvailableTeams = await _context.Teams
+                    .Select(t => new TeamSelectItem { Id = t.Id, FullName = t.FullName })
+                    .ToListAsync(),
+                SelectedTeamIds = tournament.TournamentTeams.Select(tt => tt.TeamId).ToList()
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Moderator")]
+        public async Task<IActionResult> Edit(TournamentFormViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                model.Games = AllGames();
+                model.Organizers = AllOrganizers();
+                model.EliminationTypes = AllEliminationTypes();
+                model.AvailableTeams = await _context.Teams
+                    .Select(t => new TeamSelectItem { Id = t.Id, FullName = t.FullName })
+                    .ToListAsync();
+                return View(model);
+            }
+
+            var tournament = await _context.Tournaments
+                .Include(t => t.TournamentTeams)
+                .FirstOrDefaultAsync(t => t.Id == model.Id);
+
+            if (tournament == null) return NotFound();
+
+            // Update basic fields
+            tournament.FullName = model.FullName;
+            tournament.ShortName = model.ShortName;
+            tournament.OrganizerId = model.OrganizerId;
+            tournament.Description = model.Description;
+            tournament.StartDate = model.StartDate;
+            tournament.EndDate = model.EndDate;
+            tournament.PrizePool = model.PrizePool;
+            tournament.Elimination = model.EliminationType;
+            tournament.GameId = model.GameId;
+
+            // ✅ Update participating teams
+            _context.TournamentTeams.RemoveRange(tournament.TournamentTeams);
+
+            var newTeams = model.SelectedTeamIds
+                .Select((teamId, index) => new TournamentTeam
+                {
+                    TournamentId = tournament.Id,
+                    TeamId = teamId,
+                    Seed = index + 1
+                });
+
+            await _context.TournamentTeams.AddRangeAsync(newTeams);
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Details), new { id = tournament.Id });
+        }
+
+
 
         [HttpGet("api/tournaments/{id}/bracket")]
         public IActionResult GetBracket(int id)
@@ -357,5 +539,27 @@ namespace Balkana.Controllers
             return RedirectToAction("Details", new { id });
         }
 
+        private IEnumerable<TournamentOrganizersServiceModel> AllOrganizers()
+        {
+            return _context.Organizers
+                .ProjectTo<TournamentOrganizersServiceModel>(this.con)
+                .ToList();
+        }
+        private IEnumerable<TournamentGamesServiceModel> AllGames()
+        {
+            return _context.Games
+                .ProjectTo<TournamentGamesServiceModel>(this.con)
+                .ToList();
+        }
+        private IEnumerable<SelectListItem>? AllEliminationTypes()
+        {
+            return Enum.GetValues(typeof(EliminationType))
+                .Cast<EliminationType>()
+                .Select(e => new SelectListItem
+                {
+                    Value = e.ToString(),
+                    Text = e.ToString()
+                });
+        }
     }
 }

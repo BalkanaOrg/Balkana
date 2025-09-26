@@ -1,0 +1,31 @@
+﻿@model Balkana.Models.Admin.FaceitClubsViewModel
+
+@{
+    ViewData["Title"] = "FaceIt Clubs";
+}
+<a class="button" asp-controller="Admin" asp-action="Faceit" asp-route-id="Add">Add new club</a>
+<table class="table table-bordered align-middle text-white">
+    <thead class="table-dark">
+        <tr>
+            <th>Id</th>
+            <th>Club name</th>
+            <th>Faceit ID</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var club in Model.Clubs)
+    {
+        <tr>
+            <td>
+                @club.Id
+            </td>
+            <td>
+                @club.Name
+            </td>
+            <td>
+                @club.FaceitId
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

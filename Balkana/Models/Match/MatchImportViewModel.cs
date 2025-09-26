@@ -36,5 +36,8 @@ namespace Balkana.Models.Match
         // For UI display: external IDs
         public string ExternalMatchId { get; set; }
         public string MapExternalId { get; set; }
+
+        public List<SelectListItem> Clubs { get; set; } = new();  // 👈 new
+        public int? SelectedClubId { get; set; }                  // 👈 new
     }
 }

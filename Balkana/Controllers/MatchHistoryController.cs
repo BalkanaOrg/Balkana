@@ -21,10 +21,42 @@ namespace Balkana.Controllers
             _importers = importers;
         }
 
-        public async Task<IActionResult> Index(string source, string profileId)
+        public async Task<IActionResult> Index(string source, string profileId, int? clubId)
         {
-            var matches = await _history.GetHistoryAsync(source, profileId);
-            return View(matches);
+            if (source == "FACEIT")
+            {
+                if (!clubId.HasValue)
+                {
+                    // no club selected -> show club selection page
+                    var clubs = await _db.FaceitClubs
+                        .Select(c => new SelectListItem
+                        {
+                            Value = c.Id.ToString(),
+                            Text = c.Name
+                        })
+                        .ToListAsync();
+
+                    ViewBag.Source = source;
+                    return View("SelectClub", clubs);
+                }
+
+                // get the hub id from DB
+                var club = await _db.FaceitClubs.FindAsync(clubId.Value);
+                if (club == null) return NotFound("Invalid club");
+
+                // tell importer which club to use
+                var importer = (FaceitMatchImporter)_importers["FACEIT"];
+                importer.SetHubId(club.FaceitId);
+
+                var matches = await importer.GetMatchHistoryAsync(profileId);
+                ViewBag.Source = source;
+                return View(matches);
+            }
+
+            // RIOT flow stays the same
+            var riotMatches = await _history.GetHistoryAsync(source, profileId);
+            ViewBag.Source = source;
+            return View(riotMatches);
         }
 
         [HttpGet]
@@ -46,6 +78,17 @@ namespace Balkana.Controllers
                     })
                     .ToList()
             };
+
+            if (source == "FACEIT")
+            {
+                vm.Clubs = _db.FaceitClubs
+                    .Select(c => new SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.Name
+                    })
+                    .ToList();
+            }
 
             return View(vm);
         }
@@ -77,9 +120,22 @@ namespace Balkana.Controllers
                 return View("Import", model);
             }
 
-            var importer = _importers[model.Source]; // "RIOT" or "FACEIT"
+            var importer = _importers[model.Source];
 
-            // Get one or more matches (per map in FACEIT BO3/BO5)
+            // If FaceIt, pass the chosen ClubId
+            if (model.Source == "FACEIT" && model.SelectedClubId.HasValue)
+            {
+                var club = await _db.FaceitClubs.FindAsync(model.SelectedClubId.Value);
+                if (club == null)
+                {
+                    ModelState.AddModelError("", "Invalid FaceIt Club selected.");
+                    return View("Import", model);
+                }
+
+                // 👉 update the importer to accept dynamic HubId instead of config
+                ((FaceitMatchImporter)importer).SetHubId(club.FaceitId);
+            }
+
             var matches = await importer.ImportMatchAsync(model.MatchId, _db);
 
             foreach (var match in matches)

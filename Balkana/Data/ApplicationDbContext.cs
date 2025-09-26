@@ -65,6 +65,9 @@
 
         //Articles
         public DbSet<Article> Articles { get; set; }
+        
+        //Faceit Clubs
+        public DbSet<FaceitClub> FaceitClubs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

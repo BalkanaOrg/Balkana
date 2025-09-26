@@ -390,6 +390,27 @@ namespace Balkana.Migrations
                     b.ToTable("CoreTournamentPoints");
                 });
 
+            modelBuilder.Entity("Balkana.Data.Models.FaceitClub", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FaceitId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FaceitClubs");
+                });
+
             modelBuilder.Entity("Balkana.Data.Models.Game", b =>
                 {
                     b.Property<int>("Id")
