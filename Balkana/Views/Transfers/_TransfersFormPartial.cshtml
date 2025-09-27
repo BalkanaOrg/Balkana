@@ -1,59 +1,142 @@
-﻿@model TransferFormModel
+﻿@using Balkana.Data.Models
+@model TransferFormModel
 
-@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+<!-- jQuery (must come first) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<!-- Select2 JS (must come AFTER jQuery) -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <form method="post" asp-action="Add">
     <div class="form-group">
-        <label asp-for="GameId">Game</label>
-        <select asp-for="GameId" class="form-control" id="gameSelect">
-            @foreach (var game in Model.TransferGames)
+        <label for="GameId">Game</label>
+        <select asp-for="GameId" id="GameId" class="form-control">
+            @foreach (var g in Model.TransferGames)
             {
-                <option value="@game.Id">@game.ShortName</option>
+                <option value="@g.Id">@g.FullName</option>
             }
         </select>
     </div>
 
     <div class="form-group">
-        <label asp-for="TeamId">Teams</label>
-        <select asp-for="TeamId" class="form-control" id="teamSelect">
-            @foreach (var team in Model.TransferTeams)
-            {
-                <option value="@team.Id">[@Model.TransferGames.FirstOrDefault(c=>c.Id==team.GameId)?.ShortName] <b>@team.Tag</b> @team.FullName</option>
-            }
-        </select>
-    </div>
-
-
-    <div class="form-group">
-        <label asp-for="PlayerId">Player</label>
-        <select asp-for="PlayerId" class="form-control" id="playerSelect">
-            @foreach (var p in Model.TransferPlayers)
-            {
-                <option value="@p.Id">@p.Nickname</option>
-            }
-        </select>
-    </div>
-
-
-
-    <div class="form-group">
-        <label asp-for="PositionId">Positions</label>
-        <select asp-for="PositionId" class="form-control" id="positionSelect">
-            @foreach (var pos in Model.TransferPositions)
-            {
-                <option value="@pos.Id">[@Model.TransferGames.FirstOrDefault(c=>c.Id==pos.GameId)?.ShortName] @pos.Name</option>
-            }
-        </select>
+        <label for="TeamId">Team</label>
+        <select asp-for="TeamId" id="TeamId" class="form-control"></select>
     </div>
 
     <div class="form-group">
-        <label asp-for="TransferDate">Transfer Date</label>
-        <input asp-for="TransferDate" class="form-control" type="datetime-local" value="@DateTime.Now" />
+        <label for="PlayerId">Player</label>
+        <select asp-for="PlayerId" id="PlayerId" class="form-control"></select>
+    </div>
+
+    <div class="form-group">
+        <label for="PositionId">Position</label>
+        <select asp-for="PositionId" id="PositionId" class="form-control"></select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="StartDate">Start Date</label>
+        <input asp-for="StartDate" class="form-control" type="datetime-local"
+               value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="EndDate">End Date (optional)</label>
+        <input asp-for="EndDate" class="form-control" type="datetime-local" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Status">Status</label>
+        <select asp-for="Status" asp-items="Html.GetEnumSelectList<PlayerTeamStatus>()" class="form-control"></select>
     </div>
 
     <input class="btn btn-dark float-right" type="submit" value="Save" />
 </form>
+
+<script>
+    $(document).ready(function () {
+
+        // When a game is selected → reload Teams & Positions
+        $("#GameId").change(function () {
+            var gameId = $(this).val();
+
+            // Load teams
+            $.getJSON('/Transfers/GetTeams', { gameId: gameId }, function (data) {
+                var $team = $("#TeamId");
+                $team.empty();
+                $.each(data, function (i, team) {
+                    $team.append($('<option>', { value: team.id, text: team.fullName }));
+                });
+            });
+
+            // Load positions
+            $.getJSON('/Transfers/GetPositions', { gameId: gameId }, function (data) {
+                var $pos = $("#PositionId");
+                $pos.empty();
+                $.each(data, function (i, pos) {
+                    $pos.append($('<option>', { value: pos.id, text: pos.name }));
+                });
+            });
+        });
+
+        // Player dropdown with lazy loading & search
+        $('#PlayerId').select2({
+            placeholder: "Search players...",
+            ajax: {
+                url: '/Transfers/GetPlayers',
+                data: function (params) {
+                    return {
+                        gameId: $("#GameId").val(),
+                        search: params.term,   // search term from user
+                        page: params.page || 1,
+                        pageSize: 20
+                    };
+                },
+                processResults: function (data, params) {
+                    params.page = params.page || 1;
+
+                    return {
+                        results: $.map(data, function (p) {
+                            return { id: p.id, text: p.nickname + " (" + p.fullName + ")" };
+                        }),
+                        pagination: {
+                            more: data.length === 20 // assume more if we got full page
+                        }
+                    };
+                }
+            },
+            minimumInputLength: 2
+        });
+
+        $('#TeamId').select2({
+            placeholder: "Search teams...",
+            ajax: {
+                url: '/Transfers/GetTeams',
+                data: function (params) {
+                    return {
+                        gameId: $("#GameId").val(),
+                        search: params.term,   // search term from user
+                        page: params.page || 1,
+                        pageSize: 20
+                    };
+                },
+                processResults: function (data, params) {
+                    params.page = params.page || 1;
+
+                    return {
+                        results: $.map(data, function (p) {
+                            return { id: p.id, text: p.fullName };
+                        }),
+                        pagination: {
+                            more: data.length === 20 // assume more if we got full page
+                        }
+                    };
+                }
+            },
+            minimumInputLength: 2
+        });
+        $("#GameId").trigger("change");
+    });
+</script>

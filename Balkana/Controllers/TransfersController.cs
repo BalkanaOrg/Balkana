@@ -31,21 +31,17 @@ namespace Balkana.Controllers
                 query.Game,
                 query.SearchTerm,
                 query.CurrentPage,
-                AllTransfersQueryModel.TransfersPerPage
-                );
-
-            var transferPositions = this.transfers.GetAllPositions();
-            var transferPlayers = this.transfers.GetAllPlayers();
-            var transferTeams = this.transfers.GetAllTeams();
-            var transferGames = this.transfers.GetAllGames();
-            var transfers = this.transfers.GetAllTransfers();
+                AllTransfersQueryModel.TransfersPerPage,
+                query.AsOfDate // NEW filter param in query model
+            );
 
             query.Transfers = queryResult.Transfers;
-            query.Games = transferGames;
-            query.Players = transferPlayers;
-            query.Teams = transferTeams;
-            query.Positions = transferPositions;
             query.TotalTransfers = queryResult.TotalTransfers;
+            query.Games = this.transfers.GetAllGames();
+            query.Players = this.transfers.GetAllPlayers();
+            query.Teams = this.transfers.GetAllTeams();
+            query.Positions = this.transfers.GetAllPositions();
+
             return View(query);
         }
 
@@ -54,10 +50,7 @@ namespace Balkana.Controllers
         {
             return View(new TransferFormModel
             {
-                TransferGames = this.transfers.AllGames(),
-                TransferPositions = this.transfers.AllPositions(),
-                TransferPlayers = this.transfers.AllPlayers(),
-                TransferTeams = this.transfers.AllTeams()
+                TransferGames = this.transfers.AllGames()
             });
         }
 
@@ -65,29 +58,17 @@ namespace Balkana.Controllers
         [Authorize(Roles = "Administrator,Moderator")]
         public IActionResult Add([FromForm] TransferFormModel model)
         {
-            Console.WriteLine("Received TransferFormModel:");
-            Console.WriteLine($"PlayerId: {model.PlayerId}");
-            Console.WriteLine($"TeamId: {model.TeamId}");
-            Console.WriteLine($"GameId: {model.GameId}");
-            Console.WriteLine($"PositionId: {model.PositionId}");
-            Console.WriteLine($"TransferDate: {model.TransferDate}");
-
             if (!this.transfers.PlayerExists(model.PlayerId))
-            {
-                this.ModelState.AddModelError(nameof(model.PlayerId), "Player doesn't exist.");
-            }
-            if(!this.transfers.TeamExists(model.TeamId))
-            {
-                this.ModelState.AddModelError(nameof(model.TeamId), "Team doesn't exist.");
-            }
-            if(!this.transfers.GameExists(model.GameId))
-            {
-                this.ModelState.AddModelError(nameof(model.GameId), "Game doesn't exist.");
-            }
-            if(!this.transfers.PositionExists(model.PositionId))
-            {
-                this.ModelState.AddModelError(nameof(model.PositionId), "Position doesn't exist.");
-            }
+                ModelState.AddModelError(nameof(model.PlayerId), "Player doesn't exist.");
+
+            if (model.TeamId.HasValue && !this.transfers.TeamExists(model.TeamId.Value))
+                ModelState.AddModelError(nameof(model.TeamId), "Team doesn't exist.");
+
+            if (!this.transfers.GameExists(model.GameId))
+                ModelState.AddModelError(nameof(model.GameId), "Game doesn't exist.");
+
+            if (!this.transfers.PositionExists(model.PositionId))
+                ModelState.AddModelError(nameof(model.PositionId), "Position doesn't exist.");
 
             if (!ModelState.IsValid)
             {
@@ -95,27 +76,29 @@ namespace Balkana.Controllers
                 model.TransferTeams = this.transfers.AllTeams();
                 model.TransferPlayers = this.transfers.AllPlayers();
                 model.TransferPositions = this.transfers.AllPositions();
-                foreach (var entry in ModelState)
-                {
-                    foreach (var error in entry.Value.Errors)
-                    {
-                        _logger.LogError($"❌ Error in {entry.Key}: {error.ErrorMessage}");
-                    }
-                }
-
                 return View(model);
-
-                
-
             }
+
             var transferId = this.transfers.Create(
                 model.PlayerId,
                 model.TeamId,
-                model.TransferDate,
-                model.PositionId
-                );
+                model.StartDate,
+                model.PositionId,
+                model.Status
+            );
+            return RedirectToAction("Index");
+            //return RedirectToAction(nameof(Details), new { id = transferId });
+        }
 
-            return RedirectToAction(nameof(Details), new { id = transferId });
+        // Replace Delete with Invalidate
+        [Authorize(Roles = "Administrator")]
+        public IActionResult Invalidate(int id)
+        {
+            var success = this.transfers.Invalidate(id);
+            if (!success)
+                return NotFound();
+
+            return RedirectToAction(nameof(Index));
         }
 
         public IActionResult Details(int id)
@@ -144,7 +127,9 @@ namespace Balkana.Controllers
                 TeamId = transfer.TeamId,
                 GameId = transfer.GameId,
                 PositionId = transfer.PositionId,
-                TransferDate = transfer.TransferDate,
+                StartDate = transfer.StartDate,
+                EndDate = transfer.EndDate,
+                Status = transfer.Status,
 
                 TransferGames = this.transfers.AllGames(),
                 TransferTeams = this.transfers.AllTeams(),
@@ -176,10 +161,8 @@ namespace Balkana.Controllers
 
             var success = this.transfers.Edit(
                 id,
-                model.PlayerId,
-                model.TeamId,
-                model.TransferDate,
-                model.PositionId
+                model.PositionId,
+                model.StartDate
             );
 
             if (!success)
@@ -218,6 +201,27 @@ namespace Balkana.Controllers
             data.SaveChanges();
 
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
+        public IActionResult GetTeams(int gameId, string? search = null, int page = 1, int pageSize = 20)
+        {
+            var result = this.transfers.GetTeams(gameId, search, page, pageSize);
+            return Json(result);
+        }
+
+        [HttpGet]
+        public IActionResult GetPlayers(int gameId, string? search = null, int page = 1, int pageSize = 20)
+        {
+            var result = this.transfers.GetPlayers(gameId, search, page, pageSize);
+            return Json(result);
+        }
+
+        [HttpGet]
+        public IActionResult GetPositions(int gameId)
+        {
+            var result = this.transfers.GetPositions(gameId);
+            return Json(result);
         }
     }
 }

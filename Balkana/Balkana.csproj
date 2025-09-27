@@ -31,6 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Data\Models\Store\" />
     <Folder Include="Migrations\" />
     <Folder Include="Services\Series\Models\" />
     <Folder Include="Views\Admin\Community\" />

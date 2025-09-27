@@ -756,79 +756,79 @@ namespace Balkana.Data.Infrastructure
                 return;
             }
 
-            data.PlayerTeamTransfers.AddRange(new[]
-            {
-                new PlayerTeamTransfer
-                {
-                    PlayerId = 1,
-                    TeamId = 1,
-                    PositionId = 1,
-                    TransferDate = DateTime.Now,
-                },
-                new PlayerTeamTransfer
-                {
-                    PlayerId = 2,
-                    TeamId = 1,
-                    PositionId = 1,
-                    TransferDate = DateTime.Now,
-                },
-                new PlayerTeamTransfer
-                {
-                    PlayerId = 3,
-                    TeamId = 1,
-                    PositionId = 1,
-                    TransferDate = DateTime.Now,
-                },
-                new PlayerTeamTransfer
-                {
-                    PlayerId = 4,
-                    TeamId = 1,
-                    PositionId = 1,
-                    TransferDate = DateTime.Now,
-                },
-                new PlayerTeamTransfer
-                {
-                    PlayerId = 5,
-                    TeamId = 1,
-                    PositionId = 1,
-                    TransferDate = DateTime.Now,
-                },
-                new PlayerTeamTransfer
-                {
-                    PlayerId = 6,
-                    TeamId = 2,
-                    PositionId = 1,
-                    TransferDate = DateTime.Now,
-                },
-                new PlayerTeamTransfer
-                {
-                    PlayerId = 7,
-                    TeamId = 2,
-                    PositionId = 1,
-                    TransferDate = DateTime.Now,
-                },
-                new PlayerTeamTransfer
-                {
-                    PlayerId = 8,
-                    TeamId = 2,
-                    PositionId = 1,
-                    TransferDate = DateTime.Now,
-                },
-                new PlayerTeamTransfer
-                {
-                    PlayerId = 9,
-                    TeamId = 2,
-                    PositionId = 1,
-                    TransferDate = DateTime.Now,
-                },
-                new PlayerTeamTransfer
-                {
-                    PlayerId = 10,
-                    TeamId = 2,
-                    PositionId = 1,
-                    TransferDate = DateTime.Now,
-                },
-            });
+            //data.PlayerTeamTransfers.AddRange(new[]
+            //{
+            //    new PlayerTeamTransfer
+            //    {
+            //        PlayerId = 1,
+            //        TeamId = 1,
+            //        PositionId = 1,
+            //        TransferDate = DateTime.Now,
+            //    },
+            //    new PlayerTeamTransfer
+            //    {
+            //        PlayerId = 2,
+            //        TeamId = 1,
+            //        PositionId = 1,
+            //        TransferDate = DateTime.Now,
+            //    },
+            //    new PlayerTeamTransfer
+            //    {
+            //        PlayerId = 3,
+            //        TeamId = 1,
+            //        PositionId = 1,
+            //        TransferDate = DateTime.Now,
+            //    },
+            //    new PlayerTeamTransfer
+            //    {
+            //        PlayerId = 4,
+            //        TeamId = 1,
+            //        PositionId = 1,
+            //        TransferDate = DateTime.Now,
+            //    },
+            //    new PlayerTeamTransfer
+            //    {
+            //        PlayerId = 5,
+            //        TeamId = 1,
+            //        PositionId = 1,
+            //        TransferDate = DateTime.Now,
+            //    },
+            //    new PlayerTeamTransfer
+            //    {
+            //        PlayerId = 6,
+            //        TeamId = 2,
+            //        PositionId = 1,
+            //        TransferDate = DateTime.Now,
+            //    },
+            //    new PlayerTeamTransfer
+            //    {
+            //        PlayerId = 7,
+            //        TeamId = 2,
+            //        PositionId = 1,
+            //        TransferDate = DateTime.Now,
+            //    },
+            //    new PlayerTeamTransfer
+            //    {
+            //        PlayerId = 8,
+            //        TeamId = 2,
+            //        PositionId = 1,
+            //        TransferDate = DateTime.Now,
+            //    },
+            //    new PlayerTeamTransfer
+            //    {
+            //        PlayerId = 9,
+            //        TeamId = 2,
+            //        PositionId = 1,
+            //        TransferDate = DateTime.Now,
+            //    },
+            //    new PlayerTeamTransfer
+            //    {
+            //        PlayerId = 10,
+            //        TeamId = 2,
+            //        PositionId = 1,
+            //        TransferDate = DateTime.Now,
+            //    },
+            //});
             data.SaveChanges();
         }
         private static void AddTrophies(IServiceProvider services)

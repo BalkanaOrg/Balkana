@@ -1,4 +1,5 @@
-﻿using Balkana.Models.Transfers;
+﻿using Balkana.Data.Models;
+using Balkana.Models.Transfers;
 using Balkana.Services.Teams.Models;
 using Balkana.Services.Transfers.Models;
 
@@ -10,23 +11,26 @@ namespace Balkana.Services.Transfers
             string game = null,
             string searchTerm = null,
             int currentPage = 1,
-            int transfersPerPage = int.MaxValue
+            int transfersPerPage = int.MaxValue,
+            DateTime? asOfDate = null
             );
 
         int Create(
-            int playerId,
-            int teamId,
-            DateTime date,
-            int positionId
+            int playerId, 
+            int? teamId, 
+            DateTime startDate, 
+            int positionId, 
+            PlayerTeamStatus status
             );
 
         bool Edit(
-            int transferId,
-            int playerId,
-            int teamId,
-            DateTime date,
-            int positionId
+            int id, 
+            int positionId, 
+            DateTime? 
+            newStartDate = null
             );
+
+        bool Invalidate(int id);
 
         TransferDetailsServiceModel Details(int teamId);
 
@@ -54,5 +58,9 @@ namespace Balkana.Services.Transfers
 
         public IEnumerable<string> GetAllGames();
         public IEnumerable<TeamGameServiceModel> AllGames();
+
+        IEnumerable<TransferTeamsServiceModel> GetTeams(int gameId, string? search, int page, int pageSize);
+        IEnumerable<TransferPlayersServiceModel> GetPlayers(int gameId, string? search, int page, int pageSize);
+        IEnumerable<TransferPositionsServiceModel> GetPositions(int gameId);
     }
 }

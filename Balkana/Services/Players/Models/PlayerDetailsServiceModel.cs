@@ -1,4 +1,6 @@
-﻿namespace Balkana.Services.Players.Models
+﻿using Balkana.Services.Transfers.Models;
+
+namespace Balkana.Services.Players.Models
 {
     public class PlayerDetailsServiceModel : PlayerServiceModel
     {
@@ -9,5 +11,8 @@
         // ✅ Nationality info
         public string NationalityName { get; set; }
         public string FlagUrl { get; set; }
+
+        public Dictionary<string, List<TransferDetailsServiceModel>> TransfersByGame { get; set; }
+        = new Dictionary<string, List<TransferDetailsServiceModel>>();
     }
 }

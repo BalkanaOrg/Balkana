@@ -64,6 +64,66 @@
         }
     </div>
 
+    <hr />
+    <h4>Transfers</h4>
+
+    @if (Model.TransfersByGame.Any())
+    {
+        <ul class="nav nav-tabs" id="transferTabs" role="tablist">
+            @foreach (var game in Model.TransfersByGame.Keys)
+            {
+                var active = game == Model.TransfersByGame.Keys.First() ? "active" : "";
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @active"
+                            id="@game-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#@game"
+                            type="button"
+                            role="tab">
+                        @game
+                    </button>
+                </li>
+            }
+        </ul>
+
+        <div class="tab-content mt-3" id="transferTabsContent">
+            @foreach (var kvp in Model.TransfersByGame)
+            {
+                var game = kvp.Key;
+                var transfers = kvp.Value;
+                var active = game == Model.TransfersByGame.Keys.First() ? "show active" : "";
+
+                <div class="tab-pane fade @active" id="@game" role="tabpanel">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Team</th>
+                                <th>Position</th>
+                                <th>Period</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in transfers)
+                            {
+                                <tr>
+                                    <td>@t.TeamFullName</td>
+                                    <td>@t.Position</td>
+                                    <td>@t.StartDate.ToShortDateString() - @(t.EndDate?.ToShortDateString() ?? "Present")</td>
+                                    <td>@t.Status</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="text-muted">No transfers recorded.</p>
+    }
+
     <div class="row mt-4">
         <div class="col-md-8 offset-md-2">
             <h4>Profile Pictures History</h4>

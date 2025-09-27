@@ -9,6 +9,7 @@ namespace Balkana.Services.Players
     using Balkana.Models.Players;
     using Balkana.Services.Players.Models;
     using Balkana.Services.Teams;
+    using Balkana.Services.Transfers.Models;
     using Microsoft.EntityFrameworkCore;
 
     public class PlayerService : IPlayerService
@@ -52,63 +53,93 @@ namespace Balkana.Services.Players
         {
             var defaultPic = "https://media.istockphoto.com/id/1618846975/photo/smile-black-woman-and-hand-pointing-in-studio-for-news-deal-or-coming-soon-announcement-on.jpg?s=612x612&w=0&k=20&c=LUvvJu4sGaIry5WLXmfQV7RStbGG5hEQNo8hEFxZSGY=";
 
-            return this.data.Players
-                .Where(p => p.Id == id)
-                .Select(p => new PlayerDetailsServiceModel
+            var player = this.data.Players
+        .Where(p => p.Id == id)
+        .Select(p => new PlayerDetailsServiceModel
+        {
+            Id = p.Id,
+            Nickname = p.Nickname,
+            FirstName = p.FirstName,
+            LastName = p.LastName,
+            NationalityId = p.NationalityId,
+            NationalityName = p.Nationality.Name,
+            FlagUrl = p.Nationality.FlagURL,
+
+            PictureUrl = p.PlayerPictures
+                .OrderByDescending(pic => pic.dateChanged)
+                .Select(pic => pic.PictureURL)
+                .FirstOrDefault() ?? defaultPic,
+
+            PlayerPictures = p.PlayerPictures
+                .OrderByDescending(pic => pic.dateChanged)
+                .Select(pic => new PlayerPictureServiceModel
                 {
-                    Id = p.Id,
-                    Nickname = p.Nickname,
-                    FirstName = p.FirstName,
-                    LastName = p.LastName,
-                    NationalityId = p.NationalityId,
-                    NationalityName = p.Nationality.Name,
-                    FlagUrl = p.Nationality.FlagURL,
+                    Id = pic.Id,
+                    PictureUrl = pic.PictureURL,
+                    DateChanged = pic.dateChanged
+                }),
 
-                    PictureUrl = p.PlayerPictures
-                        .OrderByDescending(pic => pic.dateChanged)
-                        .Select(pic => pic.PictureURL)
-                        .FirstOrDefault() ?? defaultPic,
+            Trophies = p.PlayerTrophies
+                .Where(pt => pt.Trophy.AwardType != "MVP" && pt.Trophy.AwardType != "EVP")
+                .Select(pt => new PlayerTrophyServiceModel
+                {
+                    Id = pt.Trophy.Id,
+                    Description = pt.Trophy.Description,
+                    IconURL = pt.Trophy.IconURL,
+                    AwardDate = pt.Trophy.AwardDate
+                }).ToList(),
 
-                    PlayerPictures = p.PlayerPictures
-                        .OrderByDescending(pic => pic.dateChanged)
-                        .Select(pic => new PlayerPictureServiceModel
-                        {
-                            Id = pic.Id,
-                            PictureUrl = pic.PictureURL,
-                            DateChanged = pic.dateChanged
-                        }),
-                    Trophies = p.PlayerTrophies
-                    .Where(pt => pt.Trophy.AwardType != "MVP" && pt.Trophy.AwardType != "EVP")
-                    .Select(pt => new PlayerTrophyServiceModel
-                    {
-                        Id = pt.Trophy.Id,
-                        Description = pt.Trophy.Description,
-                        IconURL = pt.Trophy.IconURL,
-                        AwardDate = pt.Trophy.AwardDate
-                    }).ToList(),
+            MVPs = p.PlayerTrophies
+                .Where(pt => pt.Trophy.AwardType == "MVP")
+                .Select(pt => new PlayerTrophyServiceModel
+                {
+                    Id = pt.Trophy.Id,
+                    Description = pt.Trophy.Description,
+                    IconURL = pt.Trophy.IconURL,
+                    AwardDate = pt.Trophy.AwardDate
+                }).ToList(),
 
-                    MVPs = p.PlayerTrophies
-                    .Where(pt => pt.Trophy.AwardType == "MVP")
-                    .Select(pt => new PlayerTrophyServiceModel
-                    {
-                        Id = pt.Trophy.Id,
-                        Description = pt.Trophy.Description,
-                        IconURL = pt.Trophy.IconURL,
-                        AwardDate = pt.Trophy.AwardDate
-                    }).ToList(),
+            EVPs = p.PlayerTrophies
+                .Where(pt => pt.Trophy.AwardType == "EVP")
+                .Select(pt => new PlayerTrophyServiceModel
+                {
+                    Id = pt.Trophy.Id,
+                    Description = pt.Trophy.Description,
+                    IconURL = pt.Trophy.IconURL,
+                    AwardDate = pt.Trophy.AwardDate
+                }).ToList()
+        })
+        .FirstOrDefault();
 
-                    EVPs = p.PlayerTrophies
-                    .Where(pt => pt.Trophy.AwardType == "EVP")
-                    .Select(pt => new PlayerTrophyServiceModel
-                    {
-                        Id = pt.Trophy.Id,
-                        Description = pt.Trophy.Description,
-                        IconURL = pt.Trophy.IconURL,
-                        AwardDate = pt.Trophy.AwardDate
-                    }).ToList()
-                        .ToList()
+            if (player == null) return null;
+
+            // Fetch transfers grouped by game
+            var transfers = this.data.PlayerTeamTransfers
+                .Where(t => t.PlayerId == id)
+                .Include(t => t.Team)
+                .Include(t => t.TeamPosition)
+                    .ThenInclude(tp => tp.Game)
+                .OrderByDescending(t => t.StartDate)
+                .Select(t => new TransferDetailsServiceModel
+                {
+                    Id = t.Id,
+                    TeamId = t.TeamId,
+                    TeamFullName = t.Team.FullName,
+                    GameId = t.TeamPosition.GameId,
+                    GameName = t.TeamPosition.Game.FullName,
+                    PositionId = (int)t.PositionId,
+                    Position = t.TeamPosition.Name,
+                    StartDate = t.StartDate,
+                    EndDate = t.EndDate,
+                    Status = t.Status
                 })
-                .FirstOrDefault();
+                .ToList();
+
+            player.TransfersByGame = transfers
+                .GroupBy(t => t.GameName)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            return player;
         }
 
         public PlayerStatsServiceModel Stats(int id, string? gameFilter = null)

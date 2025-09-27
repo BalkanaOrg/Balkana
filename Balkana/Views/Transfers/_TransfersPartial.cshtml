@@ -4,12 +4,23 @@
 @foreach (var tr in Model)
 {
     <tr onclick="window.location.href='@Url.Action("Details", "Transfers", new { id = tr.Id })'">
-        <th>@tr.Id</th>
-        <th><img src="@tr.GameName" width="30px" height="30px" /></th>
-        <th>@tr.PlayerUsername</th>
-        <th>@tr.TeamFullName</th>
-        <th>@tr.TransferDate</th>
-        <th>@tr.Position</th>
+        <td>@tr.Id</td>
+        <td><img src="@tr.GameName" width="30px" height="30px" /></td>
+        <td>@tr.PlayerUsername</td>
+        <td>@tr.TeamFullName</td>
+        <td>
+            @tr.StartDate.ToShortDateString()
+            @if (tr.EndDate != null)
+            {
+                <span> - @tr.EndDate?.ToShortDateString()</span>
+            }
+            else
+            {
+                <span> - Present</span>
+            }
+        </td>
+        <td>@tr.Status</td>
+        <td>@tr.Position</td>
 
         @* Show edit link for mods & admins *@
         @if (User.IsInRole("Administrator") || User.IsInRole("Moderator"))

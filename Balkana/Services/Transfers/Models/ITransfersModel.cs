@@ -3,6 +3,6 @@
     public interface ITransfersModel
     {
         int PlayerId { get; }
-        int TeamId { get; }
+        int? TeamId { get; }
     }
 }

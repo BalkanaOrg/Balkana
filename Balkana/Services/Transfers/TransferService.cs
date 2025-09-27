@@ -1,11 +1,12 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using System.Collections.Generic;
 using Balkana.Data;
-using Balkana.Models.Transfers;
-using Balkana.Services.Transfers.Models;
 using Balkana.Data.Models;
+using Balkana.Models.Transfers;
 using Balkana.Services.Teams.Models;
+using Balkana.Services.Transfers.Models;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace Balkana.Services.Transfers
 {
@@ -26,71 +27,104 @@ namespace Balkana.Services.Transfers
             string game = null,
             string searchTerm = null,
             int currentPage = 1,
-            int transfersPerPage = int.MaxValue
-            )
+            int transfersPerPage = int.MaxValue,
+            DateTime? asOfDate = null // NEW: filter by date (optional)
+        )
         {
-            var transferQuery = this.data.PlayerTeamTransfers.AsQueryable();
+            var query = this.data.PlayerTeamTransfers.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(game))
             {
-                transferQuery = transferQuery.Where(c => (c.Team.Game.FullName == game) || (c.Team.Game.ShortName == game));
+                query = query.Where(c => c.Team.Game.FullName == game || c.Team.Game.ShortName == game);
             }
+
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                transferQuery = transferQuery.Where(c =>
-                    (c.Player.Nickname).ToLower().Contains(searchTerm.ToLower()) ||
-                    (c.Team.Tag).ToLower().Contains(searchTerm.ToLower()) ||
-                    (c.Team.FullName).ToLower().Contains(searchTerm.ToLower()) ||
-                    (c.Team.Game.ShortName).ToLower().Contains(searchTerm.ToLower()) ||
-                    (c.Team.Game.FullName).ToLower().Contains(searchTerm.ToLower()));
+                var lower = searchTerm.ToLower();
+                query = query.Where(c =>
+                    c.Player.Nickname.ToLower().Contains(lower) ||
+                    c.Team.Tag.ToLower().Contains(lower) ||
+                    c.Team.FullName.ToLower().Contains(lower) ||
+                    c.Team.Game.ShortName.ToLower().Contains(lower) ||
+                    c.Team.Game.FullName.ToLower().Contains(lower));
             }
 
-            var totalTransfers = transferQuery.Count();
+            // If we're querying roster at a point in time
+            if (asOfDate.HasValue)
+            {
+                var date = asOfDate.Value;
+                query = query.Where(c =>
+                    c.StartDate <= date &&
+                    (c.EndDate == null || c.EndDate >= date));
+            }
 
-            var transfers = GetTransfers(transferQuery.Skip((currentPage - 1) * transfersPerPage).Take(transfersPerPage));
+            var total = query.Count();
+
+            var transfers = GetTransfers(
+                query
+                    .OrderByDescending(c => c.StartDate)
+                    .Skip((currentPage - 1) * transfersPerPage)
+                    .Take(transfersPerPage)
+            );
 
             return new TransferQueryServiceModel
             {
-                TotalTransfers = totalTransfers,
+                TotalTransfers = total,
                 CurrentPage = currentPage,
                 TransfersPerPage = transfersPerPage,
                 Transfers = transfers
             };
-
         }
 
-        public int Create(int playerId, int teamId, DateTime date, int positionId)
+        public int Create(int playerId, int? teamId, DateTime startDate, int positionId, PlayerTeamStatus status)
         {
-            var transferData = new PlayerTeamTransfer
+            // Close existing active contracts
+            var current = this.data.PlayerTeamTransfers
+                .Where(t => t.PlayerId == playerId && t.EndDate == null)
+                .ToList();
+
+            foreach (var c in current)
+                c.EndDate = startDate;
+
+            var transfer = new PlayerTeamTransfer
             {
                 PlayerId = playerId,
                 TeamId = teamId,
-                TransferDate = date,
-                PositionId = positionId
+                StartDate = startDate,
+                PositionId = positionId,
+                Status = status
             };
 
-            this.data.PlayerTeamTransfers.Add(transferData);
+            this.data.PlayerTeamTransfers.Add(transfer);
             this.data.SaveChanges();
 
-            return transferData.Id;
+            return transfer.Id;
         }
 
-        public bool Edit(int id, int playerId, int teamId, DateTime date, int positionId)
+        public bool Edit(int id, int positionId, DateTime? newStartDate = null)
         {
-            var transferData = this.data.PlayerTeamTransfers.Find(id);
+            var transfer = this.data.PlayerTeamTransfers.Find(id);
 
-            if (transferData == null)
-            {
+            if (transfer == null)
                 return false;
-            }
 
-            transferData.PlayerId = playerId;
-            transferData.TeamId = teamId;
-            transferData.TransferDate = date;
-            transferData.PositionId = positionId;
+            transfer.PositionId = positionId;
+
+            if (newStartDate.HasValue)
+                transfer.StartDate = newStartDate.Value; // careful: affects history
 
             this.data.SaveChanges();
+            return true;
+        }
 
+        // Disable hard delete
+        public bool Invalidate(int id)
+        {
+            var transfer = this.data.PlayerTeamTransfers.Find(id);
+            if (transfer == null) return false;
+
+            transfer.EndDate = transfer.StartDate; // makes it invalid immediately
+            this.data.SaveChanges();
             return true;
         }
 
@@ -108,15 +142,37 @@ namespace Balkana.Services.Transfers
             .FirstOrDefault();
 
         public IEnumerable<TransfersServiceModel> GetTransfers(IQueryable<PlayerTeamTransfer> transfers)
-            => transfers
-                .ProjectTo<TransfersServiceModel>(this.con)
-                .ToList();
+            => transfers.Select(t => new TransfersServiceModel
+            {
+                Id = t.Id,
+                PlayerId = t.PlayerId,
+                PlayerUsername = t.Player.Nickname,
+                TeamId = t.TeamId,
+                TeamFullName = t.Team != null ? t.Team.FullName : "Free Agent",
+                GameId = t.Team != null ? t.Team.GameId : 0,
+                GameName = t.Team != null ? t.Team.Game.FullName : "-",
+                StartDate = t.StartDate,
+                EndDate = t.EndDate,
+                Status = t.Status,
+                PositionId = t.PositionId,
+                Position = t.TeamPosition != null ? t.TeamPosition.Name : "-"
+            }).ToList();
 
-        
+        public IEnumerable<TransfersServiceModel> RosterAtDate(int teamId, DateTime date)
+        {
+            var query = this.data.PlayerTeamTransfers
+                .Where(t =>
+                    t.TeamId == teamId &&
+                    t.StartDate <= date &&
+                    (t.EndDate == null || t.EndDate >= date) &&
+                    t.Status == PlayerTeamStatus.Active);
 
-        
+            return GetTransfers(query);
+        }
 
-        
+
+
+
 
         //all teams
         public IEnumerable<string> GetAllTeams(int gameId)
@@ -242,5 +298,76 @@ namespace Balkana.Services.Transfers
             => this.data
             .PlayerTeamTransfers
             .Any(c => c.Id == id);
+
+
+        public IEnumerable<TransferTeamsServiceModel> GetTeams(int gameId, string? search, int page, int pageSize)
+        {
+            var query = this.data.Teams
+                .AsNoTracking()
+                .Where(t => t.GameId == gameId);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(t =>
+                    t.FullName.Contains(search) ||
+                    t.Tag.Contains(search));
+            }
+
+            return query
+                .OrderBy(t => t.FullName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(t => new TransferTeamsServiceModel
+                {
+                    Id = t.Id,
+                    FullName = t.FullName,
+                    Tag = t.Tag,
+                    LogoUrl = t.LogoURL
+                })
+                .ToList();
+        }
+
+        public IEnumerable<TransferPlayersServiceModel> GetPlayers(int gameId, string? search, int page, int pageSize)
+        {
+            // Players are linked to Games via GameProfiles
+            var query = this.data.Players.AsNoTracking();
+            //var query = this.data.Players
+            //    .AsNoTracking()
+            //    .Where(p => p.GameProfiles.Any(gp => gp.GameId == gameId));
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(p =>
+                    p.Nickname.Contains(search) ||
+                    p.FirstName.Contains(search) ||
+                    p.LastName.Contains(search));
+            }
+
+            return query
+                .OrderBy(p => p.Nickname)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new TransferPlayersServiceModel
+                {
+                    Id = p.Id,
+                    Nickname = p.Nickname
+                })
+                .ToList();
+        }
+
+        public IEnumerable<TransferPositionsServiceModel> GetPositions(int gameId)
+        {
+            return this.data.Positions
+                .AsNoTracking()
+                .Where(tp => tp.GameId == gameId)
+                .OrderBy(tp => tp.Id)
+                .Select(tp => new TransferPositionsServiceModel
+                {
+                    Id = tp.Id,
+                    Name = tp.Name,
+                    IconUrl = tp.Icon
+                })
+                .ToList();
+        }
     }
 }

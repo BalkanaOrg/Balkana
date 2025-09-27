@@ -1,0 +1,65 @@
+﻿/* Tournament Form CSS with Photo Upload */
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-3px);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.btn-icon {
+    font-size: 1.2rem;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(60px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .tournament-form-container {
+        padding: 20px 15px;
+    }
+
+    .form-header h2 {
+        font-size: 2.2rem;
+    }
+
+    .form-card {
+        padding: 30px 20px;
+    }
+
+    .form-content-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    .date-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .form-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .btn-primary, .btn-secondary {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .upload-area {
+        height: 250px;
+    }
+
+    .upload-icon {
+        font-size: 3rem;
+    }
+}

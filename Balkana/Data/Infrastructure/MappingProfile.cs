@@ -71,13 +71,7 @@ namespace Balkana.Data.Infrastructure
             this.CreateMap<Game, TransfersServiceModel>()
                 .ForMember(c=>c.GameName, cfg=>cfg.MapFrom(cfg=>cfg.IconURL));
 
-            this.CreateMap<PlayerTeamTransfer, TransfersServiceModel>()
-                .ForMember(c => c.Id, cfg => cfg.MapFrom(src => src.Id))
-                .ForMember(c => c.GameName, cfg => cfg.MapFrom(src => src.Team.Game.IconURL)) // Ensure navigation property exists
-                .ForMember(c => c.PlayerUsername, cfg => cfg.MapFrom(src => src.Player.Nickname))
-                .ForMember(c => c.TeamFullName, cfg => cfg.MapFrom(src => src.Team.FullName))
-                .ForMember(c => c.TransferDate, cfg => cfg.MapFrom(src => src.TransferDate))
-                .ForMember(c => c.Position, cfg => cfg.MapFrom(src => src.TeamPosition.Name));
+            this.CreateMap<PlayerTeamTransfer, TransfersServiceModel>();
             this.CreateMap<Player, TransferDetailsServiceModel>()
                 .ForMember(c=>c.PlayerId, cfg=>cfg.MapFrom(src=>src.Id));
             this.CreateMap<Team, TransferDetailsServiceModel>()
@@ -99,25 +93,28 @@ namespace Balkana.Data.Infrastructure
 
             this.CreateMap<Team, TeamDetailsServiceModel>()
             .ForMember(dest => dest.Players, opt => opt.MapFrom(src =>
-                src.Transfers.Select(tr => new TeamStaffServiceModel
-                {
-                    Id = tr.Id,
-                    PlayerId = tr.Player.Id,
-                    Nickname = tr.Player.Nickname,
-                    FirstName = tr.Player.FirstName,
-                    LastName = tr.Player.LastName,
-                    TeamId = tr.TeamId,
-                    PositionId = tr.PositionId,
-                    NationalityId = tr.Player.NationalityId,
-                    PictureId = tr.Player.PlayerPictures
-                        .OrderByDescending(pp => pp.dateChanged)
-                        .Select(pp => pp.Id)
-                        .FirstOrDefault(),
-                    PictureUrl = tr.Player.PlayerPictures
-                        .OrderByDescending(pp => pp.dateChanged)
-                        .Select(pp => pp.PictureURL)
-                        .FirstOrDefault()
-                })
+                src.Transfers
+                    .Where(tr => tr.Status == PlayerTeamStatus.Active && tr.EndDate == null) // only active players
+                    .Select(tr => new TeamStaffServiceModel
+                    {
+                        Id = tr.Id,
+                        PlayerId = tr.Player.Id,
+                        Nickname = tr.Player.Nickname,
+                        FirstName = tr.Player.FirstName,
+                        LastName = tr.Player.LastName,
+                        TeamId = tr.TeamId ?? 0, // null-check for Free Agent
+                        PositionId = tr.PositionId ?? 0,
+                        NationalityId = tr.Player.NationalityId,
+                        PictureId = tr.Player.PlayerPictures
+                            .OrderByDescending(pp => pp.dateChanged)
+                            .Select(pp => pp.Id)
+                            .FirstOrDefault(),
+                        PictureUrl = tr.Player.PlayerPictures
+                            .OrderByDescending(pp => pp.dateChanged)
+                            .Select(pp => pp.PictureURL)
+                            .FirstOrDefault()
+                    })
+                    .ToList() // force evaluation for AutoMapper
             ));
 
             //Tournaments

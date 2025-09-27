@@ -132,29 +132,41 @@
         {
             var defaultPic = "https://media.istockphoto.com/id/1618846975/photo/smile-black-woman-and-hand-pointing-in-studio-for-news-deal-or-coming-soon-announcement-on.jpg?s=612x612&w=0&k=20&c=LUvvJu4sGaIry5WLXmfQV7RStbGG5hEQNo8hEFxZSGY=";
 
-            var latestTransfers = this.data.PlayerTeamTransfers
-                .Where(ptt => ptt.TeamId == teamId &&
-                    ptt.TransferDate == this.data.PlayerTeamTransfers
-                        .Where(inner => inner.PlayerId == ptt.PlayerId)
-                        .Max(inner => inner.TransferDate))
-                .Select(ptt => new TeamStaffServiceModel
-                {
-                    Id = ptt.Player.Id,
-                    Nickname = ptt.Player.Nickname,
-                    FirstName = ptt.Player.FirstName,
-                    LastName = ptt.Player.LastName,
-                    PositionId = ptt.PositionId,
+            var now = DateTime.UtcNow; // or pass a snapshot date
 
-                    // 👇 Take latest PlayerPicture OR default
-                    PictureUrl = ptt.Player.PlayerPictures
-                        .OrderByDescending(pic => pic.dateChanged)
-                        .Select(pic => pic.PictureURL)
-                        .FirstOrDefault() ?? defaultPic
-                })
-                .ToList();
+            var latestTransfers =
+            from ptt in data.PlayerTeamTransfers
+            join maxDates in
+                (from inner in data.PlayerTeamTransfers
+                 where inner.TeamId == teamId
+                       && inner.StartDate <= now
+                       && (inner.EndDate == null || inner.EndDate >= now)
+                       && inner.Status == PlayerTeamStatus.Active
+                 group inner by inner.PlayerId into g
+                 select new { PlayerId = g.Key, LatestDate = g.Max(x => x.StartDate) })
+            on new { ptt.PlayerId, ptt.StartDate } equals new { maxDates.PlayerId, StartDate = maxDates.LatestDate }
+            where ptt.TeamId == teamId
+                  && ptt.StartDate <= now
+                  && (ptt.EndDate == null || ptt.EndDate >= now)
+                  && ptt.Status == PlayerTeamStatus.Active
+            select new TeamStaffServiceModel
+            {
+                Id = ptt.Player.Id,
+                Nickname = ptt.Player.Nickname,
+                FirstName = ptt.Player.FirstName,
+                LastName = ptt.Player.LastName,
+                PositionId = ptt.PositionId ?? 0,
+                PictureUrl = ptt.Player.PlayerPictures
+                    .OrderByDescending(pic => pic.dateChanged)
+                    .Select(pic => pic.PictureURL)
+                    .FirstOrDefault() ?? defaultPic
+            };
+
+            var list = latestTransfers.ToList();
 
             return latestTransfers;
         }
+
 
         private IEnumerable<TeamServiceModel> GetTeams(IQueryable<Team> teamQuery)
         {

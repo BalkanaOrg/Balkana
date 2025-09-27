@@ -21,14 +21,16 @@ namespace Balkana.Models.Transfers
 
         public string SearchTerm { get; set; }
 
-        public int CurrentPage { get; set; } = 1;
+        public DateTime? AsOfDate { get; set; } // NEW for “roster at date” queries
 
+        public int CurrentPage { get; set; } = 1;
         public int TotalTransfers { get; set; }
 
         public IEnumerable<string> Games { get; set; }
         public IEnumerable<string> Positions { get; set; }
         public IEnumerable<string> Players { get; set; }
         public IEnumerable<string> Teams { get; set; }
+
         public IEnumerable<TransfersServiceModel> Transfers { get; set; }
     }
 }

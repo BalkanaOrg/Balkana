@@ -3,10 +3,11 @@
 @{
     ViewData["Title"] = "Edit Tournament";
 }
+<link rel="stylesheet" href="~/css/tournamentEdit.css" />
 
 <div class="tournament-form-container">
     <div class="form-header">
-        <h2>Create New Tournament</h2>
+        <h2>Edit Tournament</h2>
         <p>Design an exciting tournament experience for players</p>
     </div>
 
@@ -23,12 +24,12 @@
                     <div class="upload-area" id="uploadArea">
                         @* <input type="file" id="tournamentImage" name="TournamentImage" accept="image/*" class="file-input" /> *@
                         @* <label asp-for="LogoFile"></label> *@
-                        @if (!string.IsNullOrEmpty(Model.BannerUrl))
+                        @* @if (!string.IsNullOrEmpty(Model.BannerUrl))
                         {
                             <div class="mb-2">
                                 <img src="@Model.BannerUrl" alt="Current Banner" style="max-height:150px; border:1px solid #ccc;" />
                             </div>
-                        }
+                        } *@
                         <input asp-for="LogoFile" type="file" accept="image/*" id="tournamentImage" class="form-control" />
                         <span asp-validation-for="LogoFile" class="text-danger"></span>
                         <div class="upload-placeholder" id="uploadPlaceholder">
@@ -161,74 +162,6 @@
     </div>
 </div>
 
-<style>
-    /* Tournament Form CSS with Photo Upload */
-    .btn-secondary:hover {
-        background: rgba(255, 255, 255, 0.2);
-        transform: translateY(-3px);
-        color: white;
-        border-color: rgba(255, 255, 255, 0.5);
-    }
-
-    .btn-icon {
-        font-size: 1.2rem;
-    }
-
-    @@keyframes slideInUp {
-        from {
-            opacity: 0;
-            transform: translateY(60px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @@media (max-width: 768px) {
-        .tournament-form-container {
-            padding: 20px 15px;
-        }
-
-        .form-header h2 {
-            font-size: 2.2rem;
-        }
-
-        .form-card {
-            padding: 30px 20px;
-        }
-
-        .form-content-grid {
-            grid-template-columns: 1fr;
-            gap: 30px;
-        }
-
-        .date-grid {
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-
-        .form-actions {
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .btn-primary, .btn-secondary {
-            width: 100%;
-            max-width: 300px;
-        }
-
-        .upload-area {
-            height: 250px;
-        }
-
-        .upload-icon {
-            font-size: 3rem;
-        }
-    }
-</style>
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const fileInput = document.getElementById('tournamentImage');
@@ -349,11 +282,6 @@
                 endDateInput.value = this.value;
             }
         });
-
-        // Set minimum date to today
-        const today = new Date().toISOString().split('T')[0];
-        startDateInput.min = today;
-        endDateInput.min = today;
     });
 </script>
 

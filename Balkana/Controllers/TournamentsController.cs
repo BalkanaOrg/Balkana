@@ -79,10 +79,13 @@ namespace Balkana.Controllers
                 {
                     Team = tt.Team,
                     Players = tt.Team.Transfers
-                        .Where(tr => tr.TransferDate <= tournament.StartDate)
-                        .GroupBy(tr => tr.PlayerId)
-                        .Select(g => g.OrderByDescending(tr => tr.TransferDate).First().Player)
-                        .ToList()
+                    .Where(tr =>
+                        tr.StartDate <= tournament.StartDate &&
+                        (tr.EndDate == null || tr.EndDate >= tournament.StartDate) &&
+                        tr.Status == PlayerTeamStatus.Active)
+                    .GroupBy(tr => tr.PlayerId)
+                    .Select(g => g.OrderByDescending(tr => tr.StartDate).First().Player)
+                    .ToList()
                 })
                 .ToListAsync();
 
@@ -497,10 +500,13 @@ namespace Balkana.Controllers
 
                 // Get roster at tournament start
                 var roster = placement.Team.Transfers
-                    .Where(tr => tr.TransferDate <= tournament.StartDate)
-                    .GroupBy(tr => tr.PlayerId)
-                    .Select(g => g.OrderByDescending(tr => tr.TransferDate).First().Player)
-                    .ToList();
+                .Where(tr =>
+                    tr.StartDate <= tournament.StartDate &&
+                    (tr.EndDate == null || tr.EndDate >= tournament.StartDate) &&
+                    tr.Status == PlayerTeamStatus.Active)
+                .GroupBy(tr => tr.PlayerId)
+                .Select(g => g.OrderByDescending(tr => tr.StartDate).First().Player)
+                .ToList();
 
                 // Decide the "core" (for simplicity: top 3 players by presence)
                 var corePlayers = roster.Take(3).ToList();

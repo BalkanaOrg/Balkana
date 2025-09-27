@@ -417,8 +417,10 @@ namespace Balkana.Controllers
                 {
                     PlayerId = existingPlayer.Id,
                     TeamId = officialTeam.Id,
-                    TransferDate = DateTime.UtcNow,
-                    PositionId = ct.Transfers.FirstOrDefault(t => t.UserId == member.UserId)?.PositionId ?? 0
+                    StartDate = DateTime.UtcNow,
+                    PositionId = ct.Transfers.FirstOrDefault(t => t.UserId == member.UserId)?.PositionId ?? 0,
+                    EndDate = null,
+                    Status = PlayerTeamStatus.Active
                 };
 
                 data.PlayerTeamTransfers.Add(pw);

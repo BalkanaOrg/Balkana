@@ -24,8 +24,23 @@
     </div>
 
     <div class="form-group">
-        <label>Date</label>
-        <input asp-for="TransferDate" type="date" class="form-control" />
+        <label>Start Date</label>
+        <input asp-for="StartDate" type="date" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>End Date (optional)</label>
+        <input asp-for="EndDate" type="date" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Status</label>
+        <select asp-for="Status" class="form-control">
+            <option value="Active">Active</option>
+            <option value="Benched">Benched</option>
+            <option value="Loaned">Loaned</option>
+            <option value="Inactive">Inactive</option>
+        </select>
     </div>
 
     <button type="submit" class="btn btn-primary">Save Changes</button>

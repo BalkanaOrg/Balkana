@@ -7,7 +7,7 @@
 <div>
     <strong>@Model.PlayerUsername</strong> → <strong>@Model.TeamFullName</strong>
     <br />
-    <small>@Model.GameName | @Model.Position | @Model.TransferDate</small>
+    <small>@Model.GameName | @Model.Position | @Model.StartDate - @* @{Model.EndDate ?? null ?? @Model.EndDate : "Current"} *@ </small>
 </div>
 
 <form asp-action="DeleteConfirmed" method="post">

@@ -8,6 +8,8 @@
 
         public string FullName { get; init; }
 
+        public string LogoUrl { get; init; }
+
         public int GameId { get; init; }
     }
 }
