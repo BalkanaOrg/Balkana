@@ -1,29 +1,66 @@
 ﻿@model AllTransfersQueryModel
 
-@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
-@if (User.IsInRole("Administrator") || User.IsInRole("Moderator"))
-{
+<div class="transfers-container">
+    <div class="filter-bar gradient-accent">
+        <div class="filter-group">
+            <input id="searchInput" class="form-control form-control-dark" type="text"
+                   placeholder="Search players, teams, positions…" value="@Model.SearchTerm" />
+        </div>
 
-    <h1><a class="dropdown-item" asp-controller="Transfers" asp-action="Add">Add Transfer</a></h1>
+        <div class="filter-group">
+            <label for="gameSelect" class="form-label">Game</label>
+            <select id="gameSelect" class="form-select form-select-dark">
+                <option value="">All games</option>
+                @foreach (var g in Model.Games ?? Enumerable.Empty<string>())
+                {
+                    <option value="@g" selected="@(string.Equals(Model.Game, g, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@g</option>
+                }
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="asOfDate" class="form-label">As of date</label>
+            <input id="asOfDate" type="date" class="form-control form-control-dark"
+                   value="@(Model.AsOfDate.HasValue? Model.AsOfDate.Value.ToString("yyyy-MM-dd") : "")" />
+        </div>
+
+        @if (User.IsInRole("Administrator") || User.IsInRole("Moderator"))
+        {
+            <div class="filter-actions">
+                <a class="btn btn-primary btn-gradient" asp-controller="Transfers" asp-action="Add">Add Transfer</a>
+            </div>
+        }
+    </div>
+
+    <div class="table-wrapper dark-surface">
+        <table class="table table-dark table-hover mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Game</th>
+                    <th scope="col">Player</th>
+                    <th scope="col">Team</th>
+                    <th scope="col">Transfer date</th>
+                    <th scope="col">Position</th>
+                    <th scope="col">Edit</th>
+                </tr>
+            </thead>
+            <tbody id="transfersBody">
+                <partial name="_TransfersPartial" model="@Model.Transfers" />
+            </tbody>
+        </table>
+
+        <div id="infiniteSentinel" class="infinite-sentinel"></div>
+    </div>
+
+    <input type="hidden" id="totalTransfers" value="@Model.TotalTransfers" />
+    <input type="hidden" id="pageSize" value="@Balkana.Models.Transfers.AllTransfersQueryModel.TransfersPerPage" />
+    <input type="hidden" id="initialPage" value="@Model.CurrentPage" />
+</div>
+
+@section Scripts {
+    <script src="~/js/transfers.js"></script>
 }
-<table class="table text-white-50">
-    <thead>
-        <tr>
-            <th scope="col">#</th>
-            <th scope="col">Game</th>
-            <th scope="col">Player</th>
-            <th scope="col">Team</th>
-            <th scope="col">Transfer date</th>
-            <th scope="col">Position</th>
-            @*Ako e admin*@
-            <th scope="col">Edit</th>
-        </tr>
-    </thead>
-    <tbody>
-        <partial name="_TransfersPartial" model="@Model.Transfers" />
-    </tbody>
-</table>
+@section Styles {
+    <link rel="stylesheet" href="~/css/transfers.css" />
+}

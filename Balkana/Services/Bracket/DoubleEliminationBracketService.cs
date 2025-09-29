@@ -19,14 +19,16 @@ namespace Balkana.Services.Bracket
         public List<Balkana.Data.Models.Series> GenerateDoubleElimination(List<Team> teams, int tournamentId)
         {
             int teamCount = teams.Count;
-            if (teamCount != 4 && teamCount != 8 && teamCount != 16)
-                throw new InvalidOperationException("Only 4, 8, or 16 teams supported for now");
+            int bracketSize = NextPowerOfTwo(teamCount);
+            var seedingOrder = GenerateSeeding(bracketSize);
 
-            var seededTeams = data.TournamentTeams
-                .Where(tt => tt.TournamentId == tournamentId)
-                .OrderBy(tt => tt.Seed)
-                .Select(tt => tt.Team)   // gets the actual Team entity
-                .ToList();
+            // Fill slots with teams or null (bye)
+            var slots = new Team[bracketSize];
+            for (int i = 0; i < teamCount; i++)
+            {
+                int slot = seedingOrder[i] - 1;
+                slots[slot] = teams[i];
+            }
             var seriesList = new List<Balkana.Data.Models.Series>();
 
             // --- UPPER BRACKET ---
@@ -34,15 +36,18 @@ namespace Balkana.Services.Bracket
             int matchId = 1;
 
             // First round UB pairings
-            for (int i = 0; i < teamCount / 2; i++)
+            for (int i = 0; i < bracketSize / 2; i++)
             {
+                var teamA = slots[i * 2];
+                var teamB = slots[i * 2 + 1];
+
                 seriesList.Add(new Balkana.Data.Models.Series
                 {
-                    Name = $"UB Round {round} - Match {i + 1}",
+                    Name = $"UB Round 1 - Match {i + 1}",
                     TournamentId = tournamentId,
-                    TeamAId = seededTeams[i].Id,
-                    TeamBId = seededTeams[teamCount - 1 - i].Id,
-                    Round = round,
+                    TeamAId = teamA?.Id,
+                    TeamBId = teamB?.Id,
+                    Round = 1,
                     Position = i + 1,
                     Bracket = BracketType.Upper
                 });
@@ -170,6 +175,30 @@ namespace Balkana.Services.Bracket
                 Position = pos,
                 Bracket = bracket
             };
+        }
+
+        private int NextPowerOfTwo(int n)
+        {
+            int p = 1;
+            while (p < n) p *= 2;
+            return p;
+        }
+
+        public static List<int> GenerateSeeding(int size)
+        {
+            if (size == 1) return new List<int> { 1 };
+
+            int half = size / 2;
+            var prev = GenerateSeeding(half);
+            var result = new List<int>();
+
+            foreach (var seed in prev)
+            {
+                result.Add(seed);
+                result.Add(size + 1 - seed);
+            }
+
+            return result;
         }
     }
 }

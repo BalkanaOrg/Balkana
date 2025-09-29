@@ -204,6 +204,20 @@ namespace Balkana.Controllers
         }
 
         [HttpGet]
+        public IActionResult Load([FromQuery] AllTransfersQueryModel query)
+        {
+            var queryResult = this.transfers.All(
+                query.Game,
+                query.SearchTerm,
+                query.CurrentPage,
+                AllTransfersQueryModel.TransfersPerPage,
+                query.AsOfDate
+            );
+
+            return PartialView("_TransfersPartial", queryResult.Transfers);
+        }
+
+        [HttpGet]
         public IActionResult GetTeams(int gameId, string? search = null, int page = 1, int pageSize = 20)
         {
             var result = this.transfers.GetTeams(gameId, search, page, pageSize);

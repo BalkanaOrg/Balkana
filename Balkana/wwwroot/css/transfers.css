@@ -1,0 +1,63 @@
+﻿.transfers-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.filter-bar {
+    display: grid;
+    grid-template-columns: 1fr repeat(2, minmax(180px, 240px)) auto;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(0, 98, 255, 0.15), rgba(255, 0, 76, 0.10));
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(6px);
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-control-dark, .form-select-dark {
+    background-color: #101218;
+    color: #e2e6f0;
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+    .form-control-dark::placeholder {
+        color: rgba(226,230,240,0.55);
+    }
+
+.btn-gradient {
+    background: linear-gradient(90deg, #1f6bff, #ff2d6b);
+    border: none;
+    color: white;
+}
+
+    .btn-gradient:hover {
+        filter: brightness(1.1);
+    }
+
+.table-wrapper.dark-surface {
+    background: #0b0d12;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.table.table-dark thead th {
+    background: linear-gradient(90deg, rgba(31,107,255,0.15), rgba(255,45,107,0.10));
+    color: #e2e6f0;
+    border-bottom-color: rgba(255,255,255,0.08);
+}
+
+.table.table-dark tbody tr {
+    color: #cfd6e6;
+}
+
+.infinite-sentinel {
+    height: 1px;
+}
