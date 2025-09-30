@@ -459,7 +459,22 @@ namespace Balkana.Controllers
             }
 
             var service = new BracketService(_context, mapper);
-            var series = service.GenerateBracket(tournamentId);
+
+            var teamIds = tournament.TournamentTeams
+                .OrderBy(tt => tt.Seed)          // Seed is set in Edit/AddTeams by index
+                .Select(tt => tt.TeamId)
+                .ToList();
+
+            var teams = await _context.Teams
+                .Where(t => teamIds.Contains(t.Id))
+                .ToListAsync(); // materialize from DB first
+
+            // now reorder in-memory using IndexOf
+            teams = teams
+                .OrderBy(t => teamIds.IndexOf(t.Id))
+                .ToList();
+
+            var series = service.GenerateBracket(tournamentId, teams);
 
             await _context.Series.AddRangeAsync(series);
             await _context.SaveChangesAsync();

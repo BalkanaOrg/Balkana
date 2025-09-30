@@ -144,8 +144,24 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="SelectedTeamIds">Participating Teams</label>
-                <select asp-for="SelectedTeamIds" asp-items="@(new MultiSelectList(Model.AvailableTeams, "Id", "FullName", Model.SelectedTeamIds))" multiple class="form-control"></select>
+                <label>Participating Teams (click to select - order matters)</label>
+                <div id="teamsList">
+                    @foreach (var team in Model.AvailableTeams)
+                    {
+                        var isChecked = Model.SelectedTeamIds?.Contains(team.Id) ?? false;
+                        <div class="team-row">
+                            <input type="checkbox"
+                                   class="team-checkbox"
+                                   data-team-id="@team.Id"
+                                   id="teamchk_@team.Id"
+                                   @(isChecked ? "checked" : "") />
+                            <label for="teamchk_@team.Id">@team.FullName</label>
+                        </div>
+                    }
+                </div>
+
+                <!-- Hidden inputs will be appended here in click order -->
+                <div id="selectedTeamsContainer"></div>
             </div>
 
             <div class="form-actions">
@@ -281,6 +297,55 @@
             if (endDateInput.value && endDateInput.value < this.value) {
                 endDateInput.value = this.value;
             }
+        });
+
+
+        const checkboxes = document.querySelectorAll('.team-checkbox');
+        const hiddenContainer = document.getElementById('selectedTeamsContainer');
+        const form = document.querySelector('form');
+
+        // maintain ordered array of selected team ids (string values)
+        const order = [];
+
+        // initialize from any checkboxes that are pre-checked
+        checkboxes.forEach(cb => {
+            const id = cb.dataset.teamId;
+            if (cb.checked) {
+            order.push(id);
+            const h = document.createElement('input');
+            h.type = 'hidden';
+            h.name = 'SelectedTeamIds';
+            h.value = id;
+            h.dataset.id = id;
+            hiddenContainer.appendChild(h);
+            }
+        });
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+            const id = cb.dataset.teamId;
+            if (cb.checked) {
+                // append to order & add hidden input last -> click order preserved
+                order.push(id);
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'SelectedTeamIds';
+                hidden.value = id;
+                hidden.dataset.id = id;
+                hiddenContainer.appendChild(hidden);
+            } else {
+                // remove from order and remove hidden input
+                const idx = order.indexOf(id);
+                if (idx > -1) order.splice(idx, 1);
+                const hidden = hiddenContainer.querySelector(`input[data-id='${id}']`);
+                if (hidden) hidden.remove();
+            }
+            });
+        });
+
+        // optional: on form submit, ensure no select exists or is disabled (not required for checkbox approach)
+        form.addEventListener('submit', () => {
+            // nothing else required — hidden inputs are authoritative
         });
     });
 </script>

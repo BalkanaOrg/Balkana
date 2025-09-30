@@ -16,7 +16,7 @@ namespace Balkana.Services.Bracket
             this.mapper = mapper;
         }
 
-        public List<Balkana.Data.Models.Series> GenerateBracket(int tournamentId)
+        public List<Balkana.Data.Models.Series> GenerateBracket(int tournamentId, List<Team> teams)
         {
             var tournament = data.Tournaments
                 .Include(t => t.TournamentTeams).ThenInclude(tt => tt.Team)
@@ -24,11 +24,6 @@ namespace Balkana.Services.Bracket
 
             if (tournament == null)
                 throw new Exception("Tournament not found");
-
-            var teams = tournament.TournamentTeams
-                .OrderBy(tt => tt.Seed)
-                .Select(tt => tt.Team)
-                .ToList();
 
             if (tournament.Elimination == EliminationType.Single)
                 return GenerateSingleElimination(teams, tournamentId, tournament.ShortName ?? $"Tournament {tournament.Id}");
@@ -42,72 +37,100 @@ namespace Balkana.Services.Bracket
             var seriesList = new List<Balkana.Data.Models.Series>();
 
             int teamCount = teams.Count;
-            int bracketSize = NextPowerOfTwo(teamCount); // e.g. 6 → 8, 10 → 16
+            int bracketSize = NextPowerOfTwo(teamCount);
             int byes = bracketSize - teamCount;
 
-            // --- Rule: top seeds get byes directly into Round 2 ---
-            var autoQualified = teams.Take(byes).ToList(); // first N seeds get byes
-            var queue = new Queue<Team>(teams.Skip(byes)); // rest must play Round 1
+            // Step 1: assign seeds in bracket positions
+            var positions = GenerateSeedPositions(bracketSize); // 0-based bracket slots
+            var slots = new Team[bracketSize];
 
-            int round = 1;
-            int matchNumber = 1;
-
-            // --- ROUND 1 (non-bye teams play) ---
-            int matchesInRound1 = (teamCount - byes) / 2;
-            for (int i = 0; i < matchesInRound1; i++)
+            int teamIndex = 0;
+            for (int i = 0; i < bracketSize; i++)
             {
-                var teamA = queue.Dequeue();
-                var teamB = queue.Dequeue();
-
-                var match = NewSeries(
-                    $"{shortName} - Round {round} Match {matchNumber}",
-                    tournamentId,
-                    teamA,
-                    teamB,
-                    round,
-                    matchNumber,
-                    BracketType.Upper
-                );
-                seriesList.Add(match);
-                matchNumber++;
-            }
-
-            // --- SUBSEQUENT ROUNDS ---
-            int totalRounds = (int)Math.Log2(bracketSize);
-            for (int r = 2; r <= totalRounds; r++)
-            {
-                int matchesInRound = bracketSize / (int)Math.Pow(2, r);
-
-                for (int i = 0; i < matchesInRound; i++)
+                if (i < byes)
                 {
-                    Team teamA = null;
-                    Team teamB = null;
-
-                    // Correct placement: distribute autoQualified seeds across different matches
-                    if (r == 2 && autoQualified.Count > 0)
-                    {
-                        // First bye goes into Semifinal 1, second into Semifinal 2, etc.
-                        var seed = autoQualified[0];
-                        autoQualified.RemoveAt(0);
-
-                        if (i % 2 == 0) teamA = seed; // odd semifinal → left slot
-                        else teamB = seed;            // even semifinal → right slot
-                    }
-
-                    var match = NewSeries(
-                        $"{shortName} - Round {r} Match {i + 1}",
-                        tournamentId,
-                        teamA,
-                        teamB,
-                        r,
-                        i + 1,
-                        BracketType.Upper
-                    );
-                    seriesList.Add(match);
+                    // top seeds get bye
+                    slots[positions[i]] = null;
+                }
+                else
+                {
+                    slots[positions[i]] = teams[teamIndex++];
                 }
             }
 
+            int round = 1;
+            while (slots.Length > 1)
+            {
+                int matchNumber = 1;
+                int nextRoundSize = slots.Length / 2;
+                var nextRoundSlots = new Team[nextRoundSize];
+
+                for (int i = 0; i < slots.Length; i += 2)
+                {
+                    var teamA = slots[i];
+                    var teamB = slots[i + 1];
+
+                    if (teamA != null && teamB != null)
+                    {
+                        // normal match
+                        seriesList.Add(NewSeries(
+                            $"{shortName} - Round {round} Match {matchNumber}",
+                            tournamentId,
+                            teamA,
+                            teamB,
+                            round,
+                            matchNumber,
+                            BracketType.Upper
+                        ));
+                        nextRoundSlots[i / 2] = null; // winner placeholder
+                    }
+                    else if (teamA != null || teamB != null)
+                    {
+                        // bye -> auto-advance
+                        nextRoundSlots[i / 2] = teamA ?? teamB;
+
+                        // optionally include a BYE match
+                        seriesList.Add(NewSeries(
+                            $"{shortName} - Round {round} Match {matchNumber} (BYE)",
+                            tournamentId,
+                            teamA,
+                            teamB,
+                            round,
+                            matchNumber,
+                            BracketType.Upper
+                        ));
+                    }
+                    else
+                    {
+                        // both null -> placeholder
+                        nextRoundSlots[i / 2] = null;
+                    }
+
+                    matchNumber++;
+                }
+
+                slots = nextRoundSlots;
+                round++;
+            }
+
             return seriesList;
+        }
+
+
+        private int[] GenerateSeedPositions(int bracketSize)
+        {
+            if (bracketSize == 1) return new[] { 0 };
+
+            var smaller = GenerateSeedPositions(bracketSize / 2);
+            var result = new int[bracketSize];
+
+            for (int i = 0; i < smaller.Length; i++)
+            {
+                result[i] = smaller[i];
+                result[bracketSize - 1 - i] = bracketSize - 1 - smaller[i];
+            }
+
+            return result;
         }
 
         private Balkana.Data.Models.Series NewSeries(string name, int tournamentId, Team teamA, Team teamB, int round, int pos, BracketType bracket)
@@ -124,10 +147,31 @@ namespace Balkana.Services.Bracket
             };
         }
 
+        private List<int?> GenerateSeeding(int bracketSize, int teamCount)
+        {
+            // Recursive seeding
+            List<int?> seeds = new List<int?>(new int?[bracketSize]);
+            void PlaceSeed(int seed, int start, int end)
+            {
+                if (start == end)
+                {
+                    seeds[start] = seed <= teamCount ? seed : (int?)null;
+                    return;
+                }
+                int mid = (start + end) / 2;
+                PlaceSeed(seed, start, mid);
+                PlaceSeed(bracketSize + 1 - seed, mid + 1, end);
+            }
+
+            PlaceSeed(1, 0, bracketSize - 1);
+            return seeds;
+        }
+
         private int NextPowerOfTwo(int n)
         {
+            if (n < 1) return 1;
             int p = 1;
-            while (p < n) p *= 2;
+            while (p < n) p <<= 1;
             return p;
         }
     }
