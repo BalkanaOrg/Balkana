@@ -25,6 +25,10 @@
 
         public decimal PrizePool { get; set; } = 0;
 
+        // Manual points and prize configuration
+        public string PointsConfiguration { get; set; } = ""; // JSON string for points per placement
+        public string PrizeConfiguration { get; set; } = ""; // JSON string for prize distribution
+
         public string BannerUrl { get; set; } = "~/uploads/Tournaments/_default.png";
         public EliminationType Elimination { get; set; }  // single or double
 

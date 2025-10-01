@@ -4,6 +4,7 @@ using Balkana.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Balkana.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250930203454_AddWinnerTeamToMatch")]
+    partial class AddWinnerTeamToMatch
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -870,9 +873,6 @@ namespace Balkana.Migrations
                     b.Property<int>("TournamentId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("WinnerTeamId")
-                        .HasColumnType("int");
-
                     b.Property<bool>("isFinished")
                         .HasColumnType("bit");
 
@@ -885,8 +885,6 @@ namespace Balkana.Migrations
                     b.HasIndex("TeamBId");
 
                     b.HasIndex("TournamentId");
-
-                    b.HasIndex("WinnerTeamId");
 
                     b.ToTable("Series");
                 });
@@ -1033,14 +1031,6 @@ namespace Balkana.Migrations
 
                     b.Property<int>("OrganizerId")
                         .HasColumnType("int");
-
-                    b.Property<string>("PointsConfiguration")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PrizeConfiguration")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("PrizePool")
                         .HasColumnType("decimal(18,2)");
@@ -1313,7 +1303,7 @@ namespace Balkana.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("MapId")
+                    b.Property<int>("MapId")
                         .HasColumnType("int");
 
                     b.HasIndex("MapId");
@@ -1891,11 +1881,6 @@ namespace Balkana.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Balkana.Data.Models.Team", "WinnerTeam")
-                        .WithMany()
-                        .HasForeignKey("WinnerTeamId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.Navigation("NextSeries");
 
                     b.Navigation("TeamA");
@@ -1903,8 +1888,6 @@ namespace Balkana.Migrations
                     b.Navigation("TeamB");
 
                     b.Navigation("Tournament");
-
-                    b.Navigation("WinnerTeam");
                 });
 
             modelBuilder.Entity("Balkana.Data.Models.Team", b =>
@@ -2083,7 +2066,8 @@ namespace Balkana.Migrations
                     b.HasOne("Balkana.Data.Models.GameMap", "Map")
                         .WithMany()
                         .HasForeignKey("MapId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.Navigation("Map");
                 });

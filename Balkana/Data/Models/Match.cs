@@ -21,6 +21,10 @@ namespace Balkana.Data.Models
         public int? TeamBId { get; set; }
         public Team TeamB { get; set; }
 
+        // Winner information
+        public int? WinnerTeamId { get; set; }
+        public Team WinnerTeam { get; set; }
+
         // Track which external slot = TeamA/TeamB
         public string TeamASourceSlot { get; set; } // "Blue" / "Team1"
         public string TeamBSourceSlot { get; set; } // "Red" / "Team2"

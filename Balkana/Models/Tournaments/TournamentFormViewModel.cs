@@ -28,6 +28,12 @@ namespace Balkana.Models.Tournaments
 
         public decimal PrizePool { get; set; } = 0;
 
+        [Display(Name = "Points Configuration (JSON)")]
+        public string PointsConfiguration { get; set; } = "";
+
+        [Display(Name = "Prize Configuration (JSON)")]
+        public string PrizeConfiguration { get; set; } = "";
+
         public string? BannerUrl { get; set; }
         public EliminationType EliminationType { get; set; }  // single or double
 

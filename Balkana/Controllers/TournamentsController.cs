@@ -57,6 +57,7 @@ namespace Balkana.Controllers
                 .Include(t => t.Series).ThenInclude(s => s.TeamA)
                 .Include(t => t.Series).ThenInclude(s => s.TeamB)
                 .Include(t => t.Series).ThenInclude(s => s.NextSeries)
+                .Include(t => t.Placements).ThenInclude(p => p.Team)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
 
@@ -200,7 +201,10 @@ namespace Balkana.Controllers
                 BannerUrl = logoPath,
                 Elimination = model.EliminationType,
                 EndDate = model.EndDate,
-                GameId = model.GameId
+                GameId = model.GameId,
+                PrizePool = model.PrizePool,
+                PointsConfiguration = model.PointsConfiguration,
+                PrizeConfiguration = model.PrizeConfiguration
             };
 
             _context.Tournaments.Add(tournament);
@@ -228,6 +232,8 @@ namespace Balkana.Controllers
                 StartDate = tournament.StartDate,
                 EndDate = tournament.EndDate,
                 PrizePool = tournament.PrizePool,
+                PointsConfiguration = tournament.PointsConfiguration,
+                PrizeConfiguration = tournament.PrizeConfiguration,
                 BannerUrl = tournament.BannerUrl,
                 EliminationType = tournament.Elimination,
                 GameId = tournament.GameId,
@@ -275,6 +281,8 @@ namespace Balkana.Controllers
             tournament.PrizePool = model.PrizePool;
             tournament.Elimination = model.EliminationType;
             tournament.GameId = model.GameId;
+            tournament.PointsConfiguration = model.PointsConfiguration;
+            tournament.PrizeConfiguration = model.PrizeConfiguration;
 
             // ✅ Update participating teams
             _context.TournamentTeams.RemoveRange(tournament.TournamentTeams);
@@ -307,6 +315,8 @@ namespace Balkana.Controllers
                     .ThenInclude(s => s.TeamA)
                 .Include(t => t.Series)
                     .ThenInclude(s => s.TeamB)
+                .Include(t => t.Series)
+                    .ThenInclude(s => s.Matches)
                 .FirstOrDefault(t => t.Id == id);
 
             if (tournament == null)
@@ -328,23 +338,34 @@ namespace Balkana.Controllers
             // Stage ID
             var stageId = 1;
 
-            // Matches
-            var matches = tournament.Series.Select(s => new
-            {
-                id = s.Id,
-                stage_id = 1, // single stage for simplicity
-                group_id = s.Bracket == BracketType.Upper ? 0 :
-               s.Bracket == BracketType.Lower ? 1 : 2,
-                round_id = s.Round,
-                number = s.Position,
-                status = "open", // or "finished", "in_progress" depending on your series
-                opponent1 = s.TeamA != null
-                    ? new { id = s.TeamA.Id, name = s.TeamA.FullName, score = 0, result = "" }
-                    : new { id = -1, name = "TBD", score = 0, result = "" },
-                opponent2 = s.TeamB != null
-                    ? new { id = s.TeamB.Id, name = s.TeamB.FullName, score = 0, result = "" }
-                    : new { id = -1, name = "TBD", score = 0, result = "" }
-            }).ToList();
+            // Matches - show all matches including TBD vs TBD
+            var matches = tournament.Series
+                .Select(s => new
+                {
+                    id = s.Id,
+                    stage_id = 1, // single stage for simplicity
+                    group_id = s.Bracket == BracketType.Upper ? 0 :
+                   s.Bracket == BracketType.Lower ? 1 : 2,
+                    round_id = s.Round,
+                    number = s.Position,
+                    status = s.isFinished ? "finished" : "open",
+                    opponent1 = s.TeamA != null
+                        ? new { 
+                            id = s.TeamA.Id, 
+                            name = s.TeamA.FullName, 
+                            score = GetTeamScore(s, s.TeamA), 
+                            result = GetTeamResult(s, s.TeamA) 
+                        }
+                        : new { id = -1, name = "TBD", score = 0, result = "" },
+                    opponent2 = s.TeamB != null
+                        ? new { 
+                            id = s.TeamB.Id, 
+                            name = s.TeamB.FullName, 
+                            score = GetTeamScore(s, s.TeamB), 
+                            result = GetTeamResult(s, s.TeamB) 
+                        }
+                        : new { id = -1, name = "TBD", score = 0, result = "" }
+                }).ToList();
 
             // Stages - must include skipFirstRound and groups
             var stages = new[]
@@ -352,18 +373,20 @@ namespace Balkana.Controllers
                 new
                 {
                     id = stageId,
-                    name = "Double Elimination",
-                    type = "double_elimination",
+                    name = tournament.Elimination == EliminationType.Single ? "Single Elimination" : "Double Elimination",
+                    type = tournament.Elimination == EliminationType.Single ? "single_elimination" : "double_elimination",
                     settings = new
                     {
                         skipFirstRound = false
                     },
-                    groups = new[]
-                    {
-                        new { id = 0, name = "Upper Bracket" },
-                        new { id = 1, name = "Lower Bracket" },
-                        new { id = 2, name = "Grand Final" }
-                    }
+                    groups = tournament.Elimination == EliminationType.Single 
+                        ? new[] { new { id = 0, name = "Main Bracket" } }
+                        : new[]
+                        {
+                            new { id = 0, name = "Upper Bracket" },
+                            new { id = 1, name = "Lower Bracket" },
+                            new { id = 2, name = "Grand Final" }
+                        }
                 }
             };
 
@@ -374,6 +397,123 @@ namespace Balkana.Controllers
                 matchGames = new object[0],
                 stages
             });
+        }
+
+        [HttpGet("api/series/{id}/details")]
+        public IActionResult GetSeriesDetails(int id)
+        {
+            var series = _context.Series
+                .Include(s => s.TeamA)
+                .Include(s => s.TeamB)
+                .Include(s => s.WinnerTeam)
+                .Include(s => s.Matches)
+                    .ThenInclude(m => m.WinnerTeam)
+                .Include(s => s.Matches)
+                    .ThenInclude(m => ((MatchCS)m).Map)
+                .FirstOrDefault(s => s.Id == id);
+
+            if (series == null)
+                return NotFound();
+
+            var seriesData = new
+            {
+                id = series.Id,
+                name = series.Name,
+                round = series.Round,
+                position = series.Position,
+                bracket = series.Bracket.ToString(),
+                isFinished = series.isFinished,
+                teamA = series.TeamA != null ? new { id = series.TeamA.Id, fullName = series.TeamA.FullName } : null,
+                teamB = series.TeamB != null ? new { id = series.TeamB.Id, fullName = series.TeamB.FullName } : null,
+                winnerTeam = series.WinnerTeam != null ? new { id = series.WinnerTeam.Id, fullName = series.WinnerTeam.FullName } : null,
+                matches = series.Matches.Select(m => new
+                {
+                    id = m.Id,
+                    externalMatchId = m.ExternalMatchId,
+                    source = m.Source,
+                    playedAt = m.PlayedAt,
+                    isCompleted = m.IsCompleted,
+                    mapName = m is MatchCS csMatch ? (csMatch.Map?.Name ?? "No Map") : "N/A",
+                    winnerTeam = m.WinnerTeam != null ? new { id = m.WinnerTeam.Id, fullName = m.WinnerTeam.FullName } : null
+                }).OrderBy(m => m.playedAt).ToList()
+            };
+
+            return Ok(seriesData);
+        }
+
+        private int GetTeamScore(Series series, Team team)
+        {
+            if (!series.isFinished || !series.Matches.Any())
+                return 0;
+
+            // Count wins for this team in the series
+            int wins = 0;
+            foreach (var match in series.Matches)
+            {
+                if (match.IsCompleted)
+                {
+                    var winner = DetermineMatchWinner(match);
+                    if (winner == team)
+                    {
+                        wins++;
+                    }
+                }
+            }
+            return wins;
+        }
+
+        private string GetTeamResult(Series series, Team team)
+        {
+            if (!series.isFinished)
+                return "";
+
+            var teamScore = GetTeamScore(series, team);
+            var otherTeam = series.TeamA == team ? series.TeamB : series.TeamA;
+            var otherScore = GetTeamScore(series, otherTeam);
+
+            if (teamScore > otherScore)
+                return "win";
+            else if (teamScore < otherScore)
+                return "loss";
+            else
+                return "draw";
+        }
+
+        private Team DetermineMatchWinner(Match match)
+        {
+            // Use the WinnerTeam directly from the match
+            if (match.WinnerTeam != null)
+            {
+                return match.WinnerTeam;
+            }
+
+            // Fallback: determine winner from player statistics if WinnerTeam is not set
+            if (match is MatchCS csMatch)
+            {
+                var teamAStats = csMatch.PlayerStats
+                    .Where(ps => ps.Team == csMatch.TeamASourceSlot)
+                    .OfType<PlayerStatistic_CS2>()
+                    .ToList();
+                var teamBStats = csMatch.PlayerStats
+                    .Where(ps => ps.Team == csMatch.TeamBSourceSlot)
+                    .OfType<PlayerStatistic_CS2>()
+                    .ToList();
+
+                if (teamAStats.Any() && teamBStats.Any())
+                {
+                    // Use rounds played to determine winner as fallback
+                    var teamARounds = teamAStats.FirstOrDefault()?.RoundsPlayed ?? 0;
+                    var teamBRounds = teamBStats.FirstOrDefault()?.RoundsPlayed ?? 0;
+                    
+                    if (teamARounds > teamBRounds)
+                        return match.TeamA;
+                    else if (teamBRounds > teamARounds)
+                        return match.TeamB;
+                }
+            }
+
+            // Fallback: return null if we can't determine the winner
+            return null;
         }
 
 
@@ -458,28 +598,71 @@ namespace Balkana.Controllers
                 return RedirectToAction("Details", new { id = tournamentId });
             }
 
+            if (!tournament.TournamentTeams.Any())
+            {
+                TempData["Error"] = "No teams added to tournament. Please add teams first.";
+                return RedirectToAction("Details", new { id = tournamentId });
+            }
+
             var service = new BracketService(_context, mapper);
 
-            var teamIds = tournament.TournamentTeams
-                .OrderBy(tt => tt.Seed)          // Seed is set in Edit/AddTeams by index
-                .Select(tt => tt.TeamId)
-                .ToList();
-
-            var teams = await _context.Teams
-                .Where(t => teamIds.Contains(t.Id))
-                .ToListAsync(); // materialize from DB first
-
-            // now reorder in-memory using IndexOf
-            teams = teams
-                .OrderBy(t => teamIds.IndexOf(t.Id))
-                .ToList();
+            // Get teams ordered by their seed (1, 2, 3, etc.)
+            var teams = await _context.TournamentTeams
+                .Where(tt => tt.TournamentId == tournamentId)
+                .Include(tt => tt.Team)
+                .OrderBy(tt => tt.Seed)
+                .Select(tt => tt.Team)
+                .ToListAsync();
 
             var series = service.GenerateBracket(tournamentId, teams);
+
+            // First, save all series without NextSeriesId relationships
+            foreach (var s in series)
+            {
+                s.NextSeriesId = null; // Clear NextSeriesId temporarily
+            }
 
             await _context.Series.AddRangeAsync(series);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"{tournament.Elimination} bracket generated!";
+            // Now wire up the NextSeriesId relationships after series have IDs
+            if (tournament.Elimination == EliminationType.Single)
+            {
+                service.WireUpSeriesProgression(series);
+            }
+            else
+            {
+                var doubleEliminationService = new DoubleEliminationBracketService(_context, mapper);
+                doubleEliminationService.WireUpDoubleEliminationProgression(series);
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"{tournament.Elimination} bracket generated with {teams.Count} teams!";
+            return RedirectToAction("Details", new { id = tournamentId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Moderator")]
+        public async Task<IActionResult> DeleteBracket(int tournamentId)
+        {
+            var tournament = await _context.Tournaments
+                .Include(t => t.Series)
+                .FirstOrDefaultAsync(t => t.Id == tournamentId);
+
+            if (tournament == null) return NotFound();
+
+            if (!tournament.Series.Any())
+            {
+                TempData["Error"] = "No bracket exists to delete.";
+                return RedirectToAction("Details", new { id = tournamentId });
+            }
+
+            _context.Series.RemoveRange(tournament.Series);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Bracket deleted successfully.";
             return RedirectToAction("Details", new { id = tournamentId });
         }
 
@@ -556,8 +739,274 @@ namespace Balkana.Controllers
 
             await _context.SaveChangesAsync();
 
+            // Generate placements from bracket results
+            await GeneratePlacementsFromBracket(tournament);
+
             TempData["Success"] = $"Tournament '{tournament.FullName}' concluded and points awarded!";
             return RedirectToAction("Details", new { id });
+        }
+
+        private async Task GeneratePlacementsFromBracket(Tournament tournament)
+        {
+            // Clear existing placements
+            _context.TournamentPlacements.RemoveRange(tournament.Placements);
+
+            // Get all participating teams
+            var participatingTeams = await _context.TournamentTeams
+                .Include(tt => tt.Team)
+                .Where(tt => tt.TournamentId == tournament.Id)
+                .OrderBy(tt => tt.Seed)
+                .Select(tt => tt.Team)
+                .ToListAsync();
+
+            // Get all series with match results
+            var allSeries = await _context.Series
+                .Include(s => s.TeamA)
+                .Include(s => s.TeamB)
+                .Include(s => s.WinnerTeam)
+                .Include(s => s.Matches)
+                .Where(s => s.TournamentId == tournament.Id)
+                .ToListAsync();
+
+            var placements = new List<TournamentPlacement>();
+
+            if (tournament.Elimination == EliminationType.Single)
+            {
+                await GenerateSingleEliminationPlacements(allSeries, participatingTeams, placements, tournament);
+            }
+            else
+            {
+                await GenerateDoubleEliminationPlacements(allSeries, participatingTeams, placements, tournament);
+            }
+
+            // Add placements to database
+            foreach (var placement in placements)
+            {
+                _context.TournamentPlacements.Add(placement);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task GenerateSingleEliminationPlacements(List<Series> allSeries, List<Team> participatingTeams, List<TournamentPlacement> placements, Tournament tournament)
+        {
+            // Get all series ordered by round (highest first)
+            var seriesByRound = allSeries
+                .Where(s => s.Bracket == BracketType.Upper)
+                .GroupBy(s => s.Round)
+                .OrderByDescending(g => g.Key)
+                .ToList();
+
+            if (!seriesByRound.Any())
+                return;
+
+            // Track teams by elimination round
+            var eliminatedTeams = new Dictionary<int, List<Team>>();
+            var remainingTeams = new HashSet<Team>(participatingTeams);
+
+            // Process rounds from highest to lowest to track eliminations
+            foreach (var roundGroup in seriesByRound)
+            {
+                var roundEliminated = new List<Team>();
+                
+                foreach (var series in roundGroup)
+                {
+                    if (series.isFinished && series.TeamA != null && series.TeamB != null)
+                    {
+                        var winner = series.WinnerTeam;
+                        var loser = series.TeamA == winner ? series.TeamB : series.TeamA;
+                        
+                        if (loser != null && remainingTeams.Contains(loser))
+                        {
+                            roundEliminated.Add(loser);
+                            remainingTeams.Remove(loser);
+                        }
+                    }
+                }
+
+                if (roundEliminated.Any())
+                {
+                    eliminatedTeams[roundGroup.Key] = roundEliminated;
+                }
+            }
+
+            // Create placements with proper shared positions
+            int currentPlacement = 1;
+
+            // 1st place - winner of final (remaining team)
+            if (remainingTeams.Count == 1)
+            {
+                var winner = remainingTeams.First();
+                placements.Add(CreatePlacement(tournament, winner, currentPlacement++));
+            }
+
+            // 2nd place - runner-up of final
+            var finalRound = seriesByRound.First().Key;
+            if (eliminatedTeams.ContainsKey(finalRound))
+            {
+                var finalEliminated = eliminatedTeams[finalRound];
+                foreach (var team in finalEliminated)
+                {
+                    placements.Add(CreatePlacement(tournament, team, currentPlacement));
+                }
+                currentPlacement++;
+            }
+
+            // Shared placements for earlier rounds (3rd-4th, 5th-8th, 9th-12th, etc.)
+            for (int i = 1; i < seriesByRound.Count; i++)
+            {
+                var round = seriesByRound[i];
+                if (eliminatedTeams.ContainsKey(round.Key))
+                {
+                    var roundEliminated = eliminatedTeams[round.Key];
+                    foreach (var team in roundEliminated)
+                    {
+                        placements.Add(CreatePlacement(tournament, team, currentPlacement));
+                    }
+                    currentPlacement++;
+                }
+            }
+
+            // Ensure all teams are placed (fallback for any missing teams)
+            var placedTeamIds = placements.Select(p => p.TeamId).ToHashSet();
+            var unplacedTeams = participatingTeams.Where(t => !placedTeamIds.Contains(t.Id)).ToList();
+            
+            foreach (var team in unplacedTeams)
+            {
+                placements.Add(CreatePlacement(tournament, team, currentPlacement));
+            }
+        }
+
+        private async Task GenerateDoubleEliminationPlacements(List<Series> allSeries, List<Team> participatingTeams, List<TournamentPlacement> placements, Tournament tournament)
+        {
+            // Find grand final
+            var grandFinal = allSeries
+                .Where(s => s.Bracket == BracketType.GrandFinal)
+                .FirstOrDefault();
+
+            if (grandFinal?.isFinished == true && grandFinal.WinnerTeam != null)
+            {
+                // 1st place - winner of grand final
+                placements.Add(CreatePlacement(tournament, grandFinal.WinnerTeam, 1));
+
+                // 2nd place - loser of grand final
+                var runnerUp = grandFinal.TeamA == grandFinal.WinnerTeam ? grandFinal.TeamB : grandFinal.TeamA;
+                if (runnerUp != null)
+                {
+                    placements.Add(CreatePlacement(tournament, runnerUp, 2));
+                }
+
+                // 3rd place - winner of lower bracket final (if it exists)
+                var lowerBracketFinal = allSeries
+                    .Where(s => s.Bracket == BracketType.Lower)
+                    .OrderByDescending(s => s.Round)
+                    .FirstOrDefault();
+
+                if (lowerBracketFinal?.isFinished == true && lowerBracketFinal.WinnerTeam != null)
+                {
+                    placements.Add(CreatePlacement(tournament, lowerBracketFinal.WinnerTeam, 3));
+                }
+
+                // For double elimination, we need more complex logic to determine other placements
+                // This is a simplified version - in a full implementation, you'd track all elimination paths
+                var remainingTeams = participatingTeams
+                    .Where(t => !placements.Any(p => p.TeamId == t.Id))
+                    .ToList();
+
+                // Assign remaining teams to shared placements (4th-8th, etc.)
+                int currentPlacement = 4;
+                int teamsPerPlacement = 2; // Start with 4th-5th, then 6th-7th, etc.
+
+                for (int i = 0; i < remainingTeams.Count; i += teamsPerPlacement)
+                {
+                    var teamsInThisPlacement = remainingTeams.Skip(i).Take(teamsPerPlacement);
+                    foreach (var team in teamsInThisPlacement)
+                    {
+                        placements.Add(CreatePlacement(tournament, team, currentPlacement));
+                    }
+                    currentPlacement += teamsPerPlacement;
+                }
+            }
+        }
+
+        private TournamentPlacement CreatePlacement(Tournament tournament, Team team, int placement)
+        {
+            return new TournamentPlacement
+            {
+                TournamentId = tournament.Id,
+                TeamId = team.Id,
+                Placement = placement,
+                PointsAwarded = GetPointsForPlacement(tournament, placement),
+                // Prize amount would be calculated here if needed
+            };
+        }
+
+        private int GetPointsForPlacement(Tournament tournament, int placement)
+        {
+            // Try to parse the points configuration JSON
+            if (!string.IsNullOrEmpty(tournament.PointsConfiguration))
+            {
+                try
+                {
+                    var pointsConfig = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int>>(tournament.PointsConfiguration);
+                    if (pointsConfig != null && pointsConfig.ContainsKey(placement.ToString()))
+                    {
+                        return pointsConfig[placement.ToString()];
+                    }
+                }
+                catch
+                {
+                    // Fall back to default if JSON parsing fails
+                }
+            }
+
+            // Default point distribution if no configuration
+            return placement switch
+            {
+                1 => 500,
+                2 => 325,
+                3 => 200,
+                4 => 125,
+                5 => 100,
+                6 => 75,
+                7 => 50,
+                8 => 25,
+                _ => 10
+            };
+        }
+
+        private decimal GetPrizeForPlacement(Tournament tournament, int placement)
+        {
+            // Try to parse the prize configuration JSON
+            if (!string.IsNullOrEmpty(tournament.PrizeConfiguration))
+            {
+                try
+                {
+                    var prizeConfig = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, decimal>>(tournament.PrizeConfiguration);
+                    if (prizeConfig != null && prizeConfig.ContainsKey(placement.ToString()))
+                    {
+                        return prizeConfig[placement.ToString()];
+                    }
+                }
+                catch
+                {
+                    // Fall back to default if JSON parsing fails
+                }
+            }
+
+            // Default prize distribution if no configuration
+            if (tournament.PrizePool > 0)
+            {
+                return placement switch
+                {
+                    1 => tournament.PrizePool * 0.50m, // 50%
+                    2 => tournament.PrizePool * 0.30m, // 30%
+                    3 => tournament.PrizePool * 0.20m, // 20%
+                    _ => 0
+                };
+            }
+
+            return 0;
         }
 
         private IEnumerable<TournamentOrganizersServiceModel> AllOrganizers()
@@ -572,6 +1021,14 @@ namespace Balkana.Controllers
                 .ProjectTo<TournamentGamesServiceModel>(this.con)
                 .ToList();
         }
+        private bool IsByeMatch(Series series)
+        {
+            // A match is a bye if one team is null and the other is not
+            // But we should still show TBD vs TBD matches
+            return (series.TeamA == null && series.TeamB != null) || 
+                   (series.TeamA != null && series.TeamB == null);
+        }
+
         private IEnumerable<SelectListItem>? AllEliminationTypes()
         {
             return Enum.GetValues(typeof(EliminationType))

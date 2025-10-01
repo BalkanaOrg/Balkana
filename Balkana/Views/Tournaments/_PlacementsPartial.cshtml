@@ -1,0 +1,426 @@
+@using Balkana.Data.Models
+@model Tournament
+
+@{
+    var placements = Model.Placements?.OrderBy(p => p.Placement).ToList() ?? new List<TournamentPlacement>();
+}
+
+@if (placements.Any())
+{
+    <div class="placements-section">
+        <div class="placements-header">
+            <h4 class="placements-title">
+                <i class="fas fa-trophy"></i> Final Placements
+            </h4>
+        </div>
+        
+        <div class="placements-grid">
+            @{
+                var groupedPlacements = placements.GroupBy(p => p.Placement).OrderBy(g => g.Key);
+            }
+            @foreach (var placementGroup in groupedPlacements)
+            {
+                var placementNumber = placementGroup.Key;
+                var teamsInPlacement = placementGroup.ToList();
+                var isShared = teamsInPlacement.Count > 1;
+                
+                @foreach (var placement in teamsInPlacement)
+                {
+                    <div class="placement-card @GetPlacementClass(placement.Placement)">
+                        <div class="placement-rank">
+                            <span class="rank-number">
+                                @if (isShared)
+                                {
+                                    <text>#@GetSharedPlacementText(placementNumber, teamsInPlacement.Count)</text>
+                                }
+                                else
+                                {
+                                    <text>#@placement.Placement</text>
+                                }
+                            </span>
+                            <div class="rank-icon">
+                                @GetPlacementIcon(placement.Placement)
+                            </div>
+                        </div>
+                    
+                    <div class="placement-team">
+                        <div class="team-logo">
+                            <img src="@placement.Team.LogoURL" alt="@placement.Team.FullName" class="logo-img" />
+                        </div>
+                        <div class="team-info">
+                            <div class="team-name">@placement.Team.FullName</div>
+                            <div class="team-tag">@placement.Team.Tag</div>
+                        </div>
+                    </div>
+                    
+                    <div class="placement-details">
+                        <div class="points-earned">
+                            <span class="points-label">Points</span>
+                            <span class="points-value">@placement.PointsAwarded</span>
+                        </div>
+                        @if (placement.Placement <= 3)
+                        {
+                            <div class="prize-info">
+                                <span class="prize-label">Prize</span>
+                                <span class="prize-value">@GetPrizeAmount(placement.Placement, Model.PrizePool)</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+                }
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="placements-section">
+        <div class="placements-header">
+            <h4 class="placements-title">
+                <i class="fas fa-trophy"></i> Final Placements
+            </h4>
+        </div>
+        
+        <div class="no-placements">
+            <div class="no-placements-icon">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <div class="no-placements-text">
+                <h5>Tournament Not Concluded</h5>
+                <p>Final placements will be displayed here once the tournament is completed.</p>
+            </div>
+        </div>
+    </div>
+}
+
+@functions {
+    string GetPlacementClass(int placement)
+    {
+        return placement switch
+        {
+            1 => "placement-gold",
+            2 => "placement-silver", 
+            3 => "placement-bronze",
+            _ => "placement-other"
+        };
+    }
+    
+    string GetPlacementIcon(int placement)
+    {
+        return placement switch
+        {
+            1 => "<i class='fas fa-crown'></i>",
+            2 => "<i class='fas fa-medal'></i>",
+            3 => "<i class='fas fa-award'></i>",
+            _ => "<i class='fas fa-trophy'></i>"
+        };
+    }
+    
+    string GetPrizeAmount(int placement, decimal prizePool)
+    {
+        if (prizePool <= 0) return "N/A";
+        
+        var percentage = placement switch
+        {
+            1 => 0.50m, // 50% for 1st place
+            2 => 0.30m, // 30% for 2nd place
+            3 => 0.20m, // 20% for 3rd place
+            _ => 0m
+        };
+        
+        var amount = prizePool * percentage;
+        return $"${amount:N0}";
+    }
+    
+    string GetSharedPlacementText(int placement, int teamCount)
+    {
+        if (teamCount == 2)
+        {
+            return $"{placement}-{placement + 1}";
+        }
+        else if (teamCount == 4)
+        {
+            return $"{placement}-{placement + 3}";
+        }
+        else if (teamCount == 8)
+        {
+            return $"{placement}-{placement + 7}";
+        }
+        else
+        {
+            return $"{placement}-{placement + teamCount - 1}";
+        }
+    }
+}
+
+<style>
+    /* Ultra Black Placements Section */
+    .placements-section {
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin: 2rem 0;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
+        border: 2px solid #1a1a1a;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .placements-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #1e40af, #dc2626);
+    }
+
+    .placements-header {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .placements-title {
+        color: #f9fafb;
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin: 0;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        background: linear-gradient(45deg, #1e40af, #dc2626);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .placements-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    /* Placement Cards */
+    .placement-card {
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        border: 2px solid #1a1a1a;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .placement-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #1e40af, #dc2626);
+    }
+
+    .placement-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 32px rgba(30, 64, 175, 0.3);
+        border-color: #1e40af;
+    }
+
+    /* Placement-specific styling */
+    .placement-gold {
+        border-color: #fbbf24;
+        box-shadow: 0 4px 16px rgba(251, 191, 36, 0.2);
+    }
+
+    .placement-gold::before {
+        background: linear-gradient(90deg, #fbbf24, #f59e0b);
+    }
+
+    .placement-silver {
+        border-color: #9ca3af;
+        box-shadow: 0 4px 16px rgba(156, 163, 175, 0.2);
+    }
+
+    .placement-silver::before {
+        background: linear-gradient(90deg, #9ca3af, #6b7280);
+    }
+
+    .placement-bronze {
+        border-color: #cd7c2f;
+        box-shadow: 0 4px 16px rgba(205, 124, 47, 0.2);
+    }
+
+    .placement-bronze::before {
+        background: linear-gradient(90deg, #cd7c2f, #b45309);
+    }
+
+    .placement-other {
+        border-color: #1a1a1a;
+    }
+
+    /* Rank Section */
+    .placement-rank {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .rank-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #f9fafb;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .rank-icon {
+        font-size: 1.5rem;
+        color: #fbbf24;
+    }
+
+    .placement-gold .rank-icon {
+        color: #fbbf24;
+    }
+
+    .placement-silver .rank-icon {
+        color: #9ca3af;
+    }
+
+    .placement-bronze .rank-icon {
+        color: #cd7c2f;
+    }
+
+    .placement-other .rank-icon {
+        color: #6b7280;
+    }
+
+    /* Team Section */
+    .placement-team {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .team-logo {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid #1a1a1a;
+        background: #0a0a0a;
+    }
+
+    .logo-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .team-info {
+        flex: 1;
+    }
+
+    .team-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #f9fafb;
+        margin-bottom: 0.25rem;
+    }
+
+    .team-tag {
+        font-size: 0.9rem;
+        color: #9ca3af;
+        font-weight: 500;
+    }
+
+    /* Details Section */
+    .placement-details {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .points-earned, .prize-info {
+        text-align: center;
+    }
+
+    .points-label, .prize-label {
+        display: block;
+        font-size: 0.8rem;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+
+    .points-value, .prize-value {
+        display: block;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #f9fafb;
+    }
+
+    .points-value {
+        color: #10b981;
+        text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+
+    .prize-value {
+        color: #fbbf24;
+        text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+    }
+
+    /* No Placements State */
+    .no-placements {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: #9ca3af;
+    }
+
+    .no-placements-icon {
+        font-size: 4rem;
+        color: #1a1a1a;
+        margin-bottom: 1rem;
+    }
+
+    .no-placements-text h5 {
+        color: #f9fafb;
+        font-size: 1.3rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .no-placements-text p {
+        color: #9ca3af;
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .placements-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .placement-card {
+            padding: 1rem;
+        }
+        
+        .placement-team {
+            gap: 0.75rem;
+        }
+        
+        .team-logo {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .rank-number {
+            font-size: 1.5rem;
+        }
+        
+        .rank-icon {
+            font-size: 1.2rem;
+        }
+    }
+</style>

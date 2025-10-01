@@ -16,6 +16,10 @@ namespace Balkana.Data.Models
         public Team? TeamA { get; set; }
         public Team? TeamB { get; set; }
 
+        // Winner information
+        public int? WinnerTeamId { get; set; }
+        public Team? WinnerTeam { get; set; }
+
         public DateTime DatePlayed { get; set; }
 
         public bool isFinished { get; set; } = false;

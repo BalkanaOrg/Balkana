@@ -7,120 +7,589 @@
 
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success">@TempData["Success"]</div>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 }
 
 @if (TempData["Error"] != null)
 {
-    <div class="alert alert-danger">@TempData["Error"]</div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 }
 
-<h2>@Model.FullName (@Model.ShortName)</h2>
-
-<div class="mb-4">
-    <dl class="row">
-        <dt class="col-sm-3">Organizer</dt>
-        <dd class="col-sm-9">@Model.Organizer?.FullName</dd>
-
-        <dt class="col-sm-3">Game</dt>
-        <dd class="col-sm-9">@Model.Game?.FullName</dd>
-
-        <dt class="col-sm-3">Description</dt>
-        <dd class="col-sm-9">@Model.Description</dd>
-
-        <dt class="col-sm-3">Dates</dt>
-        <dd class="col-sm-9">
-            @(
-                Model.StartDate.ToString("d") == Model.EndDate.ToString("d")
-                ? Model.StartDate.ToShortDateString()
-                : Model.StartDate.ToString("d") + " - " + Model.EndDate.ToString("d")
-                )
-        </dd>
-    </dl>
+<!-- Tournament Header -->
+<div class="tournament-header">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-2">
+                <div class="tournament-logo">
+                    <img src="@Model.BannerUrl" alt="@Model.FullName" class="img-fluid rounded" />
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="tournament-info">
+                    <h1 class="tournament-title">@Model.FullName</h1>
+                    <h2 class="tournament-subtitle">@Model.ShortName</h2>
+                    <div class="tournament-meta">
+                        <span class="badge bg-primary me-2">@Model.Game?.FullName</span>
+                        <span class="badge bg-secondary me-2">@Model.Elimination</span>
+                        @if (Model.PrizePool > 0)
+                        {
+                            <span class="badge bg-success">$@Model.PrizePool.ToString("N0") Prize Pool</span>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="tournament-actions">
+                    @if (!Model.Series.Any())
+                    {
+                        <form asp-action="GenerateBracket" method="post" class="d-inline">
+                            <input type="hidden" name="tournamentId" value="@Model.Id" />
+                            <button type="submit" class="btn btn-success btn-lg w-100 mb-2">
+                                <i class="fas fa-trophy"></i> Generate Bracket
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-action="DeleteBracket" method="post" class="d-inline">
+                            <input type="hidden" name="tournamentId" value="@Model.Id" />
+                            <button type="submit" class="btn btn-danger btn-lg w-100 mb-2" onclick="return confirm('Are you sure you want to delete the entire bracket? This action cannot be undone.')">
+                                <i class="fas fa-trash"></i> Delete Bracket
+                            </button>
+                        </form>
+                        
+                        @if (!Model.Placements.Any())
+                        {
+                            <form asp-action="Conclude" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <button type="submit" class="btn btn-warning btn-lg w-100 mb-2" onclick="return confirm('Are you sure you want to conclude this tournament? This will generate final placements and award points.')">
+                                    <i class="fas fa-flag-checkered"></i> Conclude Tournament
+                                </button>
+                            </form>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<h3>Series</h3>
-@if (Model.Series != null && Model.Series.Any())
+<!-- Tournament Details -->
+<div class="tournament-details">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card tournament-card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle"></i> Tournament Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label>Organizer</label>
+                                    <span>@Model.Organizer?.FullName</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Game</label>
+                                    <span>@Model.Game?.FullName</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label>Start Date</label>
+                                    <span>@Model.StartDate.ToString("MMMM dd, yyyy")</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>End Date</label>
+                                    <span>@Model.EndDate.ToString("MMMM dd, yyyy")</span>
+                                </div>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.Description))
+                        {
+                            <div class="info-item mt-3">
+                                <label>Description</label>
+                                <p class="description-text">@Model.Description</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card tournament-stats">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-bar"></i> Tournament Stats
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="stat-item">
+                            <div class="stat-value">@Model.TournamentTeams.Count</div>
+                            <div class="stat-label">Teams</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">@Model.Series.Count</div>
+                            <div class="stat-label">Matches</div>
+                        </div>
+                        @if (Model.PrizePool > 0)
+                        {
+                            <div class="stat-item">
+                                <div class="stat-value">$@Model.PrizePool.ToString("N0")</div>
+                                <div class="stat-label">Prize Pool</div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tournament Bracket -->
+@if (Model.Series.Any())
 {
-    <ul class="list-group mb-4">
-        @foreach (var s in (List<Series>)ViewData["OrderedSeries"])
-        {
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>@s.Name</span>
-                <span>@(s.TeamA?.FullName ?? "TBD") vs @(s.TeamB?.FullName ?? "TBD")</span>
-            </li>
-        }
-    </ul>
-}
-else
-{
-    <p>No series added yet.</p>
+    <div class="tournament-bracket">
+        <div class="container-fluid">
+            <partial name="_BracketLayout" model="Model" />
+        </div>
+    </div>
 }
 
-<h3>Bracket</h3>
-@if (!Model.Series.Any())
-{
-    <form asp-action="GenerateBracket" method="post">
-        <input type="hidden" name="tournamentId" value="@Model.Id" />
-        <button type="submit" class="btn btn-success mb-3">Generate Bracket</button>
-    </form>
-}
-<partial name="_BracketLayout" model="Model" />
+<!-- Placements Section -->
+<div class="tournament-placements">
+    <div class="container-fluid">
+        <partial name="_PlacementsPartial" model="Model" />
+    </div>
+</div>
 
-<partial name="_ParticipantsPartial" model="Model" />
+<!-- Participants Section -->
+<div class="tournament-participants">
+    <div class="container-fluid">
+        <partial name="_ParticipantsPartial" model="Model" />
+    </div>
+</div>
+
+<!-- Series Details Modal -->
+<div id="seriesModal" class="series-modal">
+    <div class="series-modal-content">
+        <div class="series-modal-header">
+            <h3 class="series-modal-title" id="seriesModalTitle">Series Details</h3>
+            <button class="series-modal-close" onclick="closeSeriesModal()">&times;</button>
+        </div>
+        <div class="series-modal-body" id="seriesModalBody">
+            <!-- Content will be loaded dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- Forfeit Series Modal -->
+<div id="forfeitModal" class="series-modal">
+    <div class="series-modal-content">
+        <div class="series-modal-header">
+            <h3 class="series-modal-title">Forfeit Series</h3>
+            <button class="series-modal-close" onclick="closeForfeitModal()">&times;</button>
+        </div>
+        <div class="series-modal-body">
+            <form id="forfeitForm" method="post" asp-controller="MatchHistory" asp-action="ForfeitSeries">
+                <input type="hidden" id="forfeitSeriesId" name="seriesId" />
+                <div class="mb-3">
+                    <label for="forfeitingTeamId" class="form-label">Select team that forfeited:</label>
+                    <select class="form-select" id="forfeitingTeamId" name="forfeitingTeamId" required>
+                        <option value="">Choose team...</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Warning:</strong> This action cannot be undone. The selected team will forfeit the series and the opponent will advance.
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" onclick="closeForfeitModal()">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Confirm Forfeit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <style>
-    /* Container adjustments */
+    /* Ultra Black Mode Tournament Header */
+    .tournament-header {
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 25%, #1a1a1a 50%, #0a0a0a 75%, #000000 100%);
+        color: #ffffff;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.05);
+        border-bottom: 3px solid transparent;
+        border-image: linear-gradient(90deg, #1e40af, #dc2626, #1e40af) 1;
+        position: relative;
+    }
+
+    .tournament-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(30, 64, 175, 0.05), rgba(220, 38, 38, 0.05));
+        pointer-events: none;
+    }
+
+    .tournament-logo img {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border: 4px solid rgba(30, 64, 175, 0.6);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.8), 0 0 20px rgba(30, 64, 175, 0.3);
+        border-radius: 20px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .tournament-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(30, 64, 175, 0.5);
+        background: linear-gradient(45deg, #1e40af, #dc2626, #1e40af);
+        background-size: 200% 200%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: gradientShift 3s ease-in-out infinite;
+        position: relative;
+        z-index: 1;
+    }
+
+    @@keyframes gradientShift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    .tournament-subtitle {
+        font-size: 1.5rem;
+        font-weight: 300;
+        margin-bottom: 1rem;
+        opacity: 0.9;
+        color: #d1d5db;
+        text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
+        position: relative;
+        z-index: 1;
+    }
+
+    .tournament-meta .badge {
+        font-size: 0.9rem;
+        padding: 0.6rem 1.2rem;
+        border-radius: 25px;
+        background: linear-gradient(45deg, #1e40af, #dc2626) !important;
+        border: 2px solid rgba(255,255,255,0.2);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Ultra Black Tournament Cards */
+    .tournament-card, .tournament-stats {
+        border: none;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+        border: 2px solid #1a1a1a;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tournament-card::before, .tournament-stats::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #1e40af, #dc2626);
+    }
+
+    .tournament-card .card-header, .tournament-stats .card-header {
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        border-bottom: 2px solid #2a2a2a;
+        border-radius: 20px 20px 0 0 !important;
+        padding: 1.2rem 1.8rem;
+        position: relative;
+    }
+
+    .tournament-card .card-title, .tournament-stats .card-title {
+        color: #f9fafb;
+        font-weight: 600;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .tournament-card .card-body, .tournament-stats .card-body {
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+        color: #e5e7eb;
+        padding: 1.5rem 1.8rem;
+    }
+
+    /* Ultra Black Info Items */
+    .info-item {
+        margin-bottom: 1.2rem;
+        padding: 0.8rem;
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 10px;
+        border-left: 3px solid #1e40af;
+    }
+
+    .info-item label {
+        display: block;
+        font-weight: 600;
+        color: #9ca3af;
+        font-size: 0.9rem;
+        margin-bottom: 0.4rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-item span {
+        color: #f3f4f6;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .description-text {
+        color: #d1d5db;
+        line-height: 1.7;
+        margin: 0;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 8px;
+        border-left: 3px solid #dc2626;
+    }
+
+    /* Ultra Black Stats */
+    .stat-item {
+        text-align: center;
+        padding: 1.5rem;
+        border-radius: 15px;
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+        margin-bottom: 1.2rem;
+        border: 2px solid #1a1a1a;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #1e40af, #dc2626);
+    }
+
+    .stat-value {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #f9fafb;
+        margin-bottom: 0.4rem;
+        background: linear-gradient(45deg, #1e40af, #dc2626);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 0 20px rgba(30, 64, 175, 0.3);
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #9ca3af;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Ultra Black Bracket Section */
+    .tournament-bracket {
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 100%);
+        padding: 2.5rem 0;
+        margin: 2rem 0;
+        border-top: 3px solid transparent;
+        border-image: linear-gradient(90deg, #1e40af, #dc2626, #1e40af) 1;
+        position: relative;
+    }
+
+    .tournament-bracket::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(30, 64, 175, 0.03), rgba(220, 38, 38, 0.03));
+        pointer-events: none;
+    }
+
+    .bracket-section {
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+        border-radius: 20px;
+        padding: 2.5rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
+        border: 2px solid #1a1a1a;
+        position: relative;
+        z-index: 1;
+    }
+
+    .bracket-header h4 {
+        color: #f9fafb;
+        font-weight: 600;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .bracket-header .btn {
+        background: linear-gradient(45deg, #1e40af, #dc2626);
+        border: 2px solid rgba(255,255,255,0.2);
+        color: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        font-weight: 600;
+    }
+
+    .bracket-header .btn:hover {
+        background: linear-gradient(45deg, #1d4ed8, #b91c1c);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    }
+
+    /* Ultra Black Placements Section */
+    .tournament-placements {
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 100%);
+        padding: 2.5rem 0;
+        border-top: 3px solid transparent;
+        border-image: linear-gradient(90deg, #1e40af, #dc2626, #1e40af) 1;
+        position: relative;
+    }
+
+    .tournament-placements::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(30, 64, 175, 0.03), rgba(220, 38, 38, 0.03));
+        pointer-events: none;
+    }
+
+    /* Ultra Black Participants Section */
+    .tournament-participants {
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 100%);
+        padding: 2.5rem 0;
+        border-top: 3px solid transparent;
+        border-image: linear-gradient(90deg, #1e40af, #dc2626, #1e40af) 1;
+        position: relative;
+    }
+
+    .tournament-participants::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(30, 64, 175, 0.03), rgba(220, 38, 38, 0.03));
+        pointer-events: none;
+    }
+
+    /* Ultra Black Bracket Viewer Styling */
     #bracket-container.brackets-viewer {
-        background-color: #12121b; !important; /* your dark background */
-        color: black;
-        padding: 20px;
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%) !important;
+        color: #f9fafb;
+        padding: 25px;
         overflow-x: auto;
+        border-radius: 15px;
+        border: 2px solid #1a1a1a;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
     }
 
     /* Individual brackets */
     .bracket-ub, .bracket-lb, .bracket-gf {
         display: flex;
         flex-direction: column;
-        gap: 15px;
+        gap: 18px;
     }
 
-    /* Matches */
+    /* Ultra Black Matches */
     .match {
-        min-width: 140px;
-        background-color: #1e1e2f !important; /* dark match background */
-        color: black; /* text color */
-        border: 1px solid #333; /* subtle border */
-        border-radius: 6px;
-        padding: 5px;
+        min-width: 150px;
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%) !important;
+        color: #f9fafb;
+        border: 2px solid #1a1a1a;
+        border-radius: 12px;
+        padding: 12px;
         font-size: 0.9rem;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
     }
 
-    /* Team/participant names */
+    .match::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #1e40af, #dc2626);
+    }
+
+    .match:hover {
+        border-color: #1e40af;
+        box-shadow: 0 6px 24px rgba(30, 64, 175, 0.4);
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%) !important;
+        transform: translateY(-2px);
+    }
+
+    /* Ultra Black Team/participant names */
     .participant {
-        color: #fff;
+        color: #f9fafb;
         font-weight: 500;
-        background-color: #12121b !important;
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%) !important;
+        padding: 6px 12px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        border: 1px solid #1a1a1a;
     }
 
-        /* Optional hover highlight */
-    #bracket-container.brackets-viewer .participant.hover
-    {
-        background: #32324a !important;
-        border-radius: 4px;
+    .participant:hover {
+        background: linear-gradient(45deg, #1e40af, #dc2626) !important;
+        color: white;
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
 
-    /* Scores */
+    /* Ultra Dark Scores */
     .score {
-        color: #f0c040;
+        color: #10b981;
         font-weight: bold;
+        text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
     }
 
-    /* Connector lines */
+    /* Ultra Black Connector lines */
     .connector {
-        stroke: #888; /* gray lines */
-        stroke-width: 2;
+        stroke: #1a1a1a;
+        stroke-width: 3;
+        filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
     }
 
     /* Make brackets scrollable horizontally */
@@ -130,42 +599,69 @@ else
         white-space: nowrap;
     }
 
-    /* Smaller gap between columns if too wide */
-    .bracket-column {
-        gap: 10px;
-    }
-
+    /* Ultra Black Team Cards */
     .team-card {
         cursor: pointer;
         overflow: hidden;
         position: relative;
-        width: 120px;
-        height: 150px;
+        width: 130px;
+        height: 160px;
         display: flex;
         flex-direction: column;
+        border-radius: 15px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+        border: 2px solid #1a1a1a;
+    }
+
+    .team-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #1e40af, #dc2626);
+    }
+
+    .team-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 32px rgba(30, 64, 175, 0.4);
+        border-color: #1e40af;
     }
 
     .team-logo {
-        position: relative; /* <-- add this */
+        position: relative;
         width: 100%;
-        height: 100px;
+        height: 110px;
         object-fit: contain;
-        z-index: 1; /* stays below overlay */
+        z-index: 1;
     }
 
     .team-card .team-players {
-        display: none !important; /* hidden by default */
+        display: none !important;
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
-        height: 100px;
-        z-index: 2; /* above logo */
-        background-color: #1e1e2f;
+        height: 110px;
+        z-index: 2;
+        background: linear-gradient(45deg, rgba(30, 64, 175, 0.85), rgba(220, 38, 38, 0.85));
         color: white;
         justify-content: center;
         align-items: center;
         flex-direction: column;
+        border-radius: 15px 15px 0 0;
+        backdrop-filter: blur(10px);
+    }
+
+    .team-card .team-players .player-name {
+        font-weight: bold;
+        color: #ffffff;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        font-size: 0.8rem;
+        margin: 2px 0;
     }
 
     .team-card:hover .team-logo {
@@ -174,5 +670,291 @@ else
 
     .team-card:hover .team-players {
         display: flex !important;
+    }
+
+    /* Ultra Dark Alert Styling */
+    .alert-success {
+        background: linear-gradient(45deg, #065f46, #10b981);
+        border: 2px solid rgba(16, 185, 129, 0.3);
+        color: white;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+
+    .alert-danger {
+        background: linear-gradient(45deg, #991b1b, #dc2626);
+        border: 2px solid rgba(220, 38, 38, 0.3);
+        color: white;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+
+    /* Ultra Dark Button Styling */
+    .btn-success {
+        background: linear-gradient(45deg, #065f46, #10b981);
+        border: 2px solid rgba(16, 185, 129, 0.3);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        font-weight: 600;
+    }
+
+    .btn-success:hover {
+        background: linear-gradient(45deg, #047857, #059669);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    }
+
+    .btn-danger {
+        background: linear-gradient(45deg, #991b1b, #dc2626);
+        border: 2px solid rgba(220, 38, 38, 0.3);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        font-weight: 600;
+    }
+
+    .btn-danger:hover {
+        background: linear-gradient(45deg, #7f1d1d, #b91c1c);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    }
+
+    .btn-warning {
+        background: linear-gradient(45deg, #92400e, #f59e0b);
+        border: 2px solid rgba(245, 158, 11, 0.3);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        font-weight: 600;
+    }
+
+    .btn-warning:hover {
+        background: linear-gradient(45deg, #78350f, #d97706);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    }
+
+    /* High Priority Bracket Plugin CSS Overrides */
+    #bracket-container .brackets-viewer .participant.hover,
+    #bracket-container .brackets-viewer .participant:hover,
+    #bracket-container .brackets-viewer .match .participant.hover,
+    #bracket-container .brackets-viewer .match .participant:hover,
+    #bracket-container .brackets-viewer .match:hover .participant,
+    #bracket-container .brackets-viewer .match .participant[data-hover="true"],
+    #bracket-container .brackets-viewer .match .participant.highlighted {
+        background: linear-gradient(45deg, #1e40af, #dc2626) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255,255,255,0.2) !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+        transform: scale(1.02) !important;
+        transition: all 0.2s ease !important;
+    }
+
+    #bracket-container .brackets-viewer .match.hover,
+    #bracket-container .brackets-viewer .match:hover {
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%) !important;
+        border-color: #1e40af !important;
+        box-shadow: 0 4px 16px rgba(30, 64, 175, 0.3) !important;
+    }
+
+    #bracket-container .brackets-viewer .match .participant {
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%) !important;
+        color: #f9fafb !important;
+        border: 1px solid #1a1a1a !important;
+        transition: all 0.2s ease !important;
+    }
+
+    /* Series Modal Styles */
+    .series-modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(5px);
+    }
+
+    .series-modal-content {
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+        margin: 5% auto;
+        padding: 0;
+        border: 2px solid #1a1a1a;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 800px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+        position: relative;
+    }
+
+    .series-modal-header {
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        padding: 1.5rem 2rem;
+        border-bottom: 2px solid #1a1a1a;
+        border-radius: 20px 20px 0 0;
+        position: relative;
+    }
+
+    .series-modal-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #1e40af, #dc2626);
+    }
+
+    .series-modal-title {
+        color: #f9fafb;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .series-modal-close {
+        position: absolute;
+        right: 1.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: linear-gradient(45deg, #dc2626, #ef4444);
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .series-modal-close:hover {
+        background: linear-gradient(45deg, #b91c1c, #dc2626);
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    .series-modal-body {
+        padding: 2rem;
+        color: #e5e7eb;
+    }
+
+    .series-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .series-info-item {
+        background: rgba(0, 0, 0, 0.4);
+        padding: 1rem;
+        border-radius: 10px;
+        border-left: 3px solid #1e40af;
+    }
+
+    .series-info-label {
+        color: #9ca3af;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+
+    .series-info-value {
+        color: #f3f4f6;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .matches-section {
+        margin-top: 2rem;
+    }
+
+    .matches-section h4 {
+        color: #f9fafb;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .match-item {
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        border: 1px solid #1a1a1a;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .match-item:hover {
+        border-color: #1e40af;
+        box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+    }
+
+    .match-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .match-teams {
+        color: #f9fafb;
+        font-weight: 600;
+    }
+
+    .match-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .match-status.completed {
+        background: linear-gradient(45deg, #065f46, #10b981);
+        color: white;
+    }
+
+    .match-status.pending {
+        background: linear-gradient(45deg, #1e40af, #3b82f6);
+        color: white;
+    }
+
+    .match-details {
+        color: #9ca3af;
+        font-size: 0.9rem;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .tournament-title {
+            font-size: 2rem;
+        }
+        
+        .tournament-subtitle {
+            font-size: 1.2rem;
+        }
+        
+        .tournament-logo img {
+            width: 80px;
+            height: 80px;
+        }
+        
+        .bracket-section {
+            padding: 1rem;
+        }
+
+        .series-modal-content {
+            width: 95%;
+            margin: 10% auto;
+        }
+
+        .series-info-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
     }
 </style>

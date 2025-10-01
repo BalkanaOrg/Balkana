@@ -114,12 +114,39 @@
 
                     <div class="form-group">
                         <label asp-for="EliminationType" class="form-label">Elimination Type</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <select asp-for="EliminationType" asp-items="Model.EliminationTypes" class="form-control">
-                            </select>
-                            <span asp-validation-for="EliminationType" class="text-danger"></span>
+                        <select asp-for="EliminationType" asp-items="Model.EliminationTypes" class="form-control">
+                        </select>
+                        <span asp-validation-for="EliminationType" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Points and Prize Configuration Section -->
+            <div class="form-section full-width">
+                <h3 class="section-title">Points & Prize Configuration</h3>
+                <p class="section-description">Configure custom points and prize distribution for this tournament</p>
+
+                <div class="config-grid">
+                    <div class="form-group">
+                        <label asp-for="PointsConfiguration" class="form-label">Points Configuration (JSON)</label>
+                        <textarea asp-for="PointsConfiguration" class="form-control config-textarea" rows="6" 
+                                  placeholder='{"1": 500, "2": 325, "3": 200, "4": 125, "5": 100, "6": 75, "7": 50, "8": 25}'></textarea>
+                        <div class="form-help">
+                            <strong>Example:</strong> {"1": 500, "2": 325, "3": 200, "4": 125, "5": 100, "6": 75, "7": 50, "8": 25}<br>
+                            Leave empty to use default point distribution.
                         </div>
+                        <span asp-validation-for="PointsConfiguration" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="PrizeConfiguration" class="form-label">Prize Configuration (JSON)</label>
+                        <textarea asp-for="PrizeConfiguration" class="form-control config-textarea" rows="6" 
+                                  placeholder='{"1": 0.50, "2": 0.30, "3": 0.20}'></textarea>
+                        <div class="form-help">
+                            <strong>Example:</strong> {"1": 0.50, "2": 0.30, "3": 0.20}<br>
+                            Values are percentages of total prize pool. Leave empty to use default distribution.
+                        </div>
+                        <span asp-validation-for="PrizeConfiguration" class="text-danger"></span>
                     </div>
                 </div>
             </div>
@@ -171,7 +198,7 @@
                 </a>
                 <button type="submit" class="btn-primary">
                     <span class="btn-icon">✓</span>
-                    Create Tournament
+                    Update Tournament
                 </button>
             </div>
         </form>
@@ -712,5 +739,31 @@
         background: rgba(255, 255, 255, 0.1);
         color: white;
         border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .config-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+
+    .config-textarea {
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        background: rgba(0, 0, 0, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .config-textarea:focus {
+        background: rgba(0, 0, 0, 0.3);
+        border-color: #8b0000;
+    }
+
+    .section-description {
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 25px;
+        font-size: 1rem;
+        font-style: italic;
     }
 </style>

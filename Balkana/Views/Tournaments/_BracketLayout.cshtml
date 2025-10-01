@@ -1,32 +1,315 @@
-﻿<div id="bracket-container" class="brackets-viewer" style="width: 100%; height: 800px;"></div>
+﻿<div class="bracket-section">
+    <div class="bracket-header d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Tournament Bracket</h4>
+        <button id="refresh-bracket" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-sync-alt"></i> Refresh Bracket
+        </button>
+    </div>
+    <div id="bracket-container" class="brackets-viewer" style="width: 100%; min-height: 400px; max-height: 1200px; height: auto;"></div>
+</div>
 
 <link rel="stylesheet" href="https://unpkg.com/brackets-viewer/dist/brackets-viewer.min.css" />
 <script src="https://unpkg.com/brackets-viewer/dist/brackets-viewer.min.js"></script>
 
 <script>
-    (async function() {
+    let bracketData = null;
+
+    async function loadBracket() {
         try {
+            // Clear the existing bracket first
+            const container = document.getElementById('bracket-container');
+            container.innerHTML = '';
+            
             const res = await fetch(`/api/tournaments/@Model.Id/bracket`);
-            const data = await res.json();
-            console.log("🎯 Bracket data:", data);
-            console.log("Participants:", data.participants);
-            console.log("Matches:", data.matches);
+            bracketData = await res.json();
+            console.log("🎯 Bracket data:", bracketData);
+            console.log("Participants:", bracketData.participants);
+            console.log("Matches:", bracketData.matches);
 
             await bracketsViewer.render(
                 {
-                    stages: data.stages,
-                    matches: data.matches,
-                    matchGames: data.matchGames,
-                    participants: data.participants,
+                    stages: bracketData.stages,
+                    matches: bracketData.matches,
+                    matchGames: bracketData.matchGames,
+                    participants: bracketData.participants,
                 },
                 {
                     selector: '#bracket-container',
                     orientation: 'horizontal',
+                    participantOriginPlacement: 'before',
+                    separatedByChildCountLabel: true,
+                    highlightParticipantOnHover: true,
+                    showSlotsOrigin: true,
+                    showLowerBracketSlotsOrigin: true,
+                    showPopoverOnMatchLabelClick: false,
+                    showPopoverOnMatchClick: false,
+                    highlightMatchOnHover: true
                 }
             );
+
+            // Add click event listeners to matches for series details
+            setTimeout(() => {
+                const matches = document.querySelectorAll('#bracket-container .match');
+                console.log(`Found ${matches.length} matches to add click listeners`);
+                
+                matches.forEach((match, index) => {
+                    match.style.cursor = 'pointer';
+                    console.log(`Adding click listener to match ${index}`);
+                    
+                    match.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        console.log('Match clicked!', this);
+                        
+                        // Try to get match ID from various sources
+                        let matchId = this.getAttribute('data-match-id') || 
+                                     this.querySelector('[data-match-id]')?.getAttribute('data-match-id') ||
+                                     this.getAttribute('data-id') ||
+                                     this.id;
+                        
+                        // If no ID found, try to extract from bracket data
+                        if (!matchId && bracketData && bracketData.matches) {
+                            // Find match by position in the DOM
+                            const matchIndex = Array.from(matches).indexOf(this);
+                            if (matchIndex >= 0 && matchIndex < bracketData.matches.length) {
+                                matchId = bracketData.matches[matchIndex].id;
+                            }
+                        }
+                        
+                        console.log('Match ID found:', matchId);
+                        
+                        if (matchId) {
+                            showSeriesDetails(matchId);
+                        } else {
+                            console.error('No match ID found for clicked match');
+                        }
+                    });
+                });
+            }, 1000);
 
         } catch (err) {
             console.error("⚠️ Bracket rendering error:", err);
         }
-    })();
+    }
+
+    // Load bracket on page load
+    loadBracket();
+
+    // Refresh button functionality
+    document.getElementById('refresh-bracket').addEventListener('click', function() {
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+        this.disabled = true;
+        
+        loadBracket().then(() => {
+            this.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh Bracket';
+            this.disabled = false;
+        }).catch(() => {
+            this.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh Bracket';
+            this.disabled = false;
+        });
+    });
+
+    // Series Details Modal Functions
+    async function showSeriesDetails(seriesId) {
+        console.log('Showing series details for:', seriesId);
+        
+        const modal = document.getElementById('seriesModal');
+        const title = document.getElementById('seriesModalTitle');
+        const body = document.getElementById('seriesModalBody');
+        
+        // Show loading state
+        title.textContent = `Series ${seriesId} Details`;
+        body.innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading series details...</p>
+            </div>
+        `;
+        modal.style.display = 'block';
+        
+        try {
+            // Fetch series details from API
+            const response = await fetch(`/api/series/${seriesId}/details`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const seriesData = await response.json();
+            console.log('Series data received:', seriesData);
+            
+            // Determine best-of format
+            const bestOf = seriesData.matches ? seriesData.matches.length : 1;
+            const bestOfText = bestOf === 1 ? 'BO1' : bestOf === 3 ? 'BO3' : bestOf === 5 ? 'BO5' : `BO${bestOf}`;
+            
+            // Build matches HTML
+            let matchesHtml = '';
+            if (seriesData.matches && seriesData.matches.length > 0) {
+                matchesHtml = seriesData.matches.map((match, index) => {
+                    const statusClass = match.isCompleted ? 'completed' : 'pending';
+                    const statusText = match.isCompleted ? 'Completed' : 'Pending';
+                    const mapName = match.mapName || 'TBD';
+                    const winner = match.winnerTeam ? match.winnerTeam.fullName : 'TBD';
+                    
+                    return `
+                        <div class="match-item">
+                            <div class="match-header">
+                                <div class="match-teams">${seriesData.teamA?.fullName || 'TBD'} vs ${seriesData.teamB?.fullName || 'TBD'}</div>
+                                <div class="match-status ${statusClass}">${statusText}</div>
+                            </div>
+                            <div class="match-details">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Map ${index + 1}:</strong> ${mapName}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Winner:</strong> ${winner}
+                                    </div>
+                                </div>
+                                ${match.isCompleted ? `
+                                    <div class="row mt-2">
+                                        <div class="col-12">
+                                            <small class="text-muted">Completed: ${new Date(match.playedAt).toLocaleString()}</small>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                matchesHtml = `
+                    <div class="match-item">
+                        <div class="match-header">
+                            <div class="match-teams">${seriesData.teamA?.fullName || 'TBD'} vs ${seriesData.teamB?.fullName || 'TBD'}</div>
+                            <div class="match-status pending">No matches yet</div>
+                        </div>
+                        <div class="match-details">Series has not started</div>
+                    </div>
+                `;
+            }
+            
+            // Build the modal content
+            body.innerHTML = `
+                <div class="series-info-grid">
+                    <div class="series-info-item">
+                        <div class="series-info-label">Series ID</div>
+                        <div class="series-info-value">${seriesId}</div>
+                    </div>
+                    <div class="series-info-item">
+                        <div class="series-info-label">Format</div>
+                        <div class="series-info-value">${bestOfText}</div>
+                    </div>
+                    <div class="series-info-item">
+                        <div class="series-info-label">Status</div>
+                        <div class="series-info-value">
+                            <span class="badge ${seriesData.isFinished ? 'bg-success' : 'bg-warning'}">
+                                ${seriesData.isFinished ? 'Completed' : 'In Progress'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="series-info-item">
+                        <div class="series-info-label">Round</div>
+                        <div class="series-info-value">Round ${seriesData.round || 1}</div>
+                    </div>
+                    <div class="series-info-item">
+                        <div class="series-info-label">Teams</div>
+                        <div class="series-info-value">${seriesData.teamA?.fullName || 'TBD'} vs ${seriesData.teamB?.fullName || 'TBD'}</div>
+                    </div>
+                    <div class="series-info-item">
+                        <div class="series-info-label">Winner</div>
+                        <div class="series-info-value">${seriesData.winnerTeam?.fullName || 'TBD'}</div>
+                    </div>
+                </div>
+                
+                <div class="matches-section">
+                    <h4>Matches (${bestOfText})</h4>
+                    ${matchesHtml}
+                </div>
+                
+                ${!seriesData.isFinished ? `
+                    <div class="admin-actions mt-3">
+                        <button class="btn btn-danger btn-sm" onclick="showForfeitModal(${seriesId})">
+                            <i class="fas fa-flag"></i> Forfeit Series
+                        </button>
+                    </div>
+                ` : ''}
+            `;
+            
+        } catch (error) {
+            console.error('Error fetching series details:', error);
+            body.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Error:</strong> Could not load series details. Please try again.
+                </div>
+                <div class="admin-actions mt-3">
+                    <button class="btn btn-danger btn-sm" onclick="showForfeitModal(${seriesId})">
+                        <i class="fas fa-flag"></i> Forfeit Series
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    function showForfeitModal(seriesId) {
+        // Close series details modal
+        closeSeriesModal();
+        
+        // Show forfeit modal
+        const modal = document.getElementById('forfeitModal');
+        const seriesIdInput = document.getElementById('forfeitSeriesId');
+        const teamSelect = document.getElementById('forfeitingTeamId');
+        
+        seriesIdInput.value = seriesId;
+        
+        // Clear existing options
+        teamSelect.innerHTML = '<option value="">Choose team...</option>';
+        
+        // Find the series data from bracket data
+        if (bracketData && bracketData.matches) {
+            const series = bracketData.matches.find(m => m.id == seriesId);
+            if (series) {
+                // Add team options
+                if (series.opponent1 && series.opponent1.id !== -1) {
+                    const option1 = document.createElement('option');
+                    option1.value = series.opponent1.id;
+                    option1.textContent = series.opponent1.name;
+                    teamSelect.appendChild(option1);
+                }
+                
+                if (series.opponent2 && series.opponent2.id !== -1) {
+                    const option2 = document.createElement('option');
+                    option2.value = series.opponent2.id;
+                    option2.textContent = series.opponent2.name;
+                    teamSelect.appendChild(option2);
+                }
+            }
+        }
+        
+        modal.style.display = 'block';
+    }
+
+    function closeForfeitModal() {
+        document.getElementById('forfeitModal').style.display = 'none';
+    }
+
+    function closeSeriesModal() {
+        document.getElementById('seriesModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const seriesModal = document.getElementById('seriesModal');
+        const forfeitModal = document.getElementById('forfeitModal');
+        
+        if (event.target === seriesModal) {
+            seriesModal.style.display = 'none';
+        }
+        if (event.target === forfeitModal) {
+            forfeitModal.style.display = 'none';
+        }
+    }
 </script>

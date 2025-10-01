@@ -48,6 +48,10 @@ namespace Balkana.Services.Matches.Models
                 var teamStats = round.teams;
                 var totalRounds = int.Parse(round.round_stats.Rounds ?? "0");
 
+                // Determine winning team from round stats
+                var winningTeamId = round.round_stats.Winner;
+                var winningTeam = winningTeamId == firstTeamStats[0].team_id ? dbTeam1 : dbTeam2;
+
                 var match = new MatchCS
                 {
                     ExternalMatchId = $"{response.match_id}-{round.round_stats.Map}",
@@ -59,15 +63,22 @@ namespace Balkana.Services.Matches.Models
                     MapId = await ResolveMapAsync(db, round.round_stats.Map),
 
                     TeamA = dbTeam1,
+                    TeamAId = dbTeam1?.Id,
                     TeamASourceSlot = "Team1",
                     TeamB = dbTeam2,
+                    TeamBId = dbTeam2?.Id,
                     TeamBSourceSlot = "Team2",
+                    WinnerTeam = winningTeam,
+                    WinnerTeamId = winningTeam?.Id,
+                    
                     PlayerStats = new List<PlayerStatistic>()
                 };
 
                 // Add per-player stats for this map
                 foreach (var team in teamStats)
                 {
+                    bool isWinningTeam = team.team_id == winningTeamId;
+                    
                     foreach (var player in team.players)
                     {
                         int kills = int.Parse(player.player_stats.GetValueOrDefault("Kills", "0"));
@@ -165,9 +176,31 @@ namespace Balkana.Services.Matches.Models
 
         private async Task<Team> ResolveTeamAsync(ApplicationDbContext db, IEnumerable<string> playerIds)
         {
-            return await db.Teams
-                .Include(t => t.Transfers).ThenInclude(tr => tr.Player).ThenInclude(pl => pl.GameProfiles)
-                .FirstOrDefaultAsync(t => t.Transfers.Any(tr => tr.Player.GameProfiles.Any(gp => playerIds.Contains(gp.UUID))));
+            // Get all teams with their active transfers and game profiles
+            var teams = await db.Teams
+                .Include(t => t.Transfers.Where(tr => tr.Status == PlayerTeamStatus.Active))
+                    .ThenInclude(tr => tr.Player)
+                        .ThenInclude(p => p.GameProfiles.Where(gp => gp.Provider == "FACEIT"))
+                .ToListAsync();
+
+            // Find the team that has the most matching players
+            Team bestMatch = null;
+            int maxMatches = 0;
+
+            foreach (var team in teams)
+            {
+                var matchingPlayers = team.Transfers
+                    .Where(tr => tr.Player.GameProfiles.Any(gp => playerIds.Contains(gp.UUID)))
+                    .Count();
+
+                if (matchingPlayers > maxMatches)
+                {
+                    maxMatches = matchingPlayers;
+                    bestMatch = team;
+                }
+            }
+
+            return bestMatch;
         }
     }
 }

@@ -93,6 +93,13 @@
                 .OnDelete(DeleteBehavior.NoAction)
                 .IsRequired(false);
 
+            modelBuilder.Entity<Series>()
+                .HasOne(s => s.WinnerTeam)
+                .WithMany()
+                .HasForeignKey(s => s.WinnerTeamId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .IsRequired(false);
+
             // Match inheritance mapping (TPH)
             modelBuilder.Entity<Match>()
                 .HasDiscriminator<string>("MatchType")
@@ -185,6 +192,13 @@
                 .HasMany(m => m.PlayerStats)
                 .WithOne(ps => ps.Match)
                 .HasForeignKey(ps => ps.MatchId);
+
+            modelBuilder.Entity<Match>()
+                .HasOne(m => m.WinnerTeam)
+                .WithMany()
+                .HasForeignKey(m => m.WinnerTeamId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .IsRequired(false);
 
             modelBuilder.Entity<Player>()
                 .HasMany(p => p.Transfers)
