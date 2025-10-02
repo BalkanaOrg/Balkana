@@ -1,0 +1,2135 @@
+@model ManualStatsUploadViewModel
+
+@{
+    ViewData["Title"] = "Manual Statistics Upload";
+}
+
+<div class="manual-stats-upload">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="upload-header">
+                    <h2 class="upload-title">
+                        <i class="fas fa-upload"></i> Manual Statistics Upload
+                    </h2>
+                    <p class="upload-description">
+                        Upload match statistics manually by selecting players and entering their performance data.
+                    </p>
+                </div>
+
+                <form asp-action="ManualStatsUpload" method="post" class="upload-form">
+                    @Html.AntiForgeryToken()
+                    
+                    <!-- Match Information Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">Match Information</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label asp-for="TournamentId" class="form-label">Tournament</label>
+                                <select asp-for="TournamentId" asp-items="Model.Tournaments" class="form-select" id="tournamentSelect">
+                                    <option value="">Select Tournament...</option>
+                                </select>
+                                <span asp-validation-for="TournamentId" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="form-group col-md-4">
+                                <label asp-for="SeriesId" class="form-label">Series (Optional)</label>
+                                <select asp-for="SeriesId" class="form-select" id="seriesSelect" disabled>
+                                    <option value="">Select Series...</option>
+                                </select>
+                                <span asp-validation-for="SeriesId" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="form-group col-md-4">
+                                <label asp-for="MapId" class="form-label">Map</label>
+                                <select asp-for="MapId" asp-items="Model.Maps" class="form-select">
+                                    <option value="">Select Map...</option>
+                                </select>
+                                <span asp-validation-for="MapId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label asp-for="TeamAId" class="form-label">Team A</label>
+                                <select asp-for="TeamAId" asp-items="Model.Teams" class="form-select team-select">
+                                    <option value="">Select Team A...</option>
+                                </select>
+                                <span asp-validation-for="TeamAId" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="form-group col-md-4">
+                                <label asp-for="TeamBId" class="form-label">Team B</label>
+                                <select asp-for="TeamBId" asp-items="Model.Teams" class="form-select team-select">
+                                    <option value="">Select Team B...</option>
+                                </select>
+                                <span asp-validation-for="TeamBId" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="form-group col-md-4">
+                                <label asp-for="PlayedAt" class="form-label">Match Date</label>
+                                <input asp-for="PlayedAt" type="datetime-local" class="form-control" id="matchDateInput" />
+                                <span asp-validation-for="PlayedAt" class="text-danger"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label asp-for="CompetitionType" class="form-label">Competition Type</label>
+                                <input asp-for="CompetitionType" class="form-control" placeholder="e.g., BO1, BO3, etc." />
+                                <span asp-validation-for="CompetitionType" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Team A Players Section -->
+                    <div class="form-section">
+                        <h3 class="section-title team-a-title">
+                            <i class="fas fa-users"></i> Team A Players
+                        </h3>
+                        
+                        <div class="players-grid">
+                            <div class="player-selection">
+                                <label class="player-label">Player 1</label>
+                                <select asp-for="TeamAPlayer1Id" class="form-select player-select" data-team="A" data-player="1">
+                                    <option value="">Select Player...</option>
+                                </select>
+                                <span asp-validation-for="TeamAPlayer1Id" class="text-danger"></span>
+                            </div>
+                            <div class="player-selection">
+                                <label class="player-label">Player 2</label>
+                                <select asp-for="TeamAPlayer2Id" class="form-select player-select" data-team="A" data-player="2">
+                                    <option value="">Select Player...</option>
+                                </select>
+                                <span asp-validation-for="TeamAPlayer2Id" class="text-danger"></span>
+                            </div>
+                            <div class="player-selection">
+                                <label class="player-label">Player 3</label>
+                                <select asp-for="TeamAPlayer3Id" class="form-select player-select" data-team="A" data-player="3">
+                                    <option value="">Select Player...</option>
+                                </select>
+                                <span asp-validation-for="TeamAPlayer3Id" class="text-danger"></span>
+                            </div>
+                            <div class="player-selection">
+                                <label class="player-label">Player 4</label>
+                                <select asp-for="TeamAPlayer4Id" class="form-select player-select" data-team="A" data-player="4">
+                                    <option value="">Select Player...</option>
+                                </select>
+                                <span asp-validation-for="TeamAPlayer4Id" class="text-danger"></span>
+                            </div>
+                            <div class="player-selection">
+                                <label class="player-label">Player 5</label>
+                                <select asp-for="TeamAPlayer5Id" class="form-select player-select" data-team="A" data-player="5">
+                                    <option value="">Select Player...</option>
+                                </select>
+                                <span asp-validation-for="TeamAPlayer5Id" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Team B Players Section -->
+                    <div class="form-section">
+                        <h3 class="section-title team-b-title">
+                            <i class="fas fa-users"></i> Team B Players
+                        </h3>
+                        
+                        <div class="players-grid">
+                            <div class="player-selection">
+                                <label class="player-label">Player 1</label>
+                                <select asp-for="TeamBPlayer1Id" class="form-select player-select" data-team="B" data-player="1">
+                                    <option value="">Select Player...</option>
+                                </select>
+                                <span asp-validation-for="TeamBPlayer1Id" class="text-danger"></span>
+                            </div>
+                            <div class="player-selection">
+                                <label class="player-label">Player 2</label>
+                                <select asp-for="TeamBPlayer2Id" class="form-select player-select" data-team="B" data-player="2">
+                                    <option value="">Select Player...</option>
+                                </select>
+                                <span asp-validation-for="TeamBPlayer2Id" class="text-danger"></span>
+                            </div>
+                            <div class="player-selection">
+                                <label class="player-label">Player 3</label>
+                                <select asp-for="TeamBPlayer3Id" class="form-select player-select" data-team="B" data-player="3">
+                                    <option value="">Select Player...</option>
+                                </select>
+                                <span asp-validation-for="TeamBPlayer3Id" class="text-danger"></span>
+                            </div>
+                            <div class="player-selection">
+                                <label class="player-label">Player 4</label>
+                                <select asp-for="TeamBPlayer4Id" class="form-select player-select" data-team="B" data-player="4">
+                                    <option value="">Select Player...</option>
+                                </select>
+                                <span asp-validation-for="TeamBPlayer4Id" class="text-danger"></span>
+                            </div>
+                            <div class="player-selection">
+                                <label class="player-label">Player 5</label>
+                                <select asp-for="TeamBPlayer5Id" class="form-select player-select" data-team="B" data-player="5">
+                                    <option value="">Select Player...</option>
+                                </select>
+                                <span asp-validation-for="TeamBPlayer5Id" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Winner Selection -->
+                    <div class="form-section">
+                        <h3 class="section-title">Match Result</h3>
+                        
+                        <div class="form-group">
+                            <label asp-for="WinningTeam" class="form-label">Winning Team</label>
+                            <select asp-for="WinningTeam" class="form-select">
+                                <option value="TeamA">Team A</option>
+                                <option value="TeamB">Team B</option>
+                            </select>
+                            <span asp-validation-for="WinningTeam" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">Player Statistics</h3>
+                        <p class="section-description">
+                            Enter statistics for each player. You can copy and paste from Excel.
+                        </p>
+                        
+                        <!-- Team A Statistics -->
+                        <div class="stats-section">
+                            <h4 class="stats-team-title">Team A Statistics</h4>
+                            <div class="stats-grid">
+                                <!-- Player 1 -->
+                                <div class="player-stats-card">
+                                    <h5 class="player-stats-title">Player 1</h5>
+                                    <div class="stats-form">
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Kills</label>
+                                                <input asp-for="TeamAPlayer1Stats.Kills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Assists</label>
+                                                <input asp-for="TeamAPlayer1Stats.Assists" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Deaths</label>
+                                                <input asp-for="TeamAPlayer1Stats.Deaths" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>ADR</label>
+                                                <input asp-for="TeamAPlayer1Stats.Damage" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>T Rounds</label>
+                                                <input asp-for="TeamAPlayer1Stats.TsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>CT Rounds</label>
+                                                <input asp-for="TeamAPlayer1Stats.CTsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Rounds Played</label>
+                                                <input asp-for="TeamAPlayer1Stats.RoundsPlayed" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>KAST</label>
+                                                <input asp-for="TeamAPlayer1Stats.KAST" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>HS%</label>
+                                                <input asp-for="TeamAPlayer1Stats.HSkills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>HLTV Rating</label>
+                                                <input asp-for="TeamAPlayer1Stats.HLTV1" class="form-control" type="number" step="0.01" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Utility Damage</label>
+                                                <input asp-for="TeamAPlayer1Stats.UD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>First Kills</label>
+                                                <input asp-for="TeamAPlayer1Stats.FK" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>First Deaths</label>
+                                                <input asp-for="TeamAPlayer1Stats.FD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1K Rounds</label>
+                                                <input asp-for="TeamAPlayer1Stats._1k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>2K Rounds</label>
+                                                <input asp-for="TeamAPlayer1Stats._2k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>3K Rounds</label>
+                                                <input asp-for="TeamAPlayer1Stats._3k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>4K Rounds</label>
+                                                <input asp-for="TeamAPlayer1Stats._4k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>5K Rounds</label>
+                                                <input asp-for="TeamAPlayer1Stats._5k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v1 Clutches</label>
+                                                <input asp-for="TeamAPlayer1Stats._1v1" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v2 Clutches</label>
+                                                <input asp-for="TeamAPlayer1Stats._1v2" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v3 Clutches</label>
+                                                <input asp-for="TeamAPlayer1Stats._1v3" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v4 Clutches</label>
+                                                <input asp-for="TeamAPlayer1Stats._1v4" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v5 Clutches</label>
+                                                <input asp-for="TeamAPlayer1Stats._1v5" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>AWP Kills</label>
+                                                <input asp-for="TeamAPlayer1Stats.SniperKills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Pistol Kills</label>
+                                                <input asp-for="TeamAPlayer1Stats.PistolKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Knife Kills</label>
+                                                <input asp-for="TeamAPlayer1Stats.KnifeKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Flashes</label>
+                                                <input asp-for="TeamAPlayer1Stats.Flashes" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Player 2 -->
+                                <div class="player-stats-card">
+                                    <h5 class="player-stats-title">Player 2</h5>
+                                    <div class="stats-form">
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Kills</label>
+                                                <input asp-for="TeamAPlayer2Stats.Kills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Assists</label>
+                                                <input asp-for="TeamAPlayer2Stats.Assists" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Deaths</label>
+                                                <input asp-for="TeamAPlayer2Stats.Deaths" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>ADR</label>
+                                                <input asp-for="TeamAPlayer2Stats.Damage" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>T Rounds</label>
+                                                <input asp-for="TeamAPlayer2Stats.TsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>CT Rounds</label>
+                                                <input asp-for="TeamAPlayer2Stats.CTsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Rounds Played</label>
+                                                <input asp-for="TeamAPlayer2Stats.RoundsPlayed" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>KAST</label>
+                                                <input asp-for="TeamAPlayer2Stats.KAST" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>HS%</label>
+                                                <input asp-for="TeamAPlayer2Stats.HSkills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>HLTV Rating</label>
+                                                <input asp-for="TeamAPlayer2Stats.HLTV1" class="form-control" type="number" step="0.01" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Utility Damage</label>
+                                                <input asp-for="TeamAPlayer2Stats.UD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>First Kills</label>
+                                                <input asp-for="TeamAPlayer2Stats.FK" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>First Deaths</label>
+                                                <input asp-for="TeamAPlayer2Stats.FD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1K Rounds</label>
+                                                <input asp-for="TeamAPlayer2Stats._1k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>2K Rounds</label>
+                                                <input asp-for="TeamAPlayer2Stats._2k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>3K Rounds</label>
+                                                <input asp-for="TeamAPlayer2Stats._3k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>4K Rounds</label>
+                                                <input asp-for="TeamAPlayer2Stats._4k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>5K Rounds</label>
+                                                <input asp-for="TeamAPlayer2Stats._5k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v1 Clutches</label>
+                                                <input asp-for="TeamAPlayer2Stats._1v1" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v2 Clutches</label>
+                                                <input asp-for="TeamAPlayer2Stats._1v2" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v3 Clutches</label>
+                                                <input asp-for="TeamAPlayer2Stats._1v3" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v4 Clutches</label>
+                                                <input asp-for="TeamAPlayer2Stats._1v4" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v5 Clutches</label>
+                                                <input asp-for="TeamAPlayer2Stats._1v5" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>AWP Kills</label>
+                                                <input asp-for="TeamAPlayer2Stats.SniperKills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Pistol Kills</label>
+                                                <input asp-for="TeamAPlayer2Stats.PistolKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Knife Kills</label>
+                                                <input asp-for="TeamAPlayer2Stats.KnifeKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Flashes</label>
+                                                <input asp-for="TeamAPlayer2Stats.Flashes" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Player 3 -->
+                                <div class="player-stats-card">
+                                    <h5 class="player-stats-title">Player 3</h5>
+                                    <div class="stats-form">
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Kills</label>
+                                                <input asp-for="TeamAPlayer3Stats.Kills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Assists</label>
+                                                <input asp-for="TeamAPlayer3Stats.Assists" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Deaths</label>
+                                                <input asp-for="TeamAPlayer3Stats.Deaths" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>ADR</label>
+                                                <input asp-for="TeamAPlayer3Stats.Damage" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>T Rounds</label>
+                                                <input asp-for="TeamAPlayer3Stats.TsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>CT Rounds</label>
+                                                <input asp-for="TeamAPlayer3Stats.CTsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Rounds Played</label>
+                                                <input asp-for="TeamAPlayer3Stats.RoundsPlayed" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>KAST</label>
+                                                <input asp-for="TeamAPlayer3Stats.KAST" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>HS%</label>
+                                                <input asp-for="TeamAPlayer3Stats.HSkills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>HLTV Rating</label>
+                                                <input asp-for="TeamAPlayer3Stats.HLTV1" class="form-control" type="number" step="0.01" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Utility Damage</label>
+                                                <input asp-for="TeamAPlayer3Stats.UD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>First Kills</label>
+                                                <input asp-for="TeamAPlayer3Stats.FK" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>First Deaths</label>
+                                                <input asp-for="TeamAPlayer3Stats.FD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1K Rounds</label>
+                                                <input asp-for="TeamAPlayer3Stats._1k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>2K Rounds</label>
+                                                <input asp-for="TeamAPlayer3Stats._2k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>3K Rounds</label>
+                                                <input asp-for="TeamAPlayer3Stats._3k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>4K Rounds</label>
+                                                <input asp-for="TeamAPlayer3Stats._4k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>5K Rounds</label>
+                                                <input asp-for="TeamAPlayer3Stats._5k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v1 Clutches</label>
+                                                <input asp-for="TeamAPlayer3Stats._1v1" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v2 Clutches</label>
+                                                <input asp-for="TeamAPlayer3Stats._1v2" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v3 Clutches</label>
+                                                <input asp-for="TeamAPlayer3Stats._1v3" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v4 Clutches</label>
+                                                <input asp-for="TeamAPlayer3Stats._1v4" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v5 Clutches</label>
+                                                <input asp-for="TeamAPlayer3Stats._1v5" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>AWP Kills</label>
+                                                <input asp-for="TeamAPlayer3Stats.SniperKills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Pistol Kills</label>
+                                                <input asp-for="TeamAPlayer3Stats.PistolKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Knife Kills</label>
+                                                <input asp-for="TeamAPlayer3Stats.KnifeKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Flashes</label>
+                                                <input asp-for="TeamAPlayer3Stats.Flashes" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Player 4 -->
+                                <div class="player-stats-card">
+                                    <h5 class="player-stats-title">Player 4</h5>
+                                    <div class="stats-form">
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Kills</label>
+                                                <input asp-for="TeamAPlayer4Stats.Kills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Assists</label>
+                                                <input asp-for="TeamAPlayer4Stats.Assists" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Deaths</label>
+                                                <input asp-for="TeamAPlayer4Stats.Deaths" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>ADR</label>
+                                                <input asp-for="TeamAPlayer4Stats.Damage" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>T Rounds</label>
+                                                <input asp-for="TeamAPlayer4Stats.TsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>CT Rounds</label>
+                                                <input asp-for="TeamAPlayer4Stats.CTsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Rounds Played</label>
+                                                <input asp-for="TeamAPlayer4Stats.RoundsPlayed" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>KAST</label>
+                                                <input asp-for="TeamAPlayer4Stats.KAST" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>HS%</label>
+                                                <input asp-for="TeamAPlayer4Stats.HSkills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>HLTV Rating</label>
+                                                <input asp-for="TeamAPlayer4Stats.HLTV1" class="form-control" type="number" step="0.01" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Utility Damage</label>
+                                                <input asp-for="TeamAPlayer4Stats.UD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>First Kills</label>
+                                                <input asp-for="TeamAPlayer4Stats.FK" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>First Deaths</label>
+                                                <input asp-for="TeamAPlayer4Stats.FD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1K Rounds</label>
+                                                <input asp-for="TeamAPlayer4Stats._1k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>2K Rounds</label>
+                                                <input asp-for="TeamAPlayer4Stats._2k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>3K Rounds</label>
+                                                <input asp-for="TeamAPlayer4Stats._3k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>4K Rounds</label>
+                                                <input asp-for="TeamAPlayer4Stats._4k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>5K Rounds</label>
+                                                <input asp-for="TeamAPlayer4Stats._5k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v1 Clutches</label>
+                                                <input asp-for="TeamAPlayer4Stats._1v1" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v2 Clutches</label>
+                                                <input asp-for="TeamAPlayer4Stats._1v2" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v3 Clutches</label>
+                                                <input asp-for="TeamAPlayer4Stats._1v3" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v4 Clutches</label>
+                                                <input asp-for="TeamAPlayer4Stats._1v4" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v5 Clutches</label>
+                                                <input asp-for="TeamAPlayer4Stats._1v5" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>AWP Kills</label>
+                                                <input asp-for="TeamAPlayer4Stats.SniperKills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Pistol Kills</label>
+                                                <input asp-for="TeamAPlayer4Stats.PistolKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Knife Kills</label>
+                                                <input asp-for="TeamAPlayer4Stats.KnifeKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Flashes</label>
+                                                <input asp-for="TeamAPlayer4Stats.Flashes" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Player 5 -->
+                                <div class="player-stats-card">
+                                    <h5 class="player-stats-title">Player 5</h5>
+                                    <div class="stats-form">
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Kills</label>
+                                                <input asp-for="TeamAPlayer5Stats.Kills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Assists</label>
+                                                <input asp-for="TeamAPlayer5Stats.Assists" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Deaths</label>
+                                                <input asp-for="TeamAPlayer5Stats.Deaths" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>ADR</label>
+                                                <input asp-for="TeamAPlayer5Stats.Damage" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>T Rounds</label>
+                                                <input asp-for="TeamAPlayer5Stats.TsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>CT Rounds</label>
+                                                <input asp-for="TeamAPlayer5Stats.CTsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Rounds Played</label>
+                                                <input asp-for="TeamAPlayer5Stats.RoundsPlayed" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>KAST</label>
+                                                <input asp-for="TeamAPlayer5Stats.KAST" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>HS%</label>
+                                                <input asp-for="TeamAPlayer5Stats.HSkills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>HLTV Rating</label>
+                                                <input asp-for="TeamAPlayer5Stats.HLTV1" class="form-control" type="number" step="0.01" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Utility Damage</label>
+                                                <input asp-for="TeamAPlayer5Stats.UD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>First Kills</label>
+                                                <input asp-for="TeamAPlayer5Stats.FK" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>First Deaths</label>
+                                                <input asp-for="TeamAPlayer5Stats.FD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1K Rounds</label>
+                                                <input asp-for="TeamAPlayer5Stats._1k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>2K Rounds</label>
+                                                <input asp-for="TeamAPlayer5Stats._2k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>3K Rounds</label>
+                                                <input asp-for="TeamAPlayer5Stats._3k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>4K Rounds</label>
+                                                <input asp-for="TeamAPlayer5Stats._4k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>5K Rounds</label>
+                                                <input asp-for="TeamAPlayer5Stats._5k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v1 Clutches</label>
+                                                <input asp-for="TeamAPlayer5Stats._1v1" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v2 Clutches</label>
+                                                <input asp-for="TeamAPlayer5Stats._1v2" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v3 Clutches</label>
+                                                <input asp-for="TeamAPlayer5Stats._1v3" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v4 Clutches</label>
+                                                <input asp-for="TeamAPlayer5Stats._1v4" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v5 Clutches</label>
+                                                <input asp-for="TeamAPlayer5Stats._1v5" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>AWP Kills</label>
+                                                <input asp-for="TeamAPlayer5Stats.SniperKills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Pistol Kills</label>
+                                                <input asp-for="TeamAPlayer5Stats.PistolKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Knife Kills</label>
+                                                <input asp-for="TeamAPlayer5Stats.KnifeKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Flashes</label>
+                                                <input asp-for="TeamAPlayer5Stats.Flashes" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Team B Statistics -->
+                        <div class="stats-section">
+                            <h4 class="stats-team-title">Team B Statistics</h4>
+                            <div class="stats-grid">
+                                <!-- Player 1 -->
+                                <div class="player-stats-card">
+                                    <h5 class="player-stats-title">Player 1</h5>
+                                    <div class="stats-form">
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Kills</label>
+                                                <input asp-for="TeamBPlayer1Stats.Kills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Assists</label>
+                                                <input asp-for="TeamBPlayer1Stats.Assists" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Deaths</label>
+                                                <input asp-for="TeamBPlayer1Stats.Deaths" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>ADR</label>
+                                                <input asp-for="TeamBPlayer1Stats.Damage" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>T Rounds</label>
+                                                <input asp-for="TeamBPlayer1Stats.TsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>CT Rounds</label>
+                                                <input asp-for="TeamBPlayer1Stats.CTsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Rounds Played</label>
+                                                <input asp-for="TeamBPlayer1Stats.RoundsPlayed" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>KAST</label>
+                                                <input asp-for="TeamBPlayer1Stats.KAST" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>HS%</label>
+                                                <input asp-for="TeamBPlayer1Stats.HSkills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>HLTV Rating</label>
+                                                <input asp-for="TeamBPlayer1Stats.HLTV1" class="form-control" type="number" step="0.01" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Utility Damage</label>
+                                                <input asp-for="TeamBPlayer1Stats.UD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>First Kills</label>
+                                                <input asp-for="TeamBPlayer1Stats.FK" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>First Deaths</label>
+                                                <input asp-for="TeamBPlayer1Stats.FD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1K Rounds</label>
+                                                <input asp-for="TeamBPlayer1Stats._1k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>2K Rounds</label>
+                                                <input asp-for="TeamBPlayer1Stats._2k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>3K Rounds</label>
+                                                <input asp-for="TeamBPlayer1Stats._3k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>4K Rounds</label>
+                                                <input asp-for="TeamBPlayer1Stats._4k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>5K Rounds</label>
+                                                <input asp-for="TeamBPlayer1Stats._5k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v1 Clutches</label>
+                                                <input asp-for="TeamBPlayer1Stats._1v1" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v2 Clutches</label>
+                                                <input asp-for="TeamBPlayer1Stats._1v2" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v3 Clutches</label>
+                                                <input asp-for="TeamBPlayer1Stats._1v3" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v4 Clutches</label>
+                                                <input asp-for="TeamBPlayer1Stats._1v4" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v5 Clutches</label>
+                                                <input asp-for="TeamBPlayer1Stats._1v5" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>AWP Kills</label>
+                                                <input asp-for="TeamBPlayer1Stats.SniperKills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Pistol Kills</label>
+                                                <input asp-for="TeamBPlayer1Stats.PistolKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Knife Kills</label>
+                                                <input asp-for="TeamBPlayer1Stats.KnifeKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Flashes</label>
+                                                <input asp-for="TeamBPlayer1Stats.Flashes" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Player 2 -->
+                                <div class="player-stats-card">
+                                    <h5 class="player-stats-title">Player 2</h5>
+                                    <div class="stats-form">
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Kills</label>
+                                                <input asp-for="TeamBPlayer2Stats.Kills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Assists</label>
+                                                <input asp-for="TeamBPlayer2Stats.Assists" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Deaths</label>
+                                                <input asp-for="TeamBPlayer2Stats.Deaths" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>ADR</label>
+                                                <input asp-for="TeamBPlayer2Stats.Damage" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>T Rounds</label>
+                                                <input asp-for="TeamBPlayer2Stats.TsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>CT Rounds</label>
+                                                <input asp-for="TeamBPlayer2Stats.CTsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Rounds Played</label>
+                                                <input asp-for="TeamBPlayer2Stats.RoundsPlayed" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>KAST</label>
+                                                <input asp-for="TeamBPlayer2Stats.KAST" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>HS%</label>
+                                                <input asp-for="TeamBPlayer2Stats.HSkills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>HLTV Rating</label>
+                                                <input asp-for="TeamBPlayer2Stats.HLTV1" class="form-control" type="number" step="0.01" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Utility Damage</label>
+                                                <input asp-for="TeamBPlayer2Stats.UD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>First Kills</label>
+                                                <input asp-for="TeamBPlayer2Stats.FK" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>First Deaths</label>
+                                                <input asp-for="TeamBPlayer2Stats.FD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1K Rounds</label>
+                                                <input asp-for="TeamBPlayer2Stats._1k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>2K Rounds</label>
+                                                <input asp-for="TeamBPlayer2Stats._2k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>3K Rounds</label>
+                                                <input asp-for="TeamBPlayer2Stats._3k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>4K Rounds</label>
+                                                <input asp-for="TeamBPlayer2Stats._4k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>5K Rounds</label>
+                                                <input asp-for="TeamBPlayer2Stats._5k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v1 Clutches</label>
+                                                <input asp-for="TeamBPlayer2Stats._1v1" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v2 Clutches</label>
+                                                <input asp-for="TeamBPlayer2Stats._1v2" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v3 Clutches</label>
+                                                <input asp-for="TeamBPlayer2Stats._1v3" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v4 Clutches</label>
+                                                <input asp-for="TeamBPlayer2Stats._1v4" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v5 Clutches</label>
+                                                <input asp-for="TeamBPlayer2Stats._1v5" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>AWP Kills</label>
+                                                <input asp-for="TeamBPlayer2Stats.SniperKills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Pistol Kills</label>
+                                                <input asp-for="TeamBPlayer2Stats.PistolKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Knife Kills</label>
+                                                <input asp-for="TeamBPlayer2Stats.KnifeKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Flashes</label>
+                                                <input asp-for="TeamBPlayer2Stats.Flashes" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Player 3 -->
+                                <div class="player-stats-card">
+                                    <h5 class="player-stats-title">Player 3</h5>
+                                    <div class="stats-form">
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Kills</label>
+                                                <input asp-for="TeamBPlayer3Stats.Kills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Assists</label>
+                                                <input asp-for="TeamBPlayer3Stats.Assists" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Deaths</label>
+                                                <input asp-for="TeamBPlayer3Stats.Deaths" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>ADR</label>
+                                                <input asp-for="TeamBPlayer3Stats.Damage" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>T Rounds</label>
+                                                <input asp-for="TeamBPlayer3Stats.TsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>CT Rounds</label>
+                                                <input asp-for="TeamBPlayer3Stats.CTsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Rounds Played</label>
+                                                <input asp-for="TeamBPlayer3Stats.RoundsPlayed" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>KAST</label>
+                                                <input asp-for="TeamBPlayer3Stats.KAST" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>HS%</label>
+                                                <input asp-for="TeamBPlayer3Stats.HSkills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>HLTV Rating</label>
+                                                <input asp-for="TeamBPlayer3Stats.HLTV1" class="form-control" type="number" step="0.01" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Utility Damage</label>
+                                                <input asp-for="TeamBPlayer3Stats.UD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>First Kills</label>
+                                                <input asp-for="TeamBPlayer3Stats.FK" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>First Deaths</label>
+                                                <input asp-for="TeamBPlayer3Stats.FD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1K Rounds</label>
+                                                <input asp-for="TeamBPlayer3Stats._1k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>2K Rounds</label>
+                                                <input asp-for="TeamBPlayer3Stats._2k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>3K Rounds</label>
+                                                <input asp-for="TeamBPlayer3Stats._3k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>4K Rounds</label>
+                                                <input asp-for="TeamBPlayer3Stats._4k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>5K Rounds</label>
+                                                <input asp-for="TeamBPlayer3Stats._5k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v1 Clutches</label>
+                                                <input asp-for="TeamBPlayer3Stats._1v1" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v2 Clutches</label>
+                                                <input asp-for="TeamBPlayer3Stats._1v2" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v3 Clutches</label>
+                                                <input asp-for="TeamBPlayer3Stats._1v3" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v4 Clutches</label>
+                                                <input asp-for="TeamBPlayer3Stats._1v4" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v5 Clutches</label>
+                                                <input asp-for="TeamBPlayer3Stats._1v5" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>AWP Kills</label>
+                                                <input asp-for="TeamBPlayer3Stats.SniperKills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Pistol Kills</label>
+                                                <input asp-for="TeamBPlayer3Stats.PistolKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Knife Kills</label>
+                                                <input asp-for="TeamBPlayer3Stats.KnifeKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Flashes</label>
+                                                <input asp-for="TeamBPlayer3Stats.Flashes" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Player 4 -->
+                                <div class="player-stats-card">
+                                    <h5 class="player-stats-title">Player 4</h5>
+                                    <div class="stats-form">
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Kills</label>
+                                                <input asp-for="TeamBPlayer4Stats.Kills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Assists</label>
+                                                <input asp-for="TeamBPlayer4Stats.Assists" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Deaths</label>
+                                                <input asp-for="TeamBPlayer4Stats.Deaths" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>ADR</label>
+                                                <input asp-for="TeamBPlayer4Stats.Damage" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>T Rounds</label>
+                                                <input asp-for="TeamBPlayer4Stats.TsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>CT Rounds</label>
+                                                <input asp-for="TeamBPlayer4Stats.CTsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Rounds Played</label>
+                                                <input asp-for="TeamBPlayer4Stats.RoundsPlayed" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>KAST</label>
+                                                <input asp-for="TeamBPlayer4Stats.KAST" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>HS%</label>
+                                                <input asp-for="TeamBPlayer4Stats.HSkills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>HLTV Rating</label>
+                                                <input asp-for="TeamBPlayer4Stats.HLTV1" class="form-control" type="number" step="0.01" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Utility Damage</label>
+                                                <input asp-for="TeamBPlayer4Stats.UD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>First Kills</label>
+                                                <input asp-for="TeamBPlayer4Stats.FK" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>First Deaths</label>
+                                                <input asp-for="TeamBPlayer4Stats.FD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1K Rounds</label>
+                                                <input asp-for="TeamBPlayer4Stats._1k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>2K Rounds</label>
+                                                <input asp-for="TeamBPlayer4Stats._2k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>3K Rounds</label>
+                                                <input asp-for="TeamBPlayer4Stats._3k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>4K Rounds</label>
+                                                <input asp-for="TeamBPlayer4Stats._4k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>5K Rounds</label>
+                                                <input asp-for="TeamBPlayer4Stats._5k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v1 Clutches</label>
+                                                <input asp-for="TeamBPlayer4Stats._1v1" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v2 Clutches</label>
+                                                <input asp-for="TeamBPlayer4Stats._1v2" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v3 Clutches</label>
+                                                <input asp-for="TeamBPlayer4Stats._1v3" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v4 Clutches</label>
+                                                <input asp-for="TeamBPlayer4Stats._1v4" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v5 Clutches</label>
+                                                <input asp-for="TeamBPlayer4Stats._1v5" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>AWP Kills</label>
+                                                <input asp-for="TeamBPlayer4Stats.SniperKills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Pistol Kills</label>
+                                                <input asp-for="TeamBPlayer4Stats.PistolKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Knife Kills</label>
+                                                <input asp-for="TeamBPlayer4Stats.KnifeKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Flashes</label>
+                                                <input asp-for="TeamBPlayer4Stats.Flashes" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Player 5 -->
+                                <div class="player-stats-card">
+                                    <h5 class="player-stats-title">Player 5</h5>
+                                    <div class="stats-form">
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Kills</label>
+                                                <input asp-for="TeamBPlayer5Stats.Kills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Assists</label>
+                                                <input asp-for="TeamBPlayer5Stats.Assists" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Deaths</label>
+                                                <input asp-for="TeamBPlayer5Stats.Deaths" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>ADR</label>
+                                                <input asp-for="TeamBPlayer5Stats.Damage" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>T Rounds</label>
+                                                <input asp-for="TeamBPlayer5Stats.TsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>CT Rounds</label>
+                                                <input asp-for="TeamBPlayer5Stats.CTsideRoundsWon" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Rounds Played</label>
+                                                <input asp-for="TeamBPlayer5Stats.RoundsPlayed" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>KAST</label>
+                                                <input asp-for="TeamBPlayer5Stats.KAST" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>HS%</label>
+                                                <input asp-for="TeamBPlayer5Stats.HSkills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>HLTV Rating</label>
+                                                <input asp-for="TeamBPlayer5Stats.HLTV1" class="form-control" type="number" step="0.01" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Utility Damage</label>
+                                                <input asp-for="TeamBPlayer5Stats.UD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>First Kills</label>
+                                                <input asp-for="TeamBPlayer5Stats.FK" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>First Deaths</label>
+                                                <input asp-for="TeamBPlayer5Stats.FD" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1K Rounds</label>
+                                                <input asp-for="TeamBPlayer5Stats._1k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>2K Rounds</label>
+                                                <input asp-for="TeamBPlayer5Stats._2k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>3K Rounds</label>
+                                                <input asp-for="TeamBPlayer5Stats._3k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>4K Rounds</label>
+                                                <input asp-for="TeamBPlayer5Stats._4k" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>5K Rounds</label>
+                                                <input asp-for="TeamBPlayer5Stats._5k" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v1 Clutches</label>
+                                                <input asp-for="TeamBPlayer5Stats._1v1" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v2 Clutches</label>
+                                                <input asp-for="TeamBPlayer5Stats._1v2" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v3 Clutches</label>
+                                                <input asp-for="TeamBPlayer5Stats._1v3" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>1v4 Clutches</label>
+                                                <input asp-for="TeamBPlayer5Stats._1v4" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>1v5 Clutches</label>
+                                                <input asp-for="TeamBPlayer5Stats._1v5" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>AWP Kills</label>
+                                                <input asp-for="TeamBPlayer5Stats.SniperKills" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                        <div class="stats-row">
+                                            <div class="stat-group">
+                                                <label>Pistol Kills</label>
+                                                <input asp-for="TeamBPlayer5Stats.PistolKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Knife Kills</label>
+                                                <input asp-for="TeamBPlayer5Stats.KnifeKills" class="form-control" type="number" />
+                                            </div>
+                                            <div class="stat-group">
+                                                <label>Flashes</label>
+                                                <input asp-for="TeamBPlayer5Stats.Flashes" class="form-control" type="number" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-upload"></i> Upload Statistics
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-arrow-left"></i> Back to Match History
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Ultra Black Manual Stats Upload */
+    .manual-stats-upload {
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .upload-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .upload-title {
+        color: #f9fafb;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #1e40af, #dc2626);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .upload-description {
+        color: #9ca3af;
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .upload-form {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .form-section {
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 2px solid #1a1a1a;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+    }
+
+    .section-title {
+        color: #f9fafb;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid #1e40af;
+        padding-bottom: 0.5rem;
+    }
+
+    .team-a-title {
+        border-bottom-color: #1e40af;
+    }
+
+    .team-b-title {
+        border-bottom-color: #dc2626;
+    }
+
+    .section-description {
+        color: #9ca3af;
+        margin-bottom: 1.5rem;
+        font-style: italic;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        color: #f9fafb;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control, .form-select {
+        background: rgba(0, 0, 0, 0.6);
+        border: 2px solid #1a1a1a;
+        color: #f9fafb;
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: rgba(0, 0, 0, 0.8);
+        border-color: #1e40af;
+        box-shadow: 0 0 0 0.2rem rgba(30, 64, 175, 0.25);
+        color: #f9fafb;
+    }
+
+    .players-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .player-selection {
+        margin-bottom: 1rem;
+    }
+
+    .player-label {
+        color: #9ca3af;
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+
+    .stats-section {
+        margin-bottom: 3rem;
+    }
+
+    .stats-team-title {
+        color: #f9fafb;
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        padding: 1rem;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+        border-radius: 10px;
+        border: 1px solid #1e40af;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .player-stats-card {
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        border: 2px solid #1a1a1a;
+        transition: all 0.3s ease;
+    }
+
+    .player-stats-card:hover {
+        border-color: #1e40af;
+        box-shadow: 0 4px 16px rgba(30, 64, 175, 0.2);
+    }
+
+    .player-stats-title {
+        color: #f9fafb;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        text-align: center;
+        border-bottom: 1px solid #1a1a1a;
+        padding-bottom: 0.5rem;
+    }
+
+    .stats-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+    }
+
+    .stat-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-group label {
+        color: #9ca3af;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-group input {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid #1a1a1a;
+        color: #f9fafb;
+        border-radius: 5px;
+        padding: 0.5rem;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .stat-group input:focus {
+        background: rgba(0, 0, 0, 0.6);
+        border-color: #1e40af;
+        box-shadow: 0 0 0 0.1rem rgba(30, 64, 175, 0.25);
+    }
+
+    .form-actions {
+        text-align: center;
+        margin-top: 3rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    .btn {
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .btn-primary {
+        background: linear-gradient(45deg, #1e40af, #dc2626);
+        color: white;
+        border-color: rgba(255,255,255,0.2);
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(45deg, #1d4ed8, #b91c1c);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(45deg, #6b7280, #9ca3af);
+        color: white;
+        border-color: rgba(255,255,255,0.2);
+    }
+
+    .btn-secondary:hover {
+        background: linear-gradient(45deg, #4b5563, #6b7280);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    }
+
+    .text-danger {
+        color: #ef4444 !important;
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Searchable Dropdown Styles */
+    .searchable-select-wrapper {
+        position: relative;
+    }
+
+    .searchable-input {
+        background: rgba(0, 0, 0, 0.6);
+        border: 2px solid #1a1a1a;
+        color: #f9fafb;
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+    .searchable-input:focus {
+        background: rgba(0, 0, 0, 0.8);
+        border-color: #1e40af;
+        box-shadow: 0 0 0 0.2rem rgba(30, 64, 175, 0.25);
+        color: #f9fafb;
+        outline: none;
+    }
+
+    .searchable-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #1a1a1a;
+        border: 2px solid #1e40af;
+        border-radius: 10px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.8);
+        margin-top: 2px;
+    }
+
+    .searchable-option {
+        padding: 10px;
+        cursor: pointer;
+        border-bottom: 1px solid #2a2a2a;
+        color: #f9fafb;
+        transition: background-color 0.2s ease;
+    }
+
+    .searchable-option:hover {
+        background-color: #1e40af;
+    }
+
+    .searchable-option:last-child {
+        border-bottom: none;
+    }
+
+    .searchable-loading {
+        padding: 10px;
+        text-align: center;
+        color: #9ca3af;
+    }
+
+    /* Custom scrollbar for dropdown */
+    .searchable-dropdown::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .searchable-dropdown::-webkit-scrollbar-track {
+        background: #1a1a1a;
+        border-radius: 4px;
+    }
+
+    .searchable-dropdown::-webkit-scrollbar-thumb {
+        background: #1e40af;
+        border-radius: 4px;
+    }
+
+    .searchable-dropdown::-webkit-scrollbar-thumb:hover {
+        background: #1d4ed8;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stats-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .btn {
+            width: 100%;
+            max-width: 300px;
+        }
+    }
+</style>
+
+<script>
+    // Tournament selection change handler
+    document.getElementById('tournamentSelect').addEventListener('change', function() {
+        const tournamentId = this.value;
+        const seriesSelect = document.getElementById('seriesSelect');
+        const matchDateInput = document.getElementById('matchDateInput');
+        
+        if (tournamentId) {
+            // Enable series dropdown and load series
+            seriesSelect.disabled = false;
+            seriesSelect.innerHTML = '<option value="">Loading...</option>';
+            
+            // Load tournament details and set match date
+            fetch(`/MatchHistory/GetTournamentDetails?tournamentId=${tournamentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error loading tournament:', data.error);
+                        return;
+                    }
+                    
+                    // Set match date to tournament start date
+                    if (data.startDate) {
+                        const startDate = new Date(data.startDate);
+                        const formattedDate = startDate.toISOString().slice(0, 16); // Format for datetime-local input
+                        matchDateInput.value = formattedDate;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading tournament details:', error);
+                });
+            
+            // Load series for the tournament
+            fetch(`/MatchHistory/GetSeriesForTournament?tournamentId=${tournamentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    seriesSelect.innerHTML = '<option value="">Select Series...</option>';
+                    data.forEach(series => {
+                        const option = document.createElement('option');
+                        option.value = series.id;
+                        option.textContent = series.text;
+                        seriesSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading series:', error);
+                    seriesSelect.innerHTML = '<option value="">Error loading series</option>';
+                });
+        } else {
+            // Disable series dropdown and clear match date
+            seriesSelect.disabled = true;
+            seriesSelect.innerHTML = '<option value="">Select Series...</option>';
+            matchDateInput.value = '';
+        }
+    });
+
+    // Initialize searchable dropdowns with lazy loading
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize player selects with search functionality
+        document.querySelectorAll('.player-select').forEach(select => {
+            initializeSearchableSelect(select, '/MatchHistory/SearchPlayers', 'Search players...');
+        });
+
+        // Initialize team selects with search functionality
+        document.querySelectorAll('.team-select').forEach(select => {
+            initializeSearchableSelect(select, '/MatchHistory/SearchTeams', 'Search teams...');
+        });
+    });
+
+    function initializeSearchableSelect(selectElement, searchUrl, placeholder) {
+        // Create a wrapper div
+        const wrapper = document.createElement('div');
+        wrapper.className = 'searchable-select-wrapper';
+        wrapper.style.position = 'relative';
+        
+        // Create input field
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'form-control searchable-input';
+        input.placeholder = placeholder;
+        input.autocomplete = 'off';
+        
+        // Create dropdown container
+        const dropdown = document.createElement('div');
+        dropdown.className = 'searchable-dropdown';
+        dropdown.style.display = 'none';
+        dropdown.style.position = 'absolute';
+        dropdown.style.top = '100%';
+        dropdown.style.left = '0';
+        dropdown.style.right = '0';
+        dropdown.style.backgroundColor = '#1a1a1a';
+        dropdown.style.border = '2px solid #1e40af';
+        dropdown.style.borderRadius = '10px';
+        dropdown.style.maxHeight = '200px';
+        dropdown.style.overflowY = 'auto';
+        dropdown.style.zIndex = '1000';
+        dropdown.style.boxShadow = '0 4px 16px rgba(0,0,0,0.8)';
+        
+        // Create loading indicator
+        const loading = document.createElement('div');
+        loading.className = 'searchable-loading';
+        loading.style.padding = '10px';
+        loading.style.textAlign = 'center';
+        loading.style.color = '#9ca3af';
+        loading.textContent = 'Loading...';
+        
+        // Replace original select
+        selectElement.parentNode.insertBefore(wrapper, selectElement);
+        wrapper.appendChild(input);
+        wrapper.appendChild(dropdown);
+        selectElement.style.display = 'none';
+        
+        let searchTimeout;
+        let currentResults = [];
+        let selectedValue = '';
+        let selectedText = '';
+        
+        // Search function
+        function performSearch(term) {
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+            
+            searchTimeout = setTimeout(() => {
+                dropdown.innerHTML = '';
+                dropdown.appendChild(loading);
+                dropdown.style.display = 'block';
+                
+                fetch(`${searchUrl}?term=${encodeURIComponent(term)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        currentResults = data;
+                        dropdown.innerHTML = '';
+                        
+                        if (data.length === 0) {
+                            const noResults = document.createElement('div');
+                            noResults.style.padding = '10px';
+                            noResults.style.textAlign = 'center';
+                            noResults.style.color = '#9ca3af';
+                            noResults.textContent = 'No results found';
+                            dropdown.appendChild(noResults);
+                        } else {
+                            data.forEach(item => {
+                                const option = document.createElement('div');
+                                option.className = 'searchable-option';
+                                option.style.padding = '10px';
+                                option.style.cursor = 'pointer';
+                                option.style.borderBottom = '1px solid #2a2a2a';
+                                option.style.color = '#f9fafb';
+                                option.textContent = item.text;
+                                
+                                option.addEventListener('mouseenter', function() {
+                                    this.style.backgroundColor = '#1e40af';
+                                });
+                                
+                                option.addEventListener('mouseleave', function() {
+                                    this.style.backgroundColor = 'transparent';
+                                });
+                                
+                                option.addEventListener('click', function() {
+                                    selectedValue = item.id;
+                                    selectedText = item.text;
+                                    input.value = item.text;
+                                    selectElement.value = item.id;
+                                    dropdown.style.display = 'none';
+                                    
+                                    // Trigger change event
+                                    const event = new Event('change', { bubbles: true });
+                                    selectElement.dispatchEvent(event);
+                                });
+                                
+                                dropdown.appendChild(option);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Search error:', error);
+                        dropdown.innerHTML = '';
+                        const errorDiv = document.createElement('div');
+                        errorDiv.style.padding = '10px';
+                        errorDiv.style.textAlign = 'center';
+                        errorDiv.style.color = '#ef4444';
+                        errorDiv.textContent = 'Error loading results';
+                        dropdown.appendChild(errorDiv);
+                    });
+            }, 300); // 300ms delay
+        }
+        
+        // Input event
+        input.addEventListener('input', function() {
+            const term = this.value;
+            if (term.length >= 2) {
+                performSearch(term);
+            } else {
+                dropdown.style.display = 'none';
+            }
+        });
+        
+        // Focus event
+        input.addEventListener('focus', function() {
+            if (this.value.length >= 2) {
+                performSearch(this.value);
+            }
+        });
+        
+        // Click outside to close
+        document.addEventListener('click', function(e) {
+            if (!wrapper.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+        
+        // Clear selection
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                dropdown.style.display = 'none';
+            } else if (e.key === 'Backspace' && this.value === '') {
+                selectedValue = '';
+                selectedText = '';
+                selectElement.value = '';
+            }
+        });
+    }
+</script>

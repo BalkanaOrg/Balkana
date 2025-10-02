@@ -1,7 +1,14 @@
 ﻿@using Balkana.Data.DTOs
 @model ICollection<ExternalMatchSummary>
 
-<h2>Match History (@ViewBag.Source)</h2>
+<div class="match-history-header">
+    <h2>Match History (@ViewBag.Source)</h2>
+    <div class="header-actions">
+        <a href="@Url.Action("ManualStatsUpload")" class="btn btn-success">
+            <i class="fas fa-upload"></i> Manual Upload
+        </a>
+    </div>
+</div>
 
 <table class="table">
     <thead>
@@ -35,3 +42,36 @@
         }
     </tbody>
 </table>
+
+<style>
+    .match-history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn-success {
+        background: linear-gradient(45deg, #065f46, #10b981);
+        border: 2px solid rgba(16, 185, 129, 0.3);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-success:hover {
+        background: linear-gradient(45deg, #047857, #059669);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+        color: white;
+        text-decoration: none;
+    }
+</style>

@@ -544,5 +544,373 @@ namespace Balkana.Controllers
             else
                 return "TeamB";
         }
+
+        // Manual Statistics Upload
+        [HttpGet]
+        [Authorize(Roles = "Administrator,Moderator")]
+        public async Task<IActionResult> ManualStatsUpload()
+        {
+            var vm = new ManualStatsUploadViewModel
+            {
+                Tournaments = await _db.Tournaments
+                    .Include(t => t.Game)
+                    .Where(t => t.Game.ShortName == "CS2")
+                    .Select(t => new SelectListItem
+                    {
+                        Value = t.Id.ToString(),
+                        Text = t.FullName
+                    })
+                    .ToListAsync(),
+                Maps = await _db.GameMaps
+                    .Where(m => m.Game.ShortName == "CS2")
+                    .Select(m => new SelectListItem
+                    {
+                        Value = m.Id.ToString(),
+                        Text = m.Name
+                    })
+                    .ToListAsync(),
+                Players = await _db.Players
+                    .Include(p => p.GameProfiles)
+                    .Where(p => p.GameProfiles.Any(gp => gp.Provider == "Faceit"))
+                    .Select(p => new SelectListItem
+                    {
+                        Value = p.Id.ToString(),
+                        Text = $"{p.Nickname} ({p.FirstName} {p.LastName})"
+                    })
+                    .ToListAsync(),
+                Teams = await _db.Teams
+                    .Select(t => new SelectListItem
+                    {
+                        Value = t.Id.ToString(),
+                        Text = t.FullName
+                    })
+                    .ToListAsync()
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Moderator")]
+        public async Task<IActionResult> ManualStatsUpload(ManualStatsUploadViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                // Reload dropdowns
+                model.Tournaments = await _db.Tournaments
+                    .Include(t => t.Game)
+                    .Where(t => t.Game.ShortName == "CS2")
+                    .Select(t => new SelectListItem
+                    {
+                        Value = t.Id.ToString(),
+                        Text = t.FullName
+                    })
+                    .ToListAsync();
+                model.Maps = await _db.GameMaps
+                    .Where(m => m.Game.ShortName == "CS2")
+                    .Select(m => new SelectListItem
+                    {
+                        Value = m.Id.ToString(),
+                        Text = m.Name
+                    })
+                    .ToListAsync();
+                model.Players = await _db.Players
+                    .Include(p => p.GameProfiles)
+                    .Where(p => p.GameProfiles.Any(gp => gp.Provider == "Faceit"))
+                    .Select(p => new SelectListItem
+                    {
+                        Value = p.Id.ToString(),
+                        Text = $"{p.Nickname} ({p.FirstName} {p.LastName})"
+                    })
+                    .ToListAsync();
+                model.Teams = await _db.Teams
+                    .Select(t => new SelectListItem
+                    {
+                        Value = t.Id.ToString(),
+                        Text = t.FullName
+                    })
+                    .ToListAsync();
+                return View(model);
+            }
+
+            // Get the teams
+            var teamA = await _db.Teams.FirstOrDefaultAsync(t => t.Id == model.TeamAId);
+            var teamB = await _db.Teams.FirstOrDefaultAsync(t => t.Id == model.TeamBId);
+
+            if (teamA == null || teamB == null)
+            {
+                ModelState.AddModelError("", "Invalid teams selected.");
+                return View(model);
+            }
+
+            // Create the match
+            var match = new MatchCS
+            {
+                ExternalMatchId = $"MANUAL-{DateTime.UtcNow:yyyyMMddHHmmss}",
+                Source = "MANUAL",
+                PlayedAt = model.PlayedAt,
+                IsCompleted = true,
+                CompetitionType = model.CompetitionType,
+                MapId = model.MapId,
+                TeamA = teamA,
+                TeamAId = teamA.Id,
+                TeamASourceSlot = "TeamA",
+                TeamB = teamB,
+                TeamBId = teamB.Id,
+                TeamBSourceSlot = "TeamB",
+                SeriesId = model.SeriesId,
+                PlayerStats = new List<PlayerStatistic>()
+            };
+
+            // Set winner
+            if (model.WinningTeam == "TeamA")
+            {
+                match.WinnerTeam = teamA;
+                match.WinnerTeamId = teamA.Id;
+            }
+            else
+            {
+                match.WinnerTeam = teamB;
+                match.WinnerTeamId = teamB.Id;
+            }
+
+            // Get all player IDs and their Faceit UUIDs
+            var playerIds = new List<int>
+            {
+                model.TeamAPlayer1Id, model.TeamAPlayer2Id, model.TeamAPlayer3Id, model.TeamAPlayer4Id, model.TeamAPlayer5Id,
+                model.TeamBPlayer1Id, model.TeamBPlayer2Id, model.TeamBPlayer3Id, model.TeamBPlayer4Id, model.TeamBPlayer5Id
+            };
+
+            var players = await _db.Players
+                .Include(p => p.GameProfiles)
+                .Where(p => playerIds.Contains(p.Id))
+                .ToListAsync();
+
+            var playerUuidMap = players.ToDictionary(
+                p => p.Id,
+                p => p.GameProfiles.FirstOrDefault(gp => gp.Provider == "Faceit")?.UUID ?? ""
+            );
+
+            // Create player statistics for Team A
+            var teamAPlayerStats = new[]
+            {
+                model.TeamAPlayer1Stats, model.TeamAPlayer2Stats, model.TeamAPlayer3Stats, model.TeamAPlayer4Stats, model.TeamAPlayer5Stats
+            };
+            var teamAPlayerIds = new[]
+            {
+                model.TeamAPlayer1Id, model.TeamAPlayer2Id, model.TeamAPlayer3Id, model.TeamAPlayer4Id, model.TeamAPlayer5Id
+            };
+
+            for (int i = 0; i < teamAPlayerStats.Length; i++)
+            {
+                var stats = teamAPlayerStats[i];
+                var playerId = teamAPlayerIds[i];
+                var uuid = playerUuidMap.GetValueOrDefault(playerId, "");
+
+                var playerStat = new PlayerStatistic_CS2
+                {
+                    PlayerUUID = uuid,
+                    Source = "MANUAL",
+                    Team = "TeamA",
+                    IsWinner = model.WinningTeam == "TeamA",
+                    Kills = stats.Kills,
+                    Assists = stats.Assists,
+                    Deaths = stats.Deaths,
+                    Damage = stats.Damage,
+                    TsideRoundsWon = stats.TsideRoundsWon,
+                    CTsideRoundsWon = stats.CTsideRoundsWon,
+                    RoundsPlayed = stats.RoundsPlayed,
+                    KAST = stats.KAST,
+                    HSkills = stats.HSkills,
+                    HLTV1 = stats.HLTV1,
+                    UD = stats.UD,
+                    FK = stats.FK,
+                    FD = stats.FD,
+                    _1k = stats._1k,
+                    _2k = stats._2k,
+                    _3k = stats._3k,
+                    _4k = stats._4k,
+                    _5k = stats._5k,
+                    _1v1 = stats._1v1,
+                    _1v2 = stats._1v2,
+                    _1v3 = stats._1v3,
+                    _1v4 = stats._1v4,
+                    _1v5 = stats._1v5,
+                    SniperKills = stats.SniperKills,
+                    PistolKills = stats.PistolKills,
+                    KnifeKills = stats.KnifeKills,
+                    Flashes = stats.Flashes
+                };
+
+                match.PlayerStats.Add(playerStat);
+            }
+
+            // Create player statistics for Team B
+            var teamBPlayerStats = new[]
+            {
+                model.TeamBPlayer1Stats, model.TeamBPlayer2Stats, model.TeamBPlayer3Stats, model.TeamBPlayer4Stats, model.TeamBPlayer5Stats
+            };
+            var teamBPlayerIds = new[]
+            {
+                model.TeamBPlayer1Id, model.TeamBPlayer2Id, model.TeamBPlayer3Id, model.TeamBPlayer4Id, model.TeamBPlayer5Id
+            };
+
+            for (int i = 0; i < teamBPlayerStats.Length; i++)
+            {
+                var stats = teamBPlayerStats[i];
+                var playerId = teamBPlayerIds[i];
+                var uuid = playerUuidMap.GetValueOrDefault(playerId, "");
+
+                var playerStat = new PlayerStatistic_CS2
+                {
+                    PlayerUUID = uuid,
+                    Source = "MANUAL",
+                    Team = "TeamB",
+                    IsWinner = model.WinningTeam == "TeamB",
+                    Kills = stats.Kills,
+                    Assists = stats.Assists,
+                    Deaths = stats.Deaths,
+                    Damage = stats.Damage,
+                    TsideRoundsWon = stats.TsideRoundsWon,
+                    CTsideRoundsWon = stats.CTsideRoundsWon,
+                    RoundsPlayed = stats.RoundsPlayed,
+                    KAST = stats.KAST,
+                    HSkills = stats.HSkills,
+                    HLTV1 = stats.HLTV1,
+                    UD = stats.UD,
+                    FK = stats.FK,
+                    FD = stats.FD,
+                    _1k = stats._1k,
+                    _2k = stats._2k,
+                    _3k = stats._3k,
+                    _4k = stats._4k,
+                    _5k = stats._5k,
+                    _1v1 = stats._1v1,
+                    _1v2 = stats._1v2,
+                    _1v3 = stats._1v3,
+                    _1v4 = stats._1v4,
+                    _1v5 = stats._1v5,
+                    SniperKills = stats.SniperKills,
+                    PistolKills = stats.PistolKills,
+                    KnifeKills = stats.KnifeKills,
+                    Flashes = stats.Flashes
+                };
+
+                match.PlayerStats.Add(playerStat);
+            }
+
+            // Save the match
+            _db.Matches.Add(match);
+            await _db.SaveChangesAsync();
+
+            // If series is provided, update series winner and advance to next series
+            if (model.SeriesId > 0)
+            {
+                var series = await _db.Series
+                    .Include(s => s.TeamA)
+                    .Include(s => s.TeamB)
+                    .FirstOrDefaultAsync(s => s.Id == model.SeriesId);
+
+                if (series != null)
+                {
+                    await UpdateSeriesWinner(series, new List<Match> { match });
+                    await AdvanceWinnerToNextSeries(series);
+                }
+            }
+
+            TempData["Success"] = "Match statistics uploaded successfully!";
+            return RedirectToAction("Index", "MatchHistory");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetSeriesForTournament(int tournamentId)
+        {
+            var series = await _db.Series
+                .Include(s => s.TeamA)
+                .Include(s => s.TeamB)
+                .Where(s => s.TournamentId == tournamentId)
+                .Select(s => new
+                {
+                    id = s.Id,
+                    text = $"{s.TeamA.FullName} vs {s.TeamB.FullName} - {s.Name}"
+                })
+                .ToListAsync();
+
+            return Json(series);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SearchPlayers(string term)
+        {
+            var query = _db.Players
+                .Include(p => p.GameProfiles)
+                .Where(p => p.GameProfiles.Any(gp => gp.Provider == "Faceit"));
+
+            // If term is provided and has at least 2 characters, filter by it
+            if (!string.IsNullOrEmpty(term) && term.Length >= 2)
+            {
+                query = query.Where(p => p.Nickname.Contains(term) || p.FirstName.Contains(term) || p.LastName.Contains(term));
+            }
+
+            var players = await query
+                .Take(50) // Increased limit for initial load
+                .Select(p => new
+                {
+                    id = p.Id,
+                    text = $"{p.Nickname} ({p.FirstName} {p.LastName})",
+                    nickname = p.Nickname,
+                    fullName = $"{p.FirstName} {p.LastName}"
+                })
+                .ToListAsync();
+
+            return Json(players);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SearchTeams(string term)
+        {
+            var query = _db.Teams.AsQueryable();
+
+            // If term is provided and has at least 2 characters, filter by it
+            if (!string.IsNullOrEmpty(term) && term.Length >= 2)
+            {
+                query = query.Where(t => t.FullName.Contains(term) || t.Tag.Contains(term));
+            }
+
+            var teams = await query
+                .Take(20)
+                .Select(t => new
+                {
+                    id = t.Id,
+                    text = t.FullName,
+                    tag = t.Tag
+                })
+                .ToListAsync();
+
+            return Json(teams);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetTournamentDetails(int tournamentId)
+        {
+            var tournament = await _db.Tournaments
+                .Where(t => t.Id == tournamentId)
+                .Select(t => new
+                {
+                    id = t.Id,
+                    name = t.FullName,
+                    startDate = t.StartDate,
+                    endDate = t.EndDate
+                })
+                .FirstOrDefaultAsync();
+
+            if (tournament == null)
+            {
+                return Json(new { error = "Tournament not found" });
+            }
+
+            return Json(tournament);
+        }
     }
 }
