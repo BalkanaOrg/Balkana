@@ -154,8 +154,9 @@ namespace Balkana.Services.Bracket
             var seriesList = new List<Balkana.Data.Models.Series>();
             
             // Calculate number of rounds needed for lower bracket
-            // Lower bracket has (2 * log2(bracketSize) - 1) rounds
-            int totalRounds = (int)Math.Log2(bracketSize) * 2 - 1;
+            // Standard double elimination: LB has (2 * log2(bracketSize) - 2) rounds
+            // For 8-team: LB should have 4 rounds, not 5
+            int totalRounds = (int)Math.Log2(bracketSize) * 2 - 2;
             
             for (int round = 1; round <= totalRounds; round++)
             {
@@ -163,20 +164,30 @@ namespace Balkana.Services.Bracket
                 
                 if (round == 1)
                 {
-                    // First round: losers from upper bracket first round
-                    matchesInRound = bracketSize / 2;
+                    // First round: only half the teams that lost in upper bracket first round
+                    // For 8-team bracket: 4 teams lose in UB R1, but LB R1 only has 2 matches
+                    matchesInRound = bracketSize / 4;
                 }
-                else if (round <= (int)Math.Log2(bracketSize))
+                else if (round == 2)
                 {
-                    // Early rounds: half the matches of previous round
-                    matchesInRound = bracketSize / (int)Math.Pow(2, round);
+                    // Second round: same number of matches as round 1
+                    // For 8-team bracket: LB R2 should have 2 matches (winners from LB R1 + losers from UB R2)
+                    matchesInRound = bracketSize / 4;
+                }
+                else if (round == 3)
+                {
+                    // Third round: 1 match (winners from LB R2)
+                    matchesInRound = 1;
+                }
+                else if (round == 4)
+                {
+                    // Fourth round: 1 match (winner from LB R3 vs loser from UB Final)
+                    matchesInRound = 1;
                 }
                 else
                 {
-                    // Later rounds: alternating pattern
-                    int upperBracketRounds = (int)Math.Log2(bracketSize);
-                    int lowerBracketRound = round - upperBracketRounds;
-                    matchesInRound = bracketSize / (int)Math.Pow(2, upperBracketRounds - lowerBracketRound + 1);
+                    // Fallback for other bracket sizes
+                    matchesInRound = Math.Max(1, bracketSize / (int)Math.Pow(2, round + 1));
                 }
 
                 for (int match = 1; match <= matchesInRound; match++)
@@ -214,7 +225,8 @@ namespace Balkana.Services.Bracket
 
         private int CalculateOptimalBracketSize(int teamCount)
         {
-            // Round down to previous power-of-2 bracket size
+            // Round DOWN to previous power-of-2 bracket size
+            // This ensures we use the largest bracket that is <= teamCount
             if (teamCount <= 2) return 2;
             if (teamCount <= 4) return 4;
             if (teamCount <= 8) return 8;

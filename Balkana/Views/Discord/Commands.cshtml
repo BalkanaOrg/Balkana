@@ -1,0 +1,129 @@
+@model List<Balkana.Models.Discord.DiscordCommandViewModel>
+@{
+    ViewData["Title"] = "Discord Commands";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-dark text-white">
+                <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #1e40af, #dc2626);">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-terminal me-2"></i>
+                        Discord Bot Commands
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var command in Model)
+                        {
+                            <div class="col-md-6 mb-4">
+                                <div class="card bg-dark border-secondary h-100">
+                                    <div class="card-header">
+                                        <h5 class="mb-0 text-primary">
+                                            <i class="fas fa-code me-2"></i>
+                                            @command.Command
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-white mb-3">@command.Description</p>
+                                        
+                                        <div class="mb-3">
+                                            <h6 class="text-info">Usage:</h6>
+                                            <code class="bg-dark text-success p-2 rounded d-block">@command.Usage</code>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <h6 class="text-info">Example:</h6>
+                                            <code class="bg-dark text-warning p-2 rounded d-block">@command.Example</code>
+                                        </div>
+                                        
+                                        <div class="mt-auto">
+                                            <button class="btn btn-outline-primary btn-sm" onclick="testCommand('@command.Command', '@command.Example')">
+                                                <i class="fas fa-play me-1"></i>
+                                                Test Command
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card bg-dark border-secondary">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-code me-2"></i>
+                                        API Integration
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted mb-3">
+                                        To integrate these commands with your Discord bot, use the following API endpoint:
+                                    </p>
+                                    
+                                    <div class="mb-3">
+                                        <h6 class="text-info">Endpoint:</h6>
+                                        <code class="bg-dark text-success p-2 rounded d-block">
+                                            POST /Admin/Discord/ExecuteCommand
+                                        </code>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <h6 class="text-info">Request Body:</h6>
+                                        <pre class="bg-dark text-warning p-3 rounded"><code>{
+  "command": "team",
+  "arguments": ["TDI"]
+}</code></pre>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <h6 class="text-info">Response:</h6>
+                                        <pre class="bg-dark text-success p-3 rounded"><code>{
+  "success": true,
+  "message": "**Team Name (TAG)**\n• **Player1** (Position) - Full Name\n• **Player2** (Position) - Full Name"
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function testCommand(command, example) {
+    const args = example.replace(command + ' ', '').split(' ');
+    window.location.href = '@Url.Action("TestCommand")' + '?command=' + encodeURIComponent(command) + '&arguments=' + encodeURIComponent(args.join(' '));
+}
+</script>
+
+<style>
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+    
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    code, pre {
+        border-radius: 6px;
+    }
+    
+    pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+</style>

@@ -7,6 +7,7 @@ using Balkana.Data.Seed;
 using Balkana.Services;
 using Balkana.Services.Admin;
 using Balkana.Services.Bracket;
+using Balkana.Services.Discord;
 using Balkana.Services.Matches;
 using Balkana.Services.Matches.Models;
 using Balkana.Services.Organizers;
@@ -182,6 +183,11 @@ void ConfigureServices(IServiceCollection services)
         c.BaseAddress = new Uri("https://open.faceit.com/data/v4/");
         c.DefaultRequestHeaders.Add("Authorization", "Bearer " + "moq kluch");
     });
+
+    // Discord Bot Services
+    builder.Services.Configure<Balkana.Models.Discord.DiscordConfig>(
+        builder.Configuration.GetSection("Discord"));
+    builder.Services.AddHttpClient<IDiscordBotService, DiscordBotService>();
 }
 
 // Configure the HTTP request pipeline.
@@ -218,6 +224,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

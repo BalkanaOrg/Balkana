@@ -55,6 +55,10 @@
               "target": "Package",
               "version": "[12.0.1, )"
             },
+            "Discord.Net": {
+              "target": "Package",
+              "version": "[3.18.0, )"
+            },
             "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore": {
               "target": "Package",
               "version": "[9.0.0, )"
@@ -84,6 +88,10 @@
             "Microsoft.EntityFrameworkCore.Tools": {
               "target": "Package",
               "version": "[9.0.0, )"
+            },
+            "NSec.Cryptography": {
+              "target": "Package",
+              "version": "[25.4.0, )"
             },
             "bootstrap": {
               "target": "Package",

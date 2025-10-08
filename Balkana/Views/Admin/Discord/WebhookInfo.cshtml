@@ -1,0 +1,212 @@
+@{
+    ViewData["Title"] = "Discord Webhook Information";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-dark text-white">
+                <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #1e40af, #dc2626);">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-link me-2"></i>
+                        Discord Webhook Configuration
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card bg-dark border-secondary">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-globe me-2"></i>
+                                        Webhook URL
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="input-group mb-3">
+                                        <input type="text" class="form-control bg-dark text-white border-secondary" 
+                                               value="@ViewBag.WebhookUrl" readonly id="webhookUrl">
+                                        <button class="btn btn-outline-primary" type="button" onclick="copyWebhookUrl()">
+                                            <i class="fas fa-copy me-2"></i>
+                                            Copy URL
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="alert alert-info bg-dark border-info">
+                                        <h6 class="alert-heading">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            How to Configure Discord Webhook
+                                        </h6>
+                                        <ol class="mb-0">
+                                            <li>Go to <a href="https://discord.com/developers/applications" target="_blank" class="text-primary">Discord Developer Portal</a></li>
+                                            <li>Select your application</li>
+                                            <li>Go to "General Information" section</li>
+                                            <li>Scroll down to "Interactions Endpoint URL"</li>
+                                            <li>Paste the webhook URL above</li>
+                                            <li>Click "Save Changes"</li>
+                                            <li>Discord will verify the endpoint with a test request</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card bg-dark border-secondary">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-shield-alt me-2"></i>
+                                        Security Information
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <h6 class="text-info">Verification Status:</h6>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2">
+                                                <i class="fas fa-circle text-warning"></i>
+                                            </div>
+                                            <span>Pending Discord verification</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <h6 class="text-info">Signature Verification:</h6>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2">
+                                                <i class="fas fa-circle text-success"></i>
+                                            </div>
+                                            <span>Enabled (Development)</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="alert alert-warning bg-dark border-warning">
+                                        <small>
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            In production, implement proper signature verification using your Discord public key.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card bg-dark border-secondary">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-code me-2"></i>
+                                        Webhook Endpoint Details
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-info">Endpoint Information:</h6>
+                                            <ul class="list-unstyled">
+                                                <li><strong>Method:</strong> POST</li>
+                                                <li><strong>Content-Type:</strong> application/json</li>
+                                                <li><strong>Authentication:</strong> Discord signature verification</li>
+                                                <li><strong>Response Format:</strong> JSON</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-info">Supported Interactions:</h6>
+                                            <ul class="list-unstyled">
+                                                <li><i class="fas fa-check text-success me-2"></i>PING (Type 1)</li>
+                                                <li><i class="fas fa-check text-success me-2"></i>APPLICATION_COMMAND (Type 2)</li>
+                                                <li><i class="fas fa-times text-muted me-2"></i>MESSAGE_COMPONENT (Type 3)</li>
+                                                <li><i class="fas fa-times text-muted me-2"></i>MODAL_SUBMIT (Type 5)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-3">
+                                        <h6 class="text-info">Example Response:</h6>
+                                        <pre class="bg-dark text-success p-3 rounded" style="font-size: 0.8em;"><code>{
+  "type": 4,
+  "data": {
+    "content": "**Team Name (TAG)**\n• **Player1** (Position) - Full Name"
+  }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between">
+                                <a href="@Url.Action("BotManagement")" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Back to Bot Management
+                                </a>
+                                <a href="@Url.Action("TestCommand")" class="btn btn-primary">
+                                    <i class="fas fa-play me-2"></i>
+                                    Test Commands
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyWebhookUrl() {
+    const webhookUrl = document.getElementById('webhookUrl').value;
+    navigator.clipboard.writeText(webhookUrl).then(function() {
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check text-success me-2"></i>Copied!';
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+</script>
+
+<style>
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+    
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    .alert {
+        border-radius: 8px;
+    }
+    
+    code, pre {
+        border-radius: 6px;
+    }
+    
+    pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    
+    .form-control:focus {
+        border-color: #1e40af;
+        box-shadow: 0 0 0 0.2rem rgba(30, 64, 175, 0.25);
+    }
+    
+    .input-group .btn {
+        border-radius: 0 6px 6px 0;
+    }
+</style>

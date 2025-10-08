@@ -1,0 +1,211 @@
+@{
+    ViewData["Title"] = "Discord Bot Management";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-dark text-white">
+                <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #1e40af, #dc2626);">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-robot me-2"></i>
+                        Discord Bot Management
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card bg-dark border-secondary">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-terminal me-2"></i>
+                                        Available Commands
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="list-group list-group-flush">
+                                        <div class="list-group-item bg-dark border-secondary text-white">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1 text-primary">/team</h6>
+                                                <small>Team Command</small>
+                                            </div>
+                                            <p class="mb-1">Get active players for a team</p>
+                                            <small>Usage: /team &lt;team_tag&gt;</small>
+                                        </div>
+                                        <div class="list-group-item bg-dark border-secondary text-white">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1 text-primary">/player</h6>
+                                                <small>Player Command</small>
+                                            </div>
+                                            <p class="mb-1">Get basic information for a player</p>
+                                            <small>Usage: /player &lt;nickname&gt;</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-dark border-secondary">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-cogs me-2"></i>
+                                        Bot Actions
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-primary" onclick="registerCommands()">
+                                            <i class="fas fa-upload me-2"></i>
+                                            Register Commands with Discord
+                                        </button>
+                                        <a href="@Url.Action("DiscordCommands", "Admin")" class="btn btn-outline-secondary">
+                                            <i class="fas fa-list me-2"></i>
+                                            View All Commands
+                                        </a>
+                                        <a href="@Url.Action("DiscordTest", "Admin")" class="btn btn-outline-success">
+                                            <i class="fas fa-play me-2"></i>
+                                            Test Commands
+                                        </a>
+                                        <a href="@Url.Action("DiscordDiagnostic", "Admin")" class="btn btn-outline-warning">
+                                            <i class="fas fa-bug me-2"></i>
+                                            Access Diagnostic
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card bg-dark border-secondary">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Bot Integration Information
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted">
+                                        This Discord bot integration allows you to query team and player information directly from Discord.
+                                        Commands are processed through the API endpoint and return formatted responses.
+                                    </p>
+                                    <div class="alert alert-info bg-dark border-info">
+                                        <h6 class="alert-heading">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            API Endpoint
+                                        </h6>
+                                        <p class="mb-0">
+                                            <code>POST /Admin/Discord/ExecuteCommand</code><br>
+                                            Send JSON: <code>{"command": "team", "arguments": ["TDI"]}</code>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+    
+    .list-group-item {
+        border-radius: 5px;
+        margin-bottom: 5px;
+    }
+    
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    .alert {
+        border-radius: 8px;
+    }
+    
+    code {
+        background-color: rgba(255,255,255,0.1);
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #f8f9fa;
+    }
+</style>
+
+<script>
+async function registerCommands() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    
+    try {
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Registering...';
+        button.disabled = true;
+        
+        const response = await fetch('@Url.Action("RegisterDiscordCommands", "Admin")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            button.innerHTML = '<i class="fas fa-check me-2"></i>Commands Registered!';
+            button.classList.remove('btn-primary');
+            button.classList.add('btn-success');
+            
+            // Show success message
+            showAlert('Commands successfully registered with Discord!', 'success');
+        } else {
+            throw new Error(result.message || 'Failed to register commands');
+        }
+    } catch (error) {
+        button.innerHTML = '<i class="fas fa-times me-2"></i>Registration Failed';
+        button.classList.remove('btn-primary');
+        button.classList.add('btn-danger');
+        
+        // Show error message
+        showAlert('Failed to register commands: ' + error.message, 'danger');
+        
+        // Reset button after 3 seconds
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+            button.classList.remove('btn-danger');
+            button.classList.add('btn-primary');
+        }, 3000);
+    }
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Insert at the top of the card body
+    const cardBody = document.querySelector('.card-body');
+    cardBody.insertBefore(alertDiv, cardBody.firstChild);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>

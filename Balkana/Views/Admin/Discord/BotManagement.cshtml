@@ -1,0 +1,241 @@
+@{
+    ViewData["Title"] = "Discord Bot Management";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-dark text-white">
+                <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #1e40af, #dc2626);">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-robot me-2"></i>
+                        Discord Bot Management
+                    </h3>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card bg-dark border-secondary">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-key me-2"></i>
+                                        Bot Configuration
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label text-info">Bot Token:</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control bg-dark text-white border-secondary" 
+                                                   value="@ViewBag.BotToken" readonly>
+                                            <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('@ViewBag.BotToken')">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label text-info">Client ID:</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control bg-dark text-white border-secondary" 
+                                                   value="@ViewBag.ClientId" readonly>
+                                            <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('@ViewBag.ClientId')">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label text-info">Client Secret:</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control bg-dark text-white border-secondary" 
+                                                   value="@ViewBag.ClientSecret" readonly>
+                                            <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('@ViewBag.ClientSecret')">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="alert alert-info bg-dark border-info">
+                                        <h6 class="alert-heading">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            Configuration Instructions
+                                        </h6>
+                                        <p class="mb-0">
+                                            1. Go to <a href="https://discord.com/developers/applications" target="_blank" class="text-primary">Discord Developer Portal</a><br>
+                                            2. Create a new application or select existing one<br>
+                                            3. Go to "Bot" section and copy the token<br>
+                                            4. Copy the Application ID (Client ID)<br>
+                                            5. Update your <code>appsettings.json</code> with these values
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card bg-dark border-secondary">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-cogs me-2"></i>
+                                        Bot Actions
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <form method="post" asp-action="RegisterCommands" class="d-inline">
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="fas fa-upload me-2"></i>
+                                                Register Slash Commands
+                                            </button>
+                                        </form>
+                                        
+                                        <a href="@Url.Action("WebhookInfo")" class="btn btn-outline-info">
+                                            <i class="fas fa-link me-2"></i>
+                                            View Webhook URL
+                                        </a>
+                                        
+                                        <a href="@Url.Action("TestCommand")" class="btn btn-outline-success">
+                                            <i class="fas fa-play me-2"></i>
+                                            Test Commands
+                                        </a>
+                                        
+                                        <a href="@Url.Action("Commands")" class="btn btn-outline-secondary">
+                                            <i class="fas fa-list me-2"></i>
+                                            View All Commands
+                                        </a>
+                                    </div>
+                                    
+                                    <div class="mt-4">
+                                        <h6 class="text-info">Bot Status:</h6>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2">
+                                                <i class="fas fa-circle text-success"></i>
+                                            </div>
+                                            <span>Ready for slash command registration</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card bg-dark border-secondary">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Integration Steps
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="text-center">
+                                                <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                                    <i class="fas fa-1 text-white fa-lg"></i>
+                                                </div>
+                                                <h6>Configure Bot</h6>
+                                                <p class="text-muted small">Update appsettings.json with your Discord bot credentials</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="text-center">
+                                                <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                                    <i class="fas fa-2 text-white fa-lg"></i>
+                                                </div>
+                                                <h6>Register Commands</h6>
+                                                <p class="text-muted small">Click "Register Slash Commands" to deploy commands to Discord</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="text-center">
+                                                <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                                                    <i class="fas fa-3 text-white fa-lg"></i>
+                                                </div>
+                                                <h6>Set Webhook URL</h6>
+                                                <p class="text-muted small">Configure Discord to send interactions to your webhook URL</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show a temporary success message
+        const button = event.target.closest('button');
+        const originalIcon = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check text-success"></i>';
+        
+        setTimeout(() => {
+            button.innerHTML = originalIcon;
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+</script>
+
+<style>
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+    
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    .alert {
+        border-radius: 8px;
+    }
+    
+    code {
+        background-color: rgba(255,255,255,0.1);
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #f8f9fa;
+    }
+    
+    .input-group .btn {
+        border-radius: 0 6px 6px 0;
+    }
+    
+    .form-control:focus {
+        border-color: #1e40af;
+        box-shadow: 0 0 0 0.2rem rgba(30, 64, 175, 0.25);
+    }
+</style>

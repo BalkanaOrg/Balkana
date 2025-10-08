@@ -1,7 +1,9 @@
 ﻿using Balkana.Data;
 using Balkana.Data.Models;
 using Balkana.Models.Admin;
+using Balkana.Models.Discord;
 using Balkana.Services.Admin;
+using Balkana.Services.Discord;
 using Balkana.Services.Players;
 using Balkana.Services.Players.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -289,6 +291,129 @@ namespace Balkana.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Index", "Admin"); // or maybe redirect to a list of clubs later
+        }
+
+        // Discord Bot Management
+        public IActionResult Discord()
+        {
+            return View("Discord/Index");
+        }
+
+        public IActionResult DiscordCommands()
+        {
+            var commands = new List<Balkana.Models.Discord.DiscordCommandViewModel>
+            {
+                new Balkana.Models.Discord.DiscordCommandViewModel
+                {
+                    Command = "/team",
+                    Description = "Get active and benched players for a team",
+                    Usage = "/team <team_tag_or_name>",
+                    Example = "/team TDI or /team Team Diamond"
+                },
+                new Balkana.Models.Discord.DiscordCommandViewModel
+                {
+                    Command = "/player",
+                    Description = "Get basic information for a player",
+                    Usage = "/player <nickname>",
+                    Example = "/player ext1nct"
+                },
+                new Balkana.Models.Discord.DiscordCommandViewModel
+                {
+                    Command = "/transfers",
+                    Description = "Get transfer history for a player",
+                    Usage = "/transfers <nickname>",
+                    Example = "/transfers ext1nct"
+                }
+            };
+
+            return View("Discord/Commands", commands);
+        }
+
+        public IActionResult DiscordTest()
+        {
+            return View("Discord/TestCommand");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DiscordTest(string command, string arguments, [FromServices] IDiscordBotService discordBotService)
+        {
+            try
+            {
+                ViewBag.Command = command;
+                ViewBag.Arguments = arguments;
+
+                if (string.IsNullOrEmpty(command))
+                {
+                    ViewBag.Response = new DiscordCommandResponse
+                    {
+                        Success = false,
+                        Message = "Please select a command."
+                    };
+                    return View("Discord/TestCommand");
+                }
+
+                var argsArray = string.IsNullOrEmpty(arguments) 
+                    ? Array.Empty<string>() 
+                    : arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                var response = await discordBotService.ProcessCommandAsync(command, argsArray);
+
+                ViewBag.Response = new DiscordCommandResponse
+                {
+                    Success = true,
+                    Message = response
+                };
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Response = new DiscordCommandResponse
+                {
+                    Success = false,
+                    Message = $"Error: {ex.Message}"
+                };
+            }
+
+            return View("Discord/TestCommand");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RegisterDiscordCommands([FromServices] IDiscordBotService discordBotService)
+        {
+            try
+            {
+                var success = await discordBotService.RegisterSlashCommandsAsync();
+                
+                if (success)
+                {
+                    return Json(new { success = true, message = "Commands registered successfully!" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Failed to register commands with Discord API." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
+        public IActionResult DiscordDiagnostic()
+        {
+            var user = User;
+            var isAuthenticated = user.Identity?.IsAuthenticated ?? false;
+            var userName = user.Identity?.Name ?? "Unknown";
+            var roles = user.Claims.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).ToList();
+            
+            ViewBag.IsAuthenticated = isAuthenticated;
+            ViewBag.UserName = userName;
+            ViewBag.Roles = roles;
+            ViewBag.IsAdmin = roles.Contains("Administrator");
+            ViewBag.IsModerator = roles.Contains("Moderator");
+            
+            return View("Discord/Diagnostic");
         }
     }
 }

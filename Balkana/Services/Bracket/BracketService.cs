@@ -226,7 +226,8 @@ namespace Balkana.Services.Bracket
 
         private int CalculateOptimalBracketSize(int teamCount)
         {
-            // Round down to previous power-of-2 bracket size
+            // Round DOWN to previous power-of-2 bracket size
+            // This ensures we use the largest bracket that is <= teamCount
             if (teamCount <= 2) return 2;
             if (teamCount <= 4) return 4;
             if (teamCount <= 8) return 8;
