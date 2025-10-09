@@ -84,9 +84,9 @@ namespace Balkana.Controllers
             return RedirectToAction(nameof(Profile), new { id = playerData, information = playerInformation });
         }
 
-        public IActionResult Profile(int id, string information)
+        public IActionResult Profile(int id, string information, string? game = null)
         {
-            var player = this.players.Profile(id);
+            var player = this.players.Profile(id, game);
 
             if (player == null) return NotFound();
 
@@ -95,6 +95,7 @@ namespace Balkana.Controllers
                 return BadRequest();
             }
 
+            ViewBag.SelectedGame = game;
             return View(player); // Bio page
         }
 

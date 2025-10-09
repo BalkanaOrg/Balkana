@@ -1,100 +1,529 @@
 ﻿@model PlayerDetailsServiceModel
 @{
     ViewData["Title"] = Model.Nickname;
+    var selectedGame = ViewBag.SelectedGame as string;
+    var availableGames = Model.GameProfiles.Select(gp => gp.GameName).ToList();
 }
 
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-4 text-center">
+@section Styles {
+    <link rel="stylesheet" href="~/css/player-profile.css" />
+}
+
+<div class="container-fluid px-0 bg-dark">
+    <!-- Hero Section -->
+    <div class="hero-section position-relative">
+        <div class="hero-overlay position-absolute w-100 h-100"></div>
+        <div class="container position-relative">
+            <div class="row align-items-center h-100 py-5">
+                <div class="col-lg-4 text-center">
+                    <div class="player-avatar-container mb-4">
             <img src="@Model.PictureUrl"
                  alt="@Model.Nickname"
-                 class="rounded-circle shadow"
-                 style="width:200px; height:200px; object-fit:cover;" />
-
-            <h2 class="mt-3">@Model.Nickname</h2>
-            <p class="text-muted">@Model.FirstName @Model.LastName</p>
-
-            <div class="d-flex align-items-center justify-content-center mt-2">
+                             class="player-avatar shadow-lg" />
+                    </div>
+                </div>
+                <div class="col-lg-8 text-white">
+                    <h1 class="display-4 fw-bold mb-3">@Model.Nickname</h1>
+                    <h3 class="h5 mb-3 text-light">@Model.FirstName @Model.LastName</h3>
+                    
+                    <div class="d-flex align-items-center mb-4">
                 <img src="@Model.FlagUrl" alt="@Model.NationalityName"
-                     style="width:30px; height:20px; object-fit:cover; margin-right:8px;" />
-                <span>@Model.NationalityName</span>
+                             class="flag-icon me-3" />
+                        <span class="fs-5">@Model.NationalityName</span>
+                    </div>
+
+                    <!-- Game Filter Tabs -->
+                    @if (availableGames.Any())
+                    {
+                        <div class="game-filter-tabs mb-4">
+                            <div class="btn-group" role="group">
+                                <a asp-action="Profile" asp-route-id="@Model.Id" asp-route-information="@Model.GetInformation()"
+                                   class="btn @(string.IsNullOrEmpty(selectedGame) ? "btn-light" : "btn-outline-light")">
+                                    All Games
+                                </a>
+                                @foreach (var game in availableGames)
+                                {
+                                    <a asp-action="Profile" asp-route-id="@Model.Id" asp-route-information="@Model.GetInformation()" asp-route-game="@game"
+                                       class="btn @(selectedGame == game ? "btn-light" : "btn-outline-light")">
+                                        @game
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Trophies Section (Filterable by Game) -->
+                    <div class="trophies-section">
+                        @{
+                            var filteredTrophies = Model.Trophies;
+                            var filteredMVPs = Model.MVPs;
+                            var filteredEVPs = Model.EVPs;
+
+                            if (!string.IsNullOrEmpty(selectedGame))
+                            {
+                                // Filter trophies by selected game - you may need to add game filtering logic to your service
+                                // For now, showing all trophies regardless of game filter
+                            }
+                        }
+
+                        @if (filteredMVPs.Any() || filteredEVPs.Any() || filteredTrophies.Any())
+                        {
+                            <div class="trophy-display">
+                                <div class="trophies-row">
+                                    <!-- MVPs First -->
+                                    @if (filteredMVPs.Any())
+                                    {
+                                        @foreach (var mvp in filteredMVPs)
+                                        {
+                                            <div class="trophy-item mvp-item tooltip">
+                                                <img src="@mvp.IconURL" alt="MVP" class="trophy-icon mvp-icon" />
+                                                @if (filteredMVPs.Count > 1)
+                                                {
+                                                    <span class="trophy-count mvp-count">@filteredMVPs.Count</span>
+                                                }
+                                                <span class="tooltiptext">@mvp.Description</span>
+                                            </div>
+                                        }
+                                    }
+
+                                    <!-- EVPs Second -->
+                                    @if (filteredEVPs.Any())
+                                    {
+                                        @foreach (var evp in filteredEVPs)
+                                        {
+                                            <div class="trophy-item evp-item tooltip">
+                                                <img src="@evp.IconURL" alt="EVP" class="trophy-icon evp-icon" />
+                                                @if (filteredEVPs.Count > 1)
+                                                {
+                                                    <span class="trophy-count evp-count">@filteredEVPs.Count</span>
+                                                }
+                                                <span class="tooltiptext">@evp.Description</span>
+                                            </div>
+                                        }
+                                    }
+
+                                    <!-- Tournament Wins -->
+                                    @if (filteredTrophies.Any())
+                                    {
+                                        @foreach (var trophy in filteredTrophies)
+                                        {
+                                            <div class="trophy-item tooltip" title="@trophy.Description">
+                                                <img src="@trophy.IconURL" alt="@trophy.Description" class="trophy-icon" />
+                                                <span class="tooltiptext">@trophy.Description</span>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-3">
+                                <p class="text-muted">No achievements yet</p>
+                            </div>
+                        }
+                    </div>
+                </div>
             </div>
         </div>
-
     </div>
 
-    <hr />
-
-    <div class="btn-group mt-4">
-        <a asp-action="Profile" asp-route-id="@Model.Id" asp-route-information="@Model.GetInformation()"
-           class="btn btn-primary">Overview</a>
-
-        <a asp-action="Stats" asp-route-id="@Model.Id"
-           class="btn btn-outline-primary">Stats</a>
-    </div>
-
-    <hr />
-
-    <div class="player-trophies">
-        @foreach (var trophy in Model.Trophies)
-        {
-            <img src="@trophy.IconURL" title="@trophy.Description" class="trophy-icon" />
-        }
-
-        @if (Model.MVPs.Any())
-        {
-            <div class="stacked-trophy">
-                <img src="@Model.MVPs.First().IconURL" class="trophy-icon" title="MVPs: @string.Join(", ", Model.MVPs.Select(m => m.Description))" />
-                @if (Model.MVPs.Count > 1)
-                {
-                    <span class="trophy-count">@Model.MVPs.Count</span>
-                }
-            </div>
-        }
-
-        @if (Model.EVPs.Any())
-        {
-            <div class="stacked-trophy">
-                <img src="@Model.EVPs.First().IconURL" class="trophy-icon" title="EVPs: @string.Join(", ", Model.EVPs.Select(m => m.Description))" />
-                @if (Model.EVPs.Count > 1)
-                {
-                    <span class="trophy-count">@Model.EVPs.Count</span>
-                }
-            </div>
-        }
-    </div>
-
-    <hr />
-    <h4>Transfers</h4>
-
-    @if (Model.TransfersByGame.Any())
-    {
-        <ul class="nav nav-tabs" id="transferTabs" role="tablist">
-            @foreach (var game in Model.TransfersByGame.Keys)
-            {
-                var active = game == Model.TransfersByGame.Keys.First() ? "active" : "";
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link @active"
-                            id="@game-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#@game"
-                            type="button"
-                            role="tab">
-                        @game
-                    </button>
-                </li>
-            }
+    <!-- Main Content -->
+    <div class="container py-5">
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-pills nav-fill mb-5" id="profileTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="stats-tab" data-bs-toggle="pill" data-bs-target="#stats" type="button" role="tab">
+                    <i class="fa fa-line-chart me-2"></i>Statistics
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tournaments-tab" data-bs-toggle="pill" data-bs-target="#tournaments" type="button" role="tab">
+                    <i class="fa fa-trophy me-2"></i>Tournaments
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="matches-tab" data-bs-toggle="pill" data-bs-target="#matches" type="button" role="tab">
+                    <i class="fa fa-gamepad me-2"></i>Match History
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="transfers-tab" data-bs-toggle="pill" data-bs-target="#transfers" type="button" role="tab">
+                    <i class="fa fa-exchange me-2"></i>Transfers
+                </button>
+            </li>
         </ul>
 
-        <div class="tab-content mt-3" id="transferTabsContent">
-            @foreach (var kvp in Model.TransfersByGame)
-            {
-                var game = kvp.Key;
-                var transfers = kvp.Value;
-                var active = game == Model.TransfersByGame.Keys.First() ? "show active" : "";
+        <div class="tab-content" id="profileTabsContent">
+            <!-- Statistics Tab -->
+            <div class="tab-pane fade show active" id="stats" role="tabpanel">
+                @if (Model.AverageStatsByGame.Any())
+                {
+                    @foreach (var gameStats in Model.AverageStatsByGame.Where(kvp => string.IsNullOrEmpty(selectedGame) || kvp.Key == selectedGame))
+                    {
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-header bg-gradient text-white">
+                                <h5 class="mb-0"><i class="fa fa-bar-chart me-2"></i>@gameStats.Key Statistics</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <!-- Overall Stats -->
+                                    <div class="col-md-3 mb-3">
+                                        <div class="stat-card text-center p-3 bg-light rounded">
+                                            <div class="stat-value text-primary fw-bold">@gameStats.Value.TotalMatches</div>
+                                            <div class="stat-label text-muted">Matches</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="stat-card text-center p-3 bg-light rounded">
+                                            <div class="stat-value text-success fw-bold">@gameStats.Value.WinRate.ToString("F1")%</div>
+                                            <div class="stat-label text-muted">Win Rate</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="stat-card text-center p-3 bg-light rounded">
+                                            <div class="stat-value text-info fw-bold">@gameStats.Value.Wins</div>
+                                            <div class="stat-label text-muted">Wins</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="stat-card text-center p-3 bg-light rounded">
+                                            <div class="stat-value text-danger fw-bold">@gameStats.Value.Losses</div>
+                                            <div class="stat-label text-muted">Losses</div>
+                                        </div>
+                                    </div>
+    </div>
 
-                <div class="tab-pane fade @active" id="@game" role="tabpanel">
-                    <table class="table table-striped">
+                                @if (gameStats.Value.Source == "FACEIT")
+                                {
+                                    <!-- CS2 Stats -->
+                                    <div class="row mt-4">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-3">Performance</h6>
+                                            <div class="row">
+                                                <div class="col-6 mb-2">
+                                                    <small class="text-muted">K/D/A</small>
+                                                    <div class="fw-bold">@gameStats.Value.AverageKills?.ToString("F1") / @gameStats.Value.AverageDeaths?.ToString("F1") / @gameStats.Value.AverageAssists?.ToString("F1")</div>
+                                                </div>
+                                                <div class="col-6 mb-2">
+                                                    <small class="text-muted">ADR</small>
+                                                    <div class="fw-bold">@gameStats.Value.AverageADR?.ToString("F0")</div>
+                                                </div>
+                                                <div class="col-6 mb-2">
+                                                    <small class="text-muted">HLTV Rating</small>
+                                                    <div class="fw-bold">@gameStats.Value.AverageHLTVRating?.ToString("F2")</div>
+                                                </div>
+                                                <div class="col-6 mb-2">
+                                                    <small class="text-muted">Headshot %</small>
+                                                    <div class="fw-bold">@gameStats.Value.AverageHeadshotPercentage?.ToString("F1")%</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-3">Rates</h6>
+                                            <div class="row">
+                                                <div class="col-6 mb-2">
+                                                    <small class="text-muted">KPR</small>
+                                                    <div class="fw-bold">@gameStats.Value.AverageKPR?.ToString("F2")</div>
+                                                </div>
+                                                <div class="col-6 mb-2">
+                                                    <small class="text-muted">DPR</small>
+                                                    <div class="fw-bold">@gameStats.Value.AverageDPR?.ToString("F2")</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                else if (gameStats.Value.Source == "RIOT")
+                                {
+                                    <!-- LoL Stats -->
+                                    <div class="row mt-4">
+                                        <div class="col-md-6">
+                                            <h6 class="text-muted mb-3">Performance</h6>
+                                            <div class="row">
+                                                <div class="col-6 mb-2">
+                                                    <small class="text-muted">K/D/A</small>
+                                                    <div class="fw-bold">@gameStats.Value.AverageLoLKills?.ToString("F1") / @gameStats.Value.AverageLoLDeaths?.ToString("F1") / @gameStats.Value.AverageLoLAssists?.ToString("F1")</div>
+                                                </div>
+                                                <div class="col-6 mb-2">
+                                                    <small class="text-muted">CS</small>
+                                                    <div class="fw-bold">@gameStats.Value.AverageCreepScore?.ToString("F0")</div>
+                                                </div>
+                                                <div class="col-6 mb-2">
+                                                    <small class="text-muted">Vision Score</small>
+                                                    <div class="fw-bold">@gameStats.Value.AverageVisionScore?.ToString("F1")</div>
+                                                </div>
+                                                <div class="col-6 mb-2">
+                                                    <small class="text-muted">Gold</small>
+                                                    <div class="fw-bold">@gameStats.Value.AverageGoldEarned?.ToString("F0")</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                                <!-- Map Statistics -->
+                                @if (gameStats.Value.MapStats.Any())
+                                {
+                                    <div class="row mt-4">
+                                        <div class="col-12">
+                                            <h6 class="text-muted mb-3">Map Performance</h6>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-dark">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Map</th>
+                                                            <th>Matches</th>
+                                                            <th>Wins</th>
+                                                            <th>Losses</th>
+                                                            <th>Win Rate</th>
+                                                            <th>Pick Rate</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var map in gameStats.Value.MapStats)
+                                                        {
+                                                            <tr>
+                                                                <td>
+                                                                    <div class="d-flex align-items-center">
+                                                                        @if (!string.IsNullOrEmpty(map.MapDisplayName))
+                                                                        {
+                                                                            <img src="@map.PictureURL" 
+                                                                                 alt="@map.MapDisplayName" 
+                                                                                 style="width: 24px; height: 24px; margin-right: 8px; border-radius: 4px;" />
+                                                                        }
+                                                                        @map.MapDisplayName
+                                                                    </div>
+                                                                </td>
+                                                                <td>@map.MatchesPlayed</td>
+                                                                <td class="text-success">@map.Wins</td>
+                                                                <td class="text-danger">@map.Losses</td>
+                                                                <td>
+                                                                    <span class="badge bg-@(map.WinRate >= 50 ? "success" : "danger")">
+                                                                        @map.WinRate.ToString("F1")%
+                                                                    </span>
+                                                                </td>
+                                                                <td>
+                                                                    <span class="badge bg-info">
+                                                                        @map.PickRate.ToString("F1")%
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                        <div class="card">
+                            <div class="card-body text-center py-5">
+                                <i class="fa fa-line-chart fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No statistics available</h5>
+                                <p class="text-muted">Statistics will appear here once the player participates in matches.</p>
+                            </div>
+                        </div>
+                }
+            </div>
+
+            <!-- Tournaments Tab -->
+            <div class="tab-pane fade" id="tournaments" role="tabpanel">
+                @if (Model.TournamentParticipationByGame.Any())
+                {
+                    @foreach (var gameParticipation in Model.TournamentParticipationByGame.Where(kvp => string.IsNullOrEmpty(selectedGame) || kvp.Key == selectedGame))
+                    {
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-header bg-gradient text-white">
+                                <h5 class="mb-0"><i class="fa fa-trophy me-2"></i>@gameParticipation.Key Tournaments</h5>
+                            </div>
+                            <div class="card-body">
+                                @if (gameParticipation.Value.Any())
+                                {
+                                    <div class="row">
+                                        @foreach (var tournament in gameParticipation.Value)
+                                        {
+                                            <div class="col-lg-6 mb-4">
+                                                <div class="tournament-card border rounded p-3 h-100">
+                                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                                        <div>
+                                                            <h6 class="mb-1">@tournament.TournamentName</h6>
+                                                            <small class="text-muted">@tournament.OrganizerName</small>
+                                                        </div>
+                                                        @if (tournament.Placement.HasValue)
+                                                        {
+                                                            <span class="badge bg-@(tournament.Placement <= 3 ? "warning" : "secondary") fs-6">
+                                                                @(tournament.Placement == 1 ? "🥇" : tournament.Placement == 2 ? "🥈" : tournament.Placement == 3 ? "🥉" : "#" + tournament.Placement)
+                                                            </span>
+        }
+    </div>
+
+                                                    <div class="row mb-3">
+                                                        <div class="col-6">
+                                                            <small class="text-muted">Team</small>
+                                                            <div class="fw-bold">@tournament.TeamTag</div>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <small class="text-muted">Series Record</small>
+                                                            <div class="fw-bold">@tournament.SeriesWins - @tournament.SeriesLosses</div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="row mb-3">
+                                                        <div class="col-6">
+                                                            <small class="text-muted">Match Record</small>
+                                                            <div class="fw-bold">@tournament.MatchWins - @tournament.MatchLosses</div>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <small class="text-muted">Prize Pool</small>
+                                                            <div class="fw-bold">$@tournament.PrizePool.ToString("N0")</div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <small class="text-muted">@tournament.StartDate.ToString("MMM yyyy")</small>
+                                                        @if (tournament.PointsAwarded.HasValue)
+                                                        {
+                                                            <span class="badge bg-primary">@tournament.PointsAwarded pts</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-center py-4">
+                                        <i class="fa fa-trophy fa-3x text-muted mb-3"></i>
+                                        <h6 class="text-muted">No tournament participation</h6>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="card">
+                        <div class="card-body text-center py-5">
+                            <i class="fa fa-trophy fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No tournament participation</h5>
+                            <p class="text-muted">Tournament history will appear here once the player participates in tournaments.</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Match History Tab -->
+            <div class="tab-pane fade" id="matches" role="tabpanel">
+                @if (Model.MatchHistoryByGame.Any())
+                {
+                    @foreach (var gameHistory in Model.MatchHistoryByGame.Where(kvp => string.IsNullOrEmpty(selectedGame) || kvp.Key == selectedGame))
+                    {
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-header bg-gradient text-white">
+                                <h5 class="mb-0"><i class="fa fa-gamepad me-2"></i>@gameHistory.Key Match History</h5>
+                            </div>
+                            <div class="card-body">
+                                @if (gameHistory.Value.TournamentGroups.Any())
+                                {
+                                    @foreach (var tournament in gameHistory.Value.TournamentGroups)
+                                    {
+                                        <div class="tournament-group mb-4">
+                                            <div class="tournament-header d-flex align-items-center mb-3 p-3 bg-light rounded">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-1">@tournament.TournamentName</h6>
+                                                    <small class="text-muted">@tournament.OrganizerName • @tournament.StartDate.ToString("MMM yyyy")</small>
+                                                </div>
+                                            </div>
+                                            
+                                            @foreach (var series in tournament.SeriesGroups)
+                                            {
+                                                <div class="series-group mb-3 border-left @(series.IsSeriesWinner ? "border-success" : "border-danger") border-3 ps-3">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <div>
+                                                            <h6 class="mb-1">@series.SeriesName</h6>
+                                                            <small class="text-muted">@series.DatePlayed.ToString("MMM dd, yyyy")</small>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <span class="badge bg-@(series.IsSeriesWinner ? "success" : "danger")">
+                                                                @series.MatchWins - @series.MatchLosses
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="matches-list">
+                                                        @foreach (var match in series.Matches)
+                                                        {
+                                                            <div class="match-item d-flex justify-content-between align-items-center p-2 mb-1 bg-light rounded">
+                                                                <div class="d-flex align-items-center">
+                                                                    <span class="badge bg-@(match.IsWinner ? "success" : "danger") me-2">@(match.IsWinner ? "W" : "L")</span>
+                                                                    <span class="me-3">@match.MapName</span>
+                                                                    @if (match.CS2Stats != null)
+                                                                    {
+                                                                        <small class="text-muted">
+                                                                            @match.CS2Stats.Kills/@match.CS2Stats.Deaths/@match.CS2Stats.Assists
+                                                                            (@match.CS2Stats.HLTV1.ToString("F2"))
+                                                                        </small>
+                                                                    }
+                                                                    else if (match.LoLStats != null)
+                                                                    {
+                                                                        <small class="text-muted">
+                                                                            @match.LoLStats.Kills/@match.LoLStats.Deaths/@match.LoLStats.Assists
+                                                                            (@match.LoLStats.ChampionName)
+                                                                        </small>
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="text-center py-4">
+                                        <i class="fa fa-gamepad fa-3x text-muted mb-3"></i>
+                                        <h6 class="text-muted">No match history</h6>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="card">
+                        <div class="card-body text-center py-5">
+                            <i class="fa fa-gamepad fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No match history</h5>
+                            <p class="text-muted">Match history will appear here once the player participates in matches.</p>
+                        </div>
+            </div>
+        }
+    </div>
+
+            <!-- Transfers Tab -->
+            <div class="tab-pane fade" id="transfers" role="tabpanel">
+    @if (Model.TransfersByGame.Any())
+    {
+                    @foreach (var gameTransfers in Model.TransfersByGame.Where(kvp => string.IsNullOrEmpty(selectedGame) || kvp.Key == selectedGame))
+                    {
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-header bg-gradient text-white">
+                                <h5 class="mb-0"><i class="fa fa-exchange me-2"></i>@gameTransfers.Key Transfers</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
                         <thead>
                             <tr>
                                 <th>Team</th>
@@ -104,69 +533,67 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var t in transfers)
+                            @foreach (var transfer in gameTransfers.Value)
                             {
                                 <tr>
-                                    <td>@t.TeamFullName</td>
-                                    <td>@t.Position</td>
-                                    <td>@t.StartDate.ToShortDateString() - @(t.EndDate?.ToShortDateString() ?? "Present")</td>
-                                    <td>@t.Status</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2">
+                                                <img src="@(transfer.LogoURL)" alt="Team" style="width: 24px; height: 24px; object-fit: cover;" />
+                                            </div>
+                                            @transfer.TeamFullName
+                                        </div>
+                                    </td>
+                                    <td>@transfer.Position</td>
+                                    <td>
+                                        <small>@transfer.StartDate.ToShortDateString() - @(transfer.EndDate?.ToShortDateString() ?? "Present")</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@(transfer.Status.ToString() == "Active" ? "success" : "secondary")">
+                                            @transfer.Status
+                                        </span>
+                                    </td>
                                 </tr>
                             }
                         </tbody>
                     </table>
                 </div>
-            }
+                            </div>
         </div>
+                    }
     }
     else
     {
-        <p class="text-muted">No transfers recorded.</p>
-    }
+                    <div class="card">
+                        <div class="card-body text-center py-5">
+                            <i class="fa fa-exchange fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No transfer history</h5>
+                            <p class="text-muted">Transfer history will appear here once the player joins teams.</p>
+                        </div>
+                    </div>
+                }
 
-    <div class="row mt-4">
-        <div class="col-md-8 offset-md-2">
-            <h4>Profile Pictures History</h4>
-            <div class="d-flex flex-wrap gap-3 mt-2">
-                @foreach (var pic in Model.PlayerPictures)
+                <!-- Profile Pictures Section -->
+                @if (Model.PlayerPictures.Any())
                 {
-                    <div class="text-center">
-                        <img src="@pic.PictureUrl" alt="Old picture"
-                             class="rounded shadow-sm"
-                             style="width:100px; height:100px; object-fit:cover;" />
-                        <div class="small text-muted">@pic.DateChanged.ToShortDateString()</div>
+                    <div class="card mt-4 shadow-sm">
+                        <div class="card-header bg-gradient text-white">
+                            <h5 class="mb-0"><i class="fa fa-image me-2"></i>Profile Pictures</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="profile-pictures-grid">
+                                @foreach (var pic in Model.PlayerPictures)
+                                {
+                                    <div class="profile-pic-item">
+                                        <img src="@pic.PictureUrl" alt="Profile Picture" class="profile-pic-thumb" />
+                                        <small class="text-muted d-block mt-1">@pic.DateChanged.ToString("MMM yyyy")</small>
+                                    </div>
+                                }
+                            </div>
+                        </div>
                     </div>
                 }
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .player-trophies {
-        display: flex;
-        gap: 8px;
-    }
-
-    .trophy-icon {
-        width: 32px;
-        height: 32px;
-        border-radius: 4px;
-    }
-
-    .stacked-trophy {
-        position: relative;
-        display: inline-block;
-    }
-
-    .trophy-count {
-        position: absolute;
-        bottom: -5px;
-        right: -5px;
-        background-color: #222;
-        color: #fff;
-        font-size: 12px;
-        border-radius: 50%;
-        padding: 2px 5px;
-    }
-</style>

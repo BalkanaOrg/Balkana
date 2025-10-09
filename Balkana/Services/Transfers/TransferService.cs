@@ -151,6 +151,7 @@ namespace Balkana.Services.Transfers
                 TeamFullName = t.Team != null ? t.Team.FullName : "Free Agent",
                 GameId = t.Team != null ? t.Team.GameId : 0,
                 GameName = t.Team != null ? t.Team.Game.FullName : "-",
+                IconUrl = t.Team.Game.IconURL,
                 StartDate = t.StartDate,
                 EndDate = t.EndDate,
                 Status = t.Status,

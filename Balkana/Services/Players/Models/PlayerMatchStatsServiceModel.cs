@@ -7,6 +7,7 @@ namespace Balkana.Services.Players.Models
         public int MatchId { get; set; }
         public DateTime PlayedAt { get; set; }
         public string Opponent { get; set; }
+        public string MapName { get; set; }
         public bool IsWinner { get; set; }
 
         // One of the following gets filled depending on game:

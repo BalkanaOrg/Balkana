@@ -1,4 +1,5 @@
 using Balkana.Data;
+using Balkana.Data.Models;
 using Balkana.Models.Discord;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -19,6 +20,11 @@ namespace Balkana.Services.Discord
         private readonly DiscordConfig _discordConfig;
         private readonly HttpClient _httpClient;
         private readonly ILogger<DiscordBotService> _logger;
+        
+        // Cache for emojis to avoid repeated API calls
+        private static Dictionary<string, string>? _emojiCache;
+        private static DateTime _lastCacheUpdate = DateTime.MinValue;
+        private static readonly TimeSpan CacheExpiration = TimeSpan.FromHours(1); // Cache for 1 hour
 
         public DiscordBotService(ApplicationDbContext context, IOptions<DiscordConfig> discordConfig, HttpClient httpClient, ILogger<DiscordBotService> logger)
         {
@@ -72,6 +78,9 @@ namespace Balkana.Services.Discord
                 return $"❌ Team '{searchTerm}' not found.";
             }
 
+            // Get team emoji (bot's custom emoji with fallback to Unicode)
+            var teamEmoji = await GetTeamEmojiAsync(team.Tag, team.FullName);
+
             var today = DateTime.Today;
 
             // Get active players (EndDate is null)
@@ -104,7 +113,7 @@ namespace Balkana.Services.Discord
                 })
                 .ToListAsync();
 
-            var result = $"**{team.FullName} ({team.Tag})**\n";
+            var result = $"{teamEmoji} **{team.FullName} ({team.Tag})**\n";
 
             if (activePlayers.Any())
             {
@@ -195,7 +204,7 @@ namespace Balkana.Services.Discord
             var transfers = await _context.PlayerTeamTransfers
                 .Include(pt => pt.Team)
                 .Include(pt => pt.TeamPosition)
-                .Where(pt => pt.PlayerId == player.Id && pt.Status.ToString() != "FreeAgent")
+                .Where(pt => pt.PlayerId == player.Id && pt.Status != PlayerTeamStatus.FreeAgent)
                 .OrderByDescending(pt => pt.StartDate)
                 .ToListAsync();
 
@@ -212,16 +221,154 @@ namespace Balkana.Services.Discord
                 var endDate = transfer.EndDate?.ToString("MMM dd, yyyy") ?? "Now";
                 
                 // Format position based on status
-                var positionText = transfer.Status.ToString() == "Benched" 
+                var positionText = transfer.Status == PlayerTeamStatus.Benched 
                     ? $"{transfer.TeamPosition.Name} (Benched)"
                     : transfer.TeamPosition.Name;
 
-                result += $"**{transfer.Team.FullName} ({transfer.Team.Tag})**\n";
+                // Get team emoji for transfer history
+                var transferTeamEmoji = await GetTeamEmojiAsync(transfer.Team.Tag, transfer.Team.FullName);
+                result += $"{transferTeamEmoji} **{transfer.Team.FullName}**\n";
                 result += $"• Position: {positionText}\n";
                 result += $"• Period: {startDate} - {endDate}\n\n";
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Fetches emojis from Discord API and caches them
+        /// </summary>
+        private async Task<Dictionary<string, string>> FetchEmojisAsync()
+        {
+            // Check if cache is still valid
+            if (_emojiCache != null && DateTime.UtcNow - _lastCacheUpdate < CacheExpiration)
+            {
+                return _emojiCache;
+            }
+
+            try
+            {
+                if (string.IsNullOrEmpty(_discordConfig.GuildId) || _discordConfig.GuildId == "YOUR_DISCORD_SERVER_ID")
+                {
+                    _logger.LogWarning("Discord GuildId not configured. Using fallback emojis.");
+                    return new Dictionary<string, string>();
+                }
+
+                var response = await _httpClient.GetAsync($"https://discord.com/api/v10/guilds/{_discordConfig.GuildId}/emojis");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("Failed to fetch emojis from Discord API. Status: {StatusCode}", response.StatusCode);
+                    return new Dictionary<string, string>();
+                }
+
+                var emojis = await response.Content.ReadFromJsonAsync<DiscordEmoji[]>();
+                
+                if (emojis == null)
+                {
+                    _logger.LogWarning("No emojis found or failed to deserialize response.");
+                    return new Dictionary<string, string>();
+                }
+
+                var emojiDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                
+                foreach (var emoji in emojis)
+                {
+                    if (emoji.Available != false) // Include available emojis (null means available)
+                    {
+                        var emojiString = emoji.Animated == true 
+                            ? $"<a:{emoji.Name}:{emoji.Id}>" 
+                            : $"<:{emoji.Name}:{emoji.Id}>";
+                        
+                        emojiDict[emoji.Name] = emojiString;
+                        _logger.LogDebug("Cached emoji: {Name} -> {EmojiString}", emoji.Name, emojiString);
+                    }
+                }
+
+                // Update cache
+                _emojiCache = emojiDict;
+                _lastCacheUpdate = DateTime.UtcNow;
+                
+                _logger.LogInformation("Successfully fetched and cached {Count} emojis from Discord", emojiDict.Count);
+                return emojiDict;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching emojis from Discord API");
+                return _emojiCache ?? new Dictionary<string, string>();
+            }
+        }
+
+        /// <summary>
+        /// Gets the appropriate emoji for a team tag or full name.
+        /// Uses bot's custom emojis uploaded to Discord Developer Portal.
+        /// Format: <:TAG:id> or <:FULL_NAME:id>
+        /// </summary>
+        private async Task<string> GetTeamEmojiAsync(string teamTag, string? teamFullName = null)
+        {
+            try
+            {
+                // Fetch emojis from Discord API
+                var emojis = await FetchEmojisAsync();
+
+                // First try to find by team tag
+                if (emojis.TryGetValue(teamTag, out var emoji))
+                {
+                    _logger.LogDebug("Found emoji for team tag '{TeamTag}': {Emoji}", teamTag, emoji);
+                    return emoji;
+                }
+
+                // Then try to find by team full name
+                if (!string.IsNullOrEmpty(teamFullName) && emojis.TryGetValue(teamFullName, out emoji))
+                {
+                    _logger.LogDebug("Found emoji for team full name '{TeamFullName}': {Emoji}", teamFullName, emoji);
+                    return emoji;
+                }
+
+                _logger.LogDebug("No custom emoji found for team tag '{TeamTag}' or full name '{TeamFullName}', using Unicode fallback", teamTag, teamFullName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching emoji for team tag '{TeamTag}'", teamTag);
+            }
+
+            // Fallback to Unicode emojis if no custom emoji found
+            var unicodeEmoji = teamTag.ToUpper() switch
+            {
+                "TDI" => "💎", // Diamond
+                "NAVI" => "🚀", // Navigation/Rocket
+                "FAZE" => "⚡", // Lightning
+                "G2" => "🎯", // Target
+                "VITALITY" => "🐝", // Bee
+                "HEROIC" => "🛡️", // Shield
+                "ASTRA" => "⭐", // Star
+                "LIQUID" => "💧", // Liquid drop
+                "C9" => "☁️", // Cloud
+                "TSM" => "🔥", // Fire
+                "FNATIC" => "🦁", // Lion
+                "NIP" => "🐺", // Wolf
+                "VP" => "🐻", // Bear
+                "SPIRIT" => "👻", // Spirit/Ghost
+                "BIG" => "🐘", // Elephant
+                "MOUZ" => "🐭", // Mouse
+                "OG" => "🌊", // Ocean wave
+                "ENCE" => "🦅", // Eagle
+                "FURIA" => "🔥", // Fire
+                "PAIN" => "💀", // Skull
+                "MIBR" => "🇧🇷", // Brazil flag
+                "LOUD" => "📢", // Loudspeaker
+                "LEV" => "🏔️", // Mountain
+                "KOI" => "🐟", // Fish
+                "GLADIATORS" => "⚔️", // Crossed swords
+                "SENTINELS" => "🛡️", // Shield
+                "OPTIC" => "👁️", // Eye
+                "100T" => "💯", // Hundred
+                "NRG" => "⚡", // Lightning bolt
+                "CLOUD9" => "☁️", // Cloud
+                _ => "🏆" // Default trophy emoji
+            };
+
+            return unicodeEmoji;
         }
 
         public async Task<bool> RegisterSlashCommandsAsync()

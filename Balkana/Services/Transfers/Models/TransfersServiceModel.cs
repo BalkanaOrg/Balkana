@@ -14,6 +14,7 @@ namespace Balkana.Services.Transfers.Models
 
         public int GameId { get; set; }
         public string GameName { get; set; }
+        public string IconUrl { get; set; }
 
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; } // null = still ongoing

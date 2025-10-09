@@ -25,7 +25,7 @@ namespace Balkana.Services.Players
             string lastname,
             int nationalityId);
 
-        PlayerDetailsServiceModel Profile(int playerId);
+        PlayerDetailsServiceModel Profile(int playerId, string? gameFilter = null);
 
         PlayerStatsServiceModel Stats(int id, string? gameFilter = null);
 

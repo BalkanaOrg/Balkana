@@ -16,6 +16,8 @@ namespace Balkana.Services.Transfers.Models
         public int GameId { get; set; }
         public string GameName { get; set; }
 
+        public string LogoURL { get; set; }
+
         public int PositionId { get; set; }
         public string Position { get; set; }
 

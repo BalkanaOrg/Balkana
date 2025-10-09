@@ -5,6 +5,8 @@
         Active,    // Playing normally in the roster
         Benched,   // On team but not active
         Retired,   // Career ended
-        FreeAgent  // Not tied to any team
+        FreeAgent,  // Not tied to any team
+        Substitute,
+        EmergencySubstitute
     }
 }

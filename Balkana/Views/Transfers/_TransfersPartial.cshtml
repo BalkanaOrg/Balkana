@@ -5,7 +5,7 @@
 {
     <tr onclick="window.location.href='@Url.Action("Details", "Transfers", new { id = tr.Id })'">
         <td>@tr.Id</td>
-        <td><img src="@tr.GameName" width="30px" height="30px" /></td>
+        <td><img src="@tr.IconUrl" width="30px" height="30px" /></td>
         <td>@tr.PlayerUsername</td>
         <td>@tr.TeamFullName</td>
         <td>
