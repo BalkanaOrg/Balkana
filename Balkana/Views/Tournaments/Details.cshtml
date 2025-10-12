@@ -66,12 +66,9 @@
                         
                         @if (!Model.Placements.Any())
                         {
-                            <form asp-action="Conclude" method="post" class="d-inline">
-                                <input type="hidden" name="id" value="@Model.Id" />
-                                <button type="submit" class="btn btn-warning btn-lg w-100 mb-2" onclick="return confirm('Are you sure you want to conclude this tournament? This will generate final placements and award points.')">
-                                    <i class="fas fa-flag-checkered"></i> Conclude Tournament
-                                </button>
-                            </form>
+                            <a asp-action="Conclude" asp-route-id="@Model.Id" class="btn btn-warning btn-lg w-100 mb-2">
+                                <i class="fas fa-flag-checkered"></i> Conclude Tournament
+                            </a>
                         }
                     }
                 </div>
@@ -202,20 +199,20 @@
             <form id="forfeitForm" method="post" asp-controller="MatchHistory" asp-action="ForfeitSeries">
                 <input type="hidden" id="forfeitSeriesId" name="seriesId" />
                 <div class="mb-3">
-                    <label for="forfeitingTeamId" class="form-label">Select team that forfeited:</label>
-                    <select class="form-select" id="forfeitingTeamId" name="forfeitingTeamId" required>
+                    <label for="winningTeamId" class="form-label">Select team that advances:</label>
+                    <select class="form-select" id="winningTeamId" name="winningTeamId" required>
                         <option value="">Choose team...</option>
                     </select>
                 </div>
                 <div class="mb-3">
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <strong>Warning:</strong> This action cannot be undone. The selected team will forfeit the series and the opponent will advance.
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Note:</strong> Select which team should advance. The other team will be marked as forfeiting.
                     </div>
                 </div>
                 <div class="d-flex justify-content-end gap-2">
                     <button type="button" class="btn btn-secondary" onclick="closeForfeitModal()">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Confirm Forfeit</button>
+                    <button type="submit" class="btn btn-success">Confirm Advancement</button>
                 </div>
             </form>
         </div>

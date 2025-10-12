@@ -383,6 +383,10 @@ body {
     border-radius: 2px;
 }
 
+.border-success {
+    color: green;
+}
+
 .series-group.border-success::before {
     background: linear-gradient(to bottom, #28a745, #20c997);
 }
@@ -699,14 +703,16 @@ body {
 .trophies-row {
     display: flex;
     gap: 15px;
+    padding: 10px 0;
+    align-items: center;
+    /* Only show scrollbar when content actually overflows */
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 10px 0;
     scrollbar-width: thin;
     scrollbar-color: var(--accent-blue) var(--primary-black);
-    align-items: center;
 }
 
+/* Hide scrollbar by default, only show when content overflows */
 .trophies-row::-webkit-scrollbar {
     height: 6px;
 }
@@ -723,6 +729,11 @@ body {
 
 .trophies-row::-webkit-scrollbar-thumb:hover {
     background: var(--accent-red);
+}
+
+/* Only show scrollbar when there's actual overflow */
+.trophies-row {
+    scrollbar-gutter: stable;
 }
 
 .trophy-item {
@@ -785,4 +796,275 @@ body {
     text-align: center;
     color: var(--text-muted);
     font-style: italic;
+}
+
+/* Map Cards Styling */
+.map-card {
+    background: var(--secondary-black);
+    border: 1px solid var(--border-dark);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.map-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 123, 255, 0.15);
+    border-color: var(--accent-blue);
+}
+
+.map-card-header {
+    position: relative;
+    height: 80px;
+    overflow: hidden;
+}
+
+.map-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.8);
+    transition: all 0.3s ease;
+}
+
+.map-card:hover .map-image {
+    filter: brightness(1);
+    transform: scale(1.05);
+}
+
+.map-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    padding: 15px 12px 8px;
+    color: white;
+}
+
+.map-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.2;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.map-pickrate {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.map-stats {
+    padding: 15px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.map-stats .stat-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.map-stats .stat-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.winrate-section {
+    text-align: center;
+    margin: 12px 0;
+}
+
+.winrate-badge {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.hltv-rating {
+    margin-top: auto;
+    text-align: center;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-dark);
+}
+
+.rating-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.rating-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent-blue);
+    text-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+}
+
+/* Responsive adjustments for map cards */
+@media (max-width: 768px) {
+    .map-card-header {
+        height: 70px;
+    }
+    
+    .map-name {
+        font-size: 0.8rem;
+    }
+    
+    .map-pickrate {
+        font-size: 0.7rem;
+    }
+    
+    .map-stats {
+        padding: 12px;
+    }
+    
+    .map-stats .stat-value {
+        font-size: 1rem;
+    }
+    
+    .rating-value {
+        font-size: 1.1rem;
+    }
+}
+
+/* Match History Table Styling */
+.matches-table {
+    margin-bottom: 0;
+}
+
+.matches-table thead th {
+    background-color: var(--tertiary-black);
+    border-bottom: 2px solid var(--accent-blue);
+    color: var(--text-primary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    padding: 12px 8px;
+}
+
+.matches-table tbody tr {
+    border-bottom: 1px solid var(--border-dark);
+    transition: all 0.2s ease;
+}
+
+.matches-table tbody tr:hover {
+    background-color: var(--tertiary-black);
+}
+
+/* Alternating row styles */
+.match-row-even {
+    background-color: var(--secondary-black);
+}
+
+.match-row-odd {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.match-row-even:hover,
+.match-row-odd:hover {
+    background-color: var(--tertiary-black);
+}
+
+/* Series win/loss border indicators */
+.series-winner {
+    border-left: 4px solid green !important;
+}
+
+.series-loser {
+    border-left: 4px solid var(--accent-red) !important;
+}
+
+.series-winner:hover,
+.series-loser:hover {
+    background-color: var(--tertiary-black);
+}
+
+.matches-table tbody td {
+    padding: 12px 8px;
+    vertical-align: middle;
+    border-top: none;
+    color: var(--text-primary);
+}
+
+.matches-table .rating-value {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Rating color classes */
+.matches-table .rating-low {
+    color: var(--accent-red);
+}
+
+.matches-table .rating-medium {
+    color: white;
+}
+
+.matches-table .rating-high {
+    color: green;
+}
+
+/* Badge styling in match table */
+.matches-table .badge {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+/* Team logo and name styling */
+.matches-table .team-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.matches-table img {
+    border: 1px solid var(--border-dark);
+}
+
+
+/* +/- styling */
+.matches-table .text-success {
+    color: var(--accent-blue) !important;
+    font-weight: 600;
+}
+
+.matches-table .text-danger {
+    color: var(--accent-red) !important;
+    font-weight: 600;
+}
+
+/* Responsive adjustments for match table */
+@media (max-width: 768px) {
+    .matches-table {
+        font-size: 0.8rem;
+    }
+    
+    .matches-table thead th {
+        font-size: 0.7rem;
+        padding: 8px 4px;
+    }
+    
+    .matches-table tbody td {
+        padding: 8px 4px;
+    }
+    
+    .matches-table .badge {
+        font-size: 0.6rem;
+        padding: 2px 6px;
+    }
 }

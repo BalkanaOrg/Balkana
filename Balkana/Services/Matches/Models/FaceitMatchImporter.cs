@@ -38,9 +38,10 @@ namespace Balkana.Services.Matches.Models
             // 3. Resolve teams once (same across maps)
             var firstRound = statsResponse.rounds.First();
             var firstTeamStats = firstRound.teams;
+            var matchDate = DateTimeOffset.FromUnixTimeSeconds(response.started_at).UtcDateTime;
 
-            var dbTeam1 = await ResolveTeamAsync(db, firstTeamStats[0].players.Select(p => p.player_id));
-            var dbTeam2 = await ResolveTeamAsync(db, firstTeamStats[1].players.Select(p => p.player_id));
+            var dbTeam1 = await ResolveTeamAsync(db, firstTeamStats[0].players.Select(p => p.player_id), matchDate);
+            var dbTeam2 = await ResolveTeamAsync(db, firstTeamStats[1].players.Select(p => p.player_id), matchDate);
 
             // 4. Loop over each map
             foreach (var round in statsResponse.rounds)
@@ -51,6 +52,50 @@ namespace Balkana.Services.Matches.Models
                 // Determine winning team from round stats
                 var winningTeamId = round.round_stats.Winner;
                 var winningTeam = winningTeamId == firstTeamStats[0].team_id ? dbTeam1 : dbTeam2;
+
+                // Parse round scores from the Score field (e.g., "2 / 13" or "8 / 13")
+                var scoreParts = round.round_stats.Score?.Split('/') ?? new string[0];
+                var teamARounds = 0;
+                var teamBRounds = 0;
+
+                if (scoreParts.Length == 2)
+                {
+                    // Determine which team is which based on winning team
+                    if (winningTeamId == firstTeamStats[0].team_id)
+                    {
+                        // First team won, so they have the higher score
+                        if (int.TryParse(scoreParts[0].Trim(), out var score1) && int.TryParse(scoreParts[1].Trim(), out var score2))
+                        {
+                            if (score1 > score2)
+                            {
+                                teamARounds = score1;
+                                teamBRounds = score2;
+                            }
+                            else
+                            {
+                                teamARounds = score2;
+                                teamBRounds = score1;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Second team won, so they have the higher score
+                        if (int.TryParse(scoreParts[0].Trim(), out var score1) && int.TryParse(scoreParts[1].Trim(), out var score2))
+                        {
+                            if (score1 > score2)
+                            {
+                                teamARounds = score2;
+                                teamBRounds = score1;
+                            }
+                            else
+                            {
+                                teamARounds = score1;
+                                teamBRounds = score2;
+                            }
+                        }
+                    }
+                }
 
                 var match = new MatchCS
                 {
@@ -70,6 +115,11 @@ namespace Balkana.Services.Matches.Models
                     TeamBSourceSlot = "Team2",
                     WinnerTeam = winningTeam,
                     WinnerTeamId = winningTeam?.Id,
+                    
+                    // Round information
+                    TeamARounds = teamARounds,
+                    TeamBRounds = teamBRounds,
+                    TotalRounds = totalRounds,
                     
                     PlayerStats = new List<PlayerStatistic>()
                 };
@@ -174,23 +224,28 @@ namespace Balkana.Services.Matches.Models
             return map.Id;
         }
 
-        private async Task<Team> ResolveTeamAsync(ApplicationDbContext db, IEnumerable<string> playerIds)
+        private async Task<Team> ResolveTeamAsync(ApplicationDbContext db, IEnumerable<string> playerIds, DateTime matchDate)
         {
-            // Get all teams with their active transfers and game profiles
+            // Get all teams with their transfers (both active and inactive) and game profiles
             var teams = await db.Teams
-                .Include(t => t.Transfers.Where(tr => tr.Status == PlayerTeamStatus.Active))
+                .Include(t => t.Transfers)
                     .ThenInclude(tr => tr.Player)
                         .ThenInclude(p => p.GameProfiles.Where(gp => gp.Provider == "FACEIT"))
                 .ToListAsync();
 
-            // Find the team that has the most matching players
+            // Find the team that has the most matching players based on their team affiliation at the time of the match
             Team bestMatch = null;
             int maxMatches = 0;
 
             foreach (var team in teams)
             {
+                // Count players who were on this team at the time of the match
                 var matchingPlayers = team.Transfers
-                    .Where(tr => tr.Player.GameProfiles.Any(gp => playerIds.Contains(gp.UUID)))
+                    .Where(tr => 
+                        tr.Player.GameProfiles.Any(gp => playerIds.Contains(gp.UUID)) &&
+                        tr.Status == PlayerTeamStatus.Active &&
+                        tr.StartDate <= matchDate &&
+                        (tr.EndDate == null || tr.EndDate >= matchDate))
                     .Count();
 
                 if (matchingPlayers > maxMatches)
@@ -200,6 +255,33 @@ namespace Balkana.Services.Matches.Models
                 }
             }
 
+            Console.WriteLine($"🎯 Team resolution for match on {matchDate:yyyy-MM-dd}: Found {maxMatches} matching players for team {bestMatch?.FullName ?? "null"}");
+            
+            // Debug: Show all teams and their matching player counts
+            if (maxMatches == 0)
+            {
+                Console.WriteLine($"⚠️ No team matches found for player IDs: {string.Join(", ", playerIds)}");
+                foreach (var team in teams)
+                {
+                    var teamMatches = team.Transfers
+                        .Where(tr => tr.Player.GameProfiles.Any(gp => playerIds.Contains(gp.UUID)))
+                        .Select(tr => new { 
+                            Player = tr.Player.Nickname, 
+                            StartDate = tr.StartDate, 
+                            EndDate = tr.EndDate,
+                            WasActiveAtMatch = tr.Status == PlayerTeamStatus.Active && 
+                                             tr.StartDate <= matchDate && 
+                                             (tr.EndDate == null || tr.EndDate >= matchDate)
+                        })
+                        .ToList();
+                    
+                    if (teamMatches.Any())
+                    {
+                        Console.WriteLine($"   Team {team.FullName}: {string.Join(", ", teamMatches.Select(tm => $"{tm.Player} ({tm.StartDate:yyyy-MM-dd} to {tm.EndDate?.ToString("yyyy-MM-dd") ?? "present"}) - Active at match: {tm.WasActiveAtMatch}"))}");
+                    }
+                }
+            }
+            
             return bestMatch;
         }
     }

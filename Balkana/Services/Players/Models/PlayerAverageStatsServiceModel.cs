@@ -46,5 +46,6 @@ namespace Balkana.Services.Players.Models
         public double WinRate => MatchesPlayed > 0 ? (double)Wins / MatchesPlayed * 100 : 0;
         public double PickRate { get; set; } // Percentage of total matches played on this map
         public bool IsActiveDuty { get; set; }
+        public double AverageHLTVRating { get; set; }
     }
 }

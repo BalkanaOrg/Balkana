@@ -6,7 +6,7 @@ namespace Balkana.Models.Transfers
     using System.ComponentModel.DataAnnotations;
 
 
-    using static Data.DataConstants;
+    using static Balkana.Data.DataConstants;
     public class AddTransferFormModel
     {
         [Required]

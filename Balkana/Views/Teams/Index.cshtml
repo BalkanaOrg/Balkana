@@ -22,7 +22,7 @@
 
     <!-- Search and Filter Section -->
     <div class="search-filter-section">
-        <form method="get" class="rankings-form">
+        <form method="get" class="rankings-form" id="filterForm">
             <div class="search-container">
                 <input asp-for="SearchTerm"
                        class="search-input"
@@ -35,13 +35,31 @@
             </div>
 
             <div class="filter-buttons">
+                <!-- Game Filters -->
                 @foreach (var game in Model.Games)
                 {
-                    <a class="filter-btn @(Model.Games.Contains(game) ? "active" : "")"
-                       asp-route-game="@game">
+                    <a class="filter-btn @(Model.SelectedGame == game ? "active" : "")"
+                       asp-route-game="@game"
+                       asp-route-year="@Model.Year"
+                       asp-route-searchTerm="@Model.SearchTerm">
                         @game
                     </a>
                 }
+            </div>
+
+            <!-- Year Filter -->
+            <div class="year-filter-section">
+                <label for="yearSelect" class="year-filter-label">Year:</label>
+                <select asp-for="Year" 
+                        id="yearSelect" 
+                        class="year-select"
+                        onchange="document.getElementById('filterForm').submit();">
+                    <option value="">All Years</option>
+                    @foreach (var year in Model.AvailableYears)
+                    {
+                        <option value="@year" selected="@(Model.Year == year)">@year</option>
+                    }
+                </select>
             </div>
         </form>
     </div>
@@ -61,57 +79,10 @@
         </div>
     }
 
-    <!-- Pagination -->
-    @{
-        var previousPage = Model.CurrentPage - 1;
-        if (previousPage < 1)
-        {
-            previousPage = 1;
-        }
-        var maxPage = Math.Ceiling((double)Model.TotalTeams / AllTeamsQueryModel.TeamsPerPage);
-        var shouldButtonBeDisabled = Model.CurrentPage == maxPage || !Model.Teams.Any();
-    }
-
-    <div class="pagination-container">
-        <nav class="pagination-nav">
-            <ul class="pagination">
-                <li class="page-item">
-                    <a class="page-link @(Model.CurrentPage == 1 ? "disabled" : "")"
-                       asp-controller="Teams"
-                       asp-action="Index"
-                       asp-route-currentPage="@(previousPage)"
-                       asp-route-region="@Model.Games"
-                       asp-route-searchTerm="@Model.SearchTerm">
-                        <span>‹</span>
-                    </a>
-                </li>
-
-                @for (int i = 1; i <= maxPage; i++)
-                {
-                    <li class="page-item">
-                        <a class="page-link @(Model.CurrentPage == i ? "active" : "")"
-                           asp-controller="Teams"
-                           asp-action="Index"
-                           asp-route-currentPage="@i"
-                           asp-route-region="@Model.Games"
-                           asp-route-searchTerm="@Model.SearchTerm">
-                            @i
-                        </a>
-                    </li>
-                }
-
-                <li class="page-item">
-                    <a class="page-link @(shouldButtonBeDisabled ? "disabled" : "")"
-                       asp-controller="Teams"
-                       asp-action="Index"
-                       asp-route-currentPage="@(Model.CurrentPage + 1)"
-                       asp-route-region="@Model.Games"
-                       asp-route-searchTerm="@Model.SearchTerm">
-                        <span>›</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Loading more teams...</p>
     </div>
 
     <!-- Footer Stats -->
@@ -134,3 +105,85 @@
         </div>
     </div>
 </div>
+
+<script>
+    let currentPage = @Model.CurrentPage;
+    let isLoading = false;
+    let hasMoreData = true;
+    const game = '@Model.SelectedGame';
+    const year = '@Model.Year';
+    const searchTerm = '@Model.SearchTerm';
+
+    // Lazy loading on scroll
+    window.addEventListener('scroll', function() {
+        if (isLoading || !hasMoreData) return;
+
+        const scrollPosition = window.innerHeight + window.scrollY;
+        const documentHeight = document.documentElement.scrollHeight;
+        const threshold = 200; // Load when 200px from bottom
+
+        if (scrollPosition >= documentHeight - threshold) {
+            loadMoreTeams();
+        }
+    });
+
+    function loadMoreTeams() {
+        if (isLoading || !hasMoreData) return;
+
+        isLoading = true;
+        showLoadingIndicator();
+
+        const nextPage = currentPage + 1;
+        const url = buildUrl(nextPage);
+
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newTeams = doc.querySelectorAll('.team-card');
+                
+                if (newTeams.length === 0) {
+                    hasMoreData = false;
+                } else {
+                    const rankingsGrid = document.querySelector('.rankings-grid');
+                    newTeams.forEach(team => {
+                        rankingsGrid.appendChild(team);
+                    });
+                    currentPage = nextPage;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading more teams:', error);
+                hasMoreData = false;
+            })
+            .finally(() => {
+                isLoading = false;
+                hideLoadingIndicator();
+            });
+    }
+
+    function buildUrl(page) {
+        let url = `/Teams/Index?currentPage=${page}`;
+        
+        if (game) url += `&game=${encodeURIComponent(game)}`;
+        if (year) url += `&year=${encodeURIComponent(year)}`;
+        if (searchTerm) url += `&searchTerm=${encodeURIComponent(searchTerm)}`;
+        
+        return url;
+    }
+
+    function showLoadingIndicator() {
+        document.getElementById('loadingIndicator').style.display = 'block';
+    }
+
+    function hideLoadingIndicator() {
+        document.getElementById('loadingIndicator').style.display = 'none';
+    }
+
+    // Reset lazy loading when filters change
+    document.getElementById('filterForm').addEventListener('submit', function() {
+        currentPage = 1;
+        hasMoreData = true;
+    });
+</script>

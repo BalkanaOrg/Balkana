@@ -13,6 +13,8 @@
         public IEnumerable<TeamGameServiceModel> ManyGames { get; set; }
 
         public string SearchTerm { get; set; }
+        
+        public int? Year { get; set; }
 
         public int CurrentPage { get; set; } = 1;
 
@@ -21,6 +23,7 @@
         public int AbsoluteNumberOfTeams { get; set; } = 0;
 
         public IEnumerable<string> Games { get; set; }
+        public IEnumerable<int> AvailableYears { get; set; }
         public IEnumerable<TeamServiceModel> Teams { get; set; }
     }
 }

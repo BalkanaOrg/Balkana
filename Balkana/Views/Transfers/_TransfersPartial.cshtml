@@ -1,6 +1,5 @@
 ﻿@model IEnumerable<TransfersServiceModel>
 
-
 @foreach (var tr in Model)
 {
     <tr onclick="window.location.href='@Url.Action("Details", "Transfers", new { id = tr.Id })'">

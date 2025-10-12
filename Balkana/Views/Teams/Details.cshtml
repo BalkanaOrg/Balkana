@@ -1,32 +1,586 @@
-﻿@model TeamDetailsServiceModel
-@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@using Balkana.Data.Models
+@model TeamDetailsServiceModel
 @{
-    ViewData["Title"] = Model.Tag;
+    ViewData["Title"] = $"[{Model.Tag}] {Model.FullName}";
 }
 
-<div class="row justify-content-center">
-    <h2>[@Model.Tag] @Model.FullName</h2>
+<link rel="stylesheet" href="~/css/team-details.css" />
+
+<div class="team-details-container">
+    <!-- Team Header -->
+    <div class="team-header">
+        <div class="team-header-content">
+            <div class="team-logo-section">
+                <img src="@Model.LogoURL" 
+                     alt="@Model.FullName" 
+                     class="team-logo"
+                     onerror="this.src='https://ui-avatars.com/api/?name=@Model.Tag&background=8b0000&color=fff&size=200'" />
+                <div class="team-badge">
+                    <span class="game-badge">@Model.GameShortName</span>
+                </div>
+            </div>
+            
+            <div class="team-info-section">
+                <h1 class="team-name">@Model.FullName</h1>
+                <div class="team-meta">
+                    <span class="founded-year">Founded @Model.yearFounded</span>
+                    <span class="game-name">@Model.GameName</span>
+                </div>
+                
+                <!-- Quick Stats -->
+                <div class="quick-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">@Model.AllTimeStats.TotalMatches</div>
+                        <div class="stat-label">Total Matches</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">@Model.AllTimeStats.WinRate.ToString("F1")%</div>
+                        <div class="stat-label">Win Rate</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">@Model.AllTimeStats.TournamentWins</div>
+                        <div class="stat-label">Tournament Wins</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">@Model.AllTimeStats.TotalPoints</div>
+                        <div class="stat-label">Total Points</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="team-tabs">
+        <button class="tab-button active" onclick="showTab('roster')">Current Roster</button>
+        <button class="tab-button" onclick="showTab('trophies')">Trophy Cabinet</button>
+        <button class="tab-button" onclick="showTab('tournaments')">Tournaments</button>
+        <button class="tab-button" onclick="showTab('matches')">Recent Matches</button>
+        <button class="tab-button" onclick="showTab('statistics')">Statistics</button>
+        <button class="tab-button" onclick="showTab('history')">Roster History</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+        <!-- Current Roster Tab -->
+        <div id="roster-tab" class="tab-panel active">
+            <div class="section-header">
+                <h2>Current Roster</h2>
+                <span class="roster-count">@Model.CurrentRoster.Count() players</span>
+            </div>
+            
+            @if (Model.CurrentRoster.Any())
+            {
+                var mainRoster = Model.CurrentRoster.Where(p => p.Status == PlayerTeamStatus.Active).Take(5).ToList();
+                var substitutes = Model.CurrentRoster.Where(p => p.Status == PlayerTeamStatus.Substitute || p.Status == PlayerTeamStatus.EmergencySubstitute).ToList();
+                var coaches = Model.CurrentRoster.Where(p => p.PositionName?.ToLower().Contains("coach") == true).ToList();
+                
+                <!-- Main Roster (5 players) -->
+                @if (mainRoster.Any())
+                {
+                    <div class="main-roster-grid">
+                        @foreach (var player in mainRoster)
+                        {
+                            <div class="player-card">
+                                <div class="player-image">
+                                    <img src="@player.PictureUrl" 
+                                         alt="@player.Nickname" 
+                                         class="player-avatar"
+                                         onerror="this.src='https://ui-avatars.com/api/?name=@player.Nickname&background=random&color=fff&size=120'" />
+                                </div>
+                                <div class="player-info">
+                                    <h3 class="player-nickname">@player.Nickname</h3>
+                                    <p class="player-name">@player.FirstName @player.LastName</p>
+                                    @if (!string.IsNullOrEmpty(player.PositionName))
+                                    {
+                                        <span class="player-position">@player.PositionName</span>
+                                    }
+                                    <div class="player-tenure">
+                                        <small>Since @player.StartDate.ToString("MMM yyyy")</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                
+                <!-- Substitutes -->
+                @if (substitutes.Any())
+                {
+                    <div class="substitutes-section">
+                        <h4>Substitutes</h4>
+                        <div class="substitutes-grid">
+                            @foreach (var player in substitutes)
+                            {
+                                <div class="substitute-card">
+                                    <div class="player-image">
+                                        <img src="@player.PictureUrl" 
+                                             alt="@player.Nickname" 
+                                             class="player-avatar-small"
+                                             onerror="this.src='https://ui-avatars.com/api/?name=@player.Nickname&background=random&color=fff&size=60'" />
+                                    </div>
+                                    <div class="player-info">
+                                        <h5 class="player-nickname">@player.Nickname</h5>
+                                        <p class="player-name">@player.FirstName @player.LastName</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+                
+                <!-- Coaches -->
+                @if (coaches.Any())
+                {
+                    <div class="coaches-section">
+                        <h4>Coaching Staff</h4>
+                        <div class="coaches-grid">
+                            @foreach (var coach in coaches)
+                            {
+                                <div class="coach-card">
+                                    <div class="player-image">
+                                        <img src="@coach.PictureUrl" 
+                                             alt="@coach.Nickname" 
+                                             class="player-avatar-small"
+                                             onerror="this.src='https://ui-avatars.com/api/?name=@coach.Nickname&background=random&color=fff&size=60'" />
+                                    </div>
+                                    <div class="player-info">
+                                        <h5 class="player-nickname">@coach.Nickname</h5>
+                                        <p class="player-name">@coach.FirstName @coach.LastName</p>
+                                        <span class="coach-position">@coach.PositionName</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="no-data">
+                    <p>No current roster available</p>
+                </div>
+            }
+        </div>
+
+        <!-- Trophy Cabinet Tab -->
+        <div id="trophies-tab" class="tab-panel">
+            <div class="section-header">
+                <h2>Trophy Cabinet</h2>
+                <span class="trophy-count">@Model.Trophies.Count() trophies</span>
+            </div>
+            
+            @if (Model.Trophies.Any())
+            {
+                <div class="trophy-display">
+                    <div class="trophies-row">
+                        @foreach (var trophy in Model.Trophies)
+                        {
+                            <div class="trophy-item tooltip">
+                                <img src="@trophy.IconURL" alt="@trophy.Description" class="trophy-icon" />
+                                <span class="tooltiptext">
+                                    @trophy.Description<br/>
+                                    @trophy.AwardType<br/>
+                                    @trophy.AwardDate.ToString("MMM dd, yyyy")
+                                </span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="no-data">
+                    <p>No trophies yet. Win tournaments to earn trophies!</p>
+                </div>
+            }
+        </div>
+
+        <!-- Tournaments Tab -->
+        <div id="tournaments-tab" class="tab-panel">
+            <div class="section-header">
+                <h2>Tournament Participation</h2>
+                <span class="tournament-count">@Model.Tournaments.Count() tournaments</span>
+            </div>
+            
+            @if (Model.Tournaments.Any())
+            {
+                <div class="tournaments-list">
+                    @foreach (var tournament in Model.Tournaments.Take(10))
+                    {
+                        <div class="tournament-card">
+                            <div class="tournament-image">
+                                <img src="@tournament.BannerUrl" 
+                                     alt="@tournament.TournamentName"
+                                     onerror="this.src='https://ui-avatars.com/api/?name=@tournament.TournamentShortName&background=random&color=fff&size=80'" />
+                            </div>
+                            <div class="tournament-info">
+                                <h3 class="tournament-name">@tournament.TournamentName</h3>
+                                <div class="tournament-meta">
+                                    <span class="organizer">@tournament.OrganizerName</span>
+                                    <span class="date">@tournament.StartDate.ToString("MMM yyyy")</span>
+                                    @if (tournament.Placement.HasValue)
+                                    {
+                                        <span class="placement placement-@tournament.Placement">@GetPlacementText(tournament.Placement.Value)</span>
+                                    }
+                                </div>
+                                <div class="tournament-rewards">
+                                    @if (tournament.PointsAwarded > 0)
+                                    {
+                                        <span class="points">@tournament.PointsAwarded points</span>
+                                    }
+                                    @if (tournament.PrizePool > 0)
+                                    {
+                                        <span class="prize">$@tournament.PrizePool.ToString("N0")</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="no-data">
+                    <p>No tournament participation recorded</p>
+                </div>
+            }
+        </div>
+
+        <!-- Recent Matches Tab -->
+        <div id="matches-tab" class="tab-panel">
+            <div class="section-header">
+                <h2>Recent Matches</h2>
+                <span class="match-count">Last @Model.RecentMatches.Count() matches</span>
 </div>
 
-<table class="col-12 text-center">
-    <tr>
-
-        <td class="col-4">
-            <img src="@Model.LogoURL" alt="@Model.FullName" width="50px"/><br />
-            <p><b>@Model.FullName</b></p>
+            @if (Model.RecentMatches.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark matches-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Team</th>
+                                <th>Opponent</th>
+                                <th>Map</th>
+                                <th>Tournament</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int matchIndex = 0;
+                            }
+                            @foreach (var match in Model.RecentMatches.Take(15))
+                            {
+                                <tr class="@(matchIndex % 2 == 0 ? "match-row-even" : "match-row-odd") @(match.IsWin ? "match-winner" : "match-loser")">
+                                    <td>
+                                        @match.PlayedAt.ToString("MMM dd, yyyy")
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2">
+                                                <img src="@Model.LogoURL" alt="@Model.Tag" style="width: 20px; height: 20px; object-fit: cover; border-radius: 3px;" />
+                                            </div>
+                                            <div>
+                                                <div class="team-name">@Model.FullName</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2">
+                                                <img src="@match.OpponentLogoUrl" alt="@match.OpponentName" style="width: 20px; height: 20px; object-fit: cover; border-radius: 3px;" 
+                                                     onerror="this.src='https://ui-avatars.com/api/?name=@match.OpponentTag&background=random&color=fff&size=20'" />
+                                            </div>
+                                            <div>
+                                                <div class="team-name">@match.OpponentName</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>@match.MapName</td>
+                                    <td>
+                                        <span class="tournament-name">@match.TournamentName</span>
         </td>
-
-        <td class="col-9">
-            <textarea readonly rows="8" cols="80" style="resize:none; border:none;">
-                @Model.yearFounded
-            </textarea>
+                                    <td>
+                                        <span class="match-result @(match.IsWin ? "result-win" : "result-loss")">
+                                            @(match.IsWin ? "W" : "L")
+                                        </span>
         </td>
-
     </tr>
+                                matchIndex++;
+                            }
+                        </tbody>
 </table>
-@foreach (var player in Model.Players)
-{
-    <td>@player.Nickname</td>
+                </div>
+            }
+            else
+            {
+                <div class="no-data">
+                    <p>No recent matches found</p>
+                </div>
+            }
+        </div>
+
+        <!-- Statistics Tab -->
+        <div id="statistics-tab" class="tab-panel">
+            <div class="statistics-container">
+                <div class="stats-tabs">
+                    <button class="stats-tab-button active" onclick="showStatsTab('current')">Current Roster</button>
+                    <button class="stats-tab-button" onclick="showStatsTab('alltime')">All Time</button>
+                </div>
+
+                <!-- Current Roster Stats -->
+                <div id="current-stats" class="stats-panel active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">@Model.CurrentRosterStats.Wins</div>
+                            <div class="stat-label">Wins</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">@Model.CurrentRosterStats.Losses</div>
+                            <div class="stat-label">Losses</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">@Model.CurrentRosterStats.WinRate.ToString("F1")%</div>
+                            <div class="stat-label">Win Rate</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">@Model.CurrentRosterStats.TotalMatches</div>
+                            <div class="stat-label">Total Matches</div>
+                        </div>
+                    </div>
+
+                    @if (Model.CurrentRosterStats.MapStats.Any())
+                    {
+                        <div class="map-stats">
+                            <h3>Map Performance</h3>
+                            <div class="row">
+                                @foreach (var mapStat in Model.CurrentRosterStats.MapStats.Values.OrderByDescending(m => m.MatchesPlayed))
+                                {
+                                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                                        <div class="map-card">
+                                            <div class="map-card-header">
+                                                @if (!string.IsNullOrEmpty(mapStat.MapImageUrl))
+                                                {
+                                                    <img src="@mapStat.MapImageUrl" 
+                                                         alt="@mapStat.MapName" 
+                                                         class="map-image" />
+                                                }
+                                                <div class="map-info">
+                                                    <h6 class="map-name">@mapStat.MapName</h6>
+                                                    <small class="map-pickrate">@mapStat.MatchesPlayed matches played</small>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="map-stats">
+                                                <div class="row text-center">
+                                                    <div class="col-4">
+                                                        <div class="stat-value text-primary">@mapStat.MatchesPlayed</div>
+                                                        <div class="stat-label">Matches</div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="stat-value text-success">@mapStat.Wins</div>
+                                                        <div class="stat-label">Wins</div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="stat-value text-danger">@mapStat.Losses</div>
+                                                        <div class="stat-label">Losses</div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="winrate-section">
+                                                    <span class="badge bg-@(mapStat.WinRate >= 50 ? "success" : "danger") winrate-badge">
+                                                        @mapStat.WinRate.ToString("F1")% Win Rate
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- All Time Stats -->
+                <div id="alltime-stats" class="stats-panel">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">@Model.AllTimeStats.Wins</div>
+                            <div class="stat-label">Wins</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">@Model.AllTimeStats.Losses</div>
+                            <div class="stat-label">Losses</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">@Model.AllTimeStats.WinRate.ToString("F1")%</div>
+                            <div class="stat-label">Win Rate</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">@Model.AllTimeStats.TotalMatches</div>
+                            <div class="stat-label">Total Matches</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">@Model.AllTimeStats.TournamentWins</div>
+                            <div class="stat-label">Tournament Wins</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">@Model.AllTimeStats.Top3Finishes</div>
+                            <div class="stat-label">Top 3 Finishes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">@Model.AllTimeStats.TotalPoints</div>
+                            <div class="stat-label">Total Points</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">$@Model.AllTimeStats.TotalPrizeMoney.ToString("N0")</div>
+                            <div class="stat-label">Prize Money</div>
+                        </div>
+                    </div>
+
+                    @if (Model.AllTimeStats.MapStats.Any())
+                    {
+                        <div class="map-stats">
+                            <h3>All Time Map Performance</h3>
+                            <div class="row">
+                                @foreach (var mapStat in Model.AllTimeStats.MapStats.Values.OrderByDescending(m => m.MatchesPlayed))
+                                {
+                                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                                        <div class="map-card">
+                                            <div class="map-card-header">
+                                                @if (!string.IsNullOrEmpty(mapStat.MapImageUrl))
+                                                {
+                                                    <img src="@mapStat.MapImageUrl" 
+                                                         alt="@mapStat.MapName" 
+                                                         class="map-image" />
+                                                }
+                                                <div class="map-info">
+                                                    <h6 class="map-name">@mapStat.MapName</h6>
+                                                    <small class="map-pickrate">@mapStat.MatchesPlayed matches played</small>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="map-stats">
+                                                <div class="row text-center">
+                                                    <div class="col-4">
+                                                        <div class="stat-value text-primary">@mapStat.MatchesPlayed</div>
+                                                        <div class="stat-label">Matches</div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="stat-value text-success">@mapStat.Wins</div>
+                                                        <div class="stat-label">Wins</div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="stat-value text-danger">@mapStat.Losses</div>
+                                                        <div class="stat-label">Losses</div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="winrate-section">
+                                                    <span class="badge bg-@(mapStat.WinRate >= 50 ? "success" : "danger") winrate-badge">
+                                                        @mapStat.WinRate.ToString("F1")% Win Rate
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Roster History Tab -->
+        <div id="history-tab" class="tab-panel">
+            <div class="section-header">
+                <h2>Roster History</h2>
+                <span class="history-count">@Model.HistoricalRosters.Count() former players</span>
+            </div>
+            
+            @if (Model.HistoricalRosters.Any())
+            {
+                <div class="roster-history">
+                    @foreach (var player in Model.HistoricalRosters.Take(20))
+                    {
+                        <div class="history-player-card">
+                            <div class="player-image">
+                                <img src="@player.PictureUrl" 
+                                     alt="@player.Nickname" 
+                                     class="player-avatar"
+                                     onerror="this.src='https://ui-avatars.com/api/?name=@player.Nickname&background=random&color=fff&size=60'" />
+                            </div>
+                            <div class="player-info">
+                                <h4 class="player-nickname">@player.Nickname</h4>
+                                <p class="player-name">@player.FirstName @player.LastName</p>
+                                <div class="tenure-info">
+                                    <span class="tenure-period">
+                                        @player.StartDate.ToString("MMM yyyy") - 
+                                        @(player.EndDate?.ToString("MMM yyyy") ?? "Present")
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="no-data">
+                    <p>No roster history available</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function showTab(tabName) {
+        // Hide all tab panels
+        const panels = document.querySelectorAll('.tab-panel');
+        panels.forEach(panel => panel.classList.remove('active'));
+        
+        // Remove active class from all tab buttons
+        const buttons = document.querySelectorAll('.tab-button');
+        buttons.forEach(button => button.classList.remove('active'));
+        
+        // Show selected tab panel
+        document.getElementById(tabName + '-tab').classList.add('active');
+        
+        // Add active class to clicked button
+        event.target.classList.add('active');
+    }
+
+    function showStatsTab(statsType) {
+        // Hide all stats panels
+        const panels = document.querySelectorAll('.stats-panel');
+        panels.forEach(panel => panel.classList.remove('active'));
+        
+        // Remove active class from all stats tab buttons
+        const buttons = document.querySelectorAll('.stats-tab-button');
+        buttons.forEach(button => button.classList.remove('active'));
+        
+        // Show selected stats panel
+        document.getElementById(statsType + '-stats').classList.add('active');
+        
+        // Add active class to clicked button
+        event.target.classList.add('active');
+    }
+</script>
+
+@functions {
+    string GetPlacementText(int placement)
+    {
+        return placement switch
+        {
+            1 => "1st Place",
+            2 => "2nd Place", 
+            3 => "3rd Place",
+            _ => $"{placement}th Place"
+        };
+    }
 }

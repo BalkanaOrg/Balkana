@@ -1,0 +1,520 @@
+@model Balkana.Models.Tournaments.TournamentConclusionViewModel
+
+@{
+    ViewData["Title"] = $"Conclude Tournament - {Model.TournamentName}";
+}
+
+<style>
+    .tournament-conclude-page {
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #e94560 100%);
+        min-height: 100vh;
+        color: #ffffff;
+    }
+    
+    .tournament-conclude-card {
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    
+    .tournament-conclude-header {
+        background: linear-gradient(135deg, #e94560 0%, #0f3460 100%);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        padding: 1.5rem;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .tournament-conclude-body {
+        background: rgba(0, 0, 0, 0.6);
+        color: #ffffff;
+        padding: 2rem;
+    }
+    
+    .form-control, .form-select {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        border-radius: 8px;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: #e94560;
+        box-shadow: 0 0 0 0.2rem rgba(233, 69, 96, 0.25);
+        color: #ffffff;
+    }
+    
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .form-label {
+        color: #ffffff;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-check-input:checked {
+        background-color: #e94560;
+        border-color: #e94560;
+    }
+    
+    .table-dark {
+        background: rgba(0, 0, 0, 0.8);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .table-dark th {
+        background: linear-gradient(135deg, #0f3460 0%, #e94560 100%);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: white;
+        font-weight: 600;
+    }
+    
+    .table-dark td {
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+    }
+    
+    .table-dark tbody tr:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #0f3460 0%, #e94560 100%);
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #e94560 0%, #0f3460 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+    }
+    
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-success:hover {
+        background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+    }
+    
+    .alert-info {
+        background: rgba(13, 202, 240, 0.2);
+        border: 1px solid rgba(13, 202, 240, 0.3);
+        color: #ffffff;
+        border-radius: 8px;
+    }
+    
+    .text-muted {
+        color: rgba(255, 255, 255, 0.6) !important;
+    }
+    
+    .card {
+        background: rgba(0, 0, 0, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #0f3460 0%, #e94560 100%);
+        color: white;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        font-weight: 600;
+    }
+    
+    .card-body {
+        background: rgba(0, 0, 0, 0.6);
+        color: #ffffff;
+    }
+    
+    .badge {
+        background: linear-gradient(135deg, #e94560 0%, #0f3460 100%);
+        color: white;
+        font-weight: 600;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+    }
+    
+    .form-text {
+        color: rgba(255, 255, 255, 0.6);
+    }
+</style>
+
+<div class="tournament-conclude-page">
+    <div class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-12 col-xl-10">
+                <div class="tournament-conclude-card">
+                    <div class="tournament-conclude-header">
+                        <h3 class="mb-0">
+                            <i class="fas fa-trophy me-2"></i>
+                            Conclude Tournament: @Model.TournamentName
+                        </h3>
+                        <p class="mb-0 mt-2 opacity-75">
+                            <span class="badge me-2">@Model.EliminationType</span>
+                            <span class="badge">@Model.TotalTeams Teams</span>
+                        </p>
+                    </div>
+                    <div class="tournament-conclude-body">
+                    <form asp-action="Conclude" method="post">
+                        <input asp-for="TournamentId" type="hidden" />
+                        <input asp-for="TournamentName" type="hidden" />
+                        <input asp-for="TotalTeams" type="hidden" />
+                        <input asp-for="EliminationType" type="hidden" />
+
+                        <!-- Champion Trophy Section -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5><i class="fas fa-crown"></i> Champion Trophy</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input asp-for="AwardChampionTrophy" class="form-check-input" type="checkbox" checked />
+                                    <label asp-for="AwardChampionTrophy" class="form-check-label">
+                                        Award Champion Trophy
+                                    </label>
+                                </div>
+                                <div class="mt-3">
+                                    <label asp-for="ChampionTrophyDescription" class="form-label">Trophy Description</label>
+                                    <input asp-for="ChampionTrophyDescription" class="form-control" />
+                                    <span asp-validation-for="ChampionTrophyDescription" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MVP Selection Section -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5><i class="fas fa-star"></i> MVP Selection</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label asp-for="MVPSourceType" class="form-label">MVP Selection Method</label>
+                                        <select asp-for="MVPSourceType" class="form-select" id="mvpSourceType">
+                                            <option value="Formula">Formula-based</option>
+                                            <option value="Manual">Manual Selection</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="SelectedMVPId" class="form-label">Selected MVP</label>
+                                        <select asp-for="SelectedMVPId" class="form-select" id="mvpSelection">
+                                            <option value="">Select MVP...</option>
+                                            @foreach (var candidate in Model.MVPCandidates)
+                                            {
+                                                <option value="@candidate.PlayerId">
+                                                    @candidate.PlayerName (@candidate.TeamName) - Score: @candidate.FormulaScore.TotalScore.ToString("F2")
+                                                </option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Formula Configuration -->
+                                <div id="mvpFormulaConfig" class="mt-4">
+                                    <h6>MVP Formula Configuration</h6>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <label asp-for="MVFormulaConfig.HLTVRatingPoints" class="form-label">HLTV Rating Points</label>
+                                            <input asp-for="MVFormulaConfig.HLTVRatingPoints" class="form-control" type="number" min="0" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label asp-for="MVFormulaConfig.KillPerRoundPoints" class="form-label">Kill/Round Points</label>
+                                            <input asp-for="MVFormulaConfig.KillPerRoundPoints" class="form-control" type="number" min="0" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label asp-for="MVFormulaConfig.DamagePerRoundPoints" class="form-label">Damage/Round Points</label>
+                                            <input asp-for="MVFormulaConfig.DamagePerRoundPoints" class="form-control" type="number" min="0" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label asp-for="MVFormulaConfig.DeathsPerRoundPoints" class="form-label">Deaths/Round Points</label>
+                                            <input asp-for="MVFormulaConfig.DeathsPerRoundPoints" class="form-control" type="number" min="0" />
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-md-3">
+                                            <label asp-for="MVFormulaConfig.UtilityDamagePoints" class="form-label">Utility Damage Points</label>
+                                            <input asp-for="MVFormulaConfig.UtilityDamagePoints" class="form-control" type="number" min="0" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label asp-for="MVFormulaConfig.AWPkillsPoints" class="form-label">AWP Kills Points</label>
+                                            <input asp-for="MVFormulaConfig.AWPkillsPoints" class="form-control" type="number" min="0" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label asp-for="MVFormulaConfig.FirstKillsPoints" class="form-label">First Kills Points</label>
+                                            <input asp-for="MVFormulaConfig.FirstKillsPoints" class="form-control" type="number" min="0" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label asp-for="MVFormulaConfig.Commentator1Points" class="form-label">Commentator 1 Points</label>
+                                            <input asp-for="MVFormulaConfig.Commentator1Points" class="form-control" type="number" min="0" />
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-md-3">
+                                            <label asp-for="MVFormulaConfig.Commentator2Points" class="form-label">Commentator 2 Points</label>
+                                            <input asp-for="MVFormulaConfig.Commentator2Points" class="form-control" type="number" min="0" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Commentator Selection -->
+                                <div class="mt-4">
+                                    <h6>Commentator Points Assignment</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label asp-for="MVFormulaConfig.Commentator1Name" class="form-label">Commentator A Name</label>
+                                                <input asp-for="MVFormulaConfig.Commentator1Name" class="form-control" placeholder="e.g., A Stream, Main Caster, etc." />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label asp-for="MVFormulaConfig.Commentator1SelectedPlayerId" class="form-label">Commentator A Player Selection</label>
+                                                <select asp-for="MVFormulaConfig.Commentator1SelectedPlayerId" class="form-select">
+                                                    <option value="">Select player for @Model.MVFormulaConfig.Commentator1Name points...</option>
+                                                    @foreach (var candidate in Model.MVPCandidates)
+                                                    {
+                                                        <option value="@candidate.PlayerId">
+                                                            @candidate.PlayerName (@candidate.TeamName)
+                                                        </option>
+                                                    }
+                                                </select>
+                                                <small class="form-text">Award @Model.MVFormulaConfig.Commentator1Points points to selected player</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label asp-for="MVFormulaConfig.Commentator2Name" class="form-label">Commentator B Name</label>
+                                                <input asp-for="MVFormulaConfig.Commentator2Name" class="form-control" placeholder="e.g., B Stream, Co-Caster, etc." />
+                                            </div>
+                                            <div class="mb-3">
+                                                <label asp-for="MVFormulaConfig.Commentator2SelectedPlayerId" class="form-label">Commentator B Player Selection</label>
+                                                <select asp-for="MVFormulaConfig.Commentator2SelectedPlayerId" class="form-select">
+                                                    <option value="">Select player for @Model.MVFormulaConfig.Commentator2Name points...</option>
+                                                    @foreach (var candidate in Model.MVPCandidates)
+                                                    {
+                                                        <option value="@candidate.PlayerId">
+                                                            @candidate.PlayerName (@candidate.TeamName)
+                                                        </option>
+                                                    }
+                                                </select>
+                                                <small class="form-text">Award @Model.MVFormulaConfig.Commentator2Points points to selected player</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- MVP Candidates Table -->
+                                <div class="mt-4">
+                                    <h6>MVP Candidates (Formula Scores)</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Player</th>
+                                                    <th>Team</th>
+                                                    <th>Total Score</th>
+                                                    <th>HLTV</th>
+                                                    <th>K/R</th>
+                                                    <th>D/R</th>
+                                                    <th>Deaths/R</th>
+                                                    <th>Utility</th>
+                                                    <th>AWP</th>
+                                                    <th>FK</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var candidate in Model.MVPCandidates.Take(10))
+                                                {
+                                                    <tr>
+                                                        <td>@candidate.PlayerName</td>
+                                                        <td>@candidate.TeamName</td>
+                                                        <td><strong>@candidate.FormulaScore.TotalScore.ToString("F2")</strong></td>
+                                                        <td>@candidate.FormulaScore.HLTVRatingScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.KillPerRoundScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.DamagePerRoundScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.DeathsPerRoundScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.UtilityDamageScore.ToString("F0")</td>
+                                                        <td>@candidate.FormulaScore.AWPkillsScore.ToString("F0")</td>
+                                                        <td>@candidate.FormulaScore.FirstKillsScore.ToString("F0")</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- EVP Selection Section -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5><i class="fas fa-medal"></i> EVP Selection</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label asp-for="EVPSourceType" class="form-label">EVP Selection Method</label>
+                                        <select asp-for="EVPSourceType" class="form-select" id="evpSourceType">
+                                            <option value="Formula">Formula-based</option>
+                                            <option value="Manual">Manual Selection</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Selected EVPs</label>
+                                        <select asp-for="SelectedEVPIds" class="form-select" multiple id="evpSelection">
+                                            @foreach (var candidate in Model.EVPCandidates)
+                                            {
+                                                <option value="@candidate.PlayerId">
+                                                    @candidate.PlayerName (@candidate.TeamName) - Score: @candidate.FormulaScore.TotalScore.ToString("F2")
+                                                </option>
+                                            }
+                                        </select>
+                                        <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple EVPs. Maximum 3 per team.</small>
+                                    </div>
+                                </div>
+
+                                <!-- EVP Candidates Table -->
+                                <div class="mt-4">
+                                    <h6>EVP Candidates (Formula Scores)</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Player</th>
+                                                    <th>Team</th>
+                                                    <th>Total Score</th>
+                                                    <th>HLTV</th>
+                                                    <th>K/R</th>
+                                                    <th>D/R</th>
+                                                    <th>Deaths/R</th>
+                                                    <th>Utility</th>
+                                                    <th>AWP</th>
+                                                    <th>FK</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var candidate in Model.EVPCandidates.Take(15))
+                                                {
+                                                    <tr>
+                                                        <td>@candidate.PlayerName</td>
+                                                        <td>@candidate.TeamName</td>
+                                                        <td><strong>@candidate.FormulaScore.TotalScore.ToString("F2")</strong></td>
+                                                        <td>@candidate.FormulaScore.HLTVRatingScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.KillPerRoundScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.DamagePerRoundScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.DeathsPerRoundScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.UtilityDamageScore.ToString("F0")</td>
+                                                        <td>@candidate.FormulaScore.AWPkillsScore.ToString("F0")</td>
+                                                        <td>@candidate.FormulaScore.FirstKillsScore.ToString("F0")</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Details" asp-route-id="@Model.TournamentId" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Tournament
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-trophy"></i> Conclude Tournament
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Handle MVP source type change
+            $('#mvpSourceType').change(function() {
+                if ($(this).val() === 'Formula') {
+                    $('#mvpFormulaConfig').show();
+                    // Auto-select top candidate
+                    $('#mvpSelection').val($('#mvpSelection option:first').next().val());
+                } else {
+                    $('#mvpFormulaConfig').hide();
+                }
+            });
+
+            // Handle EVP source type change
+            $('#evpSourceType').change(function() {
+                if ($(this).val() === 'Formula') {
+                    // Auto-select top candidates (excluding MVP)
+                    var mvpId = $('#mvpSelection').val();
+                    var evpOptions = $('#evpSelection option').not('[value=""]');
+                    evpOptions.each(function() {
+                        if ($(this).val() !== mvpId) {
+                            $(this).prop('selected', true);
+                        }
+                    });
+                }
+            });
+
+            // Initialize visibility
+            $('#mvpSourceType').trigger('change');
+            $('#evpSourceType').trigger('change');
+
+            // Validate EVP selection
+            $('#evpSelection').change(function() {
+                var selectedValues = $(this).val();
+                if (selectedValues && selectedValues.length > 0) {
+                    // Check if any team has more than 3 selections
+                    var teamCounts = {};
+                    selectedValues.forEach(function(playerId) {
+                        var option = $('#evpSelection option[value="' + playerId + '"]');
+                        var teamName = option.text().match(/\(([^)]+)\)/)[1];
+                        teamCounts[teamName] = (teamCounts[teamName] || 0) + 1;
+                    });
+
+                    var hasInvalidTeam = Object.values(teamCounts).some(count => count > 3);
+                    if (hasInvalidTeam) {
+                        alert('One team cannot have more than 3 MVP+EVP awards.');
+                        $(this).val([]);
+                    }
+                }
+            });
+        });
+    </script>
+}

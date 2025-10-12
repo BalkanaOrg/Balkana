@@ -64,23 +64,76 @@
                         
                         // Try to get match ID from various sources
                         let matchId = this.getAttribute('data-match-id') || 
+                                     this.getAttribute('data-match-game-id') ||
                                      this.querySelector('[data-match-id]')?.getAttribute('data-match-id') ||
+                                     this.querySelector('[data-match-game-id]')?.getAttribute('data-match-game-id') ||
                                      this.getAttribute('data-id') ||
                                      this.id;
                         
-                        // If no ID found, try to extract from bracket data
-                        if (!matchId && bracketData && bracketData.matches) {
-                            // Find match by position in the DOM
-                            const matchIndex = Array.from(matches).indexOf(this);
-                            if (matchIndex >= 0 && matchIndex < bracketData.matches.length) {
-                                matchId = bracketData.matches[matchIndex].id;
+                        console.log('Raw matchId from DOM:', matchId);
+                        
+                        // Convert match ID to series ID using bracket data
+                        let seriesId = matchId;
+                        if (matchId && bracketData && bracketData.matches) {
+                            // Find the series that corresponds to this match ID
+                            const matchingSeries = bracketData.matches.find(series => series.id == matchId);
+                            if (matchingSeries) {
+                                seriesId = matchingSeries.series_id || matchingSeries.id;
+                                console.log('Found matching series:', matchingSeries);
+                                console.log('Using series ID:', seriesId);
+                            } else {
+                                console.log('No matching series found for match ID:', matchId);
+                                // Try to find by index as fallback
+                                const matchIndex = Array.from(matches).indexOf(this);
+                                if (matchIndex >= 0 && matchIndex < bracketData.matches.length) {
+                                    seriesId = bracketData.matches[matchIndex].series_id || bracketData.matches[matchIndex].id;
+                                    console.log(`Using index-based series ID: ${seriesId}`);
+                                }
                             }
                         }
                         
-                        console.log('Match ID found:', matchId);
+                        // If no ID found, try to extract from bracket data by matching team names
+                        if (!seriesId && bracketData && bracketData.matches) {
+                            // Get team names from the clicked match element
+                            const teamElements = this.querySelectorAll('.team-name, .team, [data-team]');
+                            const teamNames = Array.from(teamElements).map(el => el.textContent?.trim()).filter(name => name);
+                            
+                            // Find matching series by team names
+                            if (teamNames.length > 0) {
+                                const matchingSeries = bracketData.matches.find(match => {
+                                    const matchTeamNames = [
+                                        match.opponent1?.name?.trim(),
+                                        match.opponent2?.name?.trim()
+                                    ].filter(name => name);
+                                    
+                                    // Check if team names match (case insensitive)
+                                    return teamNames.some(teamName => 
+                                        matchTeamNames.some(matchTeamName => 
+                                            teamName.toLowerCase() === matchTeamName.toLowerCase()
+                                        )
+                                    );
+                                });
+                                
+                                if (matchingSeries) {
+                                    matchId = matchingSeries.id;
+                                }
+                            }
+                            
+                            // Fallback: try to extract from bracket data by position (but with better error handling)
+                            if (!matchId) {
+                                const matchIndex = Array.from(matches).indexOf(this);
+                                console.log(`Match index: ${matchIndex}, Total matches: ${bracketData.matches.length}`);
+                                if (matchIndex >= 0 && matchIndex < bracketData.matches.length) {
+                                    matchId = bracketData.matches[matchIndex].id;
+                                    console.log(`Using index-based match ID: ${matchId}`);
+                                }
+                            }
+                        }
                         
-                        if (matchId) {
-                            showSeriesDetails(matchId);
+                        console.log('Series ID found:', seriesId);
+                        
+                        if (seriesId) {
+                            showSeriesDetails(seriesId);
                         } else {
                             console.error('No match ID found for clicked match');
                         }
@@ -255,14 +308,17 @@
     }
 
     function showForfeitModal(seriesId) {
+        console.log('showForfeitModal called with seriesId:', seriesId);
+        
         // Close series details modal
         closeSeriesModal();
         
         // Show forfeit modal
         const modal = document.getElementById('forfeitModal');
         const seriesIdInput = document.getElementById('forfeitSeriesId');
-        const teamSelect = document.getElementById('forfeitingTeamId');
+        const teamSelect = document.getElementById('winningTeamId');
         
+        console.log('Setting seriesIdInput value to:', seriesId);
         seriesIdInput.value = seriesId;
         
         // Clear existing options
@@ -270,10 +326,14 @@
         
         // Find the series data from bracket data
         if (bracketData && bracketData.matches) {
+            console.log('Looking for series with ID:', seriesId, 'in bracketData.matches');
             const series = bracketData.matches.find(m => m.id == seriesId);
+            console.log('Found series:', series);
+            
             if (series) {
                 // Add team options
                 if (series.opponent1 && series.opponent1.id !== -1) {
+                    console.log('Adding opponent1:', series.opponent1.name);
                     const option1 = document.createElement('option');
                     option1.value = series.opponent1.id;
                     option1.textContent = series.opponent1.name;
@@ -281,11 +341,15 @@
                 }
                 
                 if (series.opponent2 && series.opponent2.id !== -1) {
+                    console.log('Adding opponent2:', series.opponent2.name);
                     const option2 = document.createElement('option');
                     option2.value = series.opponent2.id;
                     option2.textContent = series.opponent2.name;
                     teamSelect.appendChild(option2);
                 }
+            } else {
+                console.error('Could not find series with ID:', seriesId);
+                console.log('Available series IDs:', bracketData.matches.map(m => m.id));
             }
         }
         

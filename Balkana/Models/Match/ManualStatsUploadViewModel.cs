@@ -33,6 +33,19 @@ namespace Balkana.Models.Match
         [Display(Name = "Competition Type")]
         public string CompetitionType { get; set; } = "Manual Upload";
 
+        // Round information
+        [Required]
+        [Display(Name = "Team A Rounds")]
+        public int TeamARounds { get; set; }
+
+        [Required]
+        [Display(Name = "Team B Rounds")]
+        public int TeamBRounds { get; set; }
+
+        [Required]
+        [Display(Name = "Total Rounds")]
+        public int TotalRounds { get; set; }
+
         // Team A Players (5 players)
         [Required]
         [Display(Name = "Team A Player 1")]

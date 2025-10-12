@@ -14,5 +14,8 @@ namespace Balkana.Services.Teams.Models
         public string GameName { get; init; }
 
         public IEnumerable<PlayerServiceModel> Players { get; set; } = new List<PlayerServiceModel>();
+        
+        // Trophy collections
+        public List<TeamTrophyServiceModel> Trophies { get; set; } = new();
     }
 }

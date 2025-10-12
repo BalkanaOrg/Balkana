@@ -9,6 +9,7 @@ namespace Balkana.Services.Teams
         public TeamQueryServiceModel All(
             string game = null,
             string searchTerm = null,
+            int? year = null,
             int currentPage = 1,
             int teamsPerPage = int.MaxValue
         );
@@ -31,6 +32,7 @@ namespace Balkana.Services.Teams
 
         bool GameExists(int gameId);
         public IEnumerable<string> GetAllGames();
+        public IEnumerable<int> GetAvailableYears();
         public int AbsoluteNumberOfTeams();
         public IEnumerable<TeamGameServiceModel> AllGames();
         public IEnumerable<TeamStaffServiceModel> AllPlayers(int teamId);

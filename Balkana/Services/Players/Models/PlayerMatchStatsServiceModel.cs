@@ -10,6 +10,10 @@ namespace Balkana.Services.Players.Models
         public string MapName { get; set; }
         public bool IsWinner { get; set; }
 
+        // Team rounds information for CS2 matches
+        public int? PlayerTeamRounds { get; set; }
+        public int? OpponentTeamRounds { get; set; }
+
         // One of the following gets filled depending on game:
         public PlayerStatistic_CS2? CS2Stats { get; set; }
         public PlayerStatistic_LoL? LoLStats { get; set; }

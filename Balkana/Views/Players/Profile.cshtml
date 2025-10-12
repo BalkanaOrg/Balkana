@@ -52,77 +52,6 @@
                         </div>
                     }
 
-                    <!-- Trophies Section (Filterable by Game) -->
-                    <div class="trophies-section">
-                        @{
-                            var filteredTrophies = Model.Trophies;
-                            var filteredMVPs = Model.MVPs;
-                            var filteredEVPs = Model.EVPs;
-
-                            if (!string.IsNullOrEmpty(selectedGame))
-                            {
-                                // Filter trophies by selected game - you may need to add game filtering logic to your service
-                                // For now, showing all trophies regardless of game filter
-                            }
-                        }
-
-                        @if (filteredMVPs.Any() || filteredEVPs.Any() || filteredTrophies.Any())
-                        {
-                            <div class="trophy-display">
-                                <div class="trophies-row">
-                                    <!-- MVPs First -->
-                                    @if (filteredMVPs.Any())
-                                    {
-                                        @foreach (var mvp in filteredMVPs)
-                                        {
-                                            <div class="trophy-item mvp-item tooltip">
-                                                <img src="@mvp.IconURL" alt="MVP" class="trophy-icon mvp-icon" />
-                                                @if (filteredMVPs.Count > 1)
-                                                {
-                                                    <span class="trophy-count mvp-count">@filteredMVPs.Count</span>
-                                                }
-                                                <span class="tooltiptext">@mvp.Description</span>
-                                            </div>
-                                        }
-                                    }
-
-                                    <!-- EVPs Second -->
-                                    @if (filteredEVPs.Any())
-                                    {
-                                        @foreach (var evp in filteredEVPs)
-                                        {
-                                            <div class="trophy-item evp-item tooltip">
-                                                <img src="@evp.IconURL" alt="EVP" class="trophy-icon evp-icon" />
-                                                @if (filteredEVPs.Count > 1)
-                                                {
-                                                    <span class="trophy-count evp-count">@filteredEVPs.Count</span>
-                                                }
-                                                <span class="tooltiptext">@evp.Description</span>
-                                            </div>
-                                        }
-                                    }
-
-                                    <!-- Tournament Wins -->
-                                    @if (filteredTrophies.Any())
-                                    {
-                                        @foreach (var trophy in filteredTrophies)
-                                        {
-                                            <div class="trophy-item tooltip" title="@trophy.Description">
-                                                <img src="@trophy.IconURL" alt="@trophy.Description" class="trophy-icon" />
-                                                <span class="tooltiptext">@trophy.Description</span>
-                                            </div>
-                                        }
-                                    }
-                                </div>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="text-center py-3">
-                                <p class="text-muted">No achievements yet</p>
-                            </div>
-                        }
-                    </div>
                 </div>
             </div>
         </div>
@@ -268,50 +197,54 @@
                                     <div class="row mt-4">
                                         <div class="col-12">
                                             <h6 class="text-muted mb-3">Map Performance</h6>
-                                            <div class="table-responsive">
-                                                <table class="table table-sm table-dark">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Map</th>
-                                                            <th>Matches</th>
-                                                            <th>Wins</th>
-                                                            <th>Losses</th>
-                                                            <th>Win Rate</th>
-                                                            <th>Pick Rate</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @foreach (var map in gameStats.Value.MapStats)
-                                                        {
-                                                            <tr>
-                                                                <td>
-                                                                    <div class="d-flex align-items-center">
-                                                                        @if (!string.IsNullOrEmpty(map.MapDisplayName))
-                                                                        {
-                                                                            <img src="@map.PictureURL" 
-                                                                                 alt="@map.MapDisplayName" 
-                                                                                 style="width: 24px; height: 24px; margin-right: 8px; border-radius: 4px;" />
-                                                                        }
-                                                                        @map.MapDisplayName
+                                            <div class="row">
+                                                @foreach (var map in gameStats.Value.MapStats)
+                                                {
+                                                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                                                        <div class="map-card">
+                                                            <div class="map-card-header">
+                                                                @if (!string.IsNullOrEmpty(map.PictureURL))
+                                                                {
+                                                                    <img src="@map.PictureURL" 
+                                                                         alt="@map.MapDisplayName" 
+                                                                         class="map-image" />
+                                                                }
+                                                                <div class="map-info">
+                                                                    <h6 class="map-name">@map.MapDisplayName</h6>
+                                                                    <small class="map-pickrate">@map.PickRate.ToString("F1")% pick rate</small>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div class="map-stats">
+                                                                <div class="row text-center">
+                                                                    <div class="col-4">
+                                                                        <div class="stat-value text-primary">@map.MatchesPlayed</div>
+                                                                        <div class="stat-label">Matches</div>
                                                                     </div>
-                                                                </td>
-                                                                <td>@map.MatchesPlayed</td>
-                                                                <td class="text-success">@map.Wins</td>
-                                                                <td class="text-danger">@map.Losses</td>
-                                                                <td>
-                                                                    <span class="badge bg-@(map.WinRate >= 50 ? "success" : "danger")">
-                                                                        @map.WinRate.ToString("F1")%
+                                                                    <div class="col-4">
+                                                                        <div class="stat-value text-success">@map.Wins</div>
+                                                                        <div class="stat-label">Wins</div>
+                                                                    </div>
+                                                                    <div class="col-4">
+                                                                        <div class="stat-value text-danger">@map.Losses</div>
+                                                                        <div class="stat-label">Losses</div>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                <div class="winrate-section">
+                                                                    <span class="badge bg-@(map.WinRate >= 50 ? "success" : "danger") winrate-badge">
+                                                                        @map.WinRate.ToString("F1")% Win Rate
                                                                     </span>
-                                                                </td>
-                                                                <td>
-                                                                    <span class="badge bg-info">
-                                                                        @map.PickRate.ToString("F1")%
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                        }
-                                                    </tbody>
-                                                </table>
+                                                                </div>
+                                                                
+                                                                <div class="hltv-rating">
+                                                                    <div class="rating-label">Avg HLTV Rating</div>
+                                                                    <div class="rating-value">@map.AverageHLTVRating.ToString("F2")</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
                                             </div>
                                         </div>
                                     </div>
@@ -334,6 +267,75 @@
 
             <!-- Tournaments Tab -->
             <div class="tab-pane fade" id="tournaments" role="tabpanel">
+                <!-- Trophy Cabinet Section -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-gradient text-white">
+                        <h5 class="mb-0"><i class="fa fa-trophy me-2"></i>Trophy Cabinet</h5>
+                    </div>
+                    <div class="card-body">
+                        @{
+                            var filteredTrophies = Model.Trophies;
+                            var filteredMVPs = Model.MVPs;
+                            var filteredEVPs = Model.EVPs;
+
+                            if (!string.IsNullOrEmpty(selectedGame))
+                            {
+                                // Filter trophies by selected game - you may need to add game filtering logic to your service
+                                // For now, showing all trophies regardless of game filter
+                            }
+                        }
+
+                        @if (filteredMVPs.Any() || filteredEVPs.Any() || filteredTrophies.Any())
+                        {
+                            <div class="trophy-display">
+                                <div class="trophies-row">
+                                    <!-- MVPs Grouped -->
+                                    @if (filteredMVPs.Any())
+                                    {
+                                        <div class="trophy-item mvp-item" data-bs-toggle="modal" data-bs-target="#mvpModal">
+                                            <img src="@filteredMVPs.First().IconURL" alt="MVP" class="trophy-icon mvp-icon" />
+                                            @if (filteredMVPs.Count > 1)
+                                            {
+                                                <span class="trophy-count mvp-count">@filteredMVPs.Count</span>
+                                            }
+                                        </div>
+                                    }
+
+                                    <!-- EVPs Grouped -->
+                                    @if (filteredEVPs.Any())
+                                    {
+                                        <div class="trophy-item evp-item" data-bs-toggle="modal" data-bs-target="#evpModal">
+                                            <img src="@filteredEVPs.First().IconURL" alt="EVP" class="trophy-icon evp-icon" />
+                                            @if (filteredEVPs.Count > 1)
+                                            {
+                                                <span class="trophy-count evp-count">@filteredEVPs.Count</span>
+                                            }
+                                        </div>
+                                    }
+
+                                    <!-- Tournament Trophies (Individual) -->
+                                    @if (filteredTrophies.Any())
+                                    {
+                                        @foreach (var trophy in filteredTrophies)
+                                        {
+                                            <div class="trophy-item tooltip" title="@trophy.Description">
+                                                <img src="@trophy.IconURL" alt="@trophy.Description" class="trophy-icon" />
+                                                <span class="tooltiptext">@trophy.Description</span>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-3">
+                                <p class="text-muted">No achievements yet</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
                 @if (Model.TournamentParticipationByGame.Any())
                 {
                     @foreach (var gameParticipation in Model.TournamentParticipationByGame.Where(kvp => string.IsNullOrEmpty(selectedGame) || kvp.Key == selectedGame))
@@ -443,48 +445,107 @@
                                                 </div>
                                             </div>
                                             
-                                            @foreach (var series in tournament.SeriesGroups)
-                                            {
-                                                <div class="series-group mb-3 border-left @(series.IsSeriesWinner ? "border-success" : "border-danger") border-3 ps-3">
-                                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                                        <div>
-                                                            <h6 class="mb-1">@series.SeriesName</h6>
-                                                            <small class="text-muted">@series.DatePlayed.ToString("MMM dd, yyyy")</small>
-                                                        </div>
-                                                        <div class="text-end">
-                                                            <span class="badge bg-@(series.IsSeriesWinner ? "success" : "danger")">
-                                                                @series.MatchWins - @series.MatchLosses
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div class="matches-list">
-                                                        @foreach (var match in series.Matches)
-                                                        {
-                                                            <div class="match-item d-flex justify-content-between align-items-center p-2 mb-1 bg-light rounded">
-                                                                <div class="d-flex align-items-center">
-                                                                    <span class="badge bg-@(match.IsWinner ? "success" : "danger") me-2">@(match.IsWinner ? "W" : "L")</span>
-                                                                    <span class="me-3">@match.MapName</span>
-                                                                    @if (match.CS2Stats != null)
-                                                                    {
-                                                                        <small class="text-muted">
-                                                                            @match.CS2Stats.Kills/@match.CS2Stats.Deaths/@match.CS2Stats.Assists
-                                                                            (@match.CS2Stats.HLTV1.ToString("F2"))
-                                                                        </small>
-                                                                    }
-                                                                    else if (match.LoLStats != null)
-                                                                    {
-                                                                        <small class="text-muted">
-                                                                            @match.LoLStats.Kills/@match.LoLStats.Deaths/@match.LoLStats.Assists
-                                                                            (@match.LoLStats.ChampionName)
-                                                                        </small>
-                                                                    }
-                                                                </div>
-                                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-dark matches-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Date</th>
+                                                            <th>Player Team</th>
+                                                            <th>Opponent</th>
+                                                            <th>Map</th>
+                                                            <th>K - D</th>
+                                                            <th>+/-</th>
+                                                            <th>Rating</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @{
+                                                            int seriesIndex = 0;
                                                         }
-                                                    </div>
-                                                </div>
-                                            }
+                                                        @foreach (var series in tournament.SeriesGroups)
+                                                        {
+                                                            @foreach (var match in series.Matches)
+                                                            {
+                                                                <tr class="@(seriesIndex % 2 == 0 ? "match-row-even" : "match-row-odd") @(series.IsSeriesWinner ? "series-winner" : "series-loser")">
+                                                                    <td>
+                                                                        @series.DatePlayed.ToString("MMM dd, yyyy")
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="d-flex align-items-center">
+                                                                            <div class="me-2">
+                                                                                <img src="@(series.PlayerTeamLogo ?? "https://via.placeholder.com/20x20/333333/ffffff?text=?")" alt="Team" style="width: 20px; height: 20px; object-fit: cover; border-radius: 3px;" />
+                                                                            </div>
+                                                                            <div>
+                                                                                @if (match.CS2Stats != null)
+                                                                                {
+                                                                                    <div class="team-name">@(series.PlayerTeamTag ?? "Unknown Team") (@(match.PlayerTeamRounds ?? 0))</div>
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                    <div class="team-name">@(series.PlayerTeamTag ?? "Unknown Team")</div>
+                                                                                }
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="d-flex align-items-center">
+                                                                            <div class="me-2">
+                                                                                <img src="@(series.OpponentTeamLogo ?? "https://via.placeholder.com/20x20/333333/ffffff?text=?")" alt="Team" style="width: 20px; height: 20px; object-fit: cover; border-radius: 3px;" />
+                                                                            </div>
+                                                                            @if (match.CS2Stats != null)
+                                                                            {
+                                                                                <span>@(series.OpponentTeamTag ?? "Unknown Team") (@(match.OpponentTeamRounds ?? 0))</span>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <span>@(series.OpponentTeamTag ?? "Unknown Team")</span>
+                                                                            }
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>@match.MapName</td>
+                                                                    <td>
+                                                                        @if (match.CS2Stats != null)
+                                                                        {
+                                                                            <span>@match.CS2Stats.Kills - @match.CS2Stats.Deaths</span>
+                                                                        }
+                                                                        else if (match.LoLStats != null)
+                                                                        {
+                                                                            <span>@match.LoLStats.Kills - @match.LoLStats.Deaths</span>
+                                                                        }
+                                                                    </td>
+                                                                    <td>
+                                                                        @if (match.CS2Stats != null)
+                                                                        {
+                                                                            <span class="@(match.CS2Stats.Kills - match.CS2Stats.Deaths >= 0 ? "border-success" : "text-danger")">
+                                                                                @(match.CS2Stats.Kills - match.CS2Stats.Deaths >= 0 ? "+" : "")@(match.CS2Stats.Kills - match.CS2Stats.Deaths)
+                                                                            </span>
+                                                                        }
+                                                                        else if (match.LoLStats != null)
+                                                                        {
+                                                                            <span class="@((match.LoLStats.Kills ?? 0) - (match.LoLStats.Deaths ?? 0) >= 0 ? "border-success" : "text-danger")">
+                                                                                @((match.LoLStats.Kills ?? 0) - (match.LoLStats.Deaths ?? 0) >= 0 ? "+" : "")@((match.LoLStats.Kills ?? 0) - (match.LoLStats.Deaths ?? 0))
+                                                                            </span>
+                                                                        }
+                                                                    </td>
+                                                                    <td>
+                                                                        @if (match.CS2Stats != null)
+                                                                        {
+                                                                            var rating = match.CS2Stats.HLTV1;
+                                                                            var ratingClass = rating < 0.98 ? "rating-low" : rating <= 1.07 ? "rating-medium" : "rating-high";
+                                                                            <span class="rating-value @ratingClass">@rating.ToString("F2")</span>
+                                                                        }
+                                                                        else if (match.LoLStats != null)
+                                                                        {
+                                                                            <span class="rating-value">N/A</span>
+                                                                        }
+                                                                    </td>
+                                                                </tr>
+                                                            }
+                                                            seriesIndex++;
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     }
                                 }
@@ -597,3 +658,57 @@
         </div>
     </div>
 </div>
+
+<!-- MVP Modal -->
+<div class="modal fade" id="mvpModal" tabindex="-1" aria-labelledby="mvpModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="mvpModalLabel">
+                    <i class="fa fa-star text-warning me-2"></i>MVP Awards
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @foreach (var mvp in Model.MVPs)
+                {
+                    <div class="d-flex align-items-center mb-3 p-3 bg-secondary bg-opacity-25 rounded">
+                        <img src="@mvp.IconURL" alt="MVP" style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px;" class="me-3" />
+                        <div>
+                            <h6 class="mb-1">@mvp.Description</h6>
+                            <small class="text-muted">@mvp.AwardDate.ToString("MMM yyyy")</small>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EVP Modal -->
+<div class="modal fade" id="evpModal" tabindex="-1" aria-labelledby="evpModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="evpModalLabel">
+                    <i class="fa fa-star-half-o text-info me-2"></i>EVP Awards
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @foreach (var evp in Model.EVPs)
+                {
+                    <div class="d-flex align-items-center mb-3 p-3 bg-secondary bg-opacity-25 rounded">
+                        <img src="@evp.IconURL" alt="EVP" style="width: 40px; height: 40px; object-fit: cover; border-radius: 5px;" class="me-3" />
+                        <div>
+                            <h6 class="mb-1">@evp.Description</h6>
+                            <small class="text-muted">@evp.AwardDate.ToString("MMM yyyy")</small>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+

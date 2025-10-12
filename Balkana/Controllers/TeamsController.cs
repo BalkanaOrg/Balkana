@@ -34,13 +34,16 @@ namespace Balkana.Controllers
             var queryResult = this.teams.All(
                 query.Game,
                 query.SearchTerm,
+                query.Year,
                 query.CurrentPage,
                 AllTeamsQueryModel.TeamsPerPage);
 
             var teamGames = this.teams.GetAllGames();
+            var availableYears = this.teams.GetAvailableYears();
             var absoluteNumberTeams = this.teams.AbsoluteNumberOfTeams();
 
             query.Games = teamGames;
+            query.AvailableYears = availableYears;
             query.TotalTeams = queryResult.TotalTeams;
             query.Teams = queryResult.Teams;
             query.AbsoluteNumberOfTeams = absoluteNumberTeams;

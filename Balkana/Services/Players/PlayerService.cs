@@ -583,26 +583,64 @@ namespace Balkana.Services.Players
                     BannerUrl = tg.First().Match.Series.Tournament.BannerUrl,
                     SeriesGroups = tg
                         .GroupBy(s => s.Match.SeriesId)
-                        .Select(sg => new PlayerSeriesGroupServiceModel
-                        {
-                            SeriesId = sg.Key,
-                            SeriesName = GetSeriesName(sg.First().Match.Series, playerId),
-                            DatePlayed = sg.First().Match.Series.DatePlayed,
-                            IsSeriesWinner = sg.First().Match.Series.WinnerTeamId != null && 
-                                           sg.Any(s => IsPlayerWinner(s.Match, s.PlayerUUID)),
-                            OpponentTeamName = GetOpponentTeamName(sg.First().Match, playerId),
-                            Matches = sg.Select(s => new PlayerMatchStatsServiceModel
+                        .Select(sg => {
+                            var playerTeam = GetPlayerTeamDuringSeries(sg.First().Match.Series, playerId);
+                            var opponentTeam = GetOpponentTeamInSeries(sg.First().Match.Series, playerTeam);
+                            
+                            return new PlayerSeriesGroupServiceModel
                             {
-                                MatchId = s.MatchId,
-                                PlayedAt = s.Match.PlayedAt,
-                                Opponent = GetOpponentTeamName(s.Match, playerId),
-                                MapName = GetMapName(s.Match),
-                                IsWinner = IsPlayerWinner(s.Match, s.PlayerUUID),
-                                CS2Stats = s as PlayerStatistic_CS2,
-                                LoLStats = s as PlayerStatistic_LoL
-                            }).OrderByDescending(m => m.PlayedAt).ToList(),
-                            MatchWins = sg.Count(s => IsPlayerWinner(s.Match, s.PlayerUUID)),
-                            MatchLosses = sg.Count(s => !IsPlayerWinner(s.Match, s.PlayerUUID))
+                                SeriesId = sg.Key,
+                                SeriesName = GetSeriesName(sg.First().Match.Series, playerId),
+                                DatePlayed = sg.First().Match.Series.DatePlayed,
+                                IsSeriesWinner = sg.First().Match.Series.WinnerTeamId != null && 
+                                               sg.Any(s => IsPlayerWinner(s.Match, s.PlayerUUID)),
+                                
+                                // Player team information
+                                PlayerTeamName = playerTeam?.FullName,
+                                PlayerTeamTag = playerTeam?.Tag,
+                                PlayerTeamLogo = playerTeam?.LogoURL,
+                                
+                                // Opponent team information
+                                OpponentTeamName = opponentTeam?.FullName,
+                                OpponentTeamTag = opponentTeam?.Tag,
+                                OpponentTeamLogo = opponentTeam?.LogoURL,
+                                
+                                Matches = sg.Select(s => {
+                                    var matchStats = new PlayerMatchStatsServiceModel
+                                    {
+                                        MatchId = s.MatchId,
+                                        PlayedAt = s.Match.PlayedAt,
+                                        Opponent = GetOpponentTeamName(s.Match, playerId),
+                                        MapName = GetMapName(s.Match),
+                                        IsWinner = IsPlayerWinner(s.Match, s.PlayerUUID),
+                                        CS2Stats = s as PlayerStatistic_CS2,
+                                        LoLStats = s as PlayerStatistic_LoL
+                                    };
+
+                                    // Add team rounds for CS2 matches
+                                    if (s.Match is MatchCS csMatch)
+                                    {
+                                        var playerTeamId = GetPlayerTeamInMatch(s.Match, playerId);
+                                        if (playerTeamId.HasValue)
+                                        {
+                                            if (playerTeamId.Value == csMatch.TeamAId)
+                                            {
+                                                matchStats.PlayerTeamRounds = csMatch.TeamARounds;
+                                                matchStats.OpponentTeamRounds = csMatch.TeamBRounds;
+                                            }
+                                            else if (playerTeamId.Value == csMatch.TeamBId)
+                                            {
+                                                matchStats.PlayerTeamRounds = csMatch.TeamBRounds;
+                                                matchStats.OpponentTeamRounds = csMatch.TeamARounds;
+                                            }
+                                        }
+                                    }
+
+                                    return matchStats;
+                                }).OrderByDescending(m => m.PlayedAt).ToList(),
+                                MatchWins = sg.Count(s => IsPlayerWinner(s.Match, s.PlayerUUID)),
+                                MatchLosses = sg.Count(s => !IsPlayerWinner(s.Match, s.PlayerUUID))
+                            };
                         }).OrderByDescending(s => s.DatePlayed).ToList()
                 }).OrderByDescending(t => t.StartDate).ToList();
 
@@ -716,17 +754,24 @@ namespace Balkana.Services.Players
 
             var mapStats = matchesWithMaps
                 .GroupBy(m => m.MapId.Value)
-                .Select(g => new PlayerMapStatsServiceModel
-                {
-                    MapId = g.Key,
-                    MapName = g.First().Map.Name,
-                    MapDisplayName = g.First().Map.DisplayName ?? g.First().Map.Name,
-                    MatchesPlayed = g.Count(),
-                    PictureURL = g.First().Map.PictureURL,
-                    Wins = g.Count(m => IsPlayerWinner(m, stats.First(s => s.MatchId == m.Id).PlayerUUID)),
-                    Losses = g.Count(m => !IsPlayerWinner(m, stats.First(s => s.MatchId == m.Id).PlayerUUID)),
-                    PickRate = totalMatches > 0 ? (double)g.Count() / totalMatches * 100 : 0,
-                    IsActiveDuty = g.First().Map.isActiveDuty
+                .Select(g => {
+                    var mapMatches = g.ToList();
+                    var mapStats = stats.Where(s => mapMatches.Any(m => m.Id == s.MatchId)).ToList();
+                    var cs2Stats = mapStats.OfType<PlayerStatistic_CS2>().ToList();
+                    
+                    return new PlayerMapStatsServiceModel
+                    {
+                        MapId = g.Key,
+                        MapName = g.First().Map.Name,
+                        MapDisplayName = g.First().Map.DisplayName ?? g.First().Map.Name,
+                        MatchesPlayed = g.Count(),
+                        PictureURL = g.First().Map.PictureURL,
+                        Wins = g.Count(m => IsPlayerWinner(m, stats.First(s => s.MatchId == m.Id).PlayerUUID)),
+                        Losses = g.Count(m => !IsPlayerWinner(m, stats.First(s => s.MatchId == m.Id).PlayerUUID)),
+                        PickRate = totalMatches > 0 ? (double)g.Count() / totalMatches * 100 : 0,
+                        IsActiveDuty = g.First().Map.isActiveDuty,
+                        AverageHLTVRating = cs2Stats.Any() ? cs2Stats.Average(s => s.HLTV1) : 0
+                    };
                 })
                 .OrderByDescending(ms => ms.MatchesPlayed)
                 .ToList();

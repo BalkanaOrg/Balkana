@@ -171,7 +171,7 @@ namespace Balkana.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Administrator,Moderator")]
-        public async Task<IActionResult> ForfeitSeries(int seriesId, int forfeitingTeamId)
+        public async Task<IActionResult> ForfeitSeries(int seriesId, int winningTeamId)
         {
             var series = await _db.Series
                 .Include(s => s.TeamA)
@@ -192,19 +192,22 @@ namespace Balkana.Controllers
                 return RedirectToAction("Details", "Tournaments", new { id = series.TournamentId });
             }
 
-            // Determine the winning team (the one that didn't forfeit)
+            // Determine the winning team (the one selected to progress)
             Team winningTeam = null;
-            if (forfeitingTeamId == series.TeamAId)
-            {
-                winningTeam = series.TeamB;
-            }
-            else if (forfeitingTeamId == series.TeamBId)
+            Team losingTeam = null;
+            if (winningTeamId == series.TeamAId)
             {
                 winningTeam = series.TeamA;
+                losingTeam = series.TeamB;
+            }
+            else if (winningTeamId == series.TeamBId)
+            {
+                winningTeam = series.TeamB;
+                losingTeam = series.TeamA;
             }
             else
             {
-                TempData["Error"] = "Invalid team specified for forfeit.";
+                TempData["Error"] = "Invalid team specified for progression.";
                 return RedirectToAction("Details", "Tournaments", new { id = series.TournamentId });
             }
 
@@ -246,7 +249,7 @@ namespace Balkana.Controllers
             // Advance winner to next series
             await AdvanceWinnerToNextSeries(series);
 
-            TempData["Success"] = $"{series.TeamA?.FullName} vs {series.TeamB?.FullName} - {winningTeam.FullName} wins by forfeit.";
+            TempData["Success"] = $"{series.TeamA?.FullName} vs {series.TeamB?.FullName} - {winningTeam.FullName} advances (opponent forfeited).";
             return RedirectToAction("Details", "Tournaments", new { id = series.TournamentId });
         }
 
@@ -419,6 +422,13 @@ namespace Balkana.Controllers
                 Console.WriteLine($"❌ Invalid team slot: {teamSlot}");
             }
 
+            // 🆕 NEW: Handle loser advancement for double elimination
+            if (currentSeries.Bracket == BracketType.Upper && (nextSeries.Bracket == BracketType.Upper || nextSeries.Bracket == BracketType.GrandFinal))
+            {
+                // Upper bracket to upper bracket OR upper bracket to grand final - also need to handle the loser dropping to lower bracket
+                await AdvanceLoserToLowerBracket(currentSeries);
+            }
+
             await _db.SaveChangesAsync();
         }
 
@@ -545,6 +555,195 @@ namespace Balkana.Controllers
                 return "TeamB";
         }
 
+        private async Task AdvanceLoserToLowerBracket(Series upperBracketSeries)
+        {
+            Console.WriteLine($"🔻 Attempting to advance loser from upper bracket series {upperBracketSeries.Id}");
+            
+            // Determine the loser of the upper bracket series
+            var winner = DetermineSeriesWinner(upperBracketSeries);
+            if (winner == null)
+            {
+                Console.WriteLine($"❌ Could not determine series winner, cannot determine loser");
+                return;
+            }
+
+            var loser = upperBracketSeries.TeamA == winner ? upperBracketSeries.TeamB : upperBracketSeries.TeamA;
+            if (loser == null)
+            {
+                Console.WriteLine($"❌ Could not determine series loser");
+                return;
+            }
+
+            Console.WriteLine($"🔻 Series loser: {loser.FullName}");
+
+            // Find the corresponding lower bracket series for this upper bracket series
+            var lowerBracketSeries = await FindCorrespondingLowerBracketSeries(upperBracketSeries);
+            if (lowerBracketSeries == null)
+            {
+                Console.WriteLine($"❌ Could not find corresponding lower bracket series for upper bracket series {upperBracketSeries.Id}");
+                
+                // Check if this is a bye match (no loser to seed)
+                if (upperBracketSeries.TeamAId != null && upperBracketSeries.TeamBId == null)
+                {
+                    Console.WriteLine($"✅ This is a bye match - no loser to seed into lower bracket");
+                    return;
+                }
+                
+                Console.WriteLine($"❌ No lower bracket series found and this is not a bye match");
+                return;
+            }
+
+            Console.WriteLine($"🎯 Found corresponding lower bracket series: {lowerBracketSeries.Id}");
+
+            // Seed the loser into the lower bracket series
+            if (lowerBracketSeries.TeamAId == null)
+            {
+                lowerBracketSeries.TeamAId = loser.Id;
+                lowerBracketSeries.TeamA = loser;
+                Console.WriteLine($"✅ Seeded loser {loser.FullName} to TeamA of lower bracket series {lowerBracketSeries.Id}");
+            }
+            else if (lowerBracketSeries.TeamBId == null)
+            {
+                lowerBracketSeries.TeamBId = loser.Id;
+                lowerBracketSeries.TeamB = loser;
+                Console.WriteLine($"✅ Seeded loser {loser.FullName} to TeamB of lower bracket series {lowerBracketSeries.Id}");
+            }
+            else
+            {
+                Console.WriteLine($"❌ Lower bracket series {lowerBracketSeries.Id} already has both teams filled");
+            }
+
+            await _db.SaveChangesAsync();
+        }
+
+        private async Task<Series> FindCorrespondingLowerBracketSeries(Series upperBracketSeries)
+        {
+            // Special case: WB Final loser goes to LB Final
+            if (upperBracketSeries.Round == 3) // WB Final is typically Round 3
+            {
+                var lowerBracketFinal = await _db.Series
+                    .Include(s => s.TeamA)
+                    .Include(s => s.TeamB)
+                    .Where(s => s.TournamentId == upperBracketSeries.TournamentId &&
+                               s.Bracket == BracketType.Lower &&
+                               s.Round == 4) // LB Final is typically Round 4
+                    .FirstOrDefaultAsync();
+
+                if (lowerBracketFinal != null)
+                {
+                    Console.WriteLine($"🎯 Found LB Final for WB Final loser: LB Round {lowerBracketFinal.Round}");
+                    return lowerBracketFinal;
+                }
+            }
+
+            // In double elimination, upper bracket round N losers drop to lower bracket round N
+            // We need to find the lower bracket series that corresponds to this upper bracket series
+            
+            var lowerBracketSeries = await _db.Series
+                .Include(s => s.TeamA)
+                .Include(s => s.TeamB)
+                .Where(s => s.TournamentId == upperBracketSeries.TournamentId &&
+                           s.Bracket == BracketType.Lower &&
+                           s.Round == upperBracketSeries.Round &&
+                           s.Position == upperBracketSeries.Position)
+                .FirstOrDefaultAsync();
+
+            if (lowerBracketSeries != null)
+            {
+                Console.WriteLine($"🎯 Found exact match: LB Round {lowerBracketSeries.Round} Match {lowerBracketSeries.Position}");
+                return lowerBracketSeries;
+            }
+
+            // If no exact match, try to find the appropriate lower bracket series based on position
+            // Need to handle different bracket sizes and bye scenarios
+            
+            int lowerBracketPosition;
+            if (upperBracketSeries.Round == 1)
+            {
+                // For first round, we need to handle different bracket sizes
+                lowerBracketPosition = CalculateLowerBracketPositionForFirstRound(upperBracketSeries);
+            }
+            else
+            {
+                // Other rounds: 1 upper bracket match feeds into 1 lower bracket match
+                lowerBracketPosition = upperBracketSeries.Position;
+            }
+
+            lowerBracketSeries = await _db.Series
+                .Include(s => s.TeamA)
+                .Include(s => s.TeamB)
+                .Where(s => s.TournamentId == upperBracketSeries.TournamentId &&
+                           s.Bracket == BracketType.Lower &&
+                           s.Round == upperBracketSeries.Round &&
+                           s.Position == lowerBracketPosition)
+                .FirstOrDefaultAsync();
+
+            if (lowerBracketSeries != null)
+            {
+                Console.WriteLine($"🎯 Found position-based match: LB Round {lowerBracketSeries.Round} Match {lowerBracketSeries.Position}");
+            }
+
+            return lowerBracketSeries;
+        }
+
+
+        private int CalculateLowerBracketPositionForFirstRound(Series upperBracketSeries)
+        {
+            // Get all upper bracket round 1 series to understand the bracket structure
+            var allUpperRound1Series = _db.Series
+                .Where(s => s.TournamentId == upperBracketSeries.TournamentId &&
+                           s.Bracket == BracketType.Upper &&
+                           s.Round == 1)
+                .OrderBy(s => s.Position)
+                .ToList();
+
+            // Check if this upper bracket series has a bye (only one team)
+            bool hasBye = upperBracketSeries.TeamAId != null && upperBracketSeries.TeamBId == null;
+            
+            Console.WriteLine($"🔍 UB Match {upperBracketSeries.Position}: Has bye = {hasBye}");
+
+            if (hasBye)
+            {
+                Console.WriteLine($"❌ UB Match {upperBracketSeries.Position} has bye - no loser to seed");
+                return -1; // No corresponding lower bracket series
+            }
+
+            // Count how many upper bracket matches actually have losers (no byes)
+            var matchesWithLosers = allUpperRound1Series.Where(s => s.TeamAId != null && s.TeamBId != null).ToList();
+            int loserMatchIndex = matchesWithLosers.FindIndex(s => s.Id == upperBracketSeries.Id);
+            
+            Console.WriteLine($"🔍 UB Match {upperBracketSeries.Position} is loser match #{loserMatchIndex + 1} of {matchesWithLosers.Count}");
+
+            // For 7-team bracket: 3 matches with losers, all should play in LB Round 1
+            // The correct mapping should be:
+            // UB Match 1 loser (TDI bye - no loser) → No LB match
+            // UB Match 2 loser (Banana B) → LB Match 2 (LB 1.2)
+            // UB Match 3 loser (VAGMASTERS) → LB Match 1 (LB 1.1)
+            // UB Match 4 loser (Bulletproof) → LB Match 1 (LB 1.1)
+            if (matchesWithLosers.Count == 3)
+            {
+                // 7-team bracket: Correct lower bracket seeding
+                if (upperBracketSeries.Position == 2) // UB Match 2 - Banana B vs Divi Qzovci
+                    return 2; // LB Match 2 (LB 1.2) - Banana B goes here
+                else if (upperBracketSeries.Position == 3) // UB Match 3 - Ribarite vs VAGMASTERS
+                    return 1; // LB Match 1 (LB 1.1) - VAGMASTERS goes here
+                else if (upperBracketSeries.Position == 4) // UB Match 4 - SOP Clan vs Bulletproof
+                    return 1; // LB Match 1 (LB 1.1) - Bulletproof goes here (same match as VAGMASTERS)
+                else
+                    return 1; // Default
+            }
+            else if (matchesWithLosers.Count == 2)
+            {
+                // 6-team bracket: 2 losers, 1 LB match
+                return 1; // All losers go to LB Match 1
+            }
+            else
+            {
+                // Standard mapping: 2 upper bracket matches feed into 1 lower bracket match
+                return ((loserMatchIndex) / 2) + 1;
+            }
+        }
+
         // Manual Statistics Upload
         [HttpGet]
         [Authorize(Roles = "Administrator,Moderator")]
@@ -660,6 +859,12 @@ namespace Balkana.Controllers
                 TeamBId = teamB.Id,
                 TeamBSourceSlot = "TeamB",
                 SeriesId = model.SeriesId,
+                
+                // Round information
+                TeamARounds = model.TeamARounds,
+                TeamBRounds = model.TeamBRounds,
+                TotalRounds = model.TotalRounds,
+                
                 PlayerStats = new List<PlayerStatistic>()
             };
 
