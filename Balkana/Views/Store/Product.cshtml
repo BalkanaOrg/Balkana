@@ -1,0 +1,371 @@
+@model Balkana.Models.Store.ProductDetailsViewModel
+
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<div class="container mt-4 text-white">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Store</a></li>
+            <li class="breadcrumb-item"><a asp-action="Index" asp-route-categoryId="@Model.CategoryId">@Model.CategoryName</a></li>
+            <li class="breadcrumb-item active">@Model.Name</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-md-6">
+            <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <img src="@Model.MainImageUrl" class="d-block w-100" alt="@Model.Name" style="height: 500px; object-fit: contain; background: #f8f9fa;">
+                    </div>
+                    @foreach (var img in Model.AdditionalImages)
+                    {
+                        <div class="carousel-item">
+                            <img src="@img" class="d-block w-100" alt="@Model.Name" style="height: 500px; object-fit: contain; background: #f8f9fa;">
+                        </div>
+                    }
+                </div>
+                @if (Model.AdditionalImages.Any())
+                {
+                    <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- Product Info & Purchase -->
+        <div class="col-md-6">
+            <h1 class="text-white">@Model.Name</h1>
+            
+            @if (!string.IsNullOrEmpty(Model.TeamTag) || !string.IsNullOrEmpty(Model.PlayerNickname))
+            {
+                <div class="mb-3">
+                    @if (!string.IsNullOrEmpty(Model.TeamTag))
+                    {
+                        <a href="/teams/details/@Model.TeamId" class="badge bg-info text-decoration-none">
+                            @Model.TeamTag - @Model.TeamName
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.PlayerNickname))
+                    {
+                        <a href="/players/profile/@Model.PlayerId" class="badge bg-success text-decoration-none">
+                            @Model.PlayerNickname
+                        </a>
+                    }
+                </div>
+            }
+
+            @if (Model.Collections.Any())
+            {
+                <div class="mb-3">
+                    @foreach (var collection in Model.Collections)
+                    {
+                        <span class="badge bg-secondary">@collection</span>
+                    }
+                </div>
+            }
+
+            <div class="mb-4">
+                <p class="lead">@Model.Description</p>
+            </div>
+
+            @if (Model.Variants.Any())
+            {
+                <form asp-action="AddToCart" method="post" id="purchaseForm">
+                    @Html.AntiForgeryToken()
+
+                    <!-- Size Selection -->
+                    @if (Model.AvailableSizes.Any())
+                    {
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-white">Size:</label>
+                            <div class="btn-group" role="group" id="sizeSelection">
+                                @foreach (var size in Model.AvailableSizes)
+                                {
+                                    <input type="radio" class="btn-check" name="selectedSize" id="size-@size" value="@size" autocomplete="off">
+                                    <label class="btn btn-outline-primary" for="size-@size">@size</label>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Color Selection -->
+                    @if (Model.AvailableColors.Any())
+                    {
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-white">Color:</label>
+                            <div class="d-flex gap-2 flex-wrap" id="colorSelection">
+                                @foreach (var color in Model.AvailableColors)
+                                {
+                                    <div class="color-option" data-color="@color.ColorName">
+                                        <input type="radio" class="btn-check" name="selectedColor" id="color-@color.ColorName" value="@color.ColorName" autocomplete="off">
+                                        <label class="btn btn-outline-secondary" for="color-@color.ColorName" title="@color.ColorName">
+                                            @if (!string.IsNullOrEmpty(color.ColorHex))
+                                            {
+                                                <span style="display: inline-block; width: 20px; height: 20px; background-color: @color.ColorHex; border: 1px solid #ccc; border-radius: 50%; margin-right: 5px;"></span>
+                                            }
+                                            @color.ColorName
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @* If only one variant and no size/color options, auto-select it *@
+                    @if (!Model.AvailableSizes.Any() && !Model.AvailableColors.Any() && Model.Variants.Count == 1)
+                    {
+                        <input type="hidden" id="singleVariantId" value="@Model.Variants.First().Id" />
+                    }
+
+                    <!-- Variant Selection (Hidden) -->
+                    <input type="hidden" name="productVariantId" id="selectedVariantId" />
+
+                    <!-- Variant Info -->
+                    <div id="variantInfo" class="mb-3" style="display: none;">
+                        <div class="alert alert-info">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong id="variantName"></strong><br>
+                                    <small>SKU: <span id="variantSKU"></span></small>
+                                </div>
+                                <div class="text-end">
+                                    <h4 class="mb-0"><span id="variantPrice"></span> BGN</h4>
+                                    <small id="variantStock" class="text-muted"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quantity -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Quantity:</label>
+                        <div class="input-group" style="max-width: 150px;">
+                            <button class="btn btn-outline-secondary" type="button" onclick="changeQuantity(-1)">-</button>
+                            <input type="number" class="form-control text-center" name="quantity" id="quantity" value="1" min="1" max="99">
+                            <button class="btn btn-outline-secondary" type="button" onclick="changeQuantity(1)">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Add to Cart Button -->
+                    <button type="submit" class="btn btn-success btn-lg w-100 mb-3" id="addToCartBtn" disabled>
+                        <i class="fas fa-shopping-cart"></i> Add to Cart
+                    </button>
+
+                    <div class="alert alert-warning" id="selectVariantWarning">
+                        <i class="fas fa-info-circle"></i> 
+                        <span id="warningText">
+                            @if (Model.AvailableSizes.Any() && Model.AvailableColors.Any())
+                            {
+                                @:Please select size and color
+                            }
+                            else if (Model.AvailableSizes.Any())
+                            {
+                                @:Please select a size
+                            }
+                            else if (Model.AvailableColors.Any())
+                            {
+                                @:Please select a color
+                            }
+                            else
+                            {
+                                @:Loading...
+                            }
+                        </span>
+                    </div>
+                </form>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> No variants available for this product yet.
+                </div>
+            }
+
+            <!-- Additional Info -->
+            <hr class="my-4">
+            <ul class="list-unstyled">
+                <li><i class="fas fa-truck"></i> Free shipping on orders over 100 BGN</li>
+                <li><i class="fas fa-undo"></i> 14-day return policy</li>
+                <li><i class="fas fa-shield-alt"></i> Secure payment</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Variant data from server (camelCase property names from JSON)
+        const variants = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Variants));
+        const hasSizes = @Html.Raw(Model.AvailableSizes.Any() ? "true" : "false");
+        const hasColors = @Html.Raw(Model.AvailableColors.Any() ? "true" : "false");
+        
+        console.log('=== PRODUCT PAGE DEBUG ===');
+        console.log('Total variants:', variants.length);
+        console.log('Has sizes:', hasSizes);
+        console.log('Has colors:', hasColors);
+        console.log('All variants:', variants);
+        
+        function updateSelectedVariant() {
+            const selectedSize = document.querySelector('input[name="selectedSize"]:checked')?.value;
+            const selectedColor = document.querySelector('input[name="selectedColor"]:checked')?.value;
+            
+            console.log('--- Selection Changed ---');
+            console.log('Selected size:', selectedSize);
+            console.log('Selected color:', selectedColor);
+            
+            // Check if only one variant exists (no options needed)
+            const singleVariantId = document.getElementById('singleVariantId')?.value;
+            if (singleVariantId) {
+                const variant = variants[0];
+                showVariantDetails(variant);
+                return;
+            }
+            
+            // Build filter based on what's available
+            let variant = null;
+            
+            if (hasSizes && hasColors) {
+                // Both required
+                if (!selectedSize || !selectedColor) {
+                    showWarning('Please select both size and color');
+                    return;
+                }
+                // Match with camelCase property names (Size -> size, Color -> color)
+                variant = variants.find(v => {
+                    const vSize = (v.size || v.Size || '').toLowerCase().trim();
+                    const vColor = (v.color || v.Color || '').toLowerCase().trim();
+                    const selSize = (selectedSize || '').toLowerCase().trim();
+                    const selColor = (selectedColor || '').toLowerCase().trim();
+                    
+                    console.log(`Comparing: variant(${vSize}, ${vColor}) vs selected(${selSize}, ${selColor})`);
+                    
+                    return vSize === selSize && vColor === selColor;
+                });
+                console.log('Found variant (size+color):', variant);
+            } else if (hasSizes && !hasColors) {
+                // Only size required
+                if (!selectedSize) {
+                    showWarning('Please select a size');
+                    return;
+                }
+                variant = variants.find(v => {
+                    const vSize = (v.size || v.Size || '').toLowerCase().trim();
+                    const selSize = (selectedSize || '').toLowerCase().trim();
+                    return vSize === selSize;
+                });
+                console.log('Found variant (size only):', variant);
+            } else if (!hasSizes && hasColors) {
+                // Only color required
+                if (!selectedColor) {
+                    showWarning('Please select a color');
+                    return;
+                }
+                variant = variants.find(v => {
+                    const vColor = (v.color || v.Color || '').toLowerCase().trim();
+                    const selColor = (selectedColor || '').toLowerCase().trim();
+                    return vColor === selColor;
+                });
+                console.log('Found variant (color only):', variant);
+            } else {
+                // No options, single variant
+                variant = variants[0];
+            }
+            
+            if (variant) {
+                showVariantDetails(variant);
+            } else {
+                console.error('ERROR: No variant found!');
+                console.log('Available variants:', variants);
+                showWarning('Selected combination not available. Please try another option.');
+            }
+        }
+        
+        function showVariantDetails(variant) {
+            const id = variant.id || variant.Id;
+            const name = variant.name || variant.Name;
+            const sku = variant.sku || variant.SKU || variant.Sku;
+            const price = variant.price || variant.Price;
+            const stockQuantity = variant.stockQuantity || variant.StockQuantity;
+            const inStock = variant.inStock !== undefined ? variant.inStock : (variant.InStock !== undefined ? variant.InStock : (stockQuantity > 0));
+            
+            console.log('Showing variant details:', {id, name, sku, price, stockQuantity, inStock});
+            
+            document.getElementById('selectedVariantId').value = id;
+            document.getElementById('variantName').textContent = name;
+            document.getElementById('variantSKU').textContent = sku;
+            document.getElementById('variantPrice').textContent = price.toFixed(2);
+            document.getElementById('variantStock').textContent = inStock 
+                ? `${stockQuantity} in stock` 
+                : 'Out of stock';
+            
+            document.getElementById('selectVariantWarning').style.display = 'none';
+            document.getElementById('variantInfo').style.display = 'block';
+            
+            // FIX: Check InStock (PascalCase) not inStock (camelCase)
+            const enableButton = inStock && stockQuantity > 0;
+            console.log('Enable button?', enableButton, '(inStock:', inStock, ', stockQuantity:', stockQuantity, ')');
+            document.getElementById('addToCartBtn').disabled = !enableButton;
+            
+            // Update max quantity
+            document.getElementById('quantity').max = stockQuantity || 99;
+        }
+        
+        function showWarning(message) {
+            const warning = document.getElementById('selectVariantWarning');
+            warning.textContent = message;
+            warning.style.display = 'block';
+            document.getElementById('variantInfo').style.display = 'none';
+            document.getElementById('addToCartBtn').disabled = true;
+        }
+        
+        function changeQuantity(delta) {
+            const input = document.getElementById('quantity');
+            const newValue = parseInt(input.value) + delta;
+            if (newValue >= 1 && newValue <= parseInt(input.max)) {
+                input.value = newValue;
+            }
+        }
+        
+        // Event listeners
+        document.querySelectorAll('input[name="selectedSize"], input[name="selectedColor"]').forEach(radio => {
+            radio.addEventListener('change', updateSelectedVariant);
+        });
+        
+        // Auto-select if only one option exists
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-select single variant
+            if (document.getElementById('singleVariantId')) {
+                updateSelectedVariant();
+                return;
+            }
+            
+            // Auto-select if only one size option
+            const sizeRadios = document.querySelectorAll('input[name="selectedSize"]');
+            if (sizeRadios.length === 1) {
+                sizeRadios[0].checked = true;
+                updateSelectedVariant();
+            }
+            
+            // Auto-select if only one color option
+            const colorRadios = document.querySelectorAll('input[name="selectedColor"]');
+            if (colorRadios.length === 1) {
+                colorRadios[0].checked = true;
+                updateSelectedVariant();
+            }
+            
+            // If both are auto-selected, update immediately
+            if (sizeRadios.length === 1 && colorRadios.length === 1) {
+                updateSelectedVariant();
+            }
+        });
+    </script>
+}
+

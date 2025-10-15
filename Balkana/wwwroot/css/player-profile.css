@@ -700,40 +700,52 @@ body {
     align-items: center;
 }
 
-.trophies-row {
-    display: flex;
-    gap: 15px;
-    padding: 10px 0;
-    align-items: center;
-    /* Only show scrollbar when content actually overflows */
+/* Trophy cabinet container with integrated scrollbar */
+.trophy-display {
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: thin;
     scrollbar-color: var(--accent-blue) var(--primary-black);
+    padding: 10px 0;
+    /* Hide scrollbar by default */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
-/* Hide scrollbar by default, only show when content overflows */
-.trophies-row::-webkit-scrollbar {
+.trophy-display::-webkit-scrollbar {
+    display: none;
+}
+
+/* Show scrollbar only when hovering over the trophy cabinet */
+.trophy-display:hover {
+    scrollbar-width: thin;
+}
+
+.trophy-display:hover::-webkit-scrollbar {
+    display: block;
     height: 6px;
 }
 
-.trophies-row::-webkit-scrollbar-track {
+.trophy-display::-webkit-scrollbar-track {
     background: var(--primary-black);
     border-radius: 3px;
 }
 
-.trophies-row::-webkit-scrollbar-thumb {
+.trophy-display::-webkit-scrollbar-thumb {
     background: var(--accent-blue);
     border-radius: 3px;
 }
 
-.trophies-row::-webkit-scrollbar-thumb:hover {
+.trophy-display::-webkit-scrollbar-thumb:hover {
     background: var(--accent-red);
 }
 
-/* Only show scrollbar when there's actual overflow */
 .trophies-row {
-    scrollbar-gutter: stable;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    /* Remove overflow from row, let container handle it */
+    overflow: visible;
 }
 
 .trophy-item {
@@ -1034,6 +1046,15 @@ body {
 
 .matches-table img {
     border: 1px solid var(--border-dark);
+}
+
+/* Fix transfers table hover text color */
+.table-hover tbody tr:hover td {
+    color: var(--text-primary) !important;
+}
+
+.table-hover tbody tr:hover td * {
+    color: var(--text-primary) !important;
 }
 
 

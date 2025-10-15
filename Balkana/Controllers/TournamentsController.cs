@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using PuppeteerSharp;
 
 namespace Balkana.Controllers
 {
@@ -400,6 +401,343 @@ namespace Balkana.Controllers
                 stages
             });
         }
+
+        [HttpGet("api/tournaments/{id}/bracket/image")]
+        public async Task<IActionResult> GetBracketImage(int id, [FromQuery] bool html = false)
+        {
+            // Fetch tournament with teams and series
+            var tournament = await _context.Tournaments
+                .Include(t => t.TournamentTeams)
+                    .ThenInclude(tt => tt.Team)
+                .Include(t => t.Series)
+                    .ThenInclude(s => s.TeamA)
+                .Include(t => t.Series)
+                    .ThenInclude(s => s.TeamB)
+                .Include(t => t.Series)
+                    .ThenInclude(s => s.Matches)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (tournament == null)
+                return NotFound("Tournament not found");
+
+            if (!tournament.Series.Any())
+                return BadRequest("Bracket not yet generated for this tournament");
+
+            try
+            {
+                // Always try to capture the actual bracket from the tournament page first
+                var imageBytes = await CaptureBracketFromTournamentPage(id);
+                
+                // Return image with proper headers for Discord
+                Response.Headers["Content-Type"] = "image/png";
+                Response.Headers["Cache-Control"] = "public, max-age=3600";
+                Response.Headers["Content-Disposition"] = "inline";
+                
+                return File(imageBytes, "image/png", $"{tournament.FullName.Replace(" ", "_")}_bracket.png");
+            }
+            catch (Exception ex)
+            {
+                // If image capture fails, return HTML with proper meta tags for Discord embeds
+                var bracketData = await GetBracketDataForImage(tournament);
+                var htmlContent = GenerateBracketHtmlWithMetaTags(tournament, bracketData, Request);
+                return Content(htmlContent, "text/html");
+            }
+        }
+
+        private async Task<object> GetBracketDataForImage(Tournament tournament)
+        {
+            // Reuse the existing GetBracket logic
+            var participants = tournament.TournamentTeams
+                .OrderBy(tt => tt.Seed)
+                .Select(tt => new
+                {
+                    id = tt.Team.Id,
+                    name = tt.Team.FullName
+                })
+                .ToList();
+
+            // Add dummy participant for TBD slots
+            participants.Add(new { id = -1, name = "TBD" });
+
+            var matches = tournament.Series
+                .Select(s => new
+                {
+                    id = s.Id,
+                    series_id = s.Id,
+                    stage_id = 1,
+                    group_id = s.Bracket == BracketType.Upper ? 0 :
+                               s.Bracket == BracketType.Lower ? 1 : 2,
+                    round_id = s.Round,
+                    number = s.Position,
+                    status = s.isFinished ? "finished" : "open",
+                    opponent1 = s.TeamA != null
+                        ? new { 
+                            id = s.TeamA.Id, 
+                            name = s.TeamA.FullName, 
+                            score = GetTeamScore(s, s.TeamA), 
+                            result = GetTeamResult(s, s.TeamA) 
+                        }
+                        : new { id = -1, name = "TBD", score = 0, result = "" },
+                    opponent2 = s.TeamB != null
+                        ? new { 
+                            id = s.TeamB.Id, 
+                            name = s.TeamB.FullName, 
+                            score = GetTeamScore(s, s.TeamB), 
+                            result = GetTeamResult(s, s.TeamB) 
+                        }
+                        : new { id = -1, name = "TBD", score = 0, result = "" }
+                }).ToList();
+
+            var stages = new[]
+            {
+                new
+                {
+                    id = 1,
+                    name = tournament.Elimination == EliminationType.Single ? "Single Elimination" : "Double Elimination",
+                    type = tournament.Elimination == EliminationType.Single ? "single_elimination" : "double_elimination",
+                    settings = new { skipFirstRound = false },
+                    groups = tournament.Elimination == EliminationType.Single 
+                        ? new[] { new { id = 0, name = "Main Bracket" } }
+                        : new[]
+                        {
+                            new { id = 0, name = "Upper Bracket" },
+                            new { id = 1, name = "Lower Bracket" },
+                            new { id = 2, name = "Grand Final" }
+                        }
+                }
+            };
+
+            return new
+            {
+                participants,
+                matches,
+                matchGames = new object[0],
+                stages
+            };
+        }
+
+        private string GenerateBracketHtml(Tournament tournament, object bracketData)
+        {
+            var html = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>{tournament.FullName} - Bracket</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: white;
+            min-height: 100vh;
+        }}
+        .header {{
+            text-align: center;
+            margin-bottom: 30px;
+        }}
+        .header h1 {{
+            font-size: 2.5em;
+            margin: 0;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }}
+        .bracket-container {{
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }}
+        #bracket-viewer {{
+            width: 100%;
+            min-height: 600px;
+        }}
+    </style>
+    <script src='https://cdn.jsdelivr.net/npm/brackets-viewer@1.3.0/dist/brackets-viewer.min.js'></script>
+    <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/brackets-viewer@1.3.0/dist/brackets-viewer.min.css'>
+</head>
+<body>
+    <div class='header'>
+        <h1>{tournament.FullName}</h1>
+        <p>Tournament Bracket</p>
+    </div>
+    
+    <div class='bracket-container'>
+        <div id='bracket-viewer'></div>
+    </div>
+
+    <script>
+        const bracketData = {System.Text.Json.JsonSerializer.Serialize(bracketData)};
+        
+        const viewer = new BracketViewer.BracketsViewer(
+            document.getElementById('bracket-viewer'),
+            {{
+                participantOriginPlacement: 'before',
+                separatedChildCountLabel: true,
+                showSlotsOrigin: false,
+                showLowerBracketSlotsOrigin: false,
+                highlightParticipantOnHover: true,
+                showParticipantCountryFlag: false,
+                showParticipantImage: false
+            }}
+        );
+        
+        viewer.render(bracketData);
+    </script>
+</body>
+</html>";
+
+            return html;
+        }
+
+        private string GenerateBracketHtmlWithMetaTags(Tournament tournament, object bracketData, HttpRequest request)
+        {
+            var baseUrl = $"{request.Scheme}://{request.Host}";
+            var imageUrl = $"{baseUrl}/api/tournaments/{tournament.Id}/bracket/image";
+            
+            var html = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>{tournament.FullName} - Tournament Bracket</title>
+    <meta name='description' content='Tournament bracket for {tournament.FullName}'>
+    
+    <!-- Open Graph / Facebook -->
+    <meta property='og:type' content='website'>
+    <meta property='og:url' content='{imageUrl}'>
+    <meta property='og:title' content='{tournament.FullName} - Tournament Bracket'>
+    <meta property='og:description' content='Tournament bracket for {tournament.FullName}'>
+    <meta property='og:image' content='{imageUrl}'>
+    <meta property='og:image:width' content='1920'>
+    <meta property='og:image:height' content='1080'>
+    <meta property='og:image:type' content='image/png'>
+    
+    <!-- Twitter -->
+    <meta property='twitter:card' content='summary_large_image'>
+    <meta property='twitter:url' content='{imageUrl}'>
+    <meta property='twitter:title' content='{tournament.FullName} - Tournament Bracket'>
+    <meta property='twitter:description' content='Tournament bracket for {tournament.FullName}'>
+    <meta property='twitter:image' content='{imageUrl}'>
+    
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: white;
+            min-height: 100vh;
+        }}
+        .header {{
+            text-align: center;
+            margin-bottom: 30px;
+        }}
+        .header h1 {{
+            font-size: 2.5em;
+            margin: 0;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }}
+        .bracket-container {{
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }}
+        #bracket-viewer {{
+            width: 100%;
+            min-height: 600px;
+        }}
+    </style>
+    <script src='https://cdn.jsdelivr.net/npm/brackets-viewer@1.3.0/dist/brackets-viewer.min.js'></script>
+    <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/brackets-viewer@1.3.0/dist/brackets-viewer.min.css'>
+</head>
+<body>
+    <div class='header'>
+        <h1>{tournament.FullName}</h1>
+        <p>Tournament Bracket</p>
+    </div>
+    
+    <div class='bracket-container'>
+        <div id='bracket-viewer'></div>
+    </div>
+
+    <script>
+        const bracketData = {System.Text.Json.JsonSerializer.Serialize(bracketData)};
+        
+        const viewer = new BracketViewer.BracketsViewer(
+            document.getElementById('bracket-viewer'),
+            {{
+                participantOriginPlacement: 'before',
+                separatedChildCountLabel: true,
+                showSlotsOrigin: false,
+                showLowerBracketSlotsOrigin: false,
+                highlightParticipantOnHover: true,
+                showParticipantCountryFlag: false,
+                showParticipantImage: false
+            }}
+        );
+        
+        viewer.render(bracketData);
+    </script>
+</body>
+</html>";
+
+            return html;
+        }
+
+        private async Task<byte[]> CaptureBracketFromTournamentPage(int tournamentId)
+        {
+            // Launch headless browser
+            await new BrowserFetcher().DownloadAsync();
+            
+            using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+            {
+                Headless = true,
+                Args = new[] { "--no-sandbox", "--disable-setuid-sandbox" }
+            });
+            
+            using var page = await browser.NewPageAsync();
+            
+            // Set viewport to capture the bracket properly
+            await page.SetViewportAsync(new ViewPortOptions
+            {
+                Width = 1920,
+                Height = 1080,
+                DeviceScaleFactor = 2 // Higher DPI for better quality
+            });
+            
+            // Navigate to the tournament details page
+            var tournamentUrl = $"{Request.Scheme}://{Request.Host}/Tournaments/Details/{tournamentId}";
+            await page.GoToAsync(tournamentUrl, WaitUntilNavigation.Networkidle2);
+            
+            // Wait for the bracket to load
+            await page.WaitForSelectorAsync("#bracket-viewer", new WaitForSelectorOptions { Timeout = 10000 });
+            
+            // Wait a bit more for any animations or dynamic content to settle
+            await Task.Delay(2000);
+            
+            // Find the bracket container element
+            var bracketElement = await page.QuerySelectorAsync("#bracket-viewer");
+            if (bracketElement == null)
+            {
+                throw new Exception("Bracket element not found on page");
+            }
+            
+            // Capture screenshot of just the bracket area
+            var screenshot = await bracketElement.ScreenshotDataAsync();
+            
+            return screenshot;
+        }
+
 
         [HttpGet("api/series/{id}/details")]
         public IActionResult GetSeriesDetails(int id)

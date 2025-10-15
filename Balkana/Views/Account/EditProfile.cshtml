@@ -1,0 +1,80 @@
+@model Balkana.Models.Accounts.EditProfileViewModel
+@{
+    ViewData["Title"] = "Edit Profile";
+    Layout = "_Layout";
+}
+
+<link rel="stylesheet" href="~/css/user-profile.css" />
+
+<div class="edit-profile-container">
+    <div class="edit-header">
+        <h1><i class="fi fi-rr-edit"></i> Edit Profile</h1>
+        <p>Update your personal information and preferences</p>
+    </div>
+
+    <div class="edit-form-container">
+        <form asp-action="EditProfile" method="post" class="edit-form">
+            <div class="form-section">
+                <h3><i class="fi fi-rr-user"></i> Personal Information</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label asp-for="Username">Username</label>
+                        <input asp-for="Username" class="form-input" placeholder="Enter username" />
+                        <span asp-validation-for="Username" class="validation-error"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="Email">Email Address</label>
+                        <input asp-for="Email" type="email" class="form-input" placeholder="Enter email" />
+                        <span asp-validation-for="Email" class="validation-error"></span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label asp-for="FirstName">First Name</label>
+                        <input asp-for="FirstName" class="form-input" placeholder="Enter first name" />
+                        <span asp-validation-for="FirstName" class="validation-error"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="LastName">Last Name</label>
+                        <input asp-for="LastName" class="form-input" placeholder="Enter last name" />
+                        <span asp-validation-for="LastName" class="validation-error"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="NationalityId">Nationality</label>
+                    <select asp-for="NationalityId" class="form-select">
+                        <option value="">Select your nationality</option>
+                        @foreach (var nationality in Model.Nationalities)
+                        {
+                            <option value="@nationality.Id">@nationality.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="NationalityId" class="validation-error"></span>
+                </div>
+            </div>
+
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    <i class="fi fi-rr-check"></i>
+                    Save Changes
+                </button>
+                <a asp-action="Profile" class="btn-secondary">
+                    <i class="fi fi-rr-arrow-left"></i>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

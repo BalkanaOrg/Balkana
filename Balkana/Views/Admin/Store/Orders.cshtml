@@ -1,0 +1,127 @@
+@model List<Balkana.Data.Models.Store.Order>
+
+@{
+    ViewData["Title"] = "Store Orders";
+    var statusFilter = ViewBag.StatusFilter as Balkana.Data.Models.Store.OrderStatus?;
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-white"><i class="fas fa-shopping-bag"></i> Store Orders</h2>
+        <a asp-action="StoreProducts" class="btn btn-secondary">
+            <i class="fas fa-box"></i> Back to Products
+        </a>
+    </div>
+
+    <!-- Status Filter -->
+    <div class="btn-group mb-4" role="group">
+        <a asp-action="StoreOrders" class="btn @(statusFilter == null ? "btn-primary" : "btn-outline-primary")">
+            All Orders
+        </a>
+        <a asp-action="StoreOrders" asp-route-status="@Balkana.Data.Models.Store.OrderStatus.Pending" 
+           class="btn @(statusFilter == Balkana.Data.Models.Store.OrderStatus.Pending ? "btn-warning" : "btn-outline-warning")">
+            Pending
+        </a>
+        <a asp-action="StoreOrders" asp-route-status="@Balkana.Data.Models.Store.OrderStatus.Confirmed" 
+           class="btn @(statusFilter == Balkana.Data.Models.Store.OrderStatus.Confirmed ? "btn-info" : "btn-outline-info")">
+            Confirmed
+        </a>
+        <a asp-action="StoreOrders" asp-route-status="@Balkana.Data.Models.Store.OrderStatus.Shipped" 
+           class="btn @(statusFilter == Balkana.Data.Models.Store.OrderStatus.Shipped ? "btn-primary" : "btn-outline-primary")">
+            Shipped
+        </a>
+        <a asp-action="StoreOrders" asp-route-status="@Balkana.Data.Models.Store.OrderStatus.Delivered" 
+           class="btn @(statusFilter == Balkana.Data.Models.Store.OrderStatus.Delivered ? "btn-success" : "btn-outline-success")">
+            Delivered
+        </a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Payment</th>
+                        <th>Delivery</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model)
+                    {
+                        var customerName = !string.IsNullOrEmpty(order.GuestFirstName) 
+                            ? $"{order.GuestFirstName} {order.GuestLastName}"
+                            : order.User != null ? $"{order.User.FirstName} {order.User.LastName}" : "Unknown";
+
+                        <tr>
+                            <td><strong>@order.OrderNumber</strong></td>
+                            <td>
+                                @customerName
+                                @if (order.User == null)
+                                {
+                                    <br><small class="badge bg-secondary">Guest</small>
+                                }
+                            </td>
+                            <td>@order.OrderItems.Count items</td>
+                            <td><strong>@order.TotalAmount.ToString("F2") @order.Currency</strong></td>
+                            <td>
+                                <span class="badge @(order.PaymentStatus == Balkana.Data.Models.Store.PaymentStatus.Paid ? "bg-success" : "bg-warning")">
+                                    @order.PaymentStatus.ToString()
+                                </span>
+                                <br><small>@order.PaymentMethod.ToString()</small>
+                            </td>
+                            <td>
+                                @order.DeliveryProvider.ToString()
+                                @if (!string.IsNullOrEmpty(order.TrackingNumber))
+                                {
+                                    <br><small class="text-muted">@order.TrackingNumber</small>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge @(order.Status switch 
+                                {
+                                    Balkana.Data.Models.Store.OrderStatus.Pending => "bg-warning",
+                                    Balkana.Data.Models.Store.OrderStatus.Confirmed => "bg-info",
+                                    Balkana.Data.Models.Store.OrderStatus.Processing => "bg-primary",
+                                    Balkana.Data.Models.Store.OrderStatus.Shipped => "bg-primary",
+                                    Balkana.Data.Models.Store.OrderStatus.Delivered => "bg-success",
+                                    Balkana.Data.Models.Store.OrderStatus.Cancelled => "bg-danger",
+                                    _ => "bg-secondary"
+                                })">
+                                    @order.Status.ToString()
+                                </span>
+                            </td>
+                            <td>@order.CreatedAt.ToString("dd MMM yyyy")</td>
+                            <td>
+                                <a asp-action="StoreOrderDetails" asp-route-id="@order.Id" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> Details
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No orders found.
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .card { background-color: #1a1a1a !important; }
+        .table-dark { background-color: #1a1a1a !important; }
+    </style>
+}
+

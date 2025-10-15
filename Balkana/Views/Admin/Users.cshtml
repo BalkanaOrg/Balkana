@@ -2,41 +2,208 @@
 @model IEnumerable<Balkana.Data.Models.ApplicationUser>
 @inject UserManager<Balkana.Data.Models.ApplicationUser> UserManager
 
-<h2>Manage Users</h2>
-<table>
-    <thead>
-        <tr>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Roles</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var user in Model)
-        {
-            <tr>
-                <td>@user.UserName</td>
-                <td>@user.Email</td>
-                <td>
-                    <!-- Show roles -->
-                    @string.Join(", ", await @UserManager.GetRolesAsync(user))
-                </td>
-                <td>
-                    <form asp-action="ChangeRole" method="post">
-                        <input type="hidden" name="userId" value="@user.Id" />
-                        <select name="role">
-                            <option>Member</option>
-                            <option>Author</option>
-                            <option>Editor</option>
-                            <option>StoreManager</option>
-                            <option>Moderator</option>
-                            <option>Administrator</option>
-                        </select>
-                        <button type="submit">Update</button>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+@{
+    ViewData["Title"] = "Manage Users";
+    Layout = "_Layout";
+}
+
+<link rel="stylesheet" href="~/css/site.css" />
+<link rel="stylesheet" href="~/css/admin.css" />
+
+<div class="admin-container">
+    <div class="admin-header">
+        <h1><i class="fi fi-rr-users"></i> Manage Users</h1>
+        <p>Manage user accounts, roles, and player links</p>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            <i class="fi fi-rr-check"></i>
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-error">
+            <i class="fi fi-rr-cross"></i>
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="users-table-container">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Nationality</th>
+                    <th>Player Link</th>
+                    <th>Roles</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td class="user-info">
+                            <div class="user-avatar-small">
+                                <img src="@(user.ProfilePictureUrl ?? "https://i.imgur.com/ZizgQGH.png")" alt="Avatar" />
+                            </div>
+                            <div class="user-details">
+                                <div class="user-name">@user.FirstName @user.LastName</div>
+                                <div class="user-username">@@@user.UserName</div>
+                            </div>
+                        </td>
+                        <td>@user.Email</td>
+                        <td>@user.Nationality?.Name</td>
+                        <td class="player-link">
+                            @if (user.Player != null)
+                            {
+                                <div class="linked-player">
+                                    <i class="fi fi-rr-trophy"></i>
+                                    <span>@user.Player.Nickname</span>
+                                    <form asp-action="LinkPlayer" method="post" class="inline-form">
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <input type="hidden" name="playerId" value="" />
+                                        <button type="submit" class="btn-unlink" title="Unlink Player">
+                                            <i class="fi fi-rr-cross"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="unlinked-player">
+                                    <span class="no-link">No player linked</span>
+                                    <div class="link-player-form">
+                                        <select class="player-select" data-user-id="@user.Id">
+                                            <option value="">Search for player...</option>
+                                        </select>
+                                        <button type="button" class="btn-link" data-user-id="@user.Id" style="display: none;">
+                                            <i class="fi fi-rr-link"></i>
+                                            Link
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </td>
+                        <td>
+                            <div class="user-roles">
+                                @string.Join(", ", await UserManager.GetRolesAsync(user))
+                            </div>
+                        </td>
+                        <td class="actions">
+                            <form asp-action="ChangeRole" method="post" class="role-form">
+                                <input type="hidden" name="userId" value="@user.Id" />
+                                <select name="role" class="role-select">
+                                    <option value="Member">Member</option>
+                                    <option value="Author">Author</option>
+                                    <option value="Editor">Editor</option>
+                                    <option value="StoreManager">Store Manager</option>
+                                    <option value="Moderator">Moderator</option>
+                                    <option value="Administrator">Administrator</option>
+                                </select>
+                                <button type="submit" class="btn-update-role">
+                                    <i class="fi fi-rr-refresh"></i>
+                                    Update Role
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 for player search
+            $('.player-select').select2({
+                ajax: {
+                    url: '/Admin/SearchPlayersForLinking',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            term: params.term,
+                            page: params.page || 1
+                        };
+                    },
+                    processResults: function (data, params) {
+                        params.page = params.page || 1;
+                        return {
+                            results: data.results.map(function(item) {
+                                return {
+                                    id: item.id,
+                                    text: item.text + ' (' + item.fullName + ')'
+                                };
+                            }),
+                            pagination: {
+                                more: data.pagination.more
+                            }
+                        };
+                    },
+                    cache: true
+                },
+                placeholder: 'Search for player...',
+                minimumInputLength: 1,
+                width: '100%'
+            });
+
+            // Show link button when player is selected
+            $('.player-select').on('select2:select', function (e) {
+                var userId = $(this).data('user-id');
+                $('.btn-link[data-user-id="' + userId + '"]').show();
+            });
+
+            // Handle player linking
+            $('.btn-link').click(function() {
+                var userId = $(this).data('user-id');
+                var playerId = $('.player-select[data-user-id="' + userId + '"]').val();
+                
+                if (playerId) {
+                    var form = $('<form>', {
+                        method: 'POST',
+                        action: '/Admin/LinkPlayer'
+                    });
+                    
+                    form.append($('<input>', {
+                        type: 'hidden',
+                        name: 'userId',
+                        value: userId
+                    }));
+                    
+                    form.append($('<input>', {
+                        type: 'hidden',
+                        name: 'playerId',
+                        value: playerId
+                    }));
+                    
+                    form.append($('<input>', {
+                        type: 'hidden',
+                        name: '__RequestVerificationToken',
+                        value: $('input[name="__RequestVerificationToken"]').val()
+                    }));
+                    
+                    $('body').append(form);
+                    form.submit();
+                }
+            });
+
+            // Set current role as selected
+            @foreach (var user in Model)
+            {
+                var roles = await UserManager.GetRolesAsync(user);
+                var currentRole = roles.FirstOrDefault() ?? "Member";
+                <text>
+                $('select[name="role"][data-user-id="@user.Id"]').val('@currentRole');
+                </text>
+            }
+        });
+    </script>
+}

@@ -22,9 +22,10 @@ namespace Balkana.Services.Tournaments
             // Create tournament trophy
             var tournamentTrophy = new TrophyTournament
             {
+                Name = $"Champion of {tournament.FullName}",
                 TournamentId = tournamentId,
                 Description = trophyDescription,
-                IconURL = "/uploads/Tournaments/default_trophy.png", // Default champion icon
+                IconURL = "/uploads/Tournaments/Trophies/default_trophy.png", // Default champion icon
                 AwardType = "Trophy",
                 AwardDate = tournament?.EndDate ?? DateTime.UtcNow
             };
@@ -81,6 +82,7 @@ namespace Balkana.Services.Tournaments
             // Create tournament trophy
             var tournamentTrophy = new TrophyTournament
             {
+                Name = $"Champion of {tournament.FullName}",
                 TournamentId = tournamentId,
                 Description = description,
                 IconURL = GetTrophyIconForAwardType(awardType),
@@ -113,6 +115,7 @@ namespace Balkana.Services.Tournaments
             // Create a single trophy that will be awarded to multiple players
             var tournamentTrophy = new TrophyTournament
             {
+                Name = $"Champion of {tournament.FullName}",
                 TournamentId = tournamentId,
                 Description = description,
                 IconURL = GetTrophyIconForAwardType(awardType),

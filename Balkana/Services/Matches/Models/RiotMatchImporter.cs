@@ -10,41 +10,53 @@ namespace Balkana.Services.Matches.Models
     {
         private readonly HttpClient _http;
         private readonly ApplicationDbContext _db;
+        private readonly IConfiguration _config;
 
-        public RiotMatchImporter(HttpClient http, ApplicationDbContext db)
+        public RiotMatchImporter(HttpClient http, ApplicationDbContext db, IConfiguration config)
         {
             _http = http;
             _db = db;
+            _config = config;
         }
 
         public async Task<List<Match>> ImportMatchAsync(string matchId, ApplicationDbContext db)
         {
-            // fetch from Riot API
+            // fetch from Riot API - matchId format: EUW1_1234567890 or EUNE1_1234567890
+            var region = "europe"; // routing region for match data
             var response = await _http.GetFromJsonAsync<RiotMatchDto>(
-                $"https://europe.api.riotgames.com/lol/match/v5/matches/{matchId}?api_key=YOUR_KEY");
+                $"lol/match/v5/matches/{matchId}");
 
             if (response == null) return null;
 
-            // Map players
+            // Determine match date from timestamp
+            var matchDate = DateTimeOffset.FromUnixTimeMilliseconds(response.info.gameStartTimestamp).UtcDateTime;
+
+            // Map players by PUUID
             var bluePuuids = response.info.participants.Where(p => p.teamId == 100).Select(p => p.puuid).ToList();
             var redPuuids = response.info.participants.Where(p => p.teamId == 200).Select(p => p.puuid).ToList();
 
-            var dbBlueTeam = db.Teams.Include(t => t.Transfers).ThenInclude(tr => tr.Player)
-                .FirstOrDefault(t => t.Transfers.Any(tr => tr.Player.GameProfiles.Any(gp => bluePuuids.Contains(gp.UUID))));
+            // Try to resolve teams based on player PUUIDs in GameProfiles
+            var dbBlueTeam = await ResolveTeamAsync(db, bluePuuids, matchDate);
+            var dbRedTeam = await ResolveTeamAsync(db, redPuuids, matchDate);
 
-            var dbRedTeam = db.Teams.Include(t => t.Transfers).ThenInclude(tr => tr.Player)
-                .FirstOrDefault(t => t.Transfers.Any(tr => tr.Player.GameProfiles.Any(gp => redPuuids.Contains(gp.UUID))));
+            // Determine winner team
+            var blueWon = response.info.teams.FirstOrDefault(t => t.teamId == 100)?.win ?? false;
+            Team winnerTeam = blueWon ? dbBlueTeam : dbRedTeam;
 
             var match = new MatchLoL
             {
                 ExternalMatchId = response.metadata.matchId,
                 Source = "RIOT",
-                PlayedAt = DateTimeOffset.FromUnixTimeMilliseconds(response.info.gameStartTimestamp).UtcDateTime,
+                PlayedAt = matchDate,
                 IsCompleted = true,
                 TeamA = dbBlueTeam,
                 TeamASourceSlot = "Blue",
                 TeamB = dbRedTeam,
                 TeamBSourceSlot = "Red",
+                WinnerTeam = winnerTeam,
+                GameVersion = response.info.gameVersion,
+                MapId = response.info.mapId,
+                GameMode = response.info.gameMode,
                 PlayerStats = new List<PlayerStatistic>()
             };
 
@@ -91,25 +103,77 @@ namespace Balkana.Services.Matches.Models
         {
             // Riot PUUID match history endpoint
             var matchIds = await _http.GetFromJsonAsync<List<string>>(
-                $"https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/{profileId}/ids?count=20&api_key=YOUR_KEY");
+                $"lol/match/v5/matches/by-puuid/{profileId}/ids?count=20");
 
             var results = new List<ExternalMatchSummary>();
+
+            if (matchIds == null || !matchIds.Any())
+                return results;
 
             foreach (var id in matchIds)
             {
                 // fetch metadata for each match
                 var match = await _http.GetFromJsonAsync<RiotMatchDto>(
-                    $"https://europe.api.riotgames.com/lol/match/v5/matches/{id}?api_key=YOUR_KEY");
+                    $"lol/match/v5/matches/{id}");
 
-                results.Add(new ExternalMatchSummary
+                if (match != null)
                 {
-                    ExternalMatchId = id,
-                    Source = "RIOT",
-                    PlayedAt = DateTimeOffset.FromUnixTimeMilliseconds(match.info.gameStartTimestamp).UtcDateTime
-                });
+                    results.Add(new ExternalMatchSummary
+                    {
+                        ExternalMatchId = id,
+                        Source = "RIOT",
+                        PlayedAt = DateTimeOffset.FromUnixTimeMilliseconds(match.info.gameStartTimestamp).UtcDateTime
+                    });
+                }
             }
 
             return results;
+        }
+
+        /// <summary>
+        /// Resolve a team based on player PUUIDs at a specific date
+        /// </summary>
+        private async Task<Team> ResolveTeamAsync(ApplicationDbContext db, List<string> puuids, DateTime matchDate)
+        {
+            if (puuids == null || !puuids.Any())
+                return null;
+
+            // Find teams that had at least 3 players from the puuid list at the match date
+            var teams = await db.Teams
+                .Include(t => t.Transfers)
+                    .ThenInclude(tr => tr.Player)
+                        .ThenInclude(p => p.GameProfiles)
+                .Where(t => t.Transfers.Any(tr =>
+                    (tr.StartDate == null || tr.StartDate <= matchDate) &&
+                    (tr.EndDate == null || tr.EndDate > matchDate) &&
+                    tr.Player.GameProfiles.Any(gp => gp.Provider == "RIOT" && puuids.Contains(gp.UUID))
+                ))
+                .ToListAsync();
+
+            // Find team with most matching players
+            Team bestMatch = null;
+            int maxMatches = 0;
+
+            foreach (var team in teams)
+            {
+                var activePlayerPuuids = team.Transfers
+                    .Where(tr =>
+                        (tr.StartDate == null || tr.StartDate <= matchDate) &&
+                        (tr.EndDate == null || tr.EndDate > matchDate))
+                    .SelectMany(tr => tr.Player.GameProfiles.Where(gp => gp.Provider == "RIOT").Select(gp => gp.UUID))
+                    .ToList();
+
+                var matchCount = puuids.Count(p => activePlayerPuuids.Contains(p));
+
+                if (matchCount > maxMatches)
+                {
+                    maxMatches = matchCount;
+                    bestMatch = team;
+                }
+            }
+
+            // Only return team if at least 3 players matched
+            return maxMatches >= 3 ? bestMatch : null;
         }
     }
 }

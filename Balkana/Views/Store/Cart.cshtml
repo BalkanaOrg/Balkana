@@ -1,0 +1,180 @@
+@model Balkana.Models.Store.ShoppingCartViewModel
+
+@{
+    ViewData["Title"] = "Shopping Cart";
+}
+
+<div class="container mt-4 text-white">
+    <h2 class="mb-4 text-white">
+        <i class="fas fa-shopping-cart"></i> Shopping Cart
+    </h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model.Items.Any())
+    {
+        <div class="row">
+            <!-- Cart Items -->
+            <div class="col-md-8">
+                <div class="card bg-dark border-primary">
+                    <div class="card-body">
+                        @foreach (var item in Model.Items)
+                        {
+                            <div class="row border-bottom py-3 @(!item.InStock ? "bg-light" : "")">
+                                <div class="col-md-2">
+                                    <img src="@item.ProductImageUrl" alt="@item.ProductName" class="img-fluid" style="max-height: 100px; object-fit: contain;">
+                                </div>
+                                <div class="col-md-4">
+                                    <h6><a href="/store/product/@item.ProductSlug">@item.ProductName</a></h6>
+                                    <p class="text-muted mb-1">@item.VariantName</p>
+                                    <small class="text-muted">SKU: @item.SKU</small>
+                                    
+                                    @if (!string.IsNullOrEmpty(item.Color))
+                                    {
+                                        <div class="mt-2">
+                                            @if (!string.IsNullOrEmpty(item.ColorHex))
+                                            {
+                                                <span style="display: inline-block; width: 15px; height: 15px; background-color: @item.ColorHex; border: 1px solid #ccc; border-radius: 50%;"></span>
+                                            }
+                                            <small>@item.Color @(!string.IsNullOrEmpty(item.Size) ? $"/ {item.Size}" : "")</small>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <p class="mb-1 fw-bold">@item.Price.ToString("F2") BGN</p>
+                                </div>
+                                <div class="col-md-2">
+                                    <form asp-action="UpdateCartItem" method="post" class="d-inline">
+                                        <input type="hidden" name="cartItemId" value="@item.Id" />
+                                        <div class="input-group input-group-sm">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="updateQuantity(@item.Id, @item.Quantity - 1)">-</button>
+                                            <input type="number" class="form-control text-center" name="quantity" value="@item.Quantity" min="1" max="@item.StockAvailable" id="qty-@item.Id" readonly>
+                                            <button class="btn btn-outline-secondary" type="button" onclick="updateQuantity(@item.Id, @item.Quantity + 1)">+</button>
+                                        </div>
+                                        @if (!item.InStock)
+                                        {
+                                            <small class="text-danger d-block mt-1">Insufficient stock!</small>
+                                        }
+                                        else if (item.StockAvailable < 10)
+                                        {
+                                            <small class="text-warning d-block mt-1">Only @item.StockAvailable left</small>
+                                        }
+                                    </form>
+                                </div>
+                                <div class="col-md-2 text-end">
+                                    <p class="mb-1 fw-bold">@item.Total.ToString("F2") BGN</p>
+                                    <form asp-action="RemoveFromCart" method="post" class="d-inline">
+                                        <input type="hidden" name="cartItemId" value="@item.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i> Remove
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-md-4">
+                <div class="card bg-dark border-info">
+                    <div class="card-header bg-info text-dark">
+                        <h5 class="mb-0">Order Summary</h5>
+                    </div>
+                    <div class="card-body text-white">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal (@Model.TotalItems items):</span>
+                            <span>@Model.SubTotal.ToString("F2") BGN</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Estimated Shipping:</span>
+                            <span>@Model.EstimatedShipping.ToString("F2") BGN</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tax (VAT 20%):</span>
+                            <span>@Model.EstimatedTax.ToString("F2") BGN</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Estimated Total:</strong>
+                            <strong class="h5 mb-0">@Model.EstimatedTotal.ToString("F2") BGN</strong>
+                        </div>
+
+                        <a asp-action="Checkout" class="btn btn-primary btn-lg w-100 mb-2">
+                            <i class="fas fa-lock"></i> Proceed to Checkout
+                        </a>
+                        
+                        <a asp-action="Index" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-arrow-left"></i> Continue Shopping
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Trust Badges -->
+                <div class="card bg-dark border-success mt-3">
+                    <div class="card-body text-center text-white">
+                        <p class="mb-2"><i class="fas fa-shield-alt text-success"></i> <strong>Secure Checkout</strong></p>
+                        <p class="mb-2"><i class="fas fa-truck text-primary"></i> <strong>Fast Delivery</strong></p>
+                        <p class="mb-0"><i class="fas fa-undo text-info"></i> <strong>14-Day Returns</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-shopping-cart fa-5x text-muted mb-4"></i>
+            <h3>Your cart is empty</h3>
+            <p class="text-muted">Start adding some awesome Balkana merchandise!</p>
+            <a asp-action="Index" class="btn btn-primary btn-lg mt-3">
+                <i class="fas fa-store"></i> Browse Products
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function updateQuantity(itemId, newQuantity) {
+            if (newQuantity < 1) return;
+            
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("UpdateCartItem")';
+            
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            form.innerHTML = `
+                <input type="hidden" name="__RequestVerificationToken" value="${token}" />
+                <input type="hidden" name="cartItemId" value="${itemId}" />
+                <input type="hidden" name="quantity" value="${newQuantity}" />
+            `;
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+}
+
+@section Styles {
+    <style>
+        .card { background-color: #1a1a1a !important; }
+        .form-control:focus { background-color: #2a2a2a; color: white !important; }
+    </style>
+}
+

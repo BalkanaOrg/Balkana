@@ -1,0 +1,129 @@
+@model Balkana.Models.Accounts.SearchUsersViewModel
+@using Balkana.Models.Accounts
+@{
+    ViewData["Title"] = "Search Users";
+    Layout = "_Layout";
+}
+
+<link rel="stylesheet" href="~/css/user-profile.css" />
+
+<div class="search-users-container">
+    <div class="search-users-header">
+        <h1><i class="fi fi-rr-search"></i> Search Users</h1>
+        <p>Find and connect with other users on the platform</p>
+    </div>
+
+    <div class="search-form-container">
+        <form method="get" class="search-form">
+            <div class="search-input-group">
+                <input asp-for="SearchTerm" class="search-input" placeholder="Search by username, name, or email..." />
+                <button type="submit" class="search-btn">
+                    <i class="fi fi-rr-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
+    {
+        <div class="search-results">
+            <div class="results-header">
+                <h3>Search Results for "@Model.SearchTerm"</h3>
+                <p>Found @Model.TotalUsers user(s)</p>
+            </div>
+
+            @if (Model.Users.Any())
+            {
+                <div class="users-grid">
+                    @foreach (var user in Model.Users)
+                    {
+                        <div class="user-card">
+                            <div class="user-avatar">
+                                <img src="@(user.ProfilePictureUrl ?? "https://i.imgur.com/ZizgQGH.png")" 
+                                     alt="@user.Username" 
+                                     class="avatar-image" />
+                                @if (user.HasPlayerProfile)
+                                {
+                                    <div class="player-badge">
+                                        <i class="fi fi-rr-trophy"></i>
+                                    </div>
+                                }
+                            </div>
+                            
+                            <div class="user-info">
+                                <h4 class="user-name">@user.FirstName @user.LastName</h4>
+                                <p class="user-username">@@@user.Username</p>
+                                <p class="user-location">
+                                    <i class="fi fi-rr-marker"></i>
+                                    @user.Nationality?.Name
+                                </p>
+                                <p class="user-status">
+                                    <i class="fi fi-rr-badge"></i>
+                                    @user.UserStatus
+                                </p>
+                            </div>
+                            
+                            <div class="user-actions">
+                                <a asp-action="Profile" asp-route-id="@user.Id" class="view-profile-btn">
+                                    <i class="fi fi-rr-eye"></i>
+                                    View Profile
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.TotalUsers > SearchUsersViewModel.UsersPerPage)
+                {
+                    <div class="pagination">
+                        @{
+                            var totalPages = (int)Math.Ceiling((double)Model.TotalUsers / SearchUsersViewModel.UsersPerPage);
+                            var currentPage = Model.CurrentPage;
+                        }
+                        
+                        @if (currentPage > 1)
+                        {
+                            <a asp-action="SearchUsers" asp-route-SearchTerm="@Model.SearchTerm" asp-route-CurrentPage="@(currentPage - 1)" class="page-btn">
+                                <i class="fi fi-rr-arrow-left"></i>
+                                Previous
+                            </a>
+                        }
+                        
+                        @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                        {
+                            <a asp-action="SearchUsers" asp-route-SearchTerm="@Model.SearchTerm" asp-route-CurrentPage="@i" 
+                               class="page-btn @(i == currentPage ? "active" : "")">
+                                @i
+                            </a>
+                        }
+                        
+                        @if (currentPage < totalPages)
+                        {
+                            <a asp-action="SearchUsers" asp-route-SearchTerm="@Model.SearchTerm" asp-route-CurrentPage="@(currentPage + 1)" class="page-btn">
+                                Next
+                                <i class="fi fi-rr-arrow-right"></i>
+                            </a>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="no-results">
+                    <i class="fi fi-rr-search"></i>
+                    <h3>No users found</h3>
+                    <p>Try adjusting your search terms or browse all users</p>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="search-placeholder">
+            <i class="fi fi-rr-search"></i>
+            <h3>Start searching</h3>
+            <p>Enter a username, name, or email address to find users</p>
+        </div>
+    }
+</div>

@@ -14,6 +14,7 @@ using Balkana.Services.Organizers;
 using Balkana.Services.Players;
 using Balkana.Services.Series;
 using Balkana.Services.Teams;
+using Balkana.Services.Tournaments;
 using Balkana.Services.Transfers;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
@@ -61,6 +62,15 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddControllersWithViews();
 ConfigureServices(builder.Services);
 builder.Services.AddScoped<SeriesService>();
+
+// Add session support for guest shopping cart
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(2);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 
 builder.Services.AddHttpClient<RiotMatchImporter>(client =>
@@ -174,6 +184,16 @@ void ConfigureServices(IServiceCollection services)
 
     builder.Services.AddScoped<MatchHistoryService>();
     builder.Services.AddScoped<DoubleEliminationBracketService>();
+    
+    // Riot Tournament Service
+    builder.Services.AddHttpClient<IRiotTournamentService, RiotTournamentService>();
+    
+    // Store Services
+    builder.Services.AddScoped<Balkana.Services.Store.IStoreService, Balkana.Services.Store.StoreService>();
+    builder.Services.AddScoped<Balkana.Services.Store.IAdminStoreService, Balkana.Services.Store.AdminStoreService>();
+    builder.Services.AddScoped<Balkana.Services.Store.IPaymentService, Balkana.Services.Store.PaymentService>();
+    builder.Services.AddHttpClient<Balkana.Services.Store.IDeliveryService, Balkana.Services.Store.DeliveryService>();
+    
     //services.AddTransient<ISeriesS, MatchService>();
 
     //services.AddTransient<>
@@ -220,6 +240,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseSession(); // Must be before UseAuthentication
 
 app.UseAuthentication();
 app.UseAuthorization();

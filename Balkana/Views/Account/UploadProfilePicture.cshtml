@@ -1,0 +1,90 @@
+@model Balkana.Models.Accounts.UploadProfilePictureViewModel
+@{
+    ViewData["Title"] = "Upload Profile Picture";
+    Layout = "_Layout";
+}
+
+<link rel="stylesheet" href="~/css/user-profile.css" />
+
+<div class="upload-picture-container">
+    <div class="upload-picture-header">
+        <h1><i class="fi fi-rr-camera"></i> Upload Profile Picture</h1>
+        <p>Choose a new profile picture for your account</p>
+    </div>
+
+    <div class="upload-picture-form-container">
+        <form asp-action="UploadProfilePicture" method="post" enctype="multipart/form-data" class="upload-picture-form">
+            <div class="form-section">
+                <div class="upload-area">
+                    <div class="upload-icon">
+                        <i class="fi fi-rr-camera"></i>
+                    </div>
+                    <h3>Choose Profile Picture</h3>
+                    <p>Select an image file from your device</p>
+                    
+                    <div class="file-input-wrapper">
+                        <input asp-for="ProfilePicture" type="file" accept="image/*" class="file-input" id="profilePicture" />
+                        <label for="profilePicture" class="file-input-label">
+                            <i class="fi fi-rr-upload"></i>
+                            Choose File
+                        </label>
+                    </div>
+                    
+                    <span asp-validation-for="ProfilePicture" class="validation-error"></span>
+                    
+                    <div class="file-info">
+                        <p><strong>Supported formats:</strong> JPG, PNG, GIF</p>
+                        <p><strong>Maximum size:</strong> 5MB</p>
+                        <p><strong>Recommended:</strong> Square image, 400x400px or larger</p>
+                    </div>
+                </div>
+
+                <div class="preview-area" id="previewArea" style="display: none;">
+                    <h4>Preview</h4>
+                    <div class="preview-image-container">
+                        <img id="previewImage" src="" alt="Preview" class="preview-image" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    <i class="fi fi-rr-upload"></i>
+                    Upload Picture
+                </button>
+                <a asp-action="Profile" class="btn-secondary">
+                    <i class="fi fi-rr-arrow-left"></i>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('profilePicture');
+            const previewArea = document.getElementById('previewArea');
+            const previewImage = document.getElementById('previewImage');
+
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                        previewArea.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewArea.style.display = 'none';
+                }
+            });
+        });
+    </script>
+    
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

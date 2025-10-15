@@ -30,6 +30,8 @@
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </Content>
     <PackageReference Include="NSec.Cryptography" Version="25.4.0" />
+    <PackageReference Include="PuppeteerSharp" Version="20.2.4" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.9" />
   </ItemGroup>
 
   <ItemGroup>

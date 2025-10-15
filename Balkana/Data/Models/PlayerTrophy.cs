@@ -7,5 +7,6 @@
         public Player Player { get; set; }
         public int TrophyId { get; set; }
         public Trophy Trophy { get; set; }
+        public DateTime DateAwarded { get; set; } = DateTime.Now;
     }
 }

@@ -15,6 +15,10 @@
 
     <!-- jQuery first -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <!-- Plugin after jQuery -->
     @* <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.js"></script> *@
@@ -49,6 +53,10 @@
                 <a asp-controller="Article" asp-action="Index" class="nav-link">
                     <i class="fi fi-rr-newspaper"></i>
                     <span>News</span>
+                </a>
+                <a asp-controller="Store" asp-action="Index" class="nav-link">
+                    <i class="fi fi-rr-shopping-cart"></i>
+                    <span>Store</span>
                 </a>
                 <a href="#about" class="nav-link" data-page="about">
                     <i class="fi fi-rr-info"></i>
@@ -93,11 +101,8 @@
                 </div>
                 @if (User.Identity.IsAuthenticated)
                 {
-                    <a asp-controller="Account" asp-action="Profile" class="login-btn">
-                        <img src="@(User.FindFirst("ProfilePictureUrl")?.Value ?? "https://i.imgur.com/ZizgQGH.png")"
-                             alt="Profile"
-                             class="rounded-full w-8 h-8 object-cover" 
-                             width="40px" height="40px"/>
+                    <a asp-controller="Account" asp-action="Profile" class="login-btn profile-link">
+                        @await Component.InvokeAsync("UserProfilePicture")
                         <span>@User.Identity.Name</span>
                     </a>
                     <form asp-controller="Account" asp-action="Logout" method="post" class="inline">

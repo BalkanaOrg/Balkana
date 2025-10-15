@@ -1,5 +1,263 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model Balkana.Models.Accounts.UserProfileViewModel
 @{
+    ViewData["Title"] = "Profile";
+    Layout = "_Layout";
+}
+
+<link rel="stylesheet" href="~/css/user-profile.css" />
+
+<div class="profile-container">
+    <!-- Search Users Section -->
+    @if (Model.IsCurrentUser)
+    {
+        <div class="search-users-top">
+            <div class="search-container">
+                <h3><i class="fi fi-rr-search"></i> Find Other Users</h3>
+                <form asp-action="SearchUsers" method="get" class="search-form-top">
+                    <div class="search-input-group">
+                        <input name="SearchTerm" type="text" placeholder="Search by username, name, or email..." class="search-input-wide" />
+                        <button type="submit" class="search-btn">
+                            <i class="fi fi-rr-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="profile-background">
+            <div class="background-overlay"></div>
+        </div>
+        <div class="profile-content">
+            <div class="profile-avatar-section">
+                <div class="profile-avatar">
+                    <img src="@(Model.ProfilePictureUrl ?? "https://i.imgur.com/ZizgQGH.png")" 
+                         alt="Profile Picture" 
+                         class="avatar-image" />
+                </div>
+                <div class="profile-badge">
+                    <i class="fi fi-rr-user"></i>
+                </div>
+            </div>
+            
+            <div class="profile-info">
+                <h1 class="profile-name">@Model.FirstName @Model.LastName</h1>
+                <p class="profile-username">@@@Model.Username</p>
+                <p class="profile-location">
+                    <i class="fi fi-rr-marker"></i>
+                    @Model.Nationality?.Name
+                </p>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">@Model.UserStatus</span>
+                        <span class="stat-label">Status</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Navigation -->
+    <div class="profile-nav">
+        <div class="nav-container">
+            <button class="nav-btn active" data-tab="overview">
+                <i class="fi fi-rr-user"></i>
+                Overview
+            </button>
+            @if (Model.HasPlayerProfile)
+            {
+                <button class="nav-btn" data-tab="trophies">
+                    <i class="fi fi-rr-trophy"></i>
+                    Trophies
+                </button>
+            }
+            @if (Model.IsCurrentUser)
+            {
+                <button class="nav-btn" data-tab="settings">
+                    <i class="fi fi-rr-settings"></i>
+                    Settings
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Profile Content -->
+    <div class="profile-content-area">
+        <!-- Overview Tab -->
+        <div class="tab-content active" id="overview">
+            <div class="content-grid">
+                <div class="info-card">
+                    <div class="card-header">
+                        <h3><i class="fi fi-rr-info"></i> Personal Information</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-row">
+                            <span class="info-label">Full Name</span>
+                            <span class="info-value">@Model.FirstName @Model.LastName</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Username</span>
+                            <span class="info-value">@Model.Username</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">@Model.Email</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Nationality</span>
+                            <span class="info-value">@Model.Nationality?.Name</span>
+                        </div>
+                        @if (Model.HasPlayerProfile)
+                        {
+                            <div class="info-row">
+                                <span class="info-label">Player Profile</span>
+                                <span class="info-value">@Model.Player.Nickname</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                @if (Model.HasPlayerProfile)
+                {
+                    <div class="info-card">
+                        <div class="card-header">
+                            <h3><i class="fi fi-rr-gamepad"></i> Player Information</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="player-profile-link">
+                                <a asp-controller="Players" asp-action="Profile" asp-route-id="@Model.Player.Id" class="player-link-btn">
+                                    <i class="fi fi-rr-eye"></i>
+                                    View Player Profile
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+            </div>
+        </div>
+
+        <!-- Trophies Tab -->
+        @if (Model.HasPlayerProfile)
+        {
+            <div class="tab-content" id="trophies">
+                <div class="trophies-section">
+                    <div class="section-header">
+                        <h2><i class="fi fi-rr-trophy"></i> Player Trophies</h2>
+                        <p>Achievements and tournament victories</p>
+                    </div>
+                    
+                    @if (Model.Player?.PlayerTrophies?.Any() == true)
+                    {
+                        <div class="trophies-grid">
+                            @foreach (var trophy in Model.Player.PlayerTrophies)
+                            {
+                                <div class="trophy-card">
+                                    <div class="trophy-icon">
+                                        <i class="fi fi-rr-trophy"></i>
+                                    </div>
+                                    <div class="trophy-info">
+                                        <h4>@trophy.Trophy?.Name</h4>
+                                        <p>@trophy.Trophy?.Description</p>
+                                        <span class="trophy-date">@trophy.DateAwarded.ToString("MMMM yyyy")</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="fi fi-rr-trophy"></i>
+                            <h3>No trophies yet</h3>
+                            <p>Start competing in tournaments to earn your first trophy!</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Settings Tab -->
+        @if (Model.IsCurrentUser)
+        {
+            <div class="tab-content" id="settings">
+                <div class="settings-section">
+                    <div class="section-header">
+                        <h2><i class="fi fi-rr-settings"></i> Account Settings</h2>
+                        <p>Manage your account preferences and security</p>
+                    </div>
+                    
+                    <div class="settings-grid">
+                        <div class="setting-card">
+                            <div class="setting-icon">
+                                <i class="fi fi-rr-user"></i>
+                            </div>
+                            <div class="setting-content">
+                                <h4>Profile Information</h4>
+                                <p>Update your personal details and preferences</p>
+                                <a asp-action="EditProfile" class="setting-btn">
+                                    <i class="fi fi-rr-edit"></i>
+                                    Edit Profile
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="setting-card">
+                            <div class="setting-icon">
+                                <i class="fi fi-rr-lock"></i>
+                            </div>
+                            <div class="setting-content">
+                                <h4>Change Password</h4>
+                                <p>Update your account password for better security</p>
+                                <a asp-action="ChangePassword" class="setting-btn">
+                                    <i class="fi fi-rr-key"></i>
+                                    Change Password
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="setting-card">
+                            <div class="setting-icon">
+                                <i class="fi fi-rr-camera"></i>
+                            </div>
+                            <div class="setting-content">
+                                <h4>Profile Picture</h4>
+                                <p>Upload a new profile picture</p>
+                                <a asp-action="UploadProfilePicture" class="setting-btn">
+                                    <i class="fi fi-rr-upload"></i>
+                                    Upload Picture
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Tab switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const navBtns = document.querySelectorAll('.nav-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            navBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all nav buttons and tab contents
+                    navBtns.forEach(b => b.classList.remove('active'));
+                    tabContents.forEach(t => t.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding tab
+                    this.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        });
+    </script>
 }

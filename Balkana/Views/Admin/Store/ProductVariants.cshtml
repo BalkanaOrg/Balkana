@@ -1,0 +1,168 @@
+@model List<Balkana.Data.Models.Store.ProductVariant>
+
+@{
+    ViewData["Title"] = "Product Variants";
+    var product = ViewBag.Product as Balkana.Data.Models.Store.Product;
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-white">Product Variants</h2>
+            <p class="text-muted">Product: <strong class="text-info">@product.Name</strong></p>
+        </div>
+        <div>
+            <a asp-action="CreateProductVariant" asp-route-productId="@product.Id" class="btn btn-success">
+                <i class="fas fa-plus"></i> Add Variant
+            </a>
+            <a asp-action="StoreProducts" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left"></i> Back to Products
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-dark table-striped table-hover">
+                <thead class="table-primary text-dark">
+                    <tr>
+                        <th>Image</th>
+                        <th>Variant</th>
+                        <th>SKU</th>
+                        <th>Size</th>
+                        <th>Color</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Weight</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var variant in Model)
+                    {
+                        var stockClass = variant.StockQuantity == 0 ? "table-danger" : 
+                                        variant.StockQuantity <= variant.LowStockThreshold ? "table-warning" : "";
+                        
+                        <tr class="@stockClass">
+                            <td>
+                                @if (!string.IsNullOrEmpty(variant.ImageUrl))
+                                {
+                                    <img src="@variant.ImageUrl" alt="@variant.Name" style="width: 50px; height: 50px; object-fit: cover;">
+                                }
+                                else if (!string.IsNullOrEmpty(product.MainImageUrl))
+                                {
+                                    <img src="@product.MainImageUrl" alt="@variant.Name" style="width: 50px; height: 50px; object-fit: cover;">
+                                }
+                            </td>
+                            <td><strong>@variant.Name</strong></td>
+                            <td><code>@variant.SKU</code></td>
+                            <td>@variant.Size</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(variant.ColorHex))
+                                {
+                                    <span style="display: inline-block; width: 20px; height: 20px; background-color: @variant.ColorHex; border: 1px solid #fff; border-radius: 50%; margin-right: 5px;"></span>
+                                }
+                                @variant.Color
+                            </td>
+                            <td><strong>@variant.Price.ToString("F2") BGN</strong></td>
+                            <td>
+                                <strong class="@(variant.StockQuantity == 0 ? "text-danger" : variant.StockQuantity <= variant.LowStockThreshold ? "text-warning" : "text-success")">
+                                    @variant.StockQuantity
+                                </strong>
+                                @if (variant.StockQuantity <= variant.LowStockThreshold && variant.StockQuantity > 0)
+                                {
+                                    <br><small class="text-warning">Low Stock!</small>
+                                }
+                                else if (variant.StockQuantity == 0)
+                                {
+                                    <br><small class="text-danger">Out of Stock!</small>
+                                }
+                            </td>
+                            <td>@variant.WeightGrams g</td>
+                            <td>
+                                @if (variant.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactive</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="editStock(@variant.Id, '@variant.Name', @variant.StockQuantity)">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Summary -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card bg-dark border-info">
+                    <div class="card-body text-center">
+                        <h3 class="text-info">@Model.Count</h3>
+                        <p class="mb-0 text-white">Total Variants</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-dark border-success">
+                    <div class="card-body text-center">
+                        <h3 class="text-success">@Model.Sum(v => v.StockQuantity)</h3>
+                        <p class="mb-0 text-white">Total Stock</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-dark border-warning">
+                    <div class="card-body text-center">
+                        <h3 class="text-warning">@Model.Count(v => v.StockQuantity <= v.LowStockThreshold && v.StockQuantity > 0)</h3>
+                        <p class="mb-0 text-white">Low Stock</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-dark border-danger">
+                    <div class="card-body text-center">
+                        <h3 class="text-danger">@Model.Count(v => v.StockQuantity == 0)</h3>
+                        <p class="mb-0 text-white">Out of Stock</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No variants added yet.
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .table-dark { background-color: #1a1a1a !important; }
+        .card { background-color: #1a1a1a !important; }
+    </style>
+}
+

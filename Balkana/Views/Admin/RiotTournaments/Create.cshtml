@@ -1,0 +1,77 @@
+@model Balkana.Models.Tournaments.CreateRiotTournamentViewModel
+
+@{
+    ViewData["Title"] = "Create Riot Tournament";
+}
+
+<div class="container mt-4">
+    <h2>Create Riot Tournament</h2>
+    <p class="text-muted">Register a new tournament with the Riot Tournament API</p>
+
+    <div class="row">
+        <div class="col-md-8">
+            <form asp-action="CreateRiotTournament" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" placeholder="e.g., Spring Championship 2025" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Region" class="form-label"></label>
+                    <select asp-for="Region" asp-items="Model.AvailableRegions" class="form-select">
+                        <option value="">-- Select Region --</option>
+                    </select>
+                    <span asp-validation-for="Region" class="text-danger"></span>
+                    <small class="form-text text-muted">The League of Legends server region where this tournament will be hosted.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="TournamentId" class="form-label"></label>
+                    <select asp-for="TournamentId" asp-items="Model.InternalTournaments" class="form-select">
+                        <option value="">-- None (Optional) --</option>
+                    </select>
+                    <span asp-validation-for="TournamentId" class="text-danger"></span>
+                    <small class="form-text text-muted">Optionally link this Riot tournament to an existing internal tournament for easier management.</small>
+                </div>
+
+                <input type="hidden" asp-for="ProviderId" />
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Create Tournament
+                    </button>
+                    <a asp-action="RiotTournaments" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">Information</h5>
+                    <p class="card-text">
+                        Creating a Riot tournament will:
+                    </p>
+                    <ul>
+                        <li>Register a provider with Riot (if needed)</li>
+                        <li>Create a tournament ID from Riot API</li>
+                        <li>Store the tournament in your database</li>
+                    </ul>
+                    <p class="card-text">
+                        After creation, you can generate tournament codes that players will use to create custom games.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

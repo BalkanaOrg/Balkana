@@ -984,6 +984,35 @@ body {
     }
 }
 
+/* Profile Avatar in Navigation */
+.profile-link {
+    display: flex !important;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.profile-link:hover {
+    color: #3b82f6;
+    text-decoration: none;
+}
+
+.profile-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    transition: all 0.3s ease;
+}
+
+.profile-link:hover .profile-avatar {
+    border-color: rgba(239, 68, 68, 0.5);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;

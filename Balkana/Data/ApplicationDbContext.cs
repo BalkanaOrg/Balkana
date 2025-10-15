@@ -1,6 +1,7 @@
 ﻿namespace Balkana.Data
 {
     using Balkana.Data.Models;
+    using Balkana.Data.Models.Store;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
@@ -68,6 +69,23 @@
         
         //Faceit Clubs
         public DbSet<FaceitClub> FaceitClubs { get; set; }
+
+        //Riot Tournament API
+        public DbSet<RiotTournament> RiotTournaments { get; set; }
+        public DbSet<RiotTournamentCode> RiotTournamentCodes { get; set; }
+
+        //Store
+        public DbSet<ProductCategory> ProductCategories { get; set; }
+        public DbSet<Collection> Collections { get; set; }
+        public DbSet<Product> Products { get; set; }
+        public DbSet<ProductVariant> ProductVariants { get; set; }
+        public DbSet<ProductImage> ProductImages { get; set; }
+        public DbSet<ProductCollection> ProductCollections { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<ShoppingCart> ShoppingCarts { get; set; }
+        public DbSet<ShoppingCartItem> ShoppingCartItems { get; set; }
+        public DbSet<InventoryLog> InventoryLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -354,6 +372,191 @@
             // (optional) indexes / other constraints
             modelBuilder.Entity<CommunityTeam>()
                 .HasIndex(ct => new { ct.Tag, ct.GameId });
+
+            // Riot Tournament relationships
+            modelBuilder.Entity<RiotTournament>()
+                .HasOne(rt => rt.Tournament)
+                .WithMany()
+                .HasForeignKey(rt => rt.TournamentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RiotTournament>()
+                .HasMany(rt => rt.TournamentCodes)
+                .WithOne(tc => tc.RiotTournament)
+                .HasForeignKey(tc => tc.RiotTournamentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RiotTournamentCode>()
+                .HasOne(tc => tc.Series)
+                .WithMany()
+                .HasForeignKey(tc => tc.SeriesId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RiotTournamentCode>()
+                .HasOne(tc => tc.TeamA)
+                .WithMany()
+                .HasForeignKey(tc => tc.TeamAId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RiotTournamentCode>()
+                .HasOne(tc => tc.TeamB)
+                .WithMany()
+                .HasForeignKey(tc => tc.TeamBId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RiotTournamentCode>()
+                .HasOne(tc => tc.Match)
+                .WithMany()
+                .HasForeignKey(tc => tc.MatchDbId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Unique constraint on tournament code
+            modelBuilder.Entity<RiotTournamentCode>()
+                .HasIndex(tc => tc.Code)
+                .IsUnique();
+
+            // Store relationships
+            // ProductCategory self-reference
+            modelBuilder.Entity<ProductCategory>()
+                .HasOne(pc => pc.ParentCategory)
+                .WithMany(pc => pc.SubCategories)
+                .HasForeignKey(pc => pc.ParentCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Product → Category
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Category)
+                .WithMany(c => c.Products)
+                .HasForeignKey(p => p.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Product → Team (optional)
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Team)
+                .WithMany()
+                .HasForeignKey(p => p.TeamId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Product → Player (optional)
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Player)
+                .WithMany()
+                .HasForeignKey(p => p.PlayerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ProductVariant → Product
+            modelBuilder.Entity<ProductVariant>()
+                .HasOne(pv => pv.Product)
+                .WithMany(p => p.Variants)
+                .HasForeignKey(pv => pv.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ProductImage → Product
+            modelBuilder.Entity<ProductImage>()
+                .HasOne(pi => pi.Product)
+                .WithMany(p => p.Images)
+                .HasForeignKey(pi => pi.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ProductCollection many-to-many
+            modelBuilder.Entity<ProductCollection>()
+                .HasKey(pc => new { pc.ProductId, pc.CollectionId });
+
+            modelBuilder.Entity<ProductCollection>()
+                .HasOne(pc => pc.Product)
+                .WithMany(p => p.ProductCollections)
+                .HasForeignKey(pc => pc.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ProductCollection>()
+                .HasOne(pc => pc.Collection)
+                .WithMany(c => c.ProductCollections)
+                .HasForeignKey(pc => pc.CollectionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Order → User (optional for guest checkout)
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.User)
+                .WithMany()
+                .HasForeignKey(o => o.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // OrderItem → Order
+            modelBuilder.Entity<OrderItem>()
+                .HasOne(oi => oi.Order)
+                .WithMany(o => o.OrderItems)
+                .HasForeignKey(oi => oi.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // OrderItem → ProductVariant
+            modelBuilder.Entity<OrderItem>()
+                .HasOne(oi => oi.ProductVariant)
+                .WithMany()
+                .HasForeignKey(oi => oi.ProductVariantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ShoppingCart → User
+            modelBuilder.Entity<ShoppingCart>()
+                .HasOne(sc => sc.User)
+                .WithMany()
+                .HasForeignKey(sc => sc.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ShoppingCartItem → ShoppingCart
+            modelBuilder.Entity<ShoppingCartItem>()
+                .HasOne(sci => sci.ShoppingCart)
+                .WithMany(sc => sc.Items)
+                .HasForeignKey(sci => sci.ShoppingCartId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ShoppingCartItem → ProductVariant
+            modelBuilder.Entity<ShoppingCartItem>()
+                .HasOne(sci => sci.ProductVariant)
+                .WithMany()
+                .HasForeignKey(sci => sci.ProductVariantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // InventoryLog → ProductVariant
+            modelBuilder.Entity<InventoryLog>()
+                .HasOne(il => il.ProductVariant)
+                .WithMany()
+                .HasForeignKey(il => il.ProductVariantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // InventoryLog → Order (optional)
+            modelBuilder.Entity<InventoryLog>()
+                .HasOne(il => il.Order)
+                .WithMany()
+                .HasForeignKey(il => il.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // InventoryLog → User
+            modelBuilder.Entity<InventoryLog>()
+                .HasOne(il => il.ChangedByUser)
+                .WithMany()
+                .HasForeignKey(il => il.ChangedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Indexes for store
+            modelBuilder.Entity<Product>()
+                .HasIndex(p => p.Slug)
+                .IsUnique();
+
+            modelBuilder.Entity<ProductCategory>()
+                .HasIndex(pc => pc.Slug)
+                .IsUnique();
+
+            modelBuilder.Entity<Collection>()
+                .HasIndex(c => c.Slug)
+                .IsUnique();
+
+            modelBuilder.Entity<ProductVariant>()
+                .HasIndex(pv => pv.SKU)
+                .IsUnique();
+
+            modelBuilder.Entity<Order>()
+                .HasIndex(o => o.OrderNumber)
+                .IsUnique();
 
             foreach (var fk in modelBuilder.Model.GetEntityTypes()
              .SelectMany(e => e.GetForeignKeys()))

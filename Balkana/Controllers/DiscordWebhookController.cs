@@ -89,7 +89,7 @@ namespace Balkana.Controllers
                                     } 
                                 });
                             }
-                                else if (commandName == "team" || commandName == "player" || commandName == "transfers")
+                                else if (commandName == "team" || commandName == "player" || commandName == "transfers" || commandName == "bracket")
                                 {
                                     // Handle team/player/transfers commands using DiscordBotService
                                     var discordBotService = HttpContext.RequestServices.GetRequiredService<IDiscordBotService>();
@@ -107,6 +107,43 @@ namespace Balkana.Controllers
                                     }
                                     
                                     var response = await discordBotService.ProcessCommandAsync(commandName, arguments.ToArray());
+                                    
+                                    // Check if this is a bracket image response
+                                    if (response.StartsWith("BRACKET_IMAGE:"))
+                                    {
+                                        var parts = response.Split(':');
+                                        if (parts.Length >= 3)
+                                        {
+                                            var tournamentId = parts[1];
+                                            var tournamentName = string.Join(":", parts.Skip(2)); // In case tournament name contains colons
+                                            
+                                            // Use a direct image URL that Discord can embed
+                                            var imageUrl = $"{Request.Scheme}://{Request.Host}/api/tournaments/{tournamentId}/bracket/image";
+                                            
+                                            return Ok(new
+                                            {
+                                                type = 4, // CHANNEL_MESSAGE_WITH_SOURCE
+                                                data = new
+                                                {
+                                                    embeds = new[]
+                                                    {
+                                                        new
+                                                        {
+                                                            title = $"🏆 {tournamentName}",
+                                                            description = "Tournament Bracket",
+                                                            image = new { url = imageUrl },
+                                                            color = 3447003, // Blue color
+                                                            timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                                                            footer = new
+                                                            {
+                                                                text = "Balkana Tournament System"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }
                                     
                                     return Ok(new { 
                                         type = 4, // CHANNEL_MESSAGE_WITH_SOURCE

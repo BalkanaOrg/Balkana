@@ -20,18 +20,20 @@ namespace Balkana.Services.Discord
         private readonly DiscordConfig _discordConfig;
         private readonly HttpClient _httpClient;
         private readonly ILogger<DiscordBotService> _logger;
+        private readonly IConfiguration _configuration;
         
         // Cache for emojis to avoid repeated API calls
         private static Dictionary<string, string>? _emojiCache;
         private static DateTime _lastCacheUpdate = DateTime.MinValue;
         private static readonly TimeSpan CacheExpiration = TimeSpan.FromHours(1); // Cache for 1 hour
 
-        public DiscordBotService(ApplicationDbContext context, IOptions<DiscordConfig> discordConfig, HttpClient httpClient, ILogger<DiscordBotService> logger)
+        public DiscordBotService(ApplicationDbContext context, IOptions<DiscordConfig> discordConfig, HttpClient httpClient, ILogger<DiscordBotService> logger, IConfiguration configuration)
         {
             _context = context;
             _discordConfig = discordConfig.Value;
             _httpClient = httpClient;
             _logger = logger;
+            _configuration = configuration;
 
             // Set the authorization header
             _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bot {_discordConfig.BotToken}");
@@ -49,8 +51,10 @@ namespace Balkana.Services.Discord
                         return await HandlePlayerCommand(arguments);
                     case "transfers":
                         return await HandleTransfersCommand(arguments);
+                    case "bracket":
+                        return await HandleBracketCommand(arguments);
                     default:
-                        return "❌ Unknown command. Available commands: `/team`, `/player`, `/transfers`";
+                        return "❌ Unknown command. Available commands: `/team`, `/player`, `/transfers`, `/bracket`";
                 }
             }
             catch (Exception ex)
@@ -233,6 +237,37 @@ namespace Balkana.Services.Discord
             }
 
             return result;
+        }
+
+        private async Task<string> HandleBracketCommand(string[] arguments)
+        {
+            if (arguments.Length == 0)
+            {
+                return "❌ Usage: `/bracket <tournament_name>`\nExample: `/bracket CS2 Spring Championship` or `/bracket Spring`";
+            }
+
+            var tournamentName = string.Join(" ", arguments);
+
+            // Find the tournament by name (partial match)
+            var tournament = await _context.Tournaments
+                .Include(t => t.Series)
+                .FirstOrDefaultAsync(t => t.FullName.ToLower().Contains(tournamentName.ToLower()) ||
+                                         t.ShortName.ToLower().Contains(tournamentName.ToLower()));
+
+            if (tournament == null)
+            {
+                return $"❌ Tournament '{tournamentName}' not found.";
+            }
+
+            // Check if bracket exists
+            if (!tournament.Series.Any())
+            {
+                return $"❌ Bracket not yet generated for '{tournament.FullName}'.";
+            }
+
+            // For Discord, we need to return a special format that indicates an image should be sent
+            // The Discord webhook controller will handle fetching and sending the actual image
+            return $"BRACKET_IMAGE:{tournament.Id}:{tournament.FullName}";
         }
 
         /// <summary>
@@ -422,6 +457,21 @@ namespace Balkana.Services.Discord
                             {
                                 name = "nickname",
                                 description = "The player's nickname",
+                                type = 3, // STRING
+                                required = true
+                            }
+                        }
+                    },
+                    new
+                    {
+                        name = "bracket",
+                        description = "Get bracket image for a tournament",
+                        options = new[]
+                        {
+                            new
+                            {
+                                name = "tournament_name",
+                                description = "The tournament name (partial match supported)",
                                 type = 3, // STRING
                                 required = true
                             }

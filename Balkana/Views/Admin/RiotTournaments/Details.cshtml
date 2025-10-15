@@ -1,0 +1,235 @@
+@model Balkana.Models.Tournaments.RiotTournamentDetailsViewModel
+
+@{
+    ViewData["Title"] = "Tournament Details - " + Model.Name;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>@Model.Name</h2>
+            <p class="text-muted">Riot Tournament ID: @Model.RiotTournamentId</p>
+        </div>
+        <div>
+            <a asp-action="GenerateTournamentCodes" asp-route-id="@Model.Id" class="btn btn-success">
+                <i class="fas fa-code"></i> Generate Tournament Codes
+            </a>
+            <a asp-action="RiotTournaments" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Region</h5>
+                    <h2 class="text-primary">@Model.Region</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Provider ID</h5>
+                    <h2 class="text-info">@Model.ProviderId</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Total Codes</h5>
+                    <h2 class="text-success">@Model.TournamentCodes.Count</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Created</h5>
+                    <p class="mb-0">@Model.CreatedAt.ToString("yyyy-MM-dd")</p>
+                    <small class="text-muted">@Model.CreatedAt.ToString("HH:mm:ss")</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.TournamentName))
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-link"></i> Linked to internal tournament: <strong>@Model.TournamentName</strong>
+        </div>
+    }
+
+    <h3 class="mt-4">Tournament Codes</h3>
+
+    @if (Model.TournamentCodes.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Code</th>
+                        <th>Description</th>
+                        <th>Series</th>
+                        <th>Teams</th>
+                        <th>Settings</th>
+                        <th>Status</th>
+                        <th>Match</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var code in Model.TournamentCodes)
+                    {
+                        <tr class="@(code.IsUsed ? "table-success" : "")">
+                            <td>
+                                <code class="tournament-code" data-code="@code.Code">@code.Code</code>
+                                <button class="btn btn-sm btn-outline-secondary copy-btn" data-code="@code.Code" title="Copy to clipboard">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </td>
+                            <td>@(code.Description ?? "-")</td>
+                            <td>@(code.SeriesName ?? "-")</td>
+                            <td>
+                                @if (code.TeamAId.HasValue || code.TeamBId.HasValue)
+                                {
+                                    <span>@(code.TeamAName ?? "?") vs @(code.TeamBName ?? "?")</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Any teams</span>
+                                }
+                            </td>
+                            <td>
+                                <small>
+                                    <span class="badge bg-secondary">@code.MapType</span>
+                                    <span class="badge bg-secondary">@code.PickType</span>
+                                    <span class="badge bg-secondary">@code.TeamSize v @code.TeamSize</span>
+                                </small>
+                            </td>
+                            <td>
+                                @if (code.IsUsed)
+                                {
+                                    <span class="badge bg-success">Used</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">Unused</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(code.MatchId))
+                                {
+                                    if (code.MatchDbId.HasValue)
+                                    {
+                                        <a asp-controller="Match" asp-action="Details" asp-route-id="@code.MatchDbId" class="btn btn-sm btn-info">
+                                            View Match
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">@code.MatchId</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>@code.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                @if (!code.IsUsed)
+                                {
+                                    <button class="btn btn-sm btn-primary check-code-btn" data-code="@code.Code">
+                                        <i class="fas fa-sync"></i> Check
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No tournament codes generated yet. Click "Generate Tournament Codes" to create some.
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Copy code to clipboard
+        document.querySelectorAll('.copy-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const code = this.getAttribute('data-code');
+                navigator.clipboard.writeText(code).then(() => {
+                    const icon = this.querySelector('i');
+                    icon.classList.remove('fa-copy');
+                    icon.classList.add('fa-check');
+                    setTimeout(() => {
+                        icon.classList.remove('fa-check');
+                        icon.classList.add('fa-copy');
+                    }, 2000);
+                });
+            });
+        });
+
+        // Check for matches
+        document.querySelectorAll('.check-code-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const code = this.getAttribute('data-code');
+                const icon = this.querySelector('i');
+                const originalText = this.innerHTML;
+                
+                this.disabled = true;
+                icon.classList.add('fa-spin');
+
+                try {
+                    const response = await fetch('@Url.Action("CheckTournamentCode")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': '@Html.AntiForgeryToken()'
+                        },
+                        body: JSON.stringify({ code: code })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert('Match found! Refreshing page...');
+                        location.reload();
+                    } else {
+                        alert(result.message);
+                    }
+                } catch (error) {
+                    alert('Error checking code: ' + error.message);
+                } finally {
+                    this.disabled = false;
+                    icon.classList.remove('fa-spin');
+                }
+            });
+        });
+
+        // Auto-dismiss alerts
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}
+

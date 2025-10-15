@@ -1,0 +1,138 @@
+@model Balkana.Models.Store.AdminCollectionFormViewModel
+
+@{
+    ViewData["Title"] = Model.Id > 0 ? "Edit Collection" : "Create Collection";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-white">@ViewData["Title"]</h2>
+        <a asp-action="StoreCollections" class="btn btn-outline-light">
+            <i class="fas fa-arrow-left"></i> Back to Collections
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card bg-dark border-primary">
+                <div class="card-body">
+                    <form asp-action="CreateCollection" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label text-white"></label>
+                            <input asp-for="Name" class="form-control bg-dark text-white border-secondary" placeholder="Balkana 2025 Winter Collection" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label text-white"></label>
+                            <textarea asp-for="Description" class="form-control bg-dark text-white border-secondary" rows="4"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Slug" class="form-label text-white"></label>
+                                <input asp-for="Slug" class="form-control bg-dark text-white border-secondary" placeholder="winter-2025" />
+                                <span asp-validation-for="Slug" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Season" class="form-label text-white"></label>
+                                <input asp-for="Season" class="form-control bg-dark text-white border-secondary" placeholder="Winter 2025" />
+                                <span asp-validation-for="Season" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="BannerImageUrl" class="form-label text-white"></label>
+                            <input asp-for="BannerImageUrl" class="form-control bg-dark text-white border-secondary" placeholder="/uploads/collections/banner.jpg" />
+                            <span asp-validation-for="BannerImageUrl" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="StartDate" class="form-label text-white"></label>
+                                <input asp-for="StartDate" class="form-control bg-dark text-white border-secondary" type="date" />
+                                <span asp-validation-for="StartDate" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="EndDate" class="form-label text-white"></label>
+                                <input asp-for="EndDate" class="form-control bg-dark text-white border-secondary" type="date" />
+                                <span asp-validation-for="EndDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    <input asp-for="IsActive" class="form-check-input" type="checkbox" checked />
+                                    <label asp-for="IsActive" class="form-check-label text-white"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    <input asp-for="IsFeatured" class="form-check-input" type="checkbox" />
+                                    <label asp-for="IsFeatured" class="form-check-label text-white"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="DisplayOrder" class="form-label text-white"></label>
+                                <input asp-for="DisplayOrder" class="form-control bg-dark text-white border-secondary" type="number" value="0" />
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Collection
+                            </button>
+                            <a asp-action="StoreCollections" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-dark border-info">
+                <div class="card-header bg-info text-dark">
+                    <h6 class="mb-0"><i class="fas fa-info-circle"></i> Collection Info</h6>
+                </div>
+                <div class="card-body text-white">
+                    <p>Collections group products together for campaigns or seasons.</p>
+                    
+                    <p><strong>Examples:</strong></p>
+                    <ul>
+                        <li>Winter 2025 Collection</li>
+                        <li>Team Jerseys</li>
+                        <li>Player Signature Series</li>
+                        <li>Holiday Special</li>
+                    </ul>
+                    
+                    <p><strong>Featured collections</strong> appear on the store homepage.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+@section Styles {
+    <style>
+        .card { background-color: #1a1a1a !important; }
+        .form-control:focus, .form-select:focus {
+            background-color: #2a2a2a;
+            color: white !important;
+            border-color: #0d6efd;
+        }
+    </style>
+}
+

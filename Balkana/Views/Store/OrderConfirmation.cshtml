@@ -1,0 +1,150 @@
+@model Balkana.Models.Store.OrderViewModel
+
+@{
+    ViewData["Title"] = "Order Confirmation";
+}
+
+<div class="container mt-5 text-white">
+    <div class="text-center mb-5">
+        <i class="fas fa-check-circle fa-5x text-success mb-3"></i>
+        <h1 class="mb-3">Thank You for Your Order!</h1>
+        <p class="lead">Your order has been successfully placed.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card bg-dark border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Order #@Model.OrderNumber</h5>
+                </div>
+                <div class="card-body text-white">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6>Customer Information:</h6>
+                            <p class="mb-1"><strong>@Model.CustomerName</strong></p>
+                            <p class="mb-1">@Model.CustomerEmail</p>
+                            <p class="mb-0">@Model.CustomerPhone</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Order Date:</h6>
+                            <p>@Model.CreatedAt.ToString("dd MMMM yyyy, HH:mm")</p>
+                            
+                            <h6>Payment Method:</h6>
+                            <p class="mb-0">@Model.PaymentMethodDisplay</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h6 class="mb-3">Order Items:</h6>
+                    <table class="table table-dark">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@item.ProductName</strong><br>
+                                        <small class="text-muted">@item.VariantName</small>
+                                    </td>
+                                    <td>@item.UnitPrice.ToString("F2") BGN</td>
+                                    <td>@item.Quantity</td>
+                                    <td class="text-end">@item.TotalPrice.ToString("F2") BGN</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                <td class="text-end">@Model.SubTotal.ToString("F2") BGN</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Shipping:</strong></td>
+                                <td class="text-end">@Model.ShippingCost.ToString("F2") BGN</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Tax (VAT 20%):</strong></td>
+                                <td class="text-end">@Model.Tax.ToString("F2") BGN</td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td colspan="3" class="text-end"><strong>TOTAL:</strong></td>
+                                <td class="text-end"><strong>@Model.TotalAmount.ToString("F2") @Model.Currency</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Shipping Address:</h6>
+                            <p class="mb-1">@Model.ShippingAddress</p>
+                            <p class="mb-1">@Model.ShippingCity @Model.ShippingPostalCode</p>
+                            <p class="mb-0">@Model.ShippingCountry</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Delivery Method:</h6>
+                            <p>@Model.DeliveryProviderDisplay</p>
+                            @if (!string.IsNullOrEmpty(Model.DeliveryOfficeAddress))
+                            {
+                                <p class="mb-0"><small class="text-muted">Office: @Model.DeliveryOfficeAddress</small></p>
+                            }
+                        </div>
+                    </div>
+
+                    @if (Model.PaymentMethod == Balkana.Data.Models.Store.PaymentMethod.CashOnDelivery)
+                    {
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <strong>Payment:</strong> Cash on Delivery (Наложен платеж)<br>
+                            <small>You will pay when you receive your package.</small>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.CustomerNotes))
+                    {
+                        <div class="mt-3">
+                            <h6>Your Notes:</h6>
+                            <p class="mb-0">@Model.CustomerNotes</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="alert alert-success mt-4">
+                <h6><i class="fas fa-envelope"></i> Confirmation Email Sent</h6>
+                <p class="mb-0">
+                    We've sent a confirmation email to <strong>@Model.CustomerEmail</strong>. 
+                    Please check your inbox for order details and tracking information.
+                </p>
+            </div>
+
+            <div class="text-center mt-4">
+                <a asp-action="Index" class="btn btn-primary me-2">
+                    <i class="fas fa-store"></i> Continue Shopping
+                </a>
+                @if (!Model.IsGuestOrder && User.Identity.IsAuthenticated)
+                {
+                    <a asp-action="MyOrders" class="btn btn-outline-primary">
+                        <i class="fas fa-list"></i> View My Orders
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .card { background-color: #1a1a1a !important; }
+        .table-dark { background-color: #1a1a1a !important; }
+    </style>
+}
+

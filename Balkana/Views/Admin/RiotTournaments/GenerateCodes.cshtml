@@ -1,0 +1,137 @@
+@model Balkana.Models.Tournaments.GenerateTournamentCodesViewModel
+
+@{
+    ViewData["Title"] = "Generate Tournament Codes";
+}
+
+<div class="container mt-4">
+    <h2>Generate Tournament Codes</h2>
+    <p class="text-muted">Tournament: <strong>@Model.TournamentName</strong></p>
+
+    <div class="row">
+        <div class="col-md-8">
+            <form asp-action="GenerateTournamentCodes" method="post">
+                <input type="hidden" asp-for="RiotTournamentId" />
+                <input type="hidden" asp-for="TournamentName" />
+                
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Count" class="form-label"></label>
+                    <input asp-for="Count" class="form-control" type="number" min="1" max="100" />
+                    <span asp-validation-for="Count" class="text-danger"></span>
+                    <small class="form-text text-muted">Number of codes to generate (1-100)</small>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label"></label>
+                    <input asp-for="Description" class="form-control" placeholder="e.g., Match 1 - Group Stage" />
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="SeriesId" class="form-label"></label>
+                        <select asp-for="SeriesId" asp-items="Model.AvailableSeries" class="form-select">
+                            <option value="">-- None (Optional) --</option>
+                        </select>
+                        <span asp-validation-for="SeriesId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="TeamSize" class="form-label"></label>
+                        <select asp-for="TeamSize" class="form-select">
+                            <option value="1">1v1</option>
+                            <option value="2">2v2</option>
+                            <option value="3">3v3</option>
+                            <option value="4">4v4</option>
+                            <option value="5" selected>5v5</option>
+                        </select>
+                        <span asp-validation-for="TeamSize" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="TeamAId" class="form-label"></label>
+                        <select asp-for="TeamAId" asp-items="Model.AvailableTeams" class="form-select">
+                            <option value="">-- None (Optional) --</option>
+                        </select>
+                        <span asp-validation-for="TeamAId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="TeamBId" class="form-label"></label>
+                        <select asp-for="TeamBId" asp-items="Model.AvailableTeams" class="form-select">
+                            <option value="">-- None (Optional) --</option>
+                        </select>
+                        <span asp-validation-for="TeamBId" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="MapType" class="form-label"></label>
+                    <select asp-for="MapType" asp-items="Model.MapTypes" class="form-select"></select>
+                    <span asp-validation-for="MapType" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="PickType" class="form-label"></label>
+                    <select asp-for="PickType" asp-items="Model.PickTypes" class="form-select"></select>
+                    <span asp-validation-for="PickType" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="SpectatorType" class="form-label"></label>
+                    <select asp-for="SpectatorType" asp-items="Model.SpectatorTypes" class="form-select"></select>
+                    <span asp-validation-for="SpectatorType" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Metadata" class="form-label"></label>
+                    <textarea asp-for="Metadata" class="form-control" rows="3" placeholder="Optional metadata (max 1000 characters)"></textarea>
+                    <span asp-validation-for="Metadata" class="text-danger"></span>
+                    <small class="form-text text-muted">Additional information you want to store with these codes</small>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-code"></i> Generate Codes
+                    </button>
+                    <a asp-action="RiotTournamentDetails" asp-route-id="@Model.RiotTournamentId" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">Tournament Code Usage</h5>
+                    <p class="card-text">
+                        After generating codes:
+                    </p>
+                    <ol>
+                        <li>Share the code with players</li>
+                        <li>Players create a custom game using the code</li>
+                        <li>After the match, check for results</li>
+                        <li>Import the match data using the Match History Importer</li>
+                    </ol>
+                    <hr />
+                    <h6>Game Settings</h6>
+                    <ul>
+                        <li><strong>Map Type:</strong> The map for the game</li>
+                        <li><strong>Pick Type:</strong> Champion selection method</li>
+                        <li><strong>Spectator Type:</strong> Who can spectate</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

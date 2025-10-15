@@ -14,5 +14,10 @@ namespace Balkana.Data.Models
         public Nationality Nationality { get; set; }
 
         public string ProfilePictureUrl { get; set; }
+
+        // Foreign key to Player (nullable - user may or may not have a player profile)
+        public int? PlayerId { get; set; }
+        [ForeignKey(nameof(PlayerId))]
+        public Player Player { get; set; }
     }
 }

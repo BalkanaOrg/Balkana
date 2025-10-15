@@ -1,5 +1,250 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model Balkana.Models.Store.ProductListViewModel
+
 @{
+    ViewData["Title"] = "Balkana Store";
+}
+
+<div class="container-fluid mt-4 text-white">
+    <!-- Featured Collections -->
+    @if (Model.FeaturedCollections.Any())
+    {
+        <div class="mb-5">
+            <h2 class="mb-4">Featured Collections</h2>
+            <div class="row">
+                @foreach (var collection in Model.FeaturedCollections)
+                {
+                    <div class="col-md-4 mb-4">
+                        <a href="/store/collection/@collection.Slug" class="text-decoration-none">
+                            <div class="card collection-card h-100">
+                                @if (!string.IsNullOrEmpty(collection.BannerImageUrl))
+                                {
+                                    <img src="@collection.BannerImageUrl" class="card-img-top" alt="@collection.Name" style="height: 200px; object-fit: cover;">
+                                }
+                                <div class="card-body">
+                                    <h5 class="card-title">@collection.Name</h5>
+                                    @if (!string.IsNullOrEmpty(collection.Season))
+                                    {
+                                        <span class="badge bg-primary mb-2">@collection.Season</span>
+                                    }
+                                    <p class="card-text text-muted">@collection.Description</p>
+                                    <p class="mb-0"><small class="text-muted">@collection.ProductCount products</small></p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Sidebar: Categories & Filters -->
+        <div class="col-md-3">
+            <div class="card bg-dark border-primary mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Categories</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="@Url.Action("Index")" class="list-group-item list-group-item-action bg-dark text-white border-secondary @(Model.CategoryId == null ? "active" : "")">
+                        All Products
+                    </a>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <a href="@Url.Action("Index", new { categoryId = category.Id })" 
+                           class="list-group-item list-group-item-action bg-dark text-white border-secondary @(Model.CategoryId == category.Id ? "active" : "")">
+                            @category.Name <span class="badge bg-info float-end">@category.ProductCount</span>
+                        </a>
+                        @if (category.SubCategories.Any())
+                        {
+                            foreach (var sub in category.SubCategories)
+                            {
+                                <a href="@Url.Action("Index", new { categoryId = sub.Id })" 
+                                   class="list-group-item list-group-item-action bg-dark text-white border-secondary ps-4 @(Model.CategoryId == sub.Id ? "active" : "")">
+                                    └ @sub.Name <span class="badge bg-info float-end">@sub.ProductCount</span>
+                                </a>
+                            }
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Price Filter -->
+            <div class="card bg-dark border-info">
+                <div class="card-header bg-info text-dark">
+                    <h6 class="mb-0">Price Filter</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get">
+                        <input type="hidden" name="categoryId" value="@Model.CategoryId" />
+                        <input type="hidden" name="search" value="@Model.SearchTerm" />
+                        <div class="mb-3">
+                            <label class="form-label text-white">Min Price (BGN)</label>
+                            <input type="number" name="minPrice" class="form-control bg-dark text-white border-secondary" value="@Model.MinPrice" step="0.01" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-white">Max Price (BGN)</label>
+                            <input type="number" name="maxPrice" class="form-control bg-dark text-white border-secondary" value="@Model.MaxPrice" step="0.01" />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="col-md-9">
+            <!-- Search & Sort Bar -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <form method="get" class="d-flex">
+                        <input type="hidden" name="categoryId" value="@Model.CategoryId" />
+                        <input type="search" name="search" class="form-control bg-dark text-white border-secondary me-2" placeholder="Search products..." value="@Model.SearchTerm" />
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select bg-dark text-white border-secondary" onchange="window.location.href='@Url.Action("Index")?sort=' + this.value + '&categoryId=@Model.CategoryId&search=@Model.SearchTerm'">
+                        <option value="">Sort By...</option>
+                        <option value="price-asc" selected="@(Model.SortBy == "price-asc")">Price: Low to High</option>
+                        <option value="price-desc" selected="@(Model.SortBy == "price-desc")">Price: High to Low</option>
+                        <option value="name" selected="@(Model.SortBy == "name")">Name: A-Z</option>
+                        <option value="newest" selected="@(Model.SortBy == "newest")">Newest First</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Products -->
+            @if (Model.Products.Any())
+            {
+                <div class="row">
+                    @foreach (var product in Model.Products)
+                    {
+                        <div class="col-md-4 mb-4">
+                            <div class="card product-card h-100 bg-dark border-primary">
+                                <a href="/store/product/@product.Slug">
+                                    @if (!string.IsNullOrEmpty(product.MainImageUrl))
+                                    {
+                                        <img src="@product.MainImageUrl" class="card-img-top" alt="@product.Name" style="height: 250px; object-fit: cover;">
+                                    }
+                                    else
+                                    {
+                                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px;">
+                                            <i class="fas fa-image fa-3x text-muted"></i>
+                                        </div>
+                                    }
+                                </a>
+                                
+                                <div class="card-body">
+                                    @if (product.IsFeatured)
+                                    {
+                                        <span class="badge bg-warning text-dark mb-2">Featured</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(product.TeamTag))
+                                    {
+                                        <span class="badge bg-info mb-2">@product.TeamTag</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(product.PlayerNickname))
+                                    {
+                                        <span class="badge bg-success mb-2">@product.PlayerNickname</span>
+                                    }
+                                    
+                                    <h5 class="card-title">
+                                        <a href="/store/product/@product.Slug" class="text-dark text-decoration-none">@product.Name</a>
+                                    </h5>
+                                    <p class="text-muted mb-2">@product.CategoryName</p>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            @if (product.MinPrice == product.MaxPrice)
+                                            {
+                                                <span class="h5 mb-0">@product.MinPrice.ToString("F2") BGN</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="h5 mb-0">@product.MinPrice.ToString("F2") - @product.MaxPrice.ToString("F2") BGN</span>
+                                            }
+                                        </div>
+                                        
+                                        @if (product.InStock)
+                                        {
+                                            <span class="badge bg-success">In Stock</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Out of Stock</span>
+                                        }
+                                    </div>
+                                    
+                                    <small class="text-muted">@product.VariantCount variant(s)</small>
+                                </div>
+                                
+                                <div class="card-footer">
+                                    <a href="/store/product/@product.Slug" class="btn btn-primary w-100">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.TotalPages > 1)
+                {
+                    <nav>
+                        <ul class="pagination justify-content-center">
+                            @for (int i = 1; i <= Model.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="@Url.Action("Index", new { page = i, categoryId = Model.CategoryId, search = Model.SearchTerm, sort = Model.SortBy })">@i</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No products found matching your criteria.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        body { background-color: #0a0a0a !important; }
+        .card { background-color: #1a1a1a !important; }
+        .product-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #0d6efd;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
+            border-color: #dc3545;
+        }
+        .collection-card {
+            transition: transform 0.2s;
+            background-color: #1a1a1a !important;
+            border: 1px solid #0d6efd;
+        }
+        .collection-card:hover {
+            transform: scale(1.02);
+            border-color: #dc3545;
+        }
+        .list-group-item.active {
+            background-color: #0d6efd !important;
+            border-color: #0d6efd !important;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: #2a2a2a;
+            color: white !important;
+            border-color: #0d6efd;
+        }
+        .card-body { color: white; }
+        .card-title { color: white !important; }
+    </style>
 }
