@@ -4,7 +4,51 @@
     ViewData["Title"] = Model.Name;
 }
 
-<div class="container mt-4 text-white">
+@section Styles {
+    <link rel="stylesheet" href="~/css/store.css" asp-append-version="true" />
+    <style>
+        .product-details-container {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        .product-image-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 1rem;
+            backdrop-filter: blur(10px);
+        }
+        .product-info-container {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+        }
+        .variant-selector {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .breadcrumb {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 1rem;
+        }
+        .breadcrumb-item a {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+        .breadcrumb-item.active {
+            color: #fff;
+        }
+    </style>
+}
+
+<div class="store-container">
+    <div class="container mt-4 text-white">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a asp-action="Index">Store</a></li>
@@ -13,9 +57,11 @@
         </ol>
     </nav>
 
-    <div class="row">
-        <!-- Product Images -->
-        <div class="col-md-6">
+    <div class="product-details-container">
+        <div class="row">
+            <!-- Product Images -->
+            <div class="col-md-6">
+                <div class="product-image-container">
             <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
                 <div class="carousel-inner">
                     <div class="carousel-item active">
@@ -38,10 +84,12 @@
                     </button>
                 }
             </div>
-        </div>
+                </div>
+            </div>
 
-        <!-- Product Info & Purchase -->
-        <div class="col-md-6">
+            <!-- Product Info & Purchase -->
+            <div class="col-md-6">
+                <div class="product-info-container">
             <h1 class="text-white">@Model.Name</h1>
             
             @if (!string.IsNullOrEmpty(Model.TeamTag) || !string.IsNullOrEmpty(Model.PlayerNickname))
@@ -192,10 +240,12 @@
             <!-- Additional Info -->
             <hr class="my-4">
             <ul class="list-unstyled">
-                <li><i class="fas fa-truck"></i> Free shipping on orders over 100 BGN</li>
+                <li><i class="fas fa-truck"></i> Free shipping on orders over 100 EUR</li>
                 <li><i class="fas fa-undo"></i> 14-day return policy</li>
                 <li><i class="fas fa-shield-alt"></i> Secure payment</li>
             </ul>
+                </div>
+            </div>
         </div>
     </div>
 </div>

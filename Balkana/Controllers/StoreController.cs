@@ -358,7 +358,7 @@ namespace Balkana.Controllers
             {
                 // Calculate shipping
                 model.ShippingCost = CalculateShipping(model.DeliveryProvider, model.Cart);
-                model.Tax = model.Cart.SubTotal * 0.20m; // 20% VAT
+                model.Tax = 0; // VAT already included in prices
 
                 var userId = User.Identity.IsAuthenticated 
                     ? User.FindFirstValue(ClaimTypes.NameIdentifier) 
@@ -472,12 +472,12 @@ namespace Balkana.Controllers
 
             return provider switch
             {
-                DeliveryProvider.Ekont => 5.00m,           // Ekont office pickup
-                DeliveryProvider.Speedy => 5.50m,         // Speedy office pickup
-                DeliveryProvider.CourierToAddress => 8.00m, // Courier delivery
+                DeliveryProvider.Ekont => 2.50m,           // Ekont office pickup
+                DeliveryProvider.Speedy => 2.75m,         // Speedy office pickup
+                DeliveryProvider.CourierToAddress => 4.00m, // Courier delivery
                 DeliveryProvider.OfficePickup => 0.00m,    // Free pickup
-                DeliveryProvider.InternationalShipping => 25.00m,
-                _ => 5.00m
+                DeliveryProvider.InternationalShipping => 12.50m,
+                _ => 2.50m
             };
         }
 
@@ -485,9 +485,9 @@ namespace Balkana.Controllers
         {
             return new List<SelectListItem>
             {
-                new SelectListItem { Value = ((int)DeliveryProvider.Ekont).ToString(), Text = "Ekont - Office Pickup (5.00 BGN)" },
-                new SelectListItem { Value = ((int)DeliveryProvider.Speedy).ToString(), Text = "Speedy - Office Pickup (5.50 BGN)" },
-                new SelectListItem { Value = ((int)DeliveryProvider.CourierToAddress).ToString(), Text = "Courier to Address (8.00 BGN)" },
+                new SelectListItem { Value = ((int)DeliveryProvider.Ekont).ToString(), Text = "Ekont - Office Pickup (2.50 EUR)" },
+                new SelectListItem { Value = ((int)DeliveryProvider.Speedy).ToString(), Text = "Speedy - Office Pickup (2.75 EUR)" },
+                new SelectListItem { Value = ((int)DeliveryProvider.CourierToAddress).ToString(), Text = "Courier to Address (4.00 EUR)" },
                 new SelectListItem { Value = ((int)DeliveryProvider.OfficePickup).ToString(), Text = "Pickup from Balkana Office (Free)" }
             };
         }
@@ -498,7 +498,11 @@ namespace Balkana.Controllers
             {
                 new SelectListItem { Value = ((int)PaymentMethod.CashOnDelivery).ToString(), Text = "Cash on Delivery (Наложен платеж)" },
                 new SelectListItem { Value = ((int)PaymentMethod.BankTransfer).ToString(), Text = "Bank Transfer" },
-                new SelectListItem { Value = ((int)PaymentMethod.Card).ToString(), Text = "Credit/Debit Card" }
+                new SelectListItem { Value = ((int)PaymentMethod.CreditCard).ToString(), Text = "Credit Card" },
+                new SelectListItem { Value = ((int)PaymentMethod.DebitCard).ToString(), Text = "Debit Card" },
+                new SelectListItem { Value = ((int)PaymentMethod.ePay).ToString(), Text = "ePay (Bulgarian Gateway)" },
+                new SelectListItem { Value = ((int)PaymentMethod.Stripe).ToString(), Text = "Stripe" },
+                new SelectListItem { Value = ((int)PaymentMethod.PayPal).ToString(), Text = "PayPal" }
             };
         }
 

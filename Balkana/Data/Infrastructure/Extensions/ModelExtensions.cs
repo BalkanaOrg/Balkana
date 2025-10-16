@@ -11,7 +11,7 @@ namespace Balkana.Data.Infrastructure.Extensions
             => team.Tag + "-" + team.FullName;
 
         public static string GetInformation(this IPlayerModel player)
-            => player.FirstName + "-" + player.Nickname + "-" + player.LastName;
+            => player.Nickname;
 
         public static string GetInformation(this IOrganizerModel org)
             => org.Tag + "-" + org.FullName;
@@ -20,7 +20,7 @@ namespace Balkana.Data.Infrastructure.Extensions
             => team.Tag + "-" + team.FullName;
 
         public static string GetInformation(this Player player)
-            => player.FirstName + "-" + player.Nickname + "-" + player.LastName;
+            => player.Nickname;
 
         public static string GetInformation(this Organizer org)
             => org.Tag + "-" + org.FullName;

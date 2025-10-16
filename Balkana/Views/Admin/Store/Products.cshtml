@@ -4,7 +4,30 @@
     ViewData["Title"] = "Manage Products";
 }
 
-<div class="container-fluid mt-4">
+@section Styles {
+    <link rel="stylesheet" href="~/css/store.css" asp-append-version="true" />
+    <style>
+        .card { background-color: #1a1a1a !important; }
+        .form-control:focus, .form-select:focus {
+            background-color: #2a2a2a;
+            color: white !important;
+            border-color: #0d6efd;
+        }
+        .table-dark {
+            background-color: #1a1a1a;
+        }
+        .btn {
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+}
+
+<div class="store-container">
+    <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="text-white"><i class="fas fa-store"></i> Store Products</h2>
         <div>
@@ -128,12 +151,6 @@
             <i class="fas fa-info-circle"></i> No products yet. Create your first product to get started!
         </div>
     }
+    </div>
 </div>
-
-@section Styles {
-    <style>
-        .card { background-color: #1a1a1a !important; }
-        .table-dark { background-color: #1a1a1a !important; }
-    </style>
-}
 

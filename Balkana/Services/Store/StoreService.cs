@@ -596,7 +596,7 @@ namespace Balkana.Services.Store
         private ShoppingCartViewModel CalculateCartTotals(List<CartItemViewModel> items)
         {
             var subTotal = items.Sum(i => i.Total);
-            var estimatedTax = subTotal * 0.20m; // 20% VAT in Bulgaria
+            var estimatedTax = 0; // VAT already included in prices
 
             return new ShoppingCartViewModel
             {
@@ -606,7 +606,7 @@ namespace Balkana.Services.Store
                 EstimatedTax = estimatedTax,
                 EstimatedTotal = subTotal + estimatedTax,
                 TotalItems = items.Sum(i => i.Quantity),
-                Currency = "BGN"
+                Currency = "EUR"
             };
         }
 

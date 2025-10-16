@@ -13,6 +13,7 @@ using Balkana.Services.Matches.Models;
 using Balkana.Services.Organizers;
 using Balkana.Services.Players;
 using Balkana.Services.Series;
+using Balkana.Services.Stats;
 using Balkana.Services.Teams;
 using Balkana.Services.Tournaments;
 using Balkana.Services.Transfers;
@@ -158,6 +159,7 @@ void ConfigureServices(IServiceCollection services)
     services.AddTransient<ITransferService, TransferService>();
     services.AddTransient<IOrganizerService, OrganizerService>();
     services.AddTransient<IMatchService, MatchService>();
+    services.AddTransient<IStatsService, StatsService>();
 
     //USER IDENTITY
     builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>

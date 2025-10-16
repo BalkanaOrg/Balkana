@@ -1,0 +1,122 @@
+@model List<Balkana.Models.Series.PlayerStatsViewModel>
+
+@functions {
+    string GetADRColorClass(double adr)
+    {
+        if (adr >= 110) return "stat-dark-green";
+        if (adr >= 90) return "stat-light-green";
+        if (adr >= 75) return "stat-yellow";
+        if (adr >= 50) return "stat-light-red";
+        return "stat-dark-red";
+    }
+    
+    string GetRatingColorClass(double rating)
+    {
+        if (rating >= 1.20) return "stat-dark-green";
+        if (rating >= 1.05) return "stat-light-green";
+        if (rating >= 0.95) return "stat-yellow";
+        if (rating >= 0.75) return "stat-light-red";
+        return "stat-dark-red";
+    }
+    
+    string GetKDColorClass(double kd)
+    {
+        if (kd >= 1.10) return "stat-dark-green";
+        if (kd >= 0.90) return "stat-light-green";
+        if (kd >= 0.80) return "stat-yellow";
+        if (kd >= 0.60) return "stat-light-red";
+        return "stat-dark-red";
+    }
+}
+
+@if (Model != null && Model.Any())
+{
+    <div class="scoreboard-container">
+        <!-- Team A Scoreboard -->
+        <div class="team-scoreboard team-a-scoreboard">
+            <div class="team-header">
+                <h3 class="team-name">Team A</h3>
+                <div class="team-tag">A</div>
+            </div>
+            <div class="scoreboard-table">
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>K</th>
+                            <th>D</th>
+                            <th>A</th>
+                            <th>K/D</th>
+                            <th>ADR</th>
+                            <th>Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var player in Model.Where(p => p.Team == "Team1"))
+                        {
+                            var kd = player.TotalDeaths > 0 ? (double)player.TotalKills / player.TotalDeaths : player.TotalKills;
+                            var adr = player.TotalRounds > 0 ? (double)player.TotalDamage / player.TotalRounds : 0;
+                            
+                            <tr class="@(player.IsWinner ? "winner-row" : "")">
+                                <td class="player-cell">@player.PlayerName</td>
+                                <td>@player.TotalKills</td>
+                                <td>@player.TotalDeaths</td>
+                                <td>@player.TotalAssists</td>
+                                <td class="@GetKDColorClass(kd)">@(player.TotalDeaths > 0 ? kd.ToString("F2") : "∞")</td>
+                                <td class="@GetADRColorClass(adr)">@adr.ToString("F0")</td>
+                                <td class="@GetRatingColorClass(player.HLTVRating)">@player.HLTVRating.ToString("F2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Team B Scoreboard -->
+        <div class="team-scoreboard team-b-scoreboard">
+            <div class="team-header">
+                <h3 class="team-name">Team B</h3>
+                <div class="team-tag">B</div>
+            </div>
+            <div class="scoreboard-table">
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>K</th>
+                            <th>D</th>
+                            <th>A</th>
+                            <th>K/D</th>
+                            <th>ADR</th>
+                            <th>Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var player in Model.Where(p => p.Team == "Team2"))
+                        {
+                            var kd = player.TotalDeaths > 0 ? (double)player.TotalKills / player.TotalDeaths : player.TotalKills;
+                            var adr = player.TotalRounds > 0 ? (double)player.TotalDamage / player.TotalRounds : 0;
+                            
+                            <tr class="@(player.IsWinner ? "winner-row" : "")">
+                                <td class="player-cell">@player.PlayerName</td>
+                                <td>@player.TotalKills</td>
+                                <td>@player.TotalDeaths</td>
+                                <td>@player.TotalAssists</td>
+                                <td class="@GetKDColorClass(kd)">@(player.TotalDeaths > 0 ? kd.ToString("F2") : "∞")</td>
+                                <td class="@GetADRColorClass(adr)">@adr.ToString("F0")</td>
+                                <td class="@GetRatingColorClass(player.HLTVRating)">@player.HLTVRating.ToString("F2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="no-stats-message">
+        <i class="fi fi-rr-chart-line"></i>
+        <span>No player statistics available for this map.</span>
+    </div>
+}

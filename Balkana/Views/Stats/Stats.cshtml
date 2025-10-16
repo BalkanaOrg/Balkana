@@ -1,0 +1,339 @@
+@model dynamic
+
+@{
+    ViewData["Title"] = "Statistics";
+    var stats = Model.Stats as List<Balkana.Models.Stats.PlayerStatsResponseModel>;
+    var statsType = Model.StatsType as string;
+    var statsTitle = Model.StatsTitle as string;
+    var hasStats = Model.HasStats;
+    var error = Model.Error as string;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/stats.css" asp-append-version="true" />
+}
+
+<div class="stats-page-container">
+    <!-- Header Section -->
+    <div class="stats-header">
+        <h1 class="stats-title">@statsTitle</h1>
+        <div class="stats-meta">
+            <span class="stats-type-badge">@statsType.ToUpper()</span>
+            @if (hasStats && stats != null)
+            {
+                <span class="stats-count">@stats.Count players</span>
+            }
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <div class="error-container">
+            <div class="error-icon">
+                <i class="fi fi-rr-exclamation-triangle"></i>
+            </div>
+            <div class="error-content">
+                <h3>Error Loading Statistics</h3>
+                <p>@error</p>
+            </div>
+        </div>
+    }
+    else if (!hasStats || stats == null || !stats.Any())
+    {
+        <div class="no-stats-container">
+            <div class="no-stats-icon">
+                <i class="fi fi-rr-chart-line-down"></i>
+            </div>
+            <div class="no-stats-content">
+                <h3>No Statistics Found</h3>
+                <p>No player statistics found for the selected criteria.</p>
+                <div class="help-section">
+                    <h4>How to access statistics:</h4>
+                    <div class="help-examples">
+                        <div class="help-example">
+                            <code>/Stats/Stats?player=123</code>
+                            <span>Player statistics</span>
+                        </div>
+                        <div class="help-example">
+                            <code>/Stats/Stats?team=456</code>
+                            <span>Team statistics</span>
+                        </div>
+                        <div class="help-example">
+                            <code>/Stats/Stats?series=789</code>
+                            <span>Series statistics</span>
+                        </div>
+                        <div class="help-example">
+                            <code>/Stats/Stats?tournament=101</code>
+                            <span>Tournament statistics</span>
+                        </div>
+                    </div>
+                    <div class="help-filters">
+                        <h5>Available filters:</h5>
+                        <ul>
+                            <li><code>&startDate=2024-01-01</code> - Filter from date</li>
+                            <li><code>&endDate=2024-12-31</code> - Filter to date</li>
+                            <li><code>&provider=FACEIT</code> - Filter by provider</li>
+                            <li><code>&gameId=1</code> - Filter by game</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        var providers = stats.Select(s => s.Provider).Distinct().ToList();
+        @if (providers.Count > 1)
+        {
+            <div class="provider-tabs-container">
+                <div class="provider-tabs">
+                    @foreach (var provider in providers)
+                    {
+                        <button class="provider-tab @(provider == providers.First() ? "active" : "")" 
+                                data-provider="@provider">
+                            <i class="fi fi-rr-gamepad"></i>
+                            @provider
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Statistics Content -->
+        @foreach (var provider in providers)
+        {
+            var providerStats = stats.Where(s => s.Provider == provider).ToList();
+            var isActive = provider == providers.First();
+            
+            <div class="provider-content @(isActive ? "active" : "")" data-provider="@provider">
+                <!-- CS2 Statistics -->
+                @if (providerStats.Any(s => s.CS2Stats != null))
+                {
+                    <div class="game-section">
+                        <div class="game-header">
+                            <div class="game-icon">
+                                <i class="fi fi-rr-crosshair"></i>
+                            </div>
+                            <h2>Counter-Strike 2 Statistics</h2>
+                        </div>
+
+                        <!-- Main Stats Table -->
+                        <div class="main-stats-table-container">
+                            <table class="main-stats-table">
+                                <thead>
+                                    <tr>
+                                        <th class="player-col">Player</th>
+                                        <th class="matches-col">Matches</th>
+                                        <th class="kills-col">Kills</th>
+                                        <th class="deaths-col">Deaths</th>
+                                        <th class="assists-col">Assists</th>
+                                        <th class="kd-col">K/D</th>
+                                        <th class="adr-col">ADR</th>
+                                        <th class="rating-col">Rating</th>
+                                        <th class="hs-col">HS%</th>
+                                        <th class="fk-col">FK</th>
+                                        <th class="fd-col">FD</th>
+                                        <th class="kast-col">KAST</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var playerStat in providerStats.Where(s => s.CS2Stats != null).OrderByDescending(p => p.CS2Stats.HLTVRating))
+                                    {
+                                        var hsPercentage = playerStat.CS2Stats.TotalKills > 0 ? (double)playerStat.CS2Stats.Headshots / playerStat.CS2Stats.TotalKills * 100 : 0;
+                                        
+                                        <tr>
+                                            <td class="player-cell">
+                                                <div class="player-info">
+                                                    <span class="player-nickname">@playerStat.PlayerNickname</span>
+                                                </div>
+                                            </td>
+                                            <td class="matches-cell">@playerStat.TotalMatches</td>
+                                            <td class="kills-cell">@playerStat.CS2Stats.TotalKills</td>
+                                            <td class="deaths-cell">@playerStat.CS2Stats.TotalDeaths</td>
+                                            <td class="assists-cell">@playerStat.CS2Stats.TotalAssists</td>
+                                            <td class="kd-cell @GetKDColorClass(playerStat.CS2Stats.KDRatio)">
+                                                @playerStat.CS2Stats.KDRatio.ToString("F2")
+                                            </td>
+                                            <td class="adr-cell @GetADRColorClass(playerStat.CS2Stats.ADR)">
+                                                @playerStat.CS2Stats.ADR.ToString("F0")
+                                            </td>
+                                            <td class="rating-cell @GetRatingColorClass(playerStat.CS2Stats.HLTVRating)">
+                                                @playerStat.CS2Stats.HLTVRating.ToString("F2")
+                                            </td>
+                                            <td class="hs-cell">@hsPercentage.ToString("F0")%</td>
+                                            <td class="fk-cell">@playerStat.CS2Stats.FirstKills</td>
+                                            <td class="fd-cell">@playerStat.CS2Stats.FirstDeaths</td>
+                                            <td class="kast-cell">@playerStat.CS2Stats.KAST.ToString("F0")%</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Advanced Stats Table -->
+                        <div class="advanced-stats-section">
+                            <h3>Advanced Statistics</h3>
+                            <div class="advanced-stats-table-container">
+                                <table class="advanced-stats-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="player-col">Player</th>
+                                            <th class="damage-col">Damage</th>
+                                            <th class="rounds-col">Rounds</th>
+                                            <th class="multi-col">Multi Kills</th>
+                                            <th class="clutch-col">Clutches</th>
+                                            <th class="sniper-col">Sniper</th>
+                                            <th class="pistol-col">Pistol</th>
+                                            <th class="knife-col">Knife</th>
+                                            <th class="flash-col">Flashes</th>
+                                            <th class="utility-col">Utility</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var playerStat in providerStats.Where(s => s.CS2Stats != null).OrderByDescending(p => p.CS2Stats.HLTVRating))
+                                        {
+                                            <tr>
+                                                <td class="player-cell">
+                                                    <div class="player-info">
+                                                        <span class="player-nickname">@playerStat.PlayerNickname</span>
+                                                    </div>
+                                                </td>
+                                                <td class="damage-cell">@playerStat.CS2Stats.TotalDamage</td>
+                                                <td class="rounds-cell">@playerStat.CS2Stats.TotalRounds</td>
+                                                <td class="multi-cell">@playerStat.CS2Stats.MultiKills</td>
+                                                <td class="clutch-cell">@playerStat.CS2Stats.Clutches</td>
+                                                <td class="sniper-cell">@playerStat.CS2Stats.SniperKills</td>
+                                                <td class="pistol-cell">@playerStat.CS2Stats.PistolKills</td>
+                                                <td class="knife-cell">@playerStat.CS2Stats.KnifeKills</td>
+                                                <td class="flash-cell">@playerStat.CS2Stats.Flashes</td>
+                                                <td class="utility-cell">@playerStat.CS2Stats.UtilityUsage</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- LoL Statistics -->
+                @if (providerStats.Any(s => s.LoLStats != null))
+                {
+                    <div class="game-section">
+                        <div class="game-header">
+                            <div class="game-icon">
+                                <i class="fi fi-rr-sword"></i>
+                            </div>
+                            <h2>League of Legends Statistics</h2>
+                        </div>
+
+                        <div class="main-stats-table-container">
+                            <table class="main-stats-table">
+                                <thead>
+                                    <tr>
+                                        <th class="player-col">Player</th>
+                                        <th class="matches-col">Matches</th>
+                                        <th class="kills-col">Kills</th>
+                                        <th class="deaths-col">Deaths</th>
+                                        <th class="assists-col">Assists</th>
+                                        <th class="kd-col">K/D</th>
+                                        <th class="cs-col">CS/Min</th>
+                                        <th class="gold-col">Gold/Min</th>
+                                        <th class="vision-col">Vision</th>
+                                        <th class="damage-col">Damage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var playerStat in providerStats.Where(s => s.LoLStats != null).OrderByDescending(p => p.LoLStats.KDRatio))
+                                    {
+                                        <tr>
+                                            <td class="player-cell">
+                                                <div class="player-info">
+                                                    <span class="player-nickname">@playerStat.PlayerNickname</span>
+                                                </div>
+                                            </td>
+                                            <td class="matches-cell">@playerStat.TotalMatches</td>
+                                            <td class="kills-cell">@playerStat.LoLStats.TotalKills</td>
+                                            <td class="deaths-cell">@playerStat.LoLStats.TotalDeaths</td>
+                                            <td class="assists-cell">@playerStat.LoLStats.TotalAssists</td>
+                                            <td class="kd-cell @GetKDColorClass(playerStat.LoLStats.KDRatio)">
+                                                @playerStat.LoLStats.KDRatio.ToString("F2")
+                                            </td>
+                                            <td class="cs-cell">@playerStat.LoLStats.CSPerMinute.ToString("F1")</td>
+                                            <td class="gold-cell">@playerStat.LoLStats.GoldPerMinute.ToString("F0")</td>
+                                            <td class="vision-cell">@playerStat.LoLStats.TotalVisionScore</td>
+                                            <td class="damage-cell">@playerStat.LoLStats.TotalDamageToChampions</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@functions {
+    string GetADRColorClass(double adr)
+    {
+        if (adr >= 110) return "stat-dark-green";
+        if (adr >= 90) return "stat-light-green";
+        if (adr >= 75) return "stat-yellow";
+        if (adr >= 50) return "stat-light-red";
+        return "stat-dark-red";
+    }
+    
+    string GetRatingColorClass(double rating)
+    {
+        if (rating >= 1.20) return "stat-dark-green";
+        if (rating >= 1.05) return "stat-light-green";
+        if (rating >= 0.95) return "stat-yellow";
+        if (rating >= 0.75) return "stat-light-red";
+        return "stat-dark-red";
+    }
+    
+    string GetKDColorClass(double kd)
+    {
+        if (kd >= 1.10) return "stat-dark-green";
+        if (kd >= 0.90) return "stat-light-green";
+        if (kd >= 0.80) return "stat-yellow";
+        if (kd >= 0.60) return "stat-light-red";
+        return "stat-dark-red";
+    }
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Handle provider tab switching
+            $('.provider-tab').click(function(e) {
+                e.preventDefault();
+                
+                var provider = $(this).data('provider');
+                
+                // Update active tab
+                $('.provider-tab').removeClass('active');
+                $(this).addClass('active');
+                
+                // Show corresponding content
+                $('.provider-content').removeClass('active');
+                $('.provider-content[data-provider="' + provider + '"]').addClass('active');
+            });
+            
+            // Add smooth scrolling for table overflow
+            $('.main-stats-table-container, .advanced-stats-table-container').on('scroll', function() {
+                var scrollLeft = $(this).scrollLeft();
+                var container = $(this);
+                
+                // Add visual feedback for horizontal scroll
+                if (scrollLeft > 0) {
+                    container.addClass('scrolled');
+                } else {
+                    container.removeClass('scrolled');
+                }
+            });
+        });
+    </script>
+}

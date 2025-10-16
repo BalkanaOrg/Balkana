@@ -1,6 +1,7 @@
 ﻿using Balkana.Data;
 using Balkana.Data.Infrastructure;
 using Balkana.Services.Teams;
+using Balkana.Services.Stats;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,6 +29,7 @@ namespace Balkana
             });
 
             services.AddTransient<ITeamService, TeamService>();
+            services.AddTransient<IStatsService, StatsService>();
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {

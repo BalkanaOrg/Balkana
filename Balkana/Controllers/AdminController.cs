@@ -580,6 +580,25 @@ namespace Balkana.Controllers
 
             try
             {
+                // Test API key first
+                var apiKeyValid = await tournamentService.TestApiKeyAsync();
+                if (!apiKeyValid)
+                {
+                    ModelState.AddModelError("", "API key is invalid or lacks permissions for Tournament-stub API");
+                    
+                    var tournaments = await _context.Tournaments
+                        .Where(t => t.Game.FullName == "League of Legends")
+                        .Select(t => new SelectListItem
+                        {
+                            Value = t.Id.ToString(),
+                            Text = t.FullName
+                        })
+                        .ToListAsync();
+
+                    model.InternalTournaments = tournaments;
+                    return View("RiotTournaments/Create", model);
+                }
+
                 // If no provider ID, register one
                 if (!model.ProviderId.HasValue)
                 {

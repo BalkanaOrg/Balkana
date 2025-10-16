@@ -1,0 +1,275 @@
+@model List<Balkana.Models.Stats.PlayerStatsResponseModel>
+
+@if (Model != null && Model.Any())
+{
+    <div class="player-stats-container">
+        @if (Model.Count > 1)
+        {
+            <!-- Multiple providers - show tabs -->
+            <div class="provider-tabs">
+                @foreach (var playerStats in Model)
+                {
+                    <button class="provider-tab @(playerStats == Model.First() ? "active" : "")" 
+                            data-provider="@playerStats.Provider">
+                        <i class="fi fi-rr-@(playerStats.Provider == "FACEIT" ? "gamepad" : playerStats.Provider == "RIOT" ? "trophy" : "edit")"></i>
+                        @playerStats.Provider
+                    </button>
+                }
+            </div>
+        }
+
+        @foreach (var playerStats in Model)
+        {
+            <div class="provider-content @(playerStats == Model.First() ? "active" : "")" data-provider="@playerStats.Provider">
+                <!-- Player Header -->
+                <div class="player-header">
+                    <div class="player-info">
+                        <h2 class="player-name">@playerStats.PlayerName</h2>
+                        <div class="player-nickname">@playerStats.PlayerNickname</div>
+                        <div class="player-provider">
+                            <i class="fi fi-rr-@(playerStats.Provider == "FACEIT" ? "gamepad" : playerStats.Provider == "RIOT" ? "trophy" : "edit")"></i>
+                            @playerStats.Provider
+                        </div>
+                    </div>
+                    
+                    <div class="player-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Total Matches:</span>
+                            <span class="meta-value">@playerStats.TotalMatches</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">First Match:</span>
+                            <span class="meta-value">@(playerStats.FirstMatchDate?.ToString("MMM dd, yyyy") ?? "N/A")</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Last Match:</span>
+                            <span class="meta-value">@(playerStats.LastMatchDate?.ToString("MMM dd, yyyy") ?? "N/A")</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Teams:</span>
+                            <span class="meta-value">@string.Join(", ", playerStats.TeamsPlayedFor)</span>
+                        </div>
+                    </div>
+                </div>
+
+                @if (playerStats.CS2Stats != null)
+                {
+                    <!-- CS2 Statistics -->
+                    <div class="stats-section">
+                        <h3 class="section-title">
+                            <i class="fi fi-rr-gamepad"></i>
+                            Counter-Strike 2 Statistics
+                        </h3>
+                        
+                        <!-- Basic Stats Grid -->
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value">@playerStats.CS2Stats.TotalKills</div>
+                                <div class="stat-label">Total Kills</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">@playerStats.CS2Stats.TotalDeaths</div>
+                                <div class="stat-label">Total Deaths</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">@playerStats.CS2Stats.TotalAssists</div>
+                                <div class="stat-label">Total Assists</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">@playerStats.CS2Stats.KDRatio.ToString("F2")</div>
+                                <div class="stat-label">K/D Ratio</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">@playerStats.CS2Stats.ADR.ToString("F0")</div>
+                                <div class="stat-label">ADR</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">@playerStats.CS2Stats.HLTVRating.ToString("F2")</div>
+                                <div class="stat-label">HLTV Rating</div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Stats -->
+                        <div class="advanced-stats">
+                            <div class="advanced-stats-grid">
+                                <div class="advanced-stat">
+                                    <span class="advanced-label">Headshots:</span>
+                                    <span class="advanced-value">@playerStats.CS2Stats.Headshots</span>
+                                </div>
+                                <div class="advanced-stat">
+                                    <span class="advanced-label">First Kills:</span>
+                                    <span class="advanced-value">@playerStats.CS2Stats.FirstKills</span>
+                                </div>
+                                <div class="advanced-stat">
+                                    <span class="advanced-label">Multi Kills:</span>
+                                    <span class="advanced-value">@playerStats.CS2Stats.MultiKills</span>
+                                </div>
+                                <div class="advanced-stat">
+                                    <span class="advanced-label">Clutches:</span>
+                                    <span class="advanced-value">@playerStats.CS2Stats.Clutches</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Map Performance -->
+                        @if (playerStats.CS2Stats.MapStats.Any())
+                        {
+                            <div class="map-performance">
+                                <h4 class="subsection-title">Map Performance</h4>
+                                <div class="map-stats-table">
+                                    <table class="stats-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Map</th>
+                                                <th>Matches</th>
+                                                <th>Wins</th>
+                                                <th>Win Rate</th>
+                                                <th>Avg Rating</th>
+                                                <th>Avg ADR</th>
+                                                <th>Avg K/D</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var mapStat in playerStats.CS2Stats.MapStats.OrderByDescending(m => m.MatchesPlayed))
+                                            {
+                                                <tr>
+                                                    <td class="map-name">@mapStat.MapName</td>
+                                                    <td>@mapStat.MatchesPlayed</td>
+                                                    <td>@mapStat.Wins</td>
+                                                    <td class="@GetWinRateColorClass(mapStat.WinRate)">@(mapStat.WinRate.ToString("P1"))</td>
+                                                    <td class="@GetRatingColorClass(mapStat.AverageRating)">@mapStat.AverageRating.ToString("F2")</td>
+                                                    <td class="@GetADRColorClass(mapStat.AverageADR)">@mapStat.AverageADR.ToString("F0")</td>
+                                                    <td class="@GetKDColorClass(mapStat.AverageKDRatio)">@mapStat.AverageKDRatio.ToString("F2")</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (playerStats.LoLStats != null)
+                {
+                    <!-- LoL Statistics -->
+                    <div class="stats-section">
+                        <h3 class="section-title">
+                            <i class="fi fi-rr-trophy"></i>
+                            League of Legends Statistics
+                        </h3>
+                        
+                        <!-- Basic Stats Grid -->
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value">@playerStats.LoLStats.TotalKills</div>
+                                <div class="stat-label">Total Kills</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">@playerStats.LoLStats.TotalDeaths</div>
+                                <div class="stat-label">Total Deaths</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">@playerStats.LoLStats.TotalAssists</div>
+                                <div class="stat-label">Total Assists</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">@playerStats.LoLStats.KDRatio.ToString("F2")</div>
+                                <div class="stat-label">K/D Ratio</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">@playerStats.LoLStats.KPARatio.ToString("F2")</div>
+                                <div class="stat-label">KPA Ratio</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">@playerStats.LoLStats.GoldPerMinute.ToString("F0")</div>
+                                <div class="stat-label">GPM</div>
+                            </div>
+                        </div>
+
+                        <!-- Champion Performance -->
+                        @if (playerStats.LoLStats.ChampionStats.Any())
+                        {
+                            <div class="champion-performance">
+                                <h4 class="subsection-title">Champion Performance</h4>
+                                <div class="champion-stats-table">
+                                    <table class="stats-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Champion</th>
+                                                <th>Matches</th>
+                                                <th>Wins</th>
+                                                <th>Win Rate</th>
+                                                <th>Avg K/D</th>
+                                                <th>Avg KPA</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var champStat in playerStats.LoLStats.ChampionStats.OrderByDescending(c => c.MatchesPlayed))
+                                            {
+                                                <tr>
+                                                    <td class="champion-name">@champStat.ChampionName</td>
+                                                    <td>@champStat.MatchesPlayed</td>
+                                                    <td>@champStat.Wins</td>
+                                                    <td class="@GetWinRateColorClass(champStat.WinRate)">@(champStat.WinRate.ToString("P1"))</td>
+                                                    <td class="@GetKDColorClass(champStat.AverageKDRatio)">@champStat.AverageKDRatio.ToString("F2")</td>
+                                                    <td class="@GetKDColorClass(champStat.AverageKPARatio)">@champStat.AverageKPARatio.ToString("F2")</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="no-stats-message">
+        <i class="fi fi-rr-chart-line"></i>
+        <h3>No Statistics Found</h3>
+        <p>No player statistics found for the selected criteria.</p>
+    </div>
+}
+
+@functions {
+    string GetWinRateColorClass(double winRate)
+    {
+        if (winRate >= 0.6) return "stat-dark-green";
+        if (winRate >= 0.5) return "stat-light-green";
+        if (winRate >= 0.4) return "stat-yellow";
+        if (winRate >= 0.3) return "stat-light-red";
+        return "stat-dark-red";
+    }
+    
+    string GetRatingColorClass(double rating)
+    {
+        if (rating >= 1.20) return "stat-dark-green";
+        if (rating >= 1.05) return "stat-light-green";
+        if (rating >= 0.95) return "stat-yellow";
+        if (rating >= 0.75) return "stat-light-red";
+        return "stat-dark-red";
+    }
+    
+    string GetADRColorClass(double adr)
+    {
+        if (adr >= 110) return "stat-dark-green";
+        if (adr >= 90) return "stat-light-green";
+        if (adr >= 75) return "stat-yellow";
+        if (adr >= 50) return "stat-light-red";
+        return "stat-dark-red";
+    }
+    
+    string GetKDColorClass(double kd)
+    {
+        if (kd >= 1.10) return "stat-dark-green";
+        if (kd >= 0.90) return "stat-light-green";
+        if (kd >= 0.80) return "stat-yellow";
+        if (kd >= 0.60) return "stat-light-red";
+        return "stat-dark-red";
+    }
+}

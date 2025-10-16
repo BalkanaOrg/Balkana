@@ -57,11 +57,11 @@ namespace Balkana.Data.Models.Store
         public decimal TotalAmount { get; set; }
 
         /// <summary>
-        /// Currency (BGN, EUR, USD)
+        /// Currency (EUR, BGN, USD)
         /// </summary>
         [Required]
         [MaxLength(3)]
-        public string Currency { get; set; } = "BGN";
+        public string Currency { get; set; } = "EUR";
 
         /// <summary>
         /// Order status
@@ -184,7 +184,9 @@ namespace Balkana.Data.Models.Store
         ePay = 2,           // Bulgarian payment gateway
         Stripe = 3,
         PayPal = 4,
-        Card = 5
+        Card = 5,
+        CreditCard = 6,     // Credit/Debit card
+        DebitCard = 7       // Debit card
     }
 
     public enum DeliveryProvider

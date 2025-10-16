@@ -2,17 +2,419 @@
 
 @{
     ViewData["Title"] = "Series Details";
+    bool hasMatches = (bool)ViewData["HasMatches"];
 }
 
-<h2>Series Details</h2>
+@functions {
+    string GetADRColorClass(double adr)
+    {
+        if (adr >= 110) return "stat-dark-green";
+        if (adr >= 90) return "stat-light-green";
+        if (adr >= 75) return "stat-yellow";
+        if (adr >= 50) return "stat-light-red";
+        return "stat-dark-red";
+    }
+    
+    string GetRatingColorClass(double rating)
+    {
+        if (rating >= 1.20) return "stat-dark-green";
+        if (rating >= 1.05) return "stat-light-green";
+        if (rating >= 0.95) return "stat-yellow";
+        if (rating >= 0.75) return "stat-light-red";
+        return "stat-dark-red";
+    }
+    
+    string GetKDColorClass(double kd)
+    {
+        if (kd >= 1.10) return "stat-dark-green";
+        if (kd >= 0.90) return "stat-light-green";
+        if (kd >= 0.80) return "stat-yellow";
+        if (kd >= 0.60) return "stat-light-red";
+        return "stat-dark-red";
+    }
+}
 
-<div>
-    <h4>@Model.Name</h4>
-    <p><strong>Teams:</strong> @Model.TeamA?.FullName vs @Model.TeamB?.FullName</p>
-    <p><strong>Game:</strong> @Model.Tournament.Game?.FullName</p>
-    <p><strong>Tournament:</strong> @Model.Tournament?.FullName</p>
-    <p><strong>Date Played:</strong> @Model.DatePlayed.ToShortDateString()</p>
+@section Styles {
+    <link rel="stylesheet" href="~/css/series-details.css" asp-append-version="true" />
+}
 
-    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
-    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+<div class="series-details-container">
+    <!-- Series Header -->
+    <div class="series-header">
+        <div class="series-title-section">
+            <h1 class="series-title">@Model.Name</h1>
+            <div class="series-meta">
+                <span class="tournament-info">
+                    <i class="fi fi-rr-trophy"></i>
+                    @Model.Tournament?.FullName
+                </span>
+                <span class="game-info">
+                    <i class="fi fi-rr-gamepad"></i>
+                    @Model.Tournament?.Game?.FullName
+                </span>
+                <span class="date-info">
+                    <i class="fi fi-rr-calendar"></i>
+                    @Model.DatePlayed.ToString("MMMM dd, yyyy")
+                </span>
+            </div>
+        </div>
+        
+        <div class="series-status">
+            @if (Model.isFinished)
+            {
+                <div class="status-badge finished">
+                    <i class="fi fi-rr-check"></i>
+                    Completed
+                </div>
+                @if (Model.WinnerTeam != null)
+                {
+                    <div class="winner-info">
+                        <i class="fi fi-rr-crown"></i>
+                        Winner: @Model.WinnerTeam.FullName
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="status-badge pending">
+                    <i class="fi fi-rr-clock"></i>
+                    Pending
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (!hasMatches)
+    {
+        <!-- No Matches - Show Team Rosters -->
+        <div class="rosters-section">
+            <h2 class="section-title">
+                <i class="fi fi-rr-users"></i>
+                Team Rosters
+            </h2>
+            
+            <div class="teams-container">
+                <!-- Team A -->
+                <div class="team-roster team-a">
+                    <div class="team-header">
+                        <h3 class="team-name">@(Model.TeamA?.FullName ?? "TBD")</h3>
+                        <div class="team-tag">@(Model.TeamA?.Tag ?? "")</div>
+                    </div>
+                    
+                    <div class="players-grid">
+                        @{
+                            var teamAPlayers = ViewData["TeamAPlayers"] as List<Balkana.Data.Models.Player>;
+                        }
+                        @if (teamAPlayers != null && teamAPlayers.Any())
+                        {
+                            @foreach (var player in teamAPlayers)
+                            {
+                                <div class="player-card">
+                                    <div class="player-avatar">
+                                        <img src="@(player.PlayerPictures?.FirstOrDefault()?.PictureURL ?? "/images/default-player.png")" 
+                                             alt="@player.Nickname" />
+                                    </div>
+                                    <div class="player-info">
+                                        <div class="player-nickname">@player.Nickname</div>
+                                        <div class="player-name">@player.FirstName @player.LastName</div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="no-players">
+                                <i class="fi fi-rr-user"></i>
+                                <span>No active players found</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- VS Divider -->
+                <div class="vs-divider">
+                    <div class="vs-text">VS</div>
+                </div>
+
+                <!-- Team B -->
+                <div class="team-roster team-b">
+                    <div class="team-header">
+                        <h3 class="team-name">@(Model.TeamB?.FullName ?? "TBD")</h3>
+                        <div class="team-tag">@(Model.TeamB?.Tag ?? "")</div>
+                    </div>
+                    
+                    <div class="players-grid">
+                        @{
+                            var teamBPlayers = ViewData["TeamBPlayers"] as List<Balkana.Data.Models.Player>;
+                        }
+                        @if (teamBPlayers != null && teamBPlayers.Any())
+                        {
+                            @foreach (var player in teamBPlayers)
+                            {
+                                <div class="player-card">
+                                    <div class="player-avatar">
+                                        <img src="@(player.PlayerPictures?.FirstOrDefault()?.PictureURL ?? "/images/default-player.png")" 
+                                             alt="@player.Nickname" />
+                                    </div>
+                                    <div class="player-info">
+                                        <div class="player-nickname">@player.Nickname</div>
+                                        <div class="player-name">@player.FirstName @player.LastName</div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="no-players">
+                                <i class="fi fi-rr-user"></i>
+                                <span>No active players found</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Has Matches - Show Match Statistics -->
+        <div class="matches-section">
+            <h2 class="section-title">
+                <i class="fi fi-rr-trophy"></i>
+                Match Results
+            </h2>
+            
+            @{
+                var matchStats = ViewData["MatchStats"] as List<object>;
+            }
+            
+            @if (matchStats != null && matchStats.Any())
+            {
+                <div class="matches-grid">
+                    @foreach (dynamic match in matchStats)
+                    {
+                        <div class="match-card" data-map-id="@match.MapId">
+                            <div class="match-header">
+                                <div class="map-info">
+                                    <img src="@match.MapImage" alt="@match.MapName" class="map-image" />
+                                    <h4 class="map-name">@match.MapName</h4>
+                                </div>
+                                <div class="match-date">@(((DateTime)match.PlayedAt).ToString("MMM dd, HH:mm"))</div>
+                            </div>
+                            
+                            <div class="score-container">
+                                <div class="team-score team-a-score">
+                                    <div class="team-name">@(Model.TeamA?.FullName ?? "Team A")</div>
+                                    <div class="score-number">@match.TeamARounds</div>
+                                </div>
+                                
+                                <div class="score-separator">:</div>
+                                
+                                <div class="team-score team-b-score">
+                                    <div class="team-name">@(Model.TeamB?.FullName ?? "Team B")</div>
+                                    <div class="score-number">@match.TeamBRounds</div>
+                                </div>
+                            </div>
+                            
+                            <div class="match-winner">
+                                <i class="fi fi-rr-crown"></i>
+                                Winner: @match.Winner
+                            </div>
+                            
+                            <div class="map-filter-button">
+                                <button class="btn btn-sm btn-outline-primary map-filter-btn" data-map-id="@match.MapId">
+                                    <i class="fi fi-rr-chart-line"></i>
+                                    View Stats
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- Player Statistics Scoreboard -->
+            <div class="player-stats-section">
+                <div class="stats-header">
+                    <h2 class="section-title">
+                        <i class="fi fi-rr-chart-line"></i>
+                        Player Statistics
+                    </h2>
+                    <div class="filter-controls">
+                        <button class="btn btn-sm btn-primary filter-btn active" data-map-id="">
+                            <i class="fi fi-rr-globe"></i>
+                            All Maps
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="player-stats-container">
+                    @{
+                        var playerStats = ViewData["PlayerStats"] as List<Balkana.Models.Series.PlayerStatsViewModel>;
+                    }
+                    @if (playerStats != null && playerStats.Any())
+                    {
+                        <div class="scoreboard-container">
+                            <!-- Team A Scoreboard -->
+                            <div class="team-scoreboard team-a-scoreboard">
+                                <div class="team-header">
+                                    <h3 class="team-name">@(Model.TeamA?.FullName ?? "Team A")</h3>
+                                    <div class="team-tag">@(Model.TeamA?.Tag ?? "A")</div>
+                                </div>
+                                <div class="scoreboard-table">
+                                    <table class="stats-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Player</th>
+                                                <th>K</th>
+                                                <th>D</th>
+                                                <th>A</th>
+                                                <th>K/D</th>
+                                                <th>ADR</th>
+                                                <th>Rating</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var player in playerStats.Where(p => p.Team == "Team1"))
+                                            {
+                                                var kd = player.TotalDeaths > 0 ? (double)player.TotalKills / player.TotalDeaths : player.TotalKills;
+                                                var adr = player.TotalRounds > 0 ? (double)player.TotalDamage / player.TotalRounds : 0;
+                                                
+                                                <tr class="@(player.IsWinner ? "winner-row" : "")">
+                                                    <td class="player-cell">@player.PlayerName</td>
+                                                    <td>@player.TotalKills</td>
+                                                    <td>@player.TotalDeaths</td>
+                                                    <td>@player.TotalAssists</td>
+                                                    <td class="@GetKDColorClass(kd)">@(player.TotalDeaths > 0 ? kd.ToString("F2") : "∞")</td>
+                                                    <td class="@GetADRColorClass(adr)">@adr.ToString("F0")</td>
+                                                    <td class="@GetRatingColorClass(player.HLTVRating)">@player.HLTVRating.ToString("F2")</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Team B Scoreboard -->
+                            <div class="team-scoreboard team-b-scoreboard">
+                                <div class="team-header">
+                                    <h3 class="team-name">@(Model.TeamB?.FullName ?? "Team B")</h3>
+                                    <div class="team-tag">@(Model.TeamB?.Tag ?? "B")</div>
+                                </div>
+                                <div class="scoreboard-table">
+                                    <table class="stats-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Player</th>
+                                                <th>K</th>
+                                                <th>D</th>
+                                                <th>A</th>
+                                                <th>K/D</th>
+                                                <th>ADR</th>
+                                                <th>Rating</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var player in playerStats.Where(p => p.Team == "Team2"))
+                                            {
+                                                var kd = player.TotalDeaths > 0 ? (double)player.TotalKills / player.TotalDeaths : player.TotalKills;
+                                                var adr = player.TotalRounds > 0 ? (double)player.TotalDamage / player.TotalRounds : 0;
+                                                
+                                                <tr class="@(player.IsWinner ? "winner-row" : "")">
+                                                    <td class="player-cell">@player.PlayerName</td>
+                                                    <td>@player.TotalKills</td>
+                                                    <td>@player.TotalDeaths</td>
+                                                    <td>@player.TotalAssists</td>
+                                                    <td class="@GetKDColorClass(kd)">@(player.TotalDeaths > 0 ? kd.ToString("F2") : "∞")</td>
+                                                    <td class="@GetADRColorClass(adr)">@adr.ToString("F0")</td>
+                                                    <td class="@GetRatingColorClass(player.HLTVRating)">@player.HLTVRating.ToString("F2")</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+            <i class="fi fi-rr-edit"></i>
+            Edit Series
+        </a>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fi fi-rr-arrow-left"></i>
+            Back to List
+        </a>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Add filter buttons for each map
+            var matchCards = $('.match-card');
+            var filterControls = $('.filter-controls');
+            
+            matchCards.each(function() {
+                var mapId = $(this).data('map-id');
+                var mapName = $(this).find('.map-name').text();
+                
+                if (mapId && mapName) {
+                    var filterBtn = $('<button class="btn btn-sm btn-outline-primary filter-btn" data-map-id="' + mapId + '">' +
+                        '<i class="fi fi-rr-map"></i>' +
+                        mapName +
+                        '</button>');
+                    filterControls.append(filterBtn);
+                }
+            });
+            
+            // Handle filter button clicks
+            $(document).on('click', '.filter-btn', function() {
+                var mapId = $(this).data('map-id');
+                
+                // Update active button
+                $('.filter-btn').removeClass('active btn-primary').addClass('btn-outline-primary');
+                $(this).removeClass('btn-outline-primary').addClass('active btn-primary');
+                
+                // Load player stats for the selected map
+                loadPlayerStats(mapId);
+            });
+            
+            // Handle map card button clicks
+            $(document).on('click', '.map-filter-btn', function() {
+                var mapId = $(this).data('map-id');
+                
+                // Update active button
+                $('.filter-btn').removeClass('active btn-primary').addClass('btn-outline-primary');
+                $('.filter-btn[data-map-id="' + mapId + '"]').removeClass('btn-outline-primary').addClass('active btn-primary');
+                
+                // Load player stats for the selected map
+                loadPlayerStats(mapId);
+            });
+            
+            function loadPlayerStats(mapId) {
+                var seriesId = @Model.Id;
+                var url = '@Url.Action("GetPlayerStatsByMap", "Series")' + '?seriesId=' + seriesId;
+                
+                if (mapId) {
+                    url += '&mapId=' + mapId;
+                }
+                
+                $('#player-stats-container').html('<div class="loading-spinner"><i class="fi fi-rr-spinner"></i> Loading...</div>');
+                
+                $.get(url)
+                    .done(function(data) {
+                        $('#player-stats-container').html(data);
+                    })
+                    .fail(function() {
+                        $('#player-stats-container').html('<div class="error-message"><i class="fi fi-rr-exclamation"></i> Failed to load player statistics.</div>');
+                    });
+            }
+        });
+    </script>
+}

@@ -1,10 +1,68 @@
-﻿@model Balkana.Models.Store.ProductListViewModel
+@model Balkana.Models.Store.ProductListViewModel
 
 @{
     ViewData["Title"] = "Balkana Store";
 }
 
-<div class="container-fluid mt-4 text-white">
+@section Styles {
+    <link rel="stylesheet" href="~/css/store.css" asp-append-version="true" />
+    <style>
+        body { background-color: #0a0a0a !important; }
+        .card { background-color: #1a1a1a !important; }
+        .product-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #0d6efd;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(13, 110, 253, 0.3);
+        }
+        .collection-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #198754;
+        }
+        .collection-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(25, 135, 84, 0.3);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #0d6efd 0%, #198754 100%);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0b5ed7 0%, #157347 100%);
+        }
+        .form-control, .form-select {
+            background-color: #2a2a2a !important;
+            border-color: #495057 !important;
+            color: white !important;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: #2a2a2a !important;
+            border-color: #0d6efd !important;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
+            color: white !important;
+        }
+        .badge {
+            font-size: 0.75em;
+        }
+        .text-muted {
+            color: #adb5bd !important;
+        }
+        .alert-info {
+            background-color: rgba(13, 202, 240, 0.1) !important;
+            border-color: #0dcaf0 !important;
+            color: #0dcaf0 !important;
+        }
+    </style>
+}
+
+<div class="store-container">
+    <div class="container">
+        <div class="store-header">
+            <h1 class="store-title">Balkana Store</h1>
+            <p class="store-subtitle">Premium gaming merchandise and apparel</p>
+        </div>
     <!-- Featured Collections -->
     @if (Model.FeaturedCollections.Any())
     {
@@ -60,7 +118,7 @@
                             {
                                 <a href="@Url.Action("Index", new { categoryId = sub.Id })" 
                                    class="list-group-item list-group-item-action bg-dark text-white border-secondary ps-4 @(Model.CategoryId == sub.Id ? "active" : "")">
-                                    └ @sub.Name <span class="badge bg-info float-end">@sub.ProductCount</span>
+                                    L @sub.Name <span class="badge bg-info float-end">@sub.ProductCount</span>
                                 </a>
                             }
                         }
@@ -78,11 +136,11 @@
                         <input type="hidden" name="categoryId" value="@Model.CategoryId" />
                         <input type="hidden" name="search" value="@Model.SearchTerm" />
                         <div class="mb-3">
-                            <label class="form-label text-white">Min Price (BGN)</label>
+                            <label class="form-label text-white">Min Price (EUR)</label>
                             <input type="number" name="minPrice" class="form-control bg-dark text-white border-secondary" value="@Model.MinPrice" step="0.01" />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label text-white">Max Price (BGN)</label>
+                            <label class="form-label text-white">Max Price (EUR)</label>
                             <input type="number" name="maxPrice" class="form-control bg-dark text-white border-secondary" value="@Model.MaxPrice" step="0.01" />
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
@@ -122,21 +180,21 @@
                     @foreach (var product in Model.Products)
                     {
                         <div class="col-md-4 mb-4">
-                            <div class="card product-card h-100 bg-dark border-primary">
+                            <div class="product-card">
                                 <a href="/store/product/@product.Slug">
                                     @if (!string.IsNullOrEmpty(product.MainImageUrl))
                                     {
-                                        <img src="@product.MainImageUrl" class="card-img-top" alt="@product.Name" style="height: 250px; object-fit: cover;">
+                                        <img src="@product.MainImageUrl" class="product-image" alt="@product.Name">
                                     }
                                     else
                                     {
-                                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 250px;">
+                                        <div class="product-image bg-light d-flex align-items-center justify-content-center">
                                             <i class="fas fa-image fa-3x text-muted"></i>
                                         </div>
                                     }
                                 </a>
                                 
-                                <div class="card-body">
+                                <div class="product-content">
                                     @if (product.IsFeatured)
                                     {
                                         <span class="badge bg-warning text-dark mb-2">Featured</span>
@@ -150,8 +208,8 @@
                                         <span class="badge bg-success mb-2">@product.PlayerNickname</span>
                                     }
                                     
-                                    <h5 class="card-title">
-                                        <a href="/store/product/@product.Slug" class="text-dark text-decoration-none">@product.Name</a>
+                                    <h5 class="product-title">
+                                        <a href="/store/product/@product.Slug" class="text-decoration-none">@product.Name</a>
                                     </h5>
                                     <p class="text-muted mb-2">@product.CategoryName</p>
                                     
@@ -159,11 +217,11 @@
                                         <div>
                                             @if (product.MinPrice == product.MaxPrice)
                                             {
-                                                <span class="h5 mb-0">@product.MinPrice.ToString("F2") BGN</span>
+                                                <span class="product-price">@product.MinPrice.ToString("F2") EUR</span>
                                             }
                                             else
                                             {
-                                                <span class="h5 mb-0">@product.MinPrice.ToString("F2") - @product.MaxPrice.ToString("F2") BGN</span>
+                                                <span class="product-price">@product.MinPrice.ToString("F2") - @product.MaxPrice.ToString("F2") EUR</span>
                                             }
                                         </div>
                                         
@@ -178,10 +236,12 @@
                                     </div>
                                     
                                     <small class="text-muted">@product.VariantCount variant(s)</small>
-                                </div>
-                                
-                                <div class="card-footer">
-                                    <a href="/store/product/@product.Slug" class="btn btn-primary w-100">View Details</a>
+                                    
+                                    <div class="mt-3">
+                                        <a href="/store/product/@product.Slug" class="add-to-cart-btn">
+                                            <i class="fas fa-eye"></i> View Details
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -213,38 +273,3 @@
     </div>
 </div>
 
-@section Styles {
-    <style>
-        body { background-color: #0a0a0a !important; }
-        .card { background-color: #1a1a1a !important; }
-        .product-card {
-            transition: transform 0.2s, box-shadow 0.2s;
-            border: 1px solid #0d6efd;
-        }
-        .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
-            border-color: #dc3545;
-        }
-        .collection-card {
-            transition: transform 0.2s;
-            background-color: #1a1a1a !important;
-            border: 1px solid #0d6efd;
-        }
-        .collection-card:hover {
-            transform: scale(1.02);
-            border-color: #dc3545;
-        }
-        .list-group-item.active {
-            background-color: #0d6efd !important;
-            border-color: #0d6efd !important;
-        }
-        .form-control:focus, .form-select:focus {
-            background-color: #2a2a2a;
-            color: white !important;
-            border-color: #0d6efd;
-        }
-        .card-body { color: white; }
-        .card-title { color: white !important; }
-    </style>
-}

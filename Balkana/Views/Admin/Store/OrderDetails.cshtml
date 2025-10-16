@@ -7,7 +7,22 @@
         : Model.User != null ? $"{Model.User.FirstName} {Model.User.LastName}" : "Unknown";
 }
 
-<div class="container-fluid mt-4">
+@section Styles {
+    <link rel="stylesheet" href="~/css/store.css" asp-append-version="true" />
+    <style>
+        .card { background-color: #1a1a1a !important; }
+        .btn {
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+}
+
+<div class="store-container">
+    <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="text-white">Order #@Model.OrderNumber</h2>
@@ -261,12 +276,7 @@
             </div>
         </div>
     </div>
+    </div>
 </div>
 
-@section Styles {
-    <style>
-        .card { background-color: #1a1a1a !important; }
-        .table-dark { background-color: #1a1a1a !important; }
-    </style>
-}
 

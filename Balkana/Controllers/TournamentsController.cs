@@ -746,6 +746,7 @@ namespace Balkana.Controllers
                 .Include(s => s.TeamA)
                 .Include(s => s.TeamB)
                 .Include(s => s.WinnerTeam)
+                .Include(s => s.Tournament)
                 .Include(s => s.Matches)
                     .ThenInclude(m => m.WinnerTeam)
                 .Include(s => s.Matches)
@@ -755,6 +756,9 @@ namespace Balkana.Controllers
             if (series == null)
                 return NotFound();
 
+            // Determine BO format based on series characteristics
+            string bestOfFormat = DetermineBestOfFormat(series);
+
             var seriesData = new
             {
                 id = series.Id,
@@ -763,6 +767,7 @@ namespace Balkana.Controllers
                 position = series.Position,
                 bracket = series.Bracket.ToString(),
                 isFinished = series.isFinished,
+                bestOfFormat = bestOfFormat,
                 teamA = series.TeamA != null ? new { id = series.TeamA.Id, fullName = series.TeamA.FullName } : null,
                 teamB = series.TeamB != null ? new { id = series.TeamB.Id, fullName = series.TeamB.FullName } : null,
                 winnerTeam = series.WinnerTeam != null ? new { id = series.WinnerTeam.Id, fullName = series.WinnerTeam.FullName } : null,
@@ -779,6 +784,121 @@ namespace Balkana.Controllers
             };
 
             return Ok(seriesData);
+        }
+
+        private string DetermineBestOfFormat(Series series)
+        {
+            // Check if it's a bye match (one team is null)
+            if ((series.TeamA == null && series.TeamB != null) || 
+                (series.TeamA != null && series.TeamB == null))
+            {
+                return "Bye";
+            }
+
+            // Check if both teams are null (TBD match)
+            if (series.TeamA == null && series.TeamB == null)
+            {
+                return "TBD";
+            }
+
+            // If no matches yet, determine based on tournament structure
+            if (!series.Matches.Any())
+            {
+                return DetermineBestOfFromTournamentStructure(series);
+            }
+
+            // If matches exist, determine based on actual match count and completion
+            var matchCount = series.Matches.Count;
+            
+            // Debug logging
+            Console.WriteLine($"Series {series.Id}: {matchCount} matches, Finished: {series.isFinished}");
+            
+            if (matchCount == 1)
+            {
+                return "BO1";
+            }
+            else if (matchCount == 2)
+            {
+                // Check if this is a legitimate BO2 or if it's incomplete
+                if (series.isFinished)
+                {
+                    // If finished with 2 matches, it could be a BO3 that ended 2-0
+                    var teamAWins = series.Matches.Count(m => m.WinnerTeamId == series.TeamAId);
+                    var teamBWins = series.Matches.Count(m => m.WinnerTeamId == series.TeamBId);
+                    var maxWins = Math.Max(teamAWins, teamBWins);
+                    
+                    if (maxWins == 2)
+                    {
+                        return "BO3 (2-0)";
+                    }
+                    else
+                    {
+                        return "BO2 (Invalid)";
+                    }
+                }
+                else
+                {
+                    // Not finished with 2 matches - likely incomplete BO3
+                    return "BO3 (Incomplete)";
+                }
+            }
+            else if (matchCount == 3)
+            {
+                // For 3 matches, determine if it's BO3 or BO5 based on completion
+                if (series.isFinished)
+                {
+                    var teamAWins = series.Matches.Count(m => m.WinnerTeamId == series.TeamAId);
+                    var teamBWins = series.Matches.Count(m => m.WinnerTeamId == series.TeamBId);
+                    var maxWins = Math.Max(teamAWins, teamBWins);
+                    
+                    // If a team won 2 matches, it's a BO3 (2-0 or 2-1)
+                    // If a team won 3 matches, it's a BO5 (3-0)
+                    if (maxWins == 2)
+                    {
+                        return "BO3";
+                    }
+                    else if (maxWins == 3)
+                    {
+                        return "BO5";
+                    }
+                }
+                
+                // Default to BO3 for 3 matches
+                return "BO3";
+            }
+            else if (matchCount == 5)
+            {
+                return "BO5";
+            }
+            else
+            {
+                return $"BO{matchCount}";
+            }
+        }
+
+        private string DetermineBestOfFromTournamentStructure(Series series)
+        {
+            // Determine BO format based on tournament round and structure
+            // This is a heuristic approach since we don't have explicit BO format in the model
+            
+            if (series.Round == 1)
+            {
+                // First round is typically BO1
+                return "BO1";
+            }
+            else if (series.Round == 2)
+            {
+                // Second round (semifinals) is typically BO3
+                return "BO3";
+            }
+            else if (series.Round >= 3)
+            {
+                // Finals and later rounds are typically BO5
+                return "BO5";
+            }
+            
+            // Default fallback
+            return "BO3";
         }
 
         private int GetTeamScore(Series series, Team team)

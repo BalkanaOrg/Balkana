@@ -172,7 +172,7 @@
         const body = document.getElementById('seriesModalBody');
         
         // Show loading state
-        title.textContent = `Series ${seriesId} Details`;
+        title.textContent = `Loading Series Details...`;
         body.innerHTML = `
             <div class="text-center">
                 <div class="spinner-border text-primary" role="status">
@@ -193,9 +193,11 @@
             const seriesData = await response.json();
             console.log('Series data received:', seriesData);
             
-            // Determine best-of format
-            const bestOf = seriesData.matches ? seriesData.matches.length : 1;
-            const bestOfText = bestOf === 1 ? 'BO1' : bestOf === 3 ? 'BO3' : bestOf === 5 ? 'BO5' : `BO${bestOf}`;
+            // Update modal title with series name and make it clickable
+            title.innerHTML = `<a href="/Series/Details/${seriesId}" style="color: inherit; text-decoration: none; transition: color 0.3s ease;" onmouseover="this.style.color='#007bff'" onmouseout="this.style.color='inherit'">${seriesData.name || `Series ${seriesId}`} Details</a>`;
+            
+            // Use the BO format from the API
+            const bestOfText = seriesData.bestOfFormat || 'TBD';
             
             // Build matches HTML
             let matchesHtml = '';

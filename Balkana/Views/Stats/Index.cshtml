@@ -1,0 +1,333 @@
+@{
+    ViewData["Title"] = "Statistics";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/stats.css" asp-append-version="true" />
+}
+
+<div class="stats-container">
+    <div class="stats-header">
+        <h1 class="stats-title">
+            <i class="fi fi-rr-chart-line"></i>
+            Player Statistics
+        </h1>
+        <p class="stats-subtitle">Comprehensive statistics for players, teams, series, and tournaments</p>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-section">
+        <div class="search-container">
+            <div class="search-input-group">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search for players, teams, tournaments..." />
+                <button type="button" id="searchBtn" class="search-btn">
+                    <i class="fi fi-rr-search"></i>
+                </button>
+            </div>
+            <div id="searchResults" class="search-results"></div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="filter-container">
+            <div class="filter-group">
+                <label for="gameFilter" class="filter-label">Game:</label>
+                <select id="gameFilter" class="filter-select">
+                    <option value="">All Games</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="providerFilter" class="filter-label">Provider:</label>
+                <select id="providerFilter" class="filter-select">
+                    <option value="">All Providers</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="startDateFilter" class="filter-label">Start Date:</label>
+                <input type="date" id="startDateFilter" class="filter-date" />
+            </div>
+            
+            <div class="filter-group">
+                <label for="endDateFilter" class="filter-label">End Date:</label>
+                <input type="date" id="endDateFilter" class="filter-date" />
+            </div>
+            
+            <div class="filter-group">
+                <button type="button" id="clearFiltersBtn" class="clear-filters-btn">
+                    <i class="fi fi-rr-cross"></i>
+                    Clear Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Display Area -->
+    <div id="statsDisplayArea" class="stats-display-area">
+        <div class="welcome-message">
+            <div class="welcome-icon">
+                <i class="fi fi-rr-chart-line"></i>
+            </div>
+            <h3>Welcome to Statistics</h3>
+            <p>Search for a player, team, series, or tournament to view detailed statistics.</p>
+            <div class="welcome-features">
+                <div class="feature-item">
+                    <i class="fi fi-rr-user"></i>
+                    <span>Player Statistics</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fi fi-rr-users"></i>
+                    <span>Team Statistics</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fi fi-rr-trophy"></i>
+                    <span>Series Statistics</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fi fi-rr-crown"></i>
+                    <span>Tournament Statistics</span>
+                </div>
+            </div>
+            
+            <!-- Debug Info -->
+            <div class="debug-info" style="margin-top: 30px; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 10px; font-size: 14px; color: rgba(255,255,255,0.7);">
+                <h4 style="color: white; margin-bottom: 10px;">Debug Information</h4>
+                <p><strong>jQuery Version:</strong> <span id="jquery-version">Loading...</span></p>
+                <p><strong>Page Loaded:</strong> <span id="page-loaded">Loading...</span></p>
+                <p><strong>Filter Options:</strong> <span id="filter-status">Loading...</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            let currentStats = null;
+            let filterOptions = null;
+
+            // Debug information
+            $('#jquery-version').text($.fn.jquery || 'Unknown');
+            $('#page-loaded').text(new Date().toLocaleTimeString());
+
+            // Define debounce function first
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction() {
+                    const context = this;
+                    const args = arguments;
+                    const later = function() {
+                        clearTimeout(timeout);
+                        func.apply(context, args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            // Load filter options
+            loadFilterOptions();
+
+            // Search functionality
+            $('#searchInput').on('input', debounce(function() {
+                const query = $(this).val();
+                if (query && query.length >= 2) {
+                    performSearch(query);
+                } else {
+                    $('#searchResults').empty();
+                }
+            }, 300));
+
+            $('#searchBtn').on('click', function() {
+                const query = $('#searchInput').val();
+                if (query && query.length >= 2) {
+                    performSearch(query);
+                }
+            });
+
+            // Clear filters
+            $('#clearFiltersBtn').on('click', function() {
+                $('#gameFilter').val('');
+                $('#providerFilter').val('');
+                $('#startDateFilter').val('');
+                $('#endDateFilter').val('');
+            });
+
+            // Search result click handler
+            $(document).on('click', '.search-result-item', function() {
+                const type = $(this).data('type');
+                const id = $(this).data('id');
+                const name = $(this).data('name');
+                
+                $('#searchResults').empty();
+                $('#searchInput').val(name);
+                
+                loadStats(type, id);
+            });
+
+            // Hide search results when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.search-container').length) {
+                    $('#searchResults').empty();
+                }
+            });
+
+            function loadFilterOptions() {
+                $('#filter-status').text('Loading...');
+                
+                $.get('/Stats/GetFilterOptions')
+                    .done(function(data) {
+                        filterOptions = data;
+                        $('#filter-status').text('Loaded successfully');
+                        
+                        // Populate game filter
+                        if (data.games && Array.isArray(data.games)) {
+                            data.games.forEach(function(game) {
+                                $('#gameFilter').append(`<option value="${game.id}">${game.name}</option>`);
+                            });
+                        }
+                        
+                        // Populate provider filter
+                        if (data.providers && Array.isArray(data.providers)) {
+                            data.providers.forEach(function(provider) {
+                                $('#providerFilter').append(`<option value="${provider.value}">${provider.label}</option>`);
+                            });
+                        }
+                    })
+                    .fail(function(xhr, status, error) {
+                        console.error('Failed to load filter options:', error);
+                        $('#filter-status').text('Failed: ' + error);
+                    });
+            }
+
+            function performSearch(query) {
+                if (!query || query.trim().length < 2) {
+                    return;
+                }
+
+                $.get('/Stats/Search', { query: query.trim() })
+                    .done(function(data) {
+                        if (data && data.results) {
+                            displaySearchResults(data.results);
+                        } else {
+                            $('#searchResults').html('<div class="no-results">No results found</div>');
+                        }
+                    })
+                    .fail(function() {
+                        console.error('Search failed');
+                        $('#searchResults').html('<div class="no-results">Search failed</div>');
+                    });
+            }
+
+            function displaySearchResults(results) {
+                const $results = $('#searchResults');
+                $results.empty();
+
+                if (!results || results.length === 0) {
+                    $results.html('<div class="no-results">No results found</div>');
+                    return;
+                }
+
+                results.forEach(function(result) {
+                    if (!result || !result.type || !result.id || !result.name) {
+                        return; // Skip invalid results
+                    }
+
+                    const $item = $(`
+                        <div class="search-result-item" data-type="${result.type}" data-id="${result.id}" data-name="${result.name}">
+                            <div class="result-icon">
+                                <i class="fi fi-rr-${getResultIcon(result.type)}"></i>
+                            </div>
+                            <div class="result-content">
+                                <div class="result-name">${result.name}</div>
+                                <div class="result-meta">${getResultMeta(result)}</div>
+                            </div>
+                        </div>
+                    `);
+                    $results.append($item);
+                });
+            }
+
+            function getResultIcon(type) {
+                switch(type) {
+                    case 'player': return 'user';
+                    case 'team': return 'users';
+                    case 'tournament': return 'trophy';
+                    default: return 'question';
+                }
+            }
+
+            function getResultMeta(result) {
+                if (!result) return '';
+                
+                switch(result.type) {
+                    case 'player':
+                        return `${result.fullName || ''} • ${(result.providers || []).join(', ')}`;
+                    case 'team':
+                        return `${result.tag || ''} • ${result.game || ''}`;
+                    case 'tournament':
+                        return `${result.game || ''} • ${result.startDate ? new Date(result.startDate).toLocaleDateString() : ''}`;
+                    default:
+                        return '';
+                }
+            }
+
+            function loadStats(type, id) {
+                if (!type || !id) {
+                    console.error('Invalid type or id for loadStats');
+                    return;
+                }
+
+                const gameId = $('#gameFilter').val() || '';
+                const provider = $('#providerFilter').val() || '';
+                const startDate = $('#startDateFilter').val() || '';
+                const endDate = $('#endDateFilter').val() || '';
+
+                const params = {};
+                if (gameId) params.gameId = gameId;
+                if (provider) params.provider = provider;
+                if (startDate) params.startDate = startDate;
+                if (endDate) params.endDate = endDate;
+
+                let url = '';
+                switch(type) {
+                    case 'player':
+                        url = `/Stats/Player/${id}`;
+                        break;
+                    case 'team':
+                        url = `/Stats/Team/${id}`;
+                        break;
+                    case 'tournament':
+                        url = `/Stats/Tournament/${id}`;
+                        break;
+                    default:
+                        console.error('Unknown type:', type);
+                        return;
+                }
+
+                // Add parameters to URL
+                const queryString = Object.keys(params)
+                    .map(key => `${key}=${encodeURIComponent(params[key])}`)
+                    .join('&');
+
+                if (queryString) {
+                    url += '?' + queryString;
+                }
+
+                $('#statsDisplayArea').html('<div class="loading-spinner"><i class="fi fi-rr-spinner"></i> Loading statistics...</div>');
+
+                $.get(url)
+                    .done(function(data) {
+                        $('#statsDisplayArea').html(data);
+                        currentStats = { type: type, id: id, params: params };
+                    })
+                    .fail(function() {
+                        $('#statsDisplayArea').html('<div class="error-message"><i class="fi fi-rr-exclamation"></i> Failed to load statistics</div>');
+                    });
+            }
+
+        });
+    </script>
+}
