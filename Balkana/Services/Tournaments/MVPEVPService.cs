@@ -382,7 +382,7 @@ namespace Balkana.Services.Tournaments
             var hltvWinner = candidates.OrderByDescending(c => c.FormulaScore.HLTVRatingScore).First();
             var killPerRoundWinner = candidates.OrderByDescending(c => c.FormulaScore.KillPerRoundScore).First();
             var damagePerRoundWinner = candidates.OrderByDescending(c => c.FormulaScore.DamagePerRoundScore).First();
-            var deathsPerRoundWinner = candidates.OrderByDescending(c => c.FormulaScore.DeathsPerRoundScore).First();
+            var deathsPerRoundWinner = candidates.OrderByDescending(c => c.FormulaScore.DeathsPerRoundScore).Last();
             var utilityDamageWinner = candidates.OrderByDescending(c => c.FormulaScore.UtilityDamageScore).First();
             var awpKillsWinner = candidates.OrderByDescending(c => c.FormulaScore.AWPkillsScore).First();
             var firstKillsWinner = candidates.OrderByDescending(c => c.FormulaScore.FirstKillsScore).First();

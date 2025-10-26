@@ -1,0 +1,619 @@
+@model Balkana.Models.Gambling.SlotMachineViewModel
+
+@{
+    ViewData["Title"] = "Slot Machine - Balkana Gambling";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/gambling.css" asp-append-version="true" />
+    <style>
+        body { 
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%) !important;
+            color: white !important;
+        }
+        
+        .slot-machine-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .slot-machine {
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            border: 3px solid #0d6efd;
+        }
+        
+        .machine-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .machine-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #0d6efd, #ffc107);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        
+        .credits-display {
+            background: rgba(13, 110, 253, 0.1);
+            border: 2px solid #0d6efd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .credits-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        
+        .reels-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .reel {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
+            border: 3px solid #0d6efd;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            box-shadow: inset 0 5px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .reel-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        
+        .reel-symbol {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            flex-shrink: 0;
+            background: linear-gradient(145deg, #4a4a4a, #3a3a3a);
+            border-radius: 10px;
+            margin: 2px 0;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .reel.spinning .reel-content {
+            animation: slotRoll 0.08s linear infinite;
+        }
+        
+        .reel.spinning {
+            border-color: #ffc107;
+            box-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
+        }
+        
+        @@keyframes slotRoll {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100%); }
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .bet-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .bet-input {
+            background: rgba(13, 110, 253, 0.1);
+            border: 2px solid #0d6efd;
+            border-radius: 10px;
+            padding: 10px;
+            color: white;
+            text-align: center;
+            font-size: 1.2rem;
+            width: 100px;
+        }
+        
+        .bet-input:focus {
+            outline: none;
+            border-color: #ffc107;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+        }
+        
+        .lever-container {
+            position: relative;
+        }
+        
+        .lever {
+            width: 80px;
+            height: 200px;
+            background: linear-gradient(145deg, #8b4513, #654321);
+            border-radius: 40px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .lever:hover:not(.disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .lever.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: linear-gradient(145deg, #555, #333);
+        }
+        
+        .lever-handle {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(145deg, #ffc107, #ff8c00);
+            border-radius: 50%;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .lever.pulled .lever-handle {
+            animation: pullLever 0.5s ease-in-out;
+        }
+        
+        @@keyframes pullLever {
+            0% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(20px); }
+            100% { transform: translateX(-50%) translateY(0); }
+        }
+        
+        .spin-button {
+            background: linear-gradient(145deg, #198754, #157347);
+            border: none;
+            border-radius: 15px;
+            padding: 15px 30px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .spin-button:hover:not(:disabled) {
+            background: linear-gradient(145deg, #157347, #0f5132);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .spin-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: linear-gradient(145deg, #555, #333);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(13, 110, 253, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(13, 110, 253, 0.2);
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        
+        .stat-label {
+            color: #adb5bd;
+            font-size: 0.9rem;
+        }
+        
+        .win-message {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .win-message.win {
+            background: rgba(25, 135, 84, 0.2);
+            border: 2px solid #198754;
+            color: #198754;
+        }
+        
+        .win-message.lose {
+            background: rgba(220, 53, 69, 0.2);
+            border: 2px solid #dc3545;
+            color: #dc3545;
+        }
+        
+        .symbol-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 10px;
+        }
+        
+        .symbol-list {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .symbol-item {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .symbol-emoji {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .symbol-payout {
+            font-size: 0.8rem;
+            color: #ffc107;
+        }
+    </style>
+}
+
+<div class="slot-machine-container">
+        <div class="slot-machine">
+            @Html.AntiForgeryToken()
+            <div class="machine-header">
+                <h1 class="machine-title">🎰 SLOT MACHINE 🎰</h1>
+            </div>
+        
+        <div class="credits-display">
+            <div class="stat-label">Credits</div>
+            <div class="credits-value" id="creditsValue">@Model.Credits</div>
+        </div>
+        
+        <div class="reels-container">
+            <div class="reel" id="reel1">
+                <div class="reel-content" id="reelContent1">
+                    <div class="reel-symbol" id="symbol1">@Model.CurrentSymbols[0]</div>
+                </div>
+            </div>
+            <div class="reel" id="reel2">
+                <div class="reel-content" id="reelContent2">
+                    <div class="reel-symbol" id="symbol2">@Model.CurrentSymbols[1]</div>
+                </div>
+            </div>
+            <div class="reel" id="reel3">
+                <div class="reel-content" id="reelContent3">
+                    <div class="reel-symbol" id="symbol3">@Model.CurrentSymbols[2]</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="bet-controls">
+                <label class="stat-label">Bet Amount</label>
+                <input type="number" id="betAmount" class="bet-input" value="@Model.BetAmount" min="1" max="100" />
+            </div>
+            
+            <div class="lever-container">
+                <div class="lever" id="lever">
+                    <div class="lever-handle"></div>
+                </div>
+            </div>
+            
+            <button class="spin-button" id="spinButton" onclick="spinSlotMachine()">
+                SPIN
+            </button>
+        </div>
+        
+        @if (!string.IsNullOrEmpty(Model.Message))
+        {
+            <div class="win-message @(Model.IsWin ? "win" : "lose")">
+                @Model.Message
+            </div>
+        }
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value">@Model.LastWin</div>
+                <div class="stat-label">Last Win</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">@Model.TotalWins</div>
+                <div class="stat-label">Total Wins</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">@Model.TotalSpins</div>
+                <div class="stat-label">Total Spins</div>
+            </div>
+        </div>
+        
+        <div class="symbol-info">
+            <h5 class="text-center mb-3">Symbol Payouts</h5>
+            <div class="symbol-list">
+                <div class="symbol-item">
+                    <span class="symbol-emoji">💎</span>
+                    <div class="symbol-payout">100x</div>
+                </div>
+                <div class="symbol-item">
+                    <span class="symbol-emoji">7️⃣</span>
+                    <div class="symbol-payout">50x</div>
+                </div>
+                <div class="symbol-item">
+                    <span class="symbol-emoji">⭐</span>
+                    <div class="symbol-payout">25x</div>
+                </div>
+                <div class="symbol-item">
+                    <span class="symbol-emoji">🔔</span>
+                    <div class="symbol-payout">15x</div>
+                </div>
+                <div class="symbol-item">
+                    <span class="symbol-emoji">🍇</span>
+                    <div class="symbol-payout">10x</div>
+                </div>
+                <div class="symbol-item">
+                    <span class="symbol-emoji">🍊</span>
+                    <div class="symbol-payout">8x</div>
+                </div>
+                <div class="symbol-item">
+                    <span class="symbol-emoji">🍋</span>
+                    <div class="symbol-payout">6x</div>
+                </div>
+                <div class="symbol-item">
+                    <span class="symbol-emoji">🍒</span>
+                    <div class="symbol-payout">5x</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let isSpinning = false;
+        let currentCredits = @Model.Credits;
+        let currentBet = @Model.BetAmount;
+        
+        const symbols = @Html.Raw(Json.Serialize(Model.Reels));
+        
+        function spinSlotMachine() {
+            if (isSpinning) return;
+            
+            const betAmountElement = document.getElementById('betAmount');
+            if (!betAmountElement) {
+                console.error('Bet amount element not found');
+                return;
+            }
+            
+            currentBet = parseInt(betAmountElement.value) || 1;
+            
+            if (currentCredits < currentBet) {
+                alert('Insufficient credits!');
+                return;
+            }
+            
+            isSpinning = true;
+            
+            const spinButton = document.getElementById('spinButton');
+            const lever = document.getElementById('lever');
+            const reel1 = document.getElementById('reel1');
+            const reel2 = document.getElementById('reel2');
+            const reel3 = document.getElementById('reel3');
+            const creditsValue = document.getElementById('creditsValue');
+            
+            if (spinButton) spinButton.disabled = true;
+            if (lever) lever.classList.add('disabled');
+            
+            // Pull lever animation
+            if (lever) lever.classList.add('pulled');
+            
+            // Deduct bet amount
+            currentCredits -= currentBet;
+            if (creditsValue) creditsValue.textContent = currentCredits;
+            
+            // Generate final symbols
+            const finalSymbol1 = symbols[Math.floor(Math.random() * symbols.length)];
+            const finalSymbol2 = symbols[Math.floor(Math.random() * symbols.length)];
+            const finalSymbol3 = symbols[Math.floor(Math.random() * symbols.length)];
+            
+            // Start rolling animation for each reel with different durations
+            startReelRoll(1, finalSymbol1, 1500);
+            startReelRoll(2, finalSymbol2, 2000);
+            startReelRoll(3, finalSymbol3, 2500);
+            
+            // Wait for all reels to stop
+            setTimeout(() => {
+                // Calculate win
+                const winAmount = calculateWin([finalSymbol1, finalSymbol2, finalSymbol3], currentBet);
+                currentCredits += winAmount;
+                if (creditsValue) creditsValue.textContent = currentCredits;
+                
+                // Show result message
+                showResultMessage(winAmount);
+                
+                // Reset controls
+                isSpinning = false;
+                if (spinButton) spinButton.disabled = false;
+                if (lever) lever.classList.remove('disabled', 'pulled');
+                
+                // Submit form to server for persistence
+                submitSpinResult([finalSymbol1, finalSymbol2, finalSymbol3], currentBet, winAmount);
+                
+            }, 3000);
+        }
+        
+        function startReelRoll(reelNumber, finalSymbol, duration) {
+            const reelContent = document.getElementById(`reelContent${reelNumber}`);
+            const reel = document.getElementById(`reel${reelNumber}`);
+            
+            if (!reelContent || !reel) return;
+            
+            // Create multiple symbols for rolling effect
+            const rollingSymbols = [];
+            for (let i = 0; i < 20; i++) {
+                rollingSymbols.push(symbols[Math.floor(Math.random() * symbols.length)]);
+            }
+            rollingSymbols.push(finalSymbol); // Final symbol at the end
+            
+            // Create HTML for rolling symbols
+            let symbolsHTML = '';
+            rollingSymbols.forEach(symbol => {
+                symbolsHTML += `<div class="reel-symbol">${symbol}</div>`;
+            });
+            
+            reelContent.innerHTML = symbolsHTML;
+            
+            // Add spinning class
+            reel.classList.add('spinning');
+            
+            // Stop spinning after duration
+            setTimeout(() => {
+                reel.classList.remove('spinning');
+                // Set final symbol
+                reelContent.innerHTML = `<div class="reel-symbol">${finalSymbol}</div>`;
+            }, duration);
+        }
+        
+        function calculateWin(symbols, betAmount) {
+            // All three symbols match
+            if (symbols[0] === symbols[1] && symbols[1] === symbols[2]) {
+                const multipliers = {
+                    '💎': 100,
+                    '7️⃣': 50,
+                    '⭐': 25,
+                    '🔔': 15,
+                    '🍇': 10,
+                    '🍊': 8,
+                    '🍋': 6,
+                    '🍒': 5
+                };
+                return betAmount * (multipliers[symbols[0]] || 3);
+            }
+            
+            // Two symbols match
+            if (symbols[0] === symbols[1] || symbols[1] === symbols[2] || symbols[0] === symbols[2]) {
+                return betAmount * 2;
+            }
+            
+            return 0;
+        }
+        
+        function showResultMessage(winAmount) {
+            const messageDiv = document.querySelector('.win-message');
+            if (!messageDiv) {
+                const newMessageDiv = document.createElement('div');
+                newMessageDiv.className = 'win-message';
+                document.querySelector('.controls').insertAdjacentElement('afterend', newMessageDiv);
+            }
+            
+            const messageElement = document.querySelector('.win-message');
+            if (winAmount > 0) {
+                messageElement.className = 'win-message win';
+                messageElement.textContent = `🎉 Congratulations! You won ${winAmount} credits! 🎉`;
+            } else {
+                messageElement.className = 'win-message lose';
+                messageElement.textContent = 'Better luck next time!';
+            }
+        }
+        
+        function submitSpinResult(symbols, betAmount, winAmount) {
+            // Create form data
+            const formData = new FormData();
+            formData.append('BetAmount', betAmount);
+            formData.append('Credits', currentCredits);
+            formData.append('LastWin', winAmount);
+            formData.append('TotalWins', @Model.TotalWins + winAmount);
+            formData.append('TotalSpins', @Model.TotalSpins + 1);
+            formData.append('CurrentSymbols[0]', symbols[0]);
+            formData.append('CurrentSymbols[1]', symbols[1]);
+            formData.append('CurrentSymbols[2]', symbols[2]);
+            
+            // Get anti-forgery token safely
+            const tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (tokenElement) {
+                formData.append('__RequestVerificationToken', tokenElement.value);
+            }
+            
+            // Submit to server
+            fetch('@Url.Action("SpinSlotMachine")', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    // Optionally reload page to get updated stats
+                    // window.location.reload();
+                }
+            }).catch(error => {
+                console.error('Error submitting spin result:', error);
+            });
+        }
+        
+        // Add click event to lever
+        const leverElement = document.getElementById('lever');
+        if (leverElement) {
+            leverElement.addEventListener('click', function() {
+                if (!isSpinning) {
+                    spinSlotMachine();
+                }
+            });
+        }
+        
+        // Prevent bet amount from exceeding credits
+        const betAmountElement = document.getElementById('betAmount');
+        if (betAmountElement) {
+            betAmountElement.addEventListener('input', function() {
+                const maxBet = Math.min(100, currentCredits);
+                if (this.value > maxBet) {
+                    this.value = maxBet;
+                }
+            });
+        }
+    </script>
+}

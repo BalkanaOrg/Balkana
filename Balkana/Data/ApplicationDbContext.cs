@@ -87,6 +87,10 @@
         public DbSet<ShoppingCartItem> ShoppingCartItems { get; set; }
         public DbSet<InventoryLog> InventoryLogs { get; set; }
 
+        //Gambling
+        public DbSet<GamblingSession> GamblingSessions { get; set; }
+        public DbSet<GamblingLeaderboard> GamblingLeaderboards { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

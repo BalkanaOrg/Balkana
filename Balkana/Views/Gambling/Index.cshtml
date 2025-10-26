@@ -1,0 +1,344 @@
+@model Balkana.Models.Gambling.GamblingIndexViewModel
+
+@{
+    ViewData["Title"] = "Gambling - Balkana";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/gambling.css" asp-append-version="true" />
+    <style>
+        body { 
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%) !important;
+            color: white !important;
+        }
+        
+        .gambling-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .gambling-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .gambling-title {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #0d6efd, #ffc107, #dc3545);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        
+        .gambling-subtitle {
+            font-size: 1.2rem;
+            color: #adb5bd;
+            margin-bottom: 30px;
+        }
+        
+        .credits-banner {
+            background: linear-gradient(135deg, rgba(13, 110, 253, 0.2), rgba(255, 193, 7, 0.2));
+            border: 2px solid #0d6efd;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .credits-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffc107;
+            margin-bottom: 5px;
+        }
+        
+        .credits-label {
+            color: #adb5bd;
+            font-size: 1.1rem;
+        }
+        
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .game-card {
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-10px);
+            border-color: #0d6efd;
+            box-shadow: 0 20px 40px rgba(13, 110, 253, 0.3);
+        }
+        
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+        
+        .game-card:hover::before {
+            left: 100%;
+        }
+        
+        .game-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .game-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #0d6efd;
+        }
+        
+        .game-description {
+            color: #adb5bd;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(13, 110, 253, 0.1);
+            border-radius: 10px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffc107;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #adb5bd;
+        }
+        
+        .play-button {
+            background: linear-gradient(135deg, #198754, #157347);
+            border: none;
+            border-radius: 15px;
+            padding: 15px 30px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .play-button:hover {
+            background: linear-gradient(135deg, #157347, #0f5132);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .play-button.disabled {
+            background: linear-gradient(135deg, #555, #333);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        .features-section {
+            margin-top: 50px;
+            padding: 30px;
+            background: rgba(13, 110, 253, 0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(13, 110, 253, 0.2);
+        }
+        
+        .features-title {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: #0d6efd;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .feature-item {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #ffc107;
+        }
+        
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: white;
+        }
+        
+        .feature-description {
+            color: #adb5bd;
+            line-height: 1.5;
+        }
+        
+        .warning-banner {
+            background: rgba(255, 193, 7, 0.1);
+            border: 2px solid #ffc107;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .warning-icon {
+            font-size: 2rem;
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+        
+        .warning-text {
+            color: #ffc107;
+            font-weight: bold;
+        }
+    </style>
+}
+
+<div class="gambling-container">
+    <div class="gambling-header">
+        <h1 class="gambling-title">🎰 BALKANA GAMBLING 🎰</h1>
+        <p class="gambling-subtitle">Test your luck with our exciting casino games!</p>
+        
+        <div class="credits-banner">
+            <div class="credits-value">@Model.UserCredits</div>
+            <div class="credits-label">Available Credits</div>
+        </div>
+    </div>
+    
+    <div class="warning-banner">
+        <div class="warning-icon">⚠️</div>
+        <div class="warning-text">
+            Gambling can be addictive. Please play responsibly and within your means.
+        </div>
+    </div>
+    
+    <div class="games-grid">
+        @foreach (var game in Model.AvailableGames)
+        {
+            <div class="game-card">
+                <span class="game-icon">@GetGameIcon(game.Name)</span>
+                <h3 class="game-title">@game.Name</h3>
+                <p class="game-description">@game.Description</p>
+                
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">@game.MinBet</div>
+                        <div class="stat-label">Min Bet</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">@game.MaxBet</div>
+                        <div class="stat-label">Max Bet</div>
+                    </div>
+                </div>
+                
+                @if (game.IsAvailable)
+                {
+                    <a href="@GetGameUrl(game.Name)" class="play-button">
+                        Play Now
+                    </a>
+                }
+                else
+                {
+                    <button class="play-button disabled" disabled>
+                        Coming Soon
+                    </button>
+                }
+            </div>
+        }
+    </div>
+    
+    <div class="features-section">
+        <h2 class="features-title">Why Choose Balkana Gambling?</h2>
+        <div class="features-grid">
+            <div class="feature-item">
+                <div class="feature-icon">🎯</div>
+                <h4 class="feature-title">Fair Play</h4>
+                <p class="feature-description">All games use certified random number generation for fair results.</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">⚡</div>
+                <h4 class="feature-title">Instant Results</h4>
+                <p class="feature-description">Get immediate results and instant credit updates.</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🏆</div>
+                <h4 class="feature-title">Leaderboards</h4>
+                <p class="feature-description">Compete with other players and climb the leaderboards.</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">📊</div>
+                <h4 class="feature-title">Statistics</h4>
+                <p class="feature-description">Track your gambling history and performance.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetGameIcon(string gameName)
+    {
+        return gameName switch
+        {
+            "Slot Machine" => "🎰",
+            "Blackjack" => "🃏",
+            "Poker" => "♠️",
+            "Roulette" => "🎲",
+            _ => "🎮"
+        };
+    }
+    
+    string GetGameUrl(string gameName)
+    {
+        return gameName switch
+        {
+            "Slot Machine" => Url.Action("SlotMachine"),
+            "Blackjack" => "#",
+            "Poker" => "#",
+            "Roulette" => "#",
+            _ => "#"
+        };
+    }
+}

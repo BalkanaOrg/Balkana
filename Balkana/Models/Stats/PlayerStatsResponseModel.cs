@@ -41,10 +41,27 @@ namespace Balkana.Models.Stats
         public int MultiKills { get; set; }
         public int Clutches { get; set; }
         
+        // Multi-kill stats
+        public int _5k { get; set; }
+        public int _4k { get; set; }
+        public int _3k { get; set; }
+        public int _2k { get; set; }
+        public int _1k { get; set; }
+        
+        // Clutch stats
+        public int _1v1 { get; set; }
+        public int _1v2 { get; set; }
+        public int _1v3 { get; set; }
+        public int _1v4 { get; set; }
+        public int _1v5 { get; set; }
+        
         // Weapon stats
         public int SniperKills { get; set; }
         public int PistolKills { get; set; }
         public int KnifeKills { get; set; }
+        public int WallbangKills { get; set; }
+        public int CollateralKills { get; set; }
+        public int NoScopeKills { get; set; }
         
         // Utility stats
         public int Flashes { get; set; }

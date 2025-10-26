@@ -337,10 +337,10 @@
                                 </div>
 
                                 <!-- MVP Candidates Table -->
-                                <div class="mt-4">
+                                <div class="mt-4 text-white">
                                     <h6>MVP Candidates (Formula Scores)</h6>
                                     <div class="table-responsive">
-                                        <table class="table table-sm table-striped">
+                                        <table class="table table-sm text-white">
                                             <thead>
                                                 <tr>
                                                     <th>Player</th>
@@ -379,7 +379,7 @@
                         </div>
 
                         <!-- EVP Selection Section -->
-                        <div class="card mb-4">
+                            <div class="card mb-4 text-white">
                             <div class="card-header">
                                 <h5><i class="fas fa-medal"></i> EVP Selection</h5>
                             </div>
@@ -394,7 +394,7 @@
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Selected EVPs</label>
-                                        <select asp-for="SelectedEVPIds" class="form-select" multiple id="evpSelection">
+                                        <select asp-for="SelectedEVPIds" class="form-select text-white" multiple id="evpSelection">
                                             @foreach (var candidate in Model.EVPCandidates)
                                             {
                                                 <option value="@candidate.PlayerId">
@@ -410,7 +410,7 @@
                                 <div class="mt-4">
                                     <h6>EVP Candidates (Formula Scores)</h6>
                                     <div class="table-responsive">
-                                        <table class="table table-sm table-striped">
+                                        <table class="table table-sm text-white">
                                             <thead>
                                                 <tr>
                                                     <th>Player</th>

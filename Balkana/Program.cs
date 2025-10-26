@@ -196,6 +196,9 @@ void ConfigureServices(IServiceCollection services)
     builder.Services.AddScoped<Balkana.Services.Store.IPaymentService, Balkana.Services.Store.PaymentService>();
     builder.Services.AddHttpClient<Balkana.Services.Store.IDeliveryService, Balkana.Services.Store.DeliveryService>();
     
+    // Gambling Services
+    builder.Services.AddScoped<Balkana.Services.Gambling.IGamblingService, Balkana.Services.Gambling.GamblingService>();
+    
     //services.AddTransient<ISeriesS, MatchService>();
 
     //services.AddTransient<>

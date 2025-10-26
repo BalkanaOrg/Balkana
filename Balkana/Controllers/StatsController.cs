@@ -52,10 +52,25 @@ namespace Balkana.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Team(int teamId, string? provider = null, DateTime? startDate = null, DateTime? endDate = null, int? gameId = null)
+        public async Task<IActionResult> Team(int teamId, string? provider = null, DateTime? startDate = null, DateTime? endDate = null, int? gameId = null, string? rosterType = null)
         {
             try
             {
+                // Get team information
+                var team = await _context.Teams
+                    .Include(t => t.Game)
+                    .FirstOrDefaultAsync(t => t.Id == teamId);
+
+                if (team == null)
+                    return NotFound();
+
+                // Parse roster type
+                var rosterTypeEnum = TeamRosterType.CurrentRoster;
+                if (!string.IsNullOrEmpty(rosterType) && Enum.TryParse<TeamRosterType>(rosterType, true, out var parsedRosterType))
+                {
+                    rosterTypeEnum = parsedRosterType;
+                }
+
                 var request = new StatsRequestModel
                 {
                     RequestType = StatsRequestType.Team,
@@ -66,14 +81,32 @@ namespace Balkana.Controllers
                     GameId = gameId
                 };
 
-                var stats = await _statsService.GetTeamStatsAsync(request);
-                return View("TeamStats", stats);
+                var playerStats = await _statsService.GetTeamStatsAsync(request, rosterTypeEnum);
+                var teamStats = await _statsService.GetTeamAggregatedStatsAsync(request, rosterTypeEnum);
+
+                var viewModel = new TeamStatsViewModel
+                {
+                    TeamId = team.Id,
+                    TeamName = team.FullName,
+                    TeamTag = team.Tag,
+                    GameName = team.Game.FullName,
+                    LogoUrl = team.LogoURL,
+                    RosterType = rosterTypeEnum,
+                    PlayerStats = playerStats,
+                    TeamStats = teamStats,
+                    TotalPlayers = playerStats.Count,
+                    TotalMatches = playerStats.Sum(p => p.TotalMatches),
+                    FirstMatchDate = playerStats.Where(p => p.FirstMatchDate.HasValue).Min(p => p.FirstMatchDate),
+                    LastMatchDate = playerStats.Where(p => p.LastMatchDate.HasValue).Max(p => p.LastMatchDate)
+                };
+
+                return View("TeamStats", viewModel);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in Team stats: {ex.Message}");
                 Console.WriteLine($"Stack trace: {ex.StackTrace}");
-                return View("TeamStats", new List<PlayerStatsResponseModel>());
+                return View("TeamStats", new TeamStatsViewModel());
             }
         }
 
@@ -119,7 +152,7 @@ namespace Balkana.Controllers
                 };
 
                 var stats = await _statsService.GetTournamentStatsAsync(request);
-                return View("TournamentStats", stats);
+                return View("TournamentStatsTable", stats);
             }
             catch (Exception ex)
             {

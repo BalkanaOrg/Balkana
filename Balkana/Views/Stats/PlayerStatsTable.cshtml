@@ -1,0 +1,470 @@
+@model List<PlayerStatsResponseModel>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/stats.css" asp-append-version="true" />
+    <style>
+        .stats-table-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-x: auto;
+        }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .stats-table th {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        .stats-table th:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .stats-table th.sortable::after {
+            content: " ↕";
+            opacity: 0.5;
+            font-size: 0.8rem;
+        }
+
+        .stats-table th.sort-asc::after {
+            content: " ↑";
+            opacity: 1;
+            color: #007bff;
+        }
+
+        .stats-table th.sort-desc::after {
+            content: " ↓";
+            opacity: 1;
+            color: #dc3545;
+        }
+
+        .stats-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .stats-table tbody tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .player-name-cell {
+            font-weight: 600;
+            color: white;
+        }
+
+        .player-nickname-cell {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+        }
+
+        .stat-value {
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .filter-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .filter-input, .filter-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .filter-input:focus, .filter-select:focus {
+            outline: none;
+            border-color: #007bff;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .filter-btn {
+            background: linear-gradient(135deg, #007bff, #dc3545);
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+
+        .clear-filters-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 8px 16px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clear-filters-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .no-data {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 40px;
+            font-size: 1.1rem;
+        }
+
+        .table-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .export-btn {
+            background: rgba(40, 167, 69, 0.8);
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            background: rgba(40, 167, 69, 1);
+            transform: translateY(-1px);
+        }
+    </style>
+}
+
+<div class="stats-table-container">
+    <div class="table-actions">
+        <h3 style="color: white; margin: 0;">Player Statistics</h3>
+        <button class="export-btn" onclick="exportToCSV()">
+            <i class="fi fi-rr-download"></i>
+            Export CSV
+        </button>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label class="filter-label">Search Player</label>
+                <input type="text" id="playerSearch" class="filter-input" placeholder="Search by name or nickname..." />
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Min K/D Ratio</label>
+                <input type="number" id="minKDRatio" class="filter-input" step="0.1" placeholder="0.0" />
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Min ADR</label>
+                <input type="number" id="minADR" class="filter-input" step="1" placeholder="0" />
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Min Matches</label>
+                <input type="number" id="minMatches" class="filter-input" step="1" placeholder="0" />
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Provider</label>
+                <select id="providerFilter" class="filter-select">
+                    <option value="">All Providers</option>
+                    <option value="MANUAL">Manual</option>
+                    <option value="RIOT">Riot</option>
+                    <option value="FACEIT">Faceit</option>
+                </select>
+            </div>
+        </div>
+        <div class="filter-row">
+            <button class="filter-btn" onclick="applyFilters()">
+                <i class="fi fi-rr-search"></i>
+                Apply Filters
+            </button>
+            <button class="clear-filters-btn" onclick="clearFilters()">
+                <i class="fi fi-rr-cross"></i>
+                Clear Filters
+            </button>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <table class="stats-table" id="statsTable">
+            <thead>
+                <tr>
+                    <th class="sortable" data-column="playerName">Player</th>
+                    <th class="sortable" data-column="matches">Matches</th>
+                    <th class="sortable" data-column="provider">Provider</th>
+                    <th class="sortable" data-column="kills">Kills (HS)</th>
+                    <th class="sortable" data-column="deaths">Deaths</th>
+                    <th class="sortable" data-column="assists">Assists</th>
+                    <th class="sortable" data-column="kdRatio">K/D Ratio</th>
+                    <th class="sortable" data-column="adr">ADR</th>
+                    <th class="sortable" data-column="hltvRating">HLTV Rating</th>
+                    <th class="sortable" data-column="kast">KAST</th>
+                    <th class="sortable" data-column="5k">5K</th>
+                    <th class="sortable" data-column="4k">4K</th>
+                    <th class="sortable" data-column="3k">3K</th>
+                    <th class="sortable" data-column="2k">2K</th>
+                    <th class="sortable" data-column="1k">1K</th>
+                    <th class="sortable" data-column="1v5">1v5</th>
+                    <th class="sortable" data-column="1v4">1v4</th>
+                    <th class="sortable" data-column="1v3">1v3</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var player in Model)
+                {
+                    @if (player.CS2Stats != null)
+                    {
+                        <tr data-player-name="@player.PlayerName.ToLower()" data-player-nickname="@player.PlayerNickname.ToLower()" 
+                            data-provider="@player.Provider" data-kd-ratio="@player.CS2Stats.KDRatio" 
+                            data-adr="@player.CS2Stats.ADR" data-matches="@player.TotalMatches">
+                            <td>
+                                <div class="player-name-cell">@player.PlayerName</div>
+                                <div class="player-nickname-cell">@player.PlayerNickname</div>
+                            </td>
+                            <td class="stat-value">@player.TotalMatches</td>
+                            <td class="stat-value">@player.Provider</td>
+                            <td class="stat-value">@player.CS2Stats.TotalKills (@player.CS2Stats.Headshots)</td>
+                            <td class="stat-value">@player.CS2Stats.TotalDeaths</td>
+                            <td class="stat-value">@player.CS2Stats.TotalAssists</td>
+                            <td class="stat-value">@player.CS2Stats.KDRatio.ToString("F2")</td>
+                            <td class="stat-value">@player.CS2Stats.ADR.ToString("F1")</td>
+                            <td class="stat-value">@player.CS2Stats.HLTVRating.ToString("F2")</td>
+                            <td class="stat-value">@player.CS2Stats.KAST.ToString("F1")%</td>
+                            <td class="stat-value">@player.CS2Stats._5k</td>
+                            <td class="stat-value">@player.CS2Stats._4k</td>
+                            <td class="stat-value">@player.CS2Stats._3k</td>
+                            <td class="stat-value">@player.CS2Stats._2k</td>
+                            <td class="stat-value">@player.CS2Stats._1k</td>
+                            <td class="stat-value">@player.CS2Stats._1v5</td>
+                            <td class="stat-value">@player.CS2Stats._1v4</td>
+                            <td class="stat-value">@player.CS2Stats._1v3</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="no-data">
+            <i class="fi fi-rr-user" style="font-size: 3rem; margin-bottom: 15px; display: block;"></i>
+            No player statistics found.
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        let currentSort = { column: null, direction: 'asc' };
+        let allRows = [];
+
+        $(document).ready(function() {
+            // Store all rows for filtering
+            allRows = $('#statsTable tbody tr').toArray();
+            
+            // Initialize sorting
+            $('.sortable').on('click', function() {
+                const column = $(this).data('column');
+                sortTable(column);
+            });
+        });
+
+        function sortTable(column) {
+            const tbody = $('#statsTable tbody');
+            const rows = tbody.find('tr').toArray();
+            
+            // Determine sort direction
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.direction = 'asc';
+            }
+            currentSort.column = column;
+            
+            // Update sort indicators
+            $('.sortable').removeClass('sort-asc sort-desc');
+            $(`.sortable[data-column="${column}"]`).addClass(`sort-${currentSort.direction}`);
+            
+            // Sort rows
+            rows.sort((a, b) => {
+                let aVal, bVal;
+                
+                switch(column) {
+                    case 'playerName':
+                        aVal = $(a).find('.player-name-cell').text().toLowerCase();
+                        bVal = $(b).find('.player-name-cell').text().toLowerCase();
+                        break;
+                    case 'matches':
+                        aVal = parseInt($(a).data('matches'));
+                        bVal = parseInt($(b).data('matches'));
+                        break;
+                    case 'provider':
+                        aVal = $(a).data('provider');
+                        bVal = $(b).data('provider');
+                        break;
+                    case 'kdRatio':
+                        aVal = parseFloat($(a).data('kd-ratio'));
+                        bVal = parseFloat($(b).data('kd-ratio'));
+                        break;
+                    case 'adr':
+                        aVal = parseFloat($(a).data('adr'));
+                        bVal = parseFloat($(b).data('adr'));
+                        break;
+                    default:
+                        // For numeric columns, extract the number from the cell
+                        const aCell = $(a).find(`td:nth-child(${getColumnIndex(column)})`).text();
+                        const bCell = $(b).find(`td:nth-child(${getColumnIndex(column)})`).text();
+                        aVal = parseFloat(aCell.replace(/[^\d.-]/g, '')) || 0;
+                        bVal = parseFloat(bCell.replace(/[^\d.-]/g, '')) || 0;
+                        break;
+                }
+                
+                if (currentSort.direction === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+            
+            // Rebuild table
+            tbody.empty().append(rows);
+        }
+
+        function getColumnIndex(column) {
+            const columnMap = {
+                'playerName': 1, 'matches': 2, 'provider': 3, 'kills': 4, 'deaths': 5,
+                'assists': 6, 'kdRatio': 7, 'adr': 8, 'hltvRating': 9, 'kast': 10,
+                '5k': 11, '4k': 12, '3k': 13, '2k': 14, '1k': 15,
+                '1v5': 16, '1v4': 17, '1v3': 18
+            };
+            return columnMap[column] || 1;
+        }
+
+        function applyFilters() {
+            const playerSearch = $('#playerSearch').val().toLowerCase();
+            const minKDRatio = parseFloat($('#minKDRatio').val()) || 0;
+            const minADR = parseFloat($('#minADR').val()) || 0;
+            const minMatches = parseInt($('#minMatches').val()) || 0;
+            const providerFilter = $('#providerFilter').val();
+            
+            const tbody = $('#statsTable tbody');
+            tbody.empty();
+            
+            allRows.forEach(row => {
+                const $row = $(row);
+                const playerName = $row.data('player-name');
+                const playerNickname = $row.data('player-nickname');
+                const provider = $row.data('provider');
+                const kdRatio = parseFloat($row.data('kd-ratio')) || 0;
+                const adr = parseFloat($row.data('adr')) || 0;
+                const matches = parseInt($row.data('matches')) || 0;
+                
+                let showRow = true;
+                
+                // Apply filters
+                if (playerSearch && !playerName.includes(playerSearch) && !playerNickname.includes(playerSearch)) {
+                    showRow = false;
+                }
+                if (kdRatio < minKDRatio) showRow = false;
+                if (adr < minADR) showRow = false;
+                if (matches < minMatches) showRow = false;
+                if (providerFilter && provider !== providerFilter) showRow = false;
+                
+                if (showRow) {
+                    tbody.append(row);
+                }
+            });
+        }
+
+        function clearFilters() {
+            $('#playerSearch').val('');
+            $('#minKDRatio').val('');
+            $('#minADR').val('');
+            $('#minMatches').val('');
+            $('#providerFilter').val('');
+            
+            const tbody = $('#statsTable tbody');
+            tbody.empty().append(allRows);
+        }
+
+        function exportToCSV() {
+            const table = document.getElementById('statsTable');
+            const rows = Array.from(table.querySelectorAll('tr'));
+            
+            let csv = '';
+            rows.forEach(row => {
+                const cells = Array.from(row.querySelectorAll('th, td'));
+                const rowData = cells.map(cell => {
+                    let text = cell.textContent.trim();
+                    // Escape quotes and wrap in quotes if contains comma
+                    if (text.includes(',') || text.includes('"')) {
+                        text = '"' + text.replace(/"/g, '""') + '"';
+                    }
+                    return text;
+                });
+                csv += rowData.join(',') + '\n';
+            });
+            
+            // Download CSV
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'player_stats.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+}
