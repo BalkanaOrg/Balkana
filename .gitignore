@@ -12,6 +12,11 @@
 bin/
 obj/
 
+# Sensitive configuration files
+**/appsettings.json
+**/appsettings.*.json
+!**/appsettings.example.json
+
 # Other
 *.vsidx
 *.dtbcache
