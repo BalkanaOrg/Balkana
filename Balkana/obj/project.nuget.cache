@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "9d+Vd3Z6S8Y=",
+  "dgSpecHash": "1cZ7KqlLaCg=",
   "success": true,
-  "projectFilePath": "G:\\Programming\\Csharp\\Balkana\\balkana\\Balkana.csproj",
+  "projectFilePath": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Balkana.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\1bulg\\.nuget\\packages\\automapper\\12.0.1\\automapper.12.0.1.nupkg.sha512",
     "C:\\Users\\1bulg\\.nuget\\packages\\automapper.extensions.microsoft.dependencyinjection\\12.0.1\\automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",

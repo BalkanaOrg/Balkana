@@ -54,6 +54,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+Console.WriteLine($"Connection String: {connectionString ?? "(null)"}");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -133,10 +134,21 @@ app.Use(async (context, next) =>
     }
 });
 
-using (var scope = app.Services.CreateScope())
+try
 {
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    await RoleSeeder.SeedRoles(roleManager);
+    using (var scope = app.Services.CreateScope())
+    {
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        await RoleSeeder.SeedRoles(roleManager);
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"ERROR: Failed to seed roles. This might be a database connection issue.");
+    Console.WriteLine($"Error: {ex.Message}");
+    Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+    // Don't throw - allow app to continue if database isn't available yet
+    // This is useful during initial setup
 }
 
 void ConfigureServices(IServiceCollection services)
