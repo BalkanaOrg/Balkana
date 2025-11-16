@@ -2,6 +2,7 @@ using Balkana.Data;
 using Balkana.Data.DTOs.Riot;
 using Balkana.Data.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 
@@ -13,6 +14,7 @@ namespace Balkana.Services.Tournaments
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly string _apiKey;
+        private readonly string _routingCluster;
 
         public RiotTournamentService(HttpClient httpClient, ApplicationDbContext context, IConfiguration configuration)
         {
@@ -21,10 +23,8 @@ namespace Balkana.Services.Tournaments
             _configuration = configuration;
             _apiKey = _configuration["Riot:ApiKey"];
 
-            // Configure HttpClient for Tournament-stub API (testing environment)
-            // Use regional routing based on configuration (default: europe for EUW/EUNE)
-            var tournamentRegion = _configuration["Riot:TournamentRegion"] ?? "europe";
-            _httpClient.BaseAddress = new Uri($"https://{tournamentRegion}.api.riotgames.com/lol/tournament-stub/v5/");
+            _routingCluster = ResolveRoutingCluster(_configuration["Riot:TournamentRegion"]);
+            _httpClient.BaseAddress = new Uri($"https://{_routingCluster}.api.riotgames.com/lol/tournament-stub/v5/");
             _httpClient.DefaultRequestHeaders.Clear();
             
             // Tournament-stub API uses api_key parameter instead of X-Riot-Token header
@@ -37,6 +37,7 @@ namespace Balkana.Services.Tournaments
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
             
             Console.WriteLine($"[RIOT TOURNAMENT-STUB API] Configured Base URL: {_httpClient.BaseAddress}");
+            Console.WriteLine($"[RIOT TOURNAMENT-STUB API] Routing Cluster: {_routingCluster}");
             Console.WriteLine($"[RIOT TOURNAMENT-STUB API] Configured Headers: {string.Join(", ", _httpClient.DefaultRequestHeaders.Select(h => $"{h.Key}: {string.Join(", ", h.Value)}"))}");
             Console.WriteLine($"[RIOT TOURNAMENT-STUB API] API Key Length: {_apiKey?.Length ?? 0}");
             Console.WriteLine($"[RIOT TOURNAMENT-STUB API] API Key Format: {(_apiKey?.StartsWith("RGAPI-") == true ? "Valid RGAPI format" : "Invalid format")}");
@@ -46,42 +47,9 @@ namespace Balkana.Services.Tournaments
         {
             try
             {
-                // First, let's try a simple test with a different regional endpoint
-                // Tournament-stub might require specific regional endpoints like euw1, na1, etc.
-                var testRegions = new[] { "euw1", "eune1", "na1", "kr", "br1" };
-                
-                foreach (var testRegion in testRegions)
-                {
-                    try
-                    {
-                        var testUrl = $"https://{testRegion}.api.riotgames.com/lol/tournament-stub/v5/providers?api_key={_apiKey}";
-                        Console.WriteLine($"[RIOT TOURNAMENT-STUB API] Testing region: {testRegion}");
-                        
-                        var testRequest = new HttpRequestMessage(HttpMethod.Get, testUrl);
-                        testRequest.Headers.Add("Accept", "application/json");
-                        
-                        var testResponse = await _httpClient.SendAsync(testRequest);
-                        Console.WriteLine($"[RIOT TOURNAMENT-STUB API] Region {testRegion} - Status: {testResponse.StatusCode}");
-                        
-                        if (testResponse.IsSuccessStatusCode)
-                        {
-                            Console.WriteLine($"[RIOT TOURNAMENT-STUB API] Success with region: {testRegion}");
-                            return true;
-                        }
-                        else
-                        {
-                            var errorContent = await testResponse.Content.ReadAsStringAsync();
-                            Console.WriteLine($"[RIOT TOURNAMENT-STUB API] Region {testRegion} error: {errorContent}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[RIOT TOURNAMENT-STUB API] Region {testRegion} exception: {ex.Message}");
-                    }
-                }
-                
-                // If all regions fail, try the original approach
                 var urlWithApiKey = $"providers?api_key={_apiKey}";
+                Console.WriteLine($"[RIOT TOURNAMENT-STUB API] Testing configured cluster {_routingCluster} via {_httpClient.BaseAddress}{urlWithApiKey}");
+
                 var response = await _httpClient.GetAsync(urlWithApiKey);
                 Console.WriteLine($"[RIOT TOURNAMENT-STUB API] API Key Test (GET providers) - Status: {response.StatusCode}");
                 
@@ -90,14 +58,13 @@ namespace Balkana.Services.Tournaments
                     Console.WriteLine($"[RIOT TOURNAMENT-STUB API] API Key is valid - providers endpoint accessible");
                     return true;
                 }
-                else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[RIOT TOURNAMENT-STUB API] Error Response: {errorContent}");
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
                 {
                     Console.WriteLine($"[RIOT TOURNAMENT-STUB API] API Key lacks permissions for Tournament-stub API");
-                    
-                    // Get the actual error response
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"[RIOT TOURNAMENT-STUB API] Error Response: {errorContent}");
-                    
                     return false;
                 }
                 
@@ -151,6 +118,32 @@ namespace Balkana.Services.Tournaments
             var providerId = await response.Content.ReadFromJsonAsync<int>();
             Console.WriteLine($"[RIOT TOURNAMENT-STUB API] Successfully registered provider: {providerId}");
             return providerId;
+        }
+
+        private static string ResolveRoutingCluster(string? configuredValue)
+        {
+            var defaultCluster = "americas";
+
+            if (string.IsNullOrWhiteSpace(configuredValue))
+            {
+                return defaultCluster;
+            }
+
+            var normalized = configuredValue.Trim().ToLowerInvariant();
+            var allowedClusters = new HashSet<string> { "americas", "europe", "asia", "sea", "esports" };
+
+            if (allowedClusters.Contains(normalized))
+            {
+                return normalized;
+            }
+
+            return normalized switch
+            {
+                "euw" or "euw1" or "eune" or "eune1" or "tr" or "tr1" or "ru" => "europe",
+                "na" or "na1" or "br" or "br1" or "la1" or "la2" or "lan" or "las" or "oc1" => "americas",
+                "kr" or "jp" or "jp1" => "asia",
+                _ => defaultCluster
+            };
         }
 
         public async Task<RiotTournament> CreateTournamentAsync(string name, int providerId, string region, int? internalTournamentId = null)

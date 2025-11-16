@@ -31,16 +31,18 @@ The Tournament API uses **regional routing values**:
 {
   "Riot": {
     "ApiKey": "RGAPI-YOUR-KEY-HERE",
-    "TournamentRegion": "europe"
+    "TournamentRegion": "americas"
   }
 }
 ```
 
 **TournamentRegion Options:**
-- `"europe"` - For EUW, EUNE, TR, RU tournaments
-- `"americas"` - For NA, BR, LAN, LAS, OCE tournaments
-- `"asia"` - For KR, JP tournaments
-- `"sea"` - For Southeast Asia tournaments
+- `"americas"` *(default)* - Required for tournament-stub calls regardless of platform region.
+- `"europe"` - Use when calling the production Tournament API for EUW/EUNE/TR/RU.
+- `"asia"` - Use when calling the production Tournament API for KR/JP.
+- `"sea"` - Reserved for Riot-managed Southeast Asia clusters.
+
+> Keep the cluster on `americas` while using the tournament-stub service; continue passing platform regions like `EUNE1` inside the request body.
 
 ## 📋 API Requirements
 

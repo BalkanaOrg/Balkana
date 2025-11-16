@@ -49,6 +49,9 @@ namespace Balkana.Controllers
             query.AbsoluteNumberOfTeams = absoluteNumberTeams;
 
             query.SelectedGame = query.Game;
+            
+            // Calculate starting rank for the partial view
+            ViewBag.StartRank = (query.CurrentPage - 1) * AllTeamsQueryModel.TeamsPerPage + 1;
 
             return View(query);
         }

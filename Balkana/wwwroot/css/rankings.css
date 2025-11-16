@@ -240,6 +240,40 @@
         background: linear-gradient(45deg, #8b0000, #2d1b69);
     }
 
+/* Team Card Styling for Top 3 */
+.team-card.rank-1 {
+    border: 3px solid #ffd700;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(0, 0, 0, 0.6));
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+}
+
+.team-card.rank-1:hover {
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.5);
+    border-color: #ffed4e;
+}
+
+.team-card.rank-2 {
+    border: 3px solid #c0c0c0;
+    background: linear-gradient(135deg, rgba(192, 192, 192, 0.15), rgba(0, 0, 0, 0.6));
+    box-shadow: 0 0 30px rgba(192, 192, 192, 0.3);
+}
+
+.team-card.rank-2:hover {
+    box-shadow: 0 0 40px rgba(192, 192, 192, 0.5);
+    border-color: #e5e5e5;
+}
+
+.team-card.rank-3 {
+    border: 3px solid #cd7f32;
+    background: linear-gradient(135deg, rgba(205, 127, 50, 0.15), rgba(0, 0, 0, 0.6));
+    box-shadow: 0 0 30px rgba(205, 127, 50, 0.3);
+}
+
+.team-card.rank-3:hover {
+    box-shadow: 0 0 40px rgba(205, 127, 50, 0.5);
+    border-color: #ff8c42;
+}
+
 .team-header {
     display: flex;
     align-items: center;
@@ -292,6 +326,12 @@
     margin-bottom: 0.5rem;
     color: #ffffff;
     transition: color 0.3s ease;
+    max-width: 150px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+    line-height: 1.2;
 }
 
 .team-card:hover .team-name {
@@ -622,93 +662,92 @@
     }
 }
 
- 
- / *   Y e a r   F i l t e r   S t y l e s   * / 
- . y e a r - f i l t e r - s e c t i o n   { 
-         d i s p l a y :   f l e x ; 
-         a l i g n - i t e m s :   c e n t e r ; 
-         g a p :   1 0 p x ; 
-         m a r g i n - t o p :   1 5 p x ; 
-         p a d d i n g :   0   2 0 p x ; 
- } 
- 
- . y e a r - f i l t e r - l a b e l   { 
-         c o l o r :   # f f f f f f ; 
-         f o n t - w e i g h t :   6 0 0 ; 
-         f o n t - s i z e :   0 . 9 r e m ; 
-         m a r g i n :   0 ; 
- } 
- 
- . y e a r - s e l e c t   { 
-         b a c k g r o u n d :   l i n e a r - g r a d i e n t ( 1 3 5 d e g ,   # 1 a 1 a 1 a   0 % ,   # 2 d 2 d 2 d   1 0 0 % ) ; 
-         b o r d e r :   1 p x   s o l i d   # 3 3 3 ; 
-         b o r d e r - r a d i u s :   8 p x ; 
-         c o l o r :   # f f f f f f ; 
-         p a d d i n g :   8 p x   1 2 p x ; 
-         f o n t - s i z e :   0 . 9 r e m ; 
-         m i n - w i d t h :   1 2 0 p x ; 
-         c u r s o r :   p o i n t e r ; 
-         t r a n s i t i o n :   a l l   0 . 3 s   e a s e ; 
- } 
- 
- . y e a r - s e l e c t : h o v e r   { 
-         b o r d e r - c o l o r :   # 0 0 6 6 c c ; 
-         b o x - s h a d o w :   0   0   1 0 p x   r g b a ( 0 ,   1 0 2 ,   2 0 4 ,   0 . 2 ) ; 
- } 
- 
- . y e a r - s e l e c t : f o c u s   { 
-         o u t l i n e :   n o n e ; 
-         b o r d e r - c o l o r :   # 0 0 6 6 c c ; 
-         b o x - s h a d o w :   0   0   1 5 p x   r g b a ( 0 ,   1 0 2 ,   2 0 4 ,   0 . 3 ) ; 
- } 
- 
- . y e a r - s e l e c t   o p t i o n   { 
-         b a c k g r o u n d :   # 1 a 1 a 1 a ; 
-         c o l o r :   # f f f f f f ; 
- } 
- 
- / *   L o a d i n g   I n d i c a t o r   S t y l e s   * / 
- . l o a d i n g - i n d i c a t o r   { 
-         t e x t - a l i g n :   c e n t e r ; 
-         p a d d i n g :   4 0 p x   2 0 p x ; 
-         b a c k g r o u n d :   l i n e a r - g r a d i e n t ( 1 3 5 d e g ,   # 1 a 1 a 1 a   0 % ,   # 2 d 2 d 2 d   1 0 0 % ) ; 
-         b o r d e r - r a d i u s :   1 5 p x ; 
-         m a r g i n :   3 0 p x   0 ; 
-         b o r d e r :   1 p x   s o l i d   # 3 3 3 ; 
- } 
- 
- . l o a d i n g - s p i n n e r   { 
-         w i d t h :   4 0 p x ; 
-         h e i g h t :   4 0 p x ; 
-         b o r d e r :   3 p x   s o l i d   r g b a ( 2 5 5 ,   2 5 5 ,   2 5 5 ,   0 . 1 ) ; 
-         b o r d e r - t o p :   3 p x   s o l i d   # 0 0 6 6 c c ; 
-         b o r d e r - r a d i u s :   5 0 % ; 
-         a n i m a t i o n :   s p i n   1 s   l i n e a r   i n f i n i t e ; 
-         m a r g i n :   0   a u t o   1 5 p x ; 
- } 
- 
- @ k e y f r a m e s   s p i n   { 
-         0 %   {   t r a n s f o r m :   r o t a t e ( 0 d e g ) ;   } 
-         1 0 0 %   {   t r a n s f o r m :   r o t a t e ( 3 6 0 d e g ) ;   } 
- } 
- 
- . l o a d i n g - i n d i c a t o r   p   { 
-         c o l o r :   # c c c c c c ; 
-         f o n t - s i z e :   0 . 9 r e m ; 
-         m a r g i n :   0 ; 
- } 
- 
- / *   R e s p o n s i v e   a d j u s t m e n t s   * / 
- @ m e d i a   ( m a x - w i d t h :   7 6 8 p x )   { 
-         . y e a r - f i l t e r - s e c t i o n   { 
-                 f l e x - d i r e c t i o n :   c o l u m n ; 
-                 a l i g n - i t e m s :   f l e x - s t a r t ; 
-                 g a p :   8 p x ; 
-         } 
-         
-         . y e a r - s e l e c t   { 
-                 w i d t h :   1 0 0 % ; 
-                 m i n - w i d t h :   a u t o ; 
-         } 
- }  
- 
+
+/* Year Filter Styles */
+.year-filter-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    padding: 0 20px;
+}
+
+.year-filter-label {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.year-select {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #ffffff;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    min-width: 120px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.year-select:hover {
+    border-color: #0066cc;
+    box-shadow: 0 0 10px rgba(0, 102, 204, 0.2);
+}
+
+.year-select:focus {
+    outline: none;
+    border-color: #0066cc;
+    box-shadow: 0 0 15px rgba(0, 102, 204, 0.3);
+}
+
+.year-select option {
+    background: #1a1a1a;
+    color: #ffffff;
+}
+
+/* Loading Indicator Styles */
+.loading-indicator {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border-radius: 15px;
+    margin: 30px 0;
+    border: 1px solid #333;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top: 3px solid #0066cc;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-indicator p {
+    color: #cccccc;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .year-filter-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .year-select {
+        width: 100%;
+        min-width: auto;
+    }
+}

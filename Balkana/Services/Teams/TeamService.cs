@@ -2,6 +2,7 @@
 {
     using AutoMapper;
     using Balkana.Data;
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using AutoMapper.QueryableExtensions;
@@ -242,6 +243,32 @@
             // Map teams to service models
             var teamModels = teams.Select(team =>
             {
+                // Calculate wins/losses from Series table
+                var seriesPlayed = this.data.Series
+                    .Where(s => s.isFinished && 
+                                (s.TeamAId == team.Id || s.TeamBId == team.Id) &&
+                                s.WinnerTeamId.HasValue)
+                    .ToList();
+
+                int wins = 0;
+                int losses = 0;
+
+                foreach (var series in seriesPlayed)
+                {
+                    if (series.WinnerTeamId == team.Id)
+                    {
+                        wins++;
+                    }
+                    else if ((series.TeamAId == team.Id || series.TeamBId == team.Id) && 
+                             series.WinnerTeamId.HasValue)
+                    {
+                        losses++;
+                    }
+                }
+
+                int totalSeries = wins + losses;
+                double winRate = totalSeries > 0 ? (double)wins / totalSeries * 100 : 0;
+
                 var model = new TeamServiceModel
                 {
                     Id = team.Id,
@@ -250,6 +277,9 @@
                     LogoURL = team.LogoURL,
                     yearFounded = team.yearFounded,
                     GameId = team.GameId,
+                    Wins = wins,
+                    Losses = losses,
+                    WinRate = Math.Round(winRate, 1),
                     Players = this.AllPlayers(team.Id)
                         .Take(5) // max 5 players for HLTV-style grid
                         .Select(p => new PlayerServiceModel

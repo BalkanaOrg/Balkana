@@ -1,32 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "G:\\Programming\\Csharp\\Balkana\\Balkana\\Balkana.csproj": {}
+    "/mnt/storage/Programming/Csharp/Balkana/Balkana/Balkana.csproj": {}
   },
   "projects": {
-    "G:\\Programming\\Csharp\\Balkana\\Balkana\\Balkana.csproj": {
+    "/mnt/storage/Programming/Csharp/Balkana/Balkana/Balkana.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Balkana.csproj",
+        "projectUniqueName": "/mnt/storage/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
         "projectName": "Balkana",
-        "projectPath": "G:\\Programming\\Csharp\\Balkana\\Balkana\\Balkana.csproj",
-        "packagesPath": "C:\\Users\\1bulg\\.nuget\\packages\\",
-        "outputPath": "G:\\Programming\\Csharp\\Balkana\\Balkana\\obj\\",
+        "projectPath": "/mnt/storage/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
+        "packagesPath": "/home/moh4o/.nuget/packages/",
+        "outputPath": "/mnt/storage/Programming/Csharp/Balkana/Balkana/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\1bulg\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/moh4o/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -45,7 +38,7 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "9.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -117,6 +110,12 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[9.0.9, 9.0.9]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -125,7 +124,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.110/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

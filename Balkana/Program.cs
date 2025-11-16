@@ -52,6 +52,16 @@ Console.WriteLine("OS: " + System.Runtime.InteropServices.RuntimeInformation.OSD
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(3333); // HTTP
+    options.ListenAnyIP(4444, listenOptions =>
+    {
+        listenOptions.UseHttps("/etc/letsencrypt/live/balkana.org/balkana.pfx", "SilnaParola123");
+    });
+});
+
+
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 Console.WriteLine($"Connection String: {connectionString ?? "(null)"}");
@@ -106,7 +116,7 @@ builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
 //builder.Services.AddScoped<ISeriesRepository, SeriesRepository>();
 //builder.Services.AddScoped<ISeriesService, SeriesService>();
-builder.WebHost.UseUrls("https://localhost:7241");
+//builder.WebHost.UseUrls("https://localhost:7241");
 AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
 {
     Console.WriteLine("Unhandled exception: " + args.ExceptionObject.ToString());

@@ -17,5 +17,10 @@ namespace Balkana.Services.Teams.Models
         
         // Trophy collections
         public List<TeamTrophyServiceModel> Trophies { get; set; } = new();
+        
+        // Series statistics
+        public int Wins { get; set; }
+        public int Losses { get; set; }
+        public double WinRate { get; set; }
     }
 }

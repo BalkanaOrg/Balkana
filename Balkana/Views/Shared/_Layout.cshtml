@@ -3,7 +3,88 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Balkana</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>@(ViewData["Title"] != null ? $"{ViewData["Title"]} - " : "")Balkana - Balkan Esports Championship</title>
+    <meta name="title" content="@(ViewData["Title"] != null ? $"{ViewData["Title"]} - " : "")Balkana - Balkan Esports Championship" />
+    <meta name="description" content="@(ViewData["Description"] ?? "Balkana is a premier esports tournament organizer in the Balkans, hosting competitive events for Counter-Strike, League of Legends, Valorant, and more. Join the Balkan Championship community!")" />
+    <meta name="keywords" content="@(ViewData["Keywords"] ?? "Balkana, esports, gaming, tournament, Counter-Strike, League of Legends, Valorant, Fortnite, Balkan Championship, esports tournament, competitive gaming, Bulgaria, Balkans")" />
+    <meta name="author" content="Balkana" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="English" />
+    <meta name="revisit-after" content="7 days" />
+    <meta name="theme-color" content="#1a1a2e" />
+    
+    <!-- Canonical URL -->
+    @{
+        var baseUrl = Context.Request.Scheme + "://" + Context.Request.Host;
+        var canonicalUrl = baseUrl + Context.Request.Path + Context.Request.QueryString;
+    }
+    <link rel="canonical" href="@canonicalUrl" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="@canonicalUrl" />
+    <meta property="og:title" content="@(ViewData["Title"] != null ? $"{ViewData["Title"]} - " : "")Balkana - Balkan Esports Championship" />
+    <meta property="og:description" content="@(ViewData["Description"] ?? "Balkana is a premier esports tournament organizer in the Balkans, hosting competitive events for Counter-Strike, League of Legends, Valorant, and more.")" />
+    <meta property="og:image" content="@(baseUrl)/Balkana.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Balkana" />
+    <meta property="og:locale" content="en_US" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="@canonicalUrl" />
+    <meta name="twitter:title" content="@(ViewData["Title"] != null ? $"{ViewData["Title"]} - " : "")Balkana - Balkan Esports Championship" />
+    <meta name="twitter:description" content="@(ViewData["Description"] ?? "Balkana is a premier esports tournament organizer in the Balkans, hosting competitive events for Counter-Strike, League of Legends, Valorant, and more.")" />
+    <meta name="twitter:image" content="@(baseUrl)/Balkana.png" />
+    <meta name="twitter:site" content="@@BalkanaOrg" />
+    <meta name="twitter:creator" content="@@BalkanaOrg" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="~/favicon.ico" />
+    
+    <!-- Preconnect for Performance -->
+    <link rel="preconnect" href="https://cdn-uicons.flaticon.com" />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="dns-prefetch" href="https://code.jquery.com" />
+    
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+        "@@context": "https://schema.org",
+        "@@type": "Organization",
+        "name": "Balkana",
+        "alternateName": "Balkan Championship",
+        "url": "@baseUrl",
+        "logo": "@(baseUrl)/Balkana.png",
+        "description": "Premier esports tournament organizer in the Balkans, hosting competitive events for Counter-Strike, League of Legends, Valorant, and more.",
+        "address": {
+            "@@type": "PostalAddress",
+            "addressLocality": "Sofia",
+            "addressCountry": "BG"
+        },
+        "contactPoint": {
+            "@@type": "ContactPoint",
+            "email": "promotions@balkana.org",
+            "contactType": "Customer Service"
+        },
+        "sameAs": [
+            "https://www.instagram.com/balkanaorg/",
+            "https://www.tiktok.com/@@balkanaorg",
+            "https://www.twitch.tv/balkanaorg",
+            "https://www.youtube.com/@@BalkanaOrg",
+            "https://discord.gg/balkana",
+            "https://www.linkedin.com/company/balkana",
+            "https://x.com/BalkanaOrg",
+            "https://steamcommunity.com/groups/balkana"
+        ]
+    }
+    </script>
+    
     <!-- CSS -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     @* <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bracket/0.11.1/jquery.bracket.min.css" /> *@
@@ -32,12 +113,24 @@
     <script src="~/js/script.js"></script>
 </head>
 <body>
+    <!-- Mobile Menu Toggle Button -->
+    <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    
     <!-- Left Sidebar Navigation -->
-    <nav class="top-navbar">
+    <nav class="top-navbar" id="topNavbar">
         <div class="navbar-container">
             <!-- Logo at top with animation -->
             <div class="navbar-logo">
-                <img src="~/Balkana.png" alt="Balkana Logo">
+                <a asp-controller="Home" asp-action="Index" aria-label="Balkana Home">
+                    <img src="~/Balkana.png" alt="Balkana - Balkan Esports Championship Logo" width="120" height="120">
+                </a>
             </div>
 
             <!-- Vertical navigation links -->
@@ -63,8 +156,30 @@
                     <span>About</span>
                 </a>
 
-                <!-- Dropdown Menu -->
-                <div class="dropdown">
+                <!-- Mobile-only nav links (shown instead of dropdown on mobile) -->
+                <a href="#" class="nav-link mobile-only-link" data-page="fantasy">
+                    <i class="fi fi-rr-gamepad"></i>
+                    <span>Fantasy</span>
+                </a>
+                <a asp-controller="Teams" asp-action="Index" asp-route-game="Counter-Strike" class="nav-link mobile-only-link" data-page="ranking">
+                    <i class="fi fi-rr-star"></i>
+                    <span>Rankings</span>
+                </a>
+                <a href="#" class="nav-link mobile-only-link" data-page="schedule">
+                    <i class="fi fi-rr-calendar"></i>
+                    <span>Schedule</span>
+                </a>
+                <a href="#" class="nav-link mobile-only-link" data-page="festival">
+                    <i class="fi fi-rr-party-horn"></i>
+                    <span>Festival</span>
+                </a>
+                <a href="#" class="nav-link mobile-only-link" data-page="gallery">
+                    <i class="fi fi-rr-camera"></i>
+                    <span>Gallery</span>
+                </a>
+
+                <!-- Dropdown Menu (desktop only) -->
+                <div class="dropdown desktop-only-dropdown">
                     <button class="dropdown-btn">
                         <i class="fi fi-rr-menu-dots"></i>
                         <span>More</span>
@@ -124,7 +239,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="main-content text-white">
+    <main class="main-content text-white" id="mainContent">
         @RenderBody()
     </main>
 
@@ -133,35 +248,45 @@
         <div class="footer-container">
             <div class="footer-section brand-section">
                 <div class="footer-logo">
-                    <img src="~/Balkana.png" alt="Balkana Logo">
+                    <a asp-controller="Home" asp-action="Index" aria-label="Balkana Home">
+                        <img src="~/Balkana.png" alt="Balkana - Balkan Esports Championship Logo" width="150" height="150">
+                    </a>
                 </div>
                 <p class="footer-description">
                     Videbimus invicem in Balcania!
                 </p>
                 <div class="social-links">
-                    <a href="https://www.instagram.com/balkanaorg/" class="social-link instagram" target="_blank" title="Instagram">
+                    <a href="https://www.instagram.com/balkanaorg/" class="social-link instagram" target="_blank" rel="noopener noreferrer" title="Follow Balkana on Instagram">
                         <i class="fi fi-brands-instagram"></i>
+                        <span class="sr-only">Instagram</span>
                     </a>
-                    <a href="https://www.tiktok.com/\@@balkanaorg" class="social-link tiktok" target="_blank" title="TikTok">
+                    <a href="https://www.tiktok.com/\@@balkanaorg" class="social-link tiktok" target="_blank" rel="noopener noreferrer" title="Follow Balkana on TikTok">
                         <i class="fi fi-brands-tik-tok"></i>
+                        <span class="sr-only">TikTok</span>
                     </a>
-                    <a href="https://www.twitch.tv/balkanaorg" class="social-link twitch" target="_blank" title="Twitch">
+                    <a href="https://www.twitch.tv/balkanaorg" class="social-link twitch" target="_blank" rel="noopener noreferrer" title="Watch Balkana on Twitch">
                         <i class="fi fi-brands-twitch"></i>
+                        <span class="sr-only">Twitch</span>
                     </a>
-                    <a href="https://www.youtube.com/\@@BalkanaOrg" class="social-link youtube" target="_blank" title="YouTube">
+                    <a href="https://www.youtube.com/\@@BalkanaOrg" class="social-link youtube" target="_blank" rel="noopener noreferrer" title="Subscribe to Balkana on YouTube">
                         <i class="fi fi-brands-youtube"></i>
+                        <span class="sr-only">YouTube</span>
                     </a>
-                    <a href="https://discord.gg/balkana" class="social-link discord" target="_blank" title="Discord">
+                    <a href="https://discord.gg/balkana" class="social-link discord" target="_blank" rel="noopener noreferrer" title="Join Balkana Discord Server">
                         <i class="fi fi-brands-discord"></i>
+                        <span class="sr-only">Discord</span>
                     </a>
-                    <a href="https://www.linkedin.com/company/balkana" class="social-link linkedin" target="_blank" title="LinkedIn">
+                    <a href="https://www.linkedin.com/company/balkana" class="social-link linkedin" target="_blank" rel="noopener noreferrer" title="Connect with Balkana on LinkedIn">
                         <i class="fi fi-brands-linkedin"></i>
+                        <span class="sr-only">LinkedIn</span>
                     </a>
-                    <a href="https://x.com/BalkanaOrg" class="social-link twitter" target="_blank" title="Twitter/X">
+                    <a href="https://x.com/BalkanaOrg" class="social-link twitter" target="_blank" rel="noopener noreferrer" title="Follow Balkana on Twitter/X">
                         <i class="fi fi-brands-twitter-alt"></i>
+                        <span class="sr-only">Twitter/X</span>
                     </a>
-                    <a href="https://steamcommunity.com/groups/balkana" class="social-link steam" target="_blank" title="Steam">
+                    <a href="https://steamcommunity.com/groups/balkana" class="social-link steam" target="_blank" rel="noopener noreferrer" title="Join Balkana Steam Group">
                         <i class="fi fi-brands-steam"></i>
+                        <span class="sr-only">Steam</span>
                     </a>
                 </div>
             </div>
@@ -223,5 +348,6 @@
     </footer>
     @RenderSection("Scripts", required: false)
     @RenderSection("Styles", required: false)
+    <script src="~/js/site.js"></script>
 </body>
 </html>
