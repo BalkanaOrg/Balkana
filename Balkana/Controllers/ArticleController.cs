@@ -284,6 +284,14 @@ namespace Balkana.Controllers
                 }
             }
 
+            // Set SEO metadata
+            ViewData["Title"] = article.Title;
+            var description = article.Content.Length > 160 
+                ? System.Text.RegularExpressions.Regex.Replace(article.Content, "<.*?>", string.Empty).Substring(0, 160) + "..."
+                : System.Text.RegularExpressions.Regex.Replace(article.Content, "<.*?>", string.Empty);
+            ViewData["Description"] = description;
+            ViewData["Keywords"] = $"Balkana, esports, {article.Title}, gaming news, tournament news";
+
             return View(article);
         }
 

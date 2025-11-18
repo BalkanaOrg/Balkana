@@ -1,0 +1,13 @@
+# robots.txt for Balkana - Balkan Esports Championship
+# https://www.robotstxt.org/
+
+User-agent: *
+
+# Disallow admin and private areas
+Disallow: /Account/
+Disallow: /Admin/
+Disallow: /File/
+Disallow: /DiscordWebhook/
+
+# Sitemap location
+Sitemap: https://balkana.org/sitemap.xml

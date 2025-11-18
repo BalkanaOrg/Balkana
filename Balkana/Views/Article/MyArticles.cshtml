@@ -4,36 +4,75 @@
     ViewData["Title"] = "My Articles";
 }
 
-<h2 class="mb-4">My Articles</h2>
+<div class="articles-management-page">
+    <div class="articles-management-header">
+        <div>
+            <h1 class="articles-management-title">My Articles</h1>
+            <p class="articles-management-subtitle">Manage and track your published articles and drafts</p>
+        </div>
+        <a asp-action="Create" class="btn-modern btn-modern-primary">
+            <i class="fi fi-rr-plus"></i>
+            New Article
+        </a>
+    </div>
 
-<a class="btn btn-success mb-3" asp-action="Create">➕ New Article</a>
-
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Title</th>
-            <th>Status</th>
-            <th>Created</th>
-            <th>Published</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
+    <div class="articles-management-grid">
         @foreach (var article in Model)
         {
-            <tr>
-                <td>@article.Title</td>
-                <td>@article.Status</td>
-                <td>@article.CreatedAt.ToString("yyyy-MM-dd")</td>
-                <td>@(article.PublishedAt?.ToString("yyyy-MM-dd") ?? "-")</td>
-                <td>
-                    <a class="btn btn-sm btn-primary" asp-action="Details" asp-route-id="@article.Id">View</a>
-                    @if (article.Status == "Draft")
-                    {
-                        <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@article.Id">Edit</a>
-                    }
-                </td>
-            </tr>
+            <div class="article-management-card">
+                @if (!string.IsNullOrEmpty(article.ThumbnailUrl))
+                {
+                    <div class="article-management-thumb">
+                        <img src="@article.ThumbnailUrl" alt="@article.Title" />
+                    </div>
+                }
+                <div class="article-management-content">
+                    <h3 class="article-management-title">@article.Title</h3>
+                    <div class="article-management-meta">
+                        <span class="article-status-badge article-status-@article.Status.ToLower()">
+                            <i class="fi fi-rr-@(article.Status == "Published" ? "check" : "clock")"></i>
+                            @article.Status
+                        </span>
+                        <span class="article-meta-item">
+                            <i class="fi fi-rr-calendar"></i>
+                            Created: @article.CreatedAt.ToString("MMM dd, yyyy")
+                        </span>
+                        @if (article.PublishedAt.HasValue)
+                        {
+                            <span class="article-meta-item">
+                                <i class="fi fi-rr-globe"></i>
+                                Published: @article.PublishedAt.Value.ToString("MMM dd, yyyy")
+                            </span>
+                        }
+                    </div>
+                    <div class="article-management-actions">
+                        <a asp-action="Details" asp-route-id="@article.Id" class="btn-action btn-action-view">
+                            <i class="fi fi-rr-eye"></i>
+                            View
+                        </a>
+                        @if (article.Status == "Draft")
+                        {
+                            <a asp-action="Edit" asp-route-id="@article.Id" class="btn-action btn-action-edit">
+                                <i class="fi fi-rr-edit"></i>
+                                Edit
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
         }
-    </tbody>
-</table>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <i class="fi fi-rr-document"></i>
+            <h3>No articles yet</h3>
+            <p>Start creating your first article to share with the community</p>
+            <a asp-action="Create" class="btn-modern btn-modern-primary">
+                <i class="fi fi-rr-plus"></i>
+                Create Your First Article
+            </a>
+        </div>
+    }
+</div>

@@ -16,15 +16,13 @@ namespace Balkana.Data.Models
         [MinLength(NameMinLength)]
         public string Nickname { get; set; }
 
-        [Required]
         [MaxLength(NameMaxLength)]
         [MinLength(NameMinLength)]
-        public string FirstName { get; set; }
+        public string? FirstName { get; set; }
 
-        [Required]
         [MaxLength(NameMaxLength)]
         [MinLength(NameMinLength)]
-        public string LastName { get; set; }
+        public string? LastName { get; set; }
 
         [Required]
         public int NationalityId { get; set; }

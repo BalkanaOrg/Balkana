@@ -5,8 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- Primary Meta Tags -->
-    <title>@(ViewData["Title"] != null ? $"{ViewData["Title"]} - " : "")Balkana - Balkan Esports Championship</title>
-    <meta name="title" content="@(ViewData["Title"] != null ? $"{ViewData["Title"]} - " : "")Balkana - Balkan Esports Championship" />
+    @{
+        // Build title - don't add "- Balkana" if title already contains it
+        var pageTitle = ViewData["Title"] as string;
+        var fullTitle = pageTitle;
+        if (!string.IsNullOrEmpty(pageTitle))
+        {
+            // If title doesn't already contain "Balkana", add it
+            if (!pageTitle.Contains("Balkana", StringComparison.OrdinalIgnoreCase))
+            {
+                fullTitle = $"{pageTitle} - Balkana";
+            }
+        }
+        else
+        {
+            fullTitle = "Balkana";
+        }
+    }
+    <title>@fullTitle</title>
+    <meta name="title" content="@fullTitle" />
     <meta name="description" content="@(ViewData["Description"] ?? "Balkana is a premier esports tournament organizer in the Balkans, hosting competitive events for Counter-Strike, League of Legends, Valorant, and more. Join the Balkan Championship community!")" />
     <meta name="keywords" content="@(ViewData["Keywords"] ?? "Balkana, esports, gaming, tournament, Counter-Strike, League of Legends, Valorant, Fortnite, Balkan Championship, esports tournament, competitive gaming, Bulgaria, Balkans")" />
     <meta name="author" content="Balkana" />
@@ -19,26 +36,39 @@
     @{
         var baseUrl = Context.Request.Scheme + "://" + Context.Request.Host;
         var canonicalUrl = baseUrl + Context.Request.Path + Context.Request.QueryString;
+        
+        // Get page-specific image or use default
+        var ogImage = ViewData["Image"] as string ?? ViewData["OgImage"] as string;
+        if (!string.IsNullOrEmpty(ogImage))
+        {
+            // Ensure absolute URL
+            if (!ogImage.StartsWith("http"))
+            {
+                ogImage = ogImage.StartsWith("/") ? baseUrl + ogImage : baseUrl + "/" + ogImage;
+            }
+        }
+        else
+        {
+            ogImage = baseUrl + "/Balkana.png";
+        }
     }
     <link rel="canonical" href="@canonicalUrl" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="@canonicalUrl" />
-    <meta property="og:title" content="@(ViewData["Title"] != null ? $"{ViewData["Title"]} - " : "")Balkana - Balkan Esports Championship" />
+    <meta property="og:title" content="@fullTitle" />
     <meta property="og:description" content="@(ViewData["Description"] ?? "Balkana is a premier esports tournament organizer in the Balkans, hosting competitive events for Counter-Strike, League of Legends, Valorant, and more.")" />
-    <meta property="og:image" content="@(baseUrl)/Balkana.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    <meta property="og:image" content="@ogImage" />
     <meta property="og:site_name" content="Balkana" />
     <meta property="og:locale" content="en_US" />
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content="@canonicalUrl" />
-    <meta name="twitter:title" content="@(ViewData["Title"] != null ? $"{ViewData["Title"]} - " : "")Balkana - Balkan Esports Championship" />
+    <meta name="twitter:title" content="@fullTitle" />
     <meta name="twitter:description" content="@(ViewData["Description"] ?? "Balkana is a premier esports tournament organizer in the Balkans, hosting competitive events for Counter-Strike, League of Legends, Valorant, and more.")" />
-    <meta name="twitter:image" content="@(baseUrl)/Balkana.png" />
+    <meta name="twitter:image" content="@ogImage" />
     <meta name="twitter:site" content="@@BalkanaOrg" />
     <meta name="twitter:creator" content="@@BalkanaOrg" />
     

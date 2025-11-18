@@ -94,6 +94,13 @@ namespace Balkana.Controllers
 
             ViewData["ParticipatingTeams"] = participatingTeams;
 
+            // Set SEO metadata
+            ViewData["Title"] = tournament.FullName;
+            ViewData["Description"] = tournament.Description?.Length > 160 
+                ? tournament.Description.Substring(0, 160) + "..." 
+                : tournament.Description ?? $"{tournament.FullName} - {tournament.Game?.FullName} tournament";
+            ViewData["Keywords"] = $"Balkana, {tournament.FullName}, {tournament.Game?.FullName}, esports tournament, {tournament.Organizer?.FullName}";
+
             return View(tournament);
         }
 

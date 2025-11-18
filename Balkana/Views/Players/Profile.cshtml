@@ -1,6 +1,27 @@
 ﻿@model PlayerDetailsServiceModel
 @{
-    ViewData["Title"] = Model.Nickname;
+    // Format title: FirstName "Nickname" LastName - Balkana
+    // Or just: Nickname - Balkana if FirstName/LastName are empty
+    string playerTitle;
+    if (!string.IsNullOrWhiteSpace(Model.FirstName) || !string.IsNullOrWhiteSpace(Model.LastName))
+    {
+        var firstName = Model.FirstName ?? "";
+        var lastName = Model.LastName ?? "";
+        playerTitle = $"{firstName} \"{Model.Nickname}\" {lastName}".Trim();
+    }
+    else
+    {
+        playerTitle = Model.Nickname;
+    }
+    ViewData["Title"] = playerTitle;
+    
+    // Set player picture for Open Graph/Twitter Card
+    var baseUrl = Context.Request.Scheme + "://" + Context.Request.Host;
+    var playerImage = !string.IsNullOrEmpty(Model.PictureUrl) 
+        ? (Model.PictureUrl.StartsWith("http") ? Model.PictureUrl : baseUrl + Model.PictureUrl)
+        : baseUrl + "/uploads/PlayerProfiles/_defaultPfp.png";
+    ViewData["Image"] = playerImage;
+    
     var selectedGame = ViewBag.SelectedGame as string;
     var availableGames = Model.GameProfiles.Select(gp => gp.GameName).ToList();
 }

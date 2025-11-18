@@ -24,7 +24,9 @@
                                     DateTime.Now > t.EndDate ? "Completed" : "Today")
             </div>
 
-                <img src="@t.BannerUrl" class="tournament-image" alt="@t.FullName" />
+                <div class="tournament-image-container">
+                    <img src="@t.BannerUrl" class="tournament-image" alt="@t.FullName" />
+                </div>
 
                 <div class="tournament-content">
                     <h3 class="tournament-title">@t.FullName</h3>
@@ -71,43 +73,81 @@
                         <div class="tournament-teams">
                             <div class="teams-label">Participating Teams (@t.TournamentTeams.Count()):</div>
                             <div class="teams-grid">
-                                @* @foreach (var tt in t.TournamentTeams.OrderBy(tt => tt.Seed).Take(7))
-                                {
-                                    <img src="@tt.Team.LogoURL"
-                                         class="team-logo"
-                                         alt="@tt.Team.FullName"
-                                         title="@tt.Team.FullName" />
-                                }
-                                @if (t.TournamentTeams.Count() > 8)
-                                {
-                                    <div class="team-logo" style="display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.2); font-size: 0.8rem;">
-                                        +@(t.TournamentTeams.Count() - 7)
-                                    </div>
-                                } *@
                                 @if (t.TournamentTeams.Count() > 8)
                                 {
                                     @foreach (var tt in t.TournamentTeams.OrderBy(tt => tt.Seed).Take(7))
                                     {
-                                        <img src="@tt.Team.LogoURL"
-                                             class="team-logo"
-                                             alt="@tt.Team.FullName"
-                                             title="@tt.Team.FullName" />
+                                        <a asp-controller="Teams"
+                                           asp-action="Details"
+                                           asp-route-id="@tt.Team.Id"
+                                           asp-route-information="@tt.Team.GetInformation()"
+                                           class="team-logo-link"
+                                           title="@tt.Team.FullName">
+                                            <img src="@tt.Team.LogoURL"
+                                                 class="team-logo"
+                                                 alt="@tt.Team.FullName" />
+                                        </a>
                                     }
-                                    @if (t.TournamentTeams.Count() > 8)
-                                    {
-                                        <div class="team-logo" style="display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.2); font-size: 0.8rem;">
+                                    <div class="team-more-container desktop-only">
+                                        <button type="button" 
+                                                class="team-logo team-more-btn" 
+                                                data-tournament-id="@t.Id"
+                                                title="Show remaining teams"
+                                                style="display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.2); font-size: 0.8rem;">
                                             +@(t.TournamentTeams.Count() - 7)
+                                        </button>
+                                        
+                                        <div class="remaining-teams-popup" id="remaining-teams-@t.Id" style="display: none;">
+                                            <div class="remaining-teams-content">
+                                                <div class="remaining-teams-grid">
+                                                    @foreach (var tt in t.TournamentTeams.OrderBy(tt => tt.Seed).Skip(7))
+                                                    {
+                                                        <a asp-controller="Teams"
+                                                           asp-action="Details"
+                                                           asp-route-id="@tt.Team.Id"
+                                                           asp-route-information="@tt.Team.GetInformation()"
+                                                           class="team-logo-link"
+                                                           title="@tt.Team.FullName">
+                                                            <img src="@tt.Team.LogoURL"
+                                                                 class="team-logo"
+                                                                 alt="@tt.Team.FullName" />
+                                                        </a>
+                                                    }
+                                                </div>
+                                            </div>
                                         </div>
-                                    }
+                                    </div>
+                                    @* Show remaining teams on mobile *@
+                                    <div class="mobile-remaining-teams">
+                                        @foreach (var tt in t.TournamentTeams.OrderBy(tt => tt.Seed).Skip(7))
+                                        {
+                                            <a asp-controller="Teams"
+                                               asp-action="Details"
+                                               asp-route-id="@tt.Team.Id"
+                                               asp-route-information="@tt.Team.GetInformation()"
+                                               class="team-logo-link"
+                                               title="@tt.Team.FullName">
+                                                <img src="@tt.Team.LogoURL"
+                                                     class="team-logo"
+                                                     alt="@tt.Team.FullName" />
+                                            </a>
+                                        }
+                                    </div>
                                 }
                                 else
                                 {
                                     @foreach (var tt in t.TournamentTeams.OrderBy(tt => tt.Seed))
                                     {
-                                        <img src="@tt.Team.LogoURL"
-                                             class="team-logo"
-                                             alt="@tt.Team.FullName"
-                                             title="@tt.Team.FullName" />
+                                        <a asp-controller="Teams"
+                                           asp-action="Details"
+                                           asp-route-id="@tt.Team.Id"
+                                           asp-route-information="@tt.Team.GetInformation()"
+                                           class="team-logo-link"
+                                           title="@tt.Team.FullName">
+                                            <img src="@tt.Team.LogoURL"
+                                                 class="team-logo"
+                                                 alt="@tt.Team.FullName" />
+                                        </a>
                                     }
                                 }
                             </div>
@@ -136,6 +176,50 @@
             setTimeout(() => {
                 card.style.animationDelay = `${index * 0.1}s`;
             }, 100);
+        });
+
+        // Toggle remaining teams popup
+        const moreButtons = document.querySelectorAll('.team-more-btn');
+        moreButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const tournamentId = this.getAttribute('data-tournament-id');
+                const popup = document.getElementById('remaining-teams-' + tournamentId);
+                
+                if (popup) {
+                    const isVisible = popup.style.display !== 'none';
+                    // Hide all other popups first
+                    document.querySelectorAll('.remaining-teams-popup').forEach(p => {
+                        if (p.id !== popup.id) {
+                            p.style.display = 'none';
+                        }
+                    });
+                    
+                    if (!isVisible) {
+                        // Position popup relative to button
+                        const buttonRect = this.getBoundingClientRect();
+                        const container = this.closest('.team-more-container');
+                        const containerRect = container.getBoundingClientRect();
+                        
+                        // Calculate position relative to container
+                        popup.style.left = '0';
+                        popup.style.top = 'calc(100% + 8px)';
+                        popup.style.display = 'block';
+                    } else {
+                        popup.style.display = 'none';
+                    }
+                }
+            });
+        });
+
+        // Close popup when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.team-more-btn') && !e.target.closest('.remaining-teams-popup')) {
+                document.querySelectorAll('.remaining-teams-popup').forEach(popup => {
+                    popup.style.display = 'none';
+                });
+            }
         });
     });
 </script>

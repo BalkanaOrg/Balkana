@@ -2,8 +2,86 @@
 @model Balkana.Data.Models.Tournament
 
 @{
-    ViewData["Title"] = "Tournament Details";
+    ViewData["Title"] = Model.FullName;
+    ViewData["Description"] = Model.Description?.Length > 160 ? Model.Description.Substring(0, 160) + "..." : Model.Description ?? $"{Model.FullName} - {Model.Game?.FullName} tournament starting {Model.StartDate:MMMM dd, yyyy}";
+    ViewData["Keywords"] = $"Balkana, {Model.FullName}, {Model.Game?.FullName}, esports tournament, {Model.Organizer?.FullName}";
+    
+    var baseUrl = Context.Request.Scheme + "://" + Context.Request.Host;
+    var tournamentUrl = baseUrl + Context.Request.Path;
+    var imageUrl = Model.BannerUrl?.StartsWith("http") == true ? Model.BannerUrl : baseUrl + Model.BannerUrl;
+    
+    // Set tournament banner for Open Graph/Twitter Card
+    var tournamentImage = !string.IsNullOrEmpty(Model.BannerUrl) 
+        ? (Model.BannerUrl.StartsWith("http") ? Model.BannerUrl : baseUrl + Model.BannerUrl)
+        : baseUrl + "/Balkana.png";
+    ViewData["Image"] = tournamentImage;
+    
+    var eventStatus = DateTime.UtcNow < Model.StartDate ? "EventScheduled" : 
+                     (DateTime.UtcNow >= Model.StartDate && DateTime.UtcNow <= Model.EndDate ? "EventScheduled" : "EventPostponed");
 }
+
+<!-- Event Structured Data (JSON-LD) -->
+<script type="application/ld+json">
+{
+    "@@context": "https://schema.org",
+    "@@type": "SportsEvent",
+    "name": "@Html.Raw(Model.FullName.Replace("\"", "\\\""))",
+    "description": "@Html.Raw((Model.Description ?? $"{Model.FullName} esports tournament").Replace("\"", "\\\"").Replace("\r", "").Replace("\n", " "))",
+    "image": "@imageUrl",
+    "startDate": "@Model.StartDate.ToString("yyyy-MM-ddTHH:mm:ssZ")",
+    "endDate": "@Model.EndDate.ToString("yyyy-MM-ddTHH:mm:ssZ")",
+    "eventStatus": "https://schema.org/@eventStatus",
+    "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
+    "location": {
+        "@@type": "VirtualLocation",
+        "url": "@tournamentUrl"
+    },
+    "organizer": {
+        "@@type": "Organization",
+        "name": "@(Model.Organizer?.FullName ?? "Balkana")",
+        "url": "@baseUrl"
+    },
+    "sport": "@(Model.Game?.FullName ?? "Esports")",
+    "offers": {
+        "@@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR",
+        "availability": "https://schema.org/InStock",
+        "url": "@tournamentUrl"
+    }@if (Model.PrizePool > 0) {
+        <text>,
+    "award": "$@Model.PrizePool.ToString("N0") Prize Pool"</text>
+    }
+}
+</script>
+
+<!-- Breadcrumb Structured Data (JSON-LD) -->
+<script type="application/ld+json">
+{
+    "@@context": "https://schema.org",
+    "@@type": "BreadcrumbList",
+    "itemListElement": [
+        {
+            "@@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "@baseUrl"
+        },
+        {
+            "@@type": "ListItem",
+            "position": 2,
+            "name": "Tournaments",
+            "item": "@(baseUrl)/Tournaments"
+        },
+        {
+            "@@type": "ListItem",
+            "position": 3,
+            "name": "@Html.Raw(Model.FullName.Replace("\"", "\\\""))",
+            "item": "@tournamentUrl"
+        }
+    ]
+}
+</script>
 
 @if (TempData["Success"] != null)
 {
@@ -21,13 +99,23 @@
     </div>
 }
 
+<nav aria-label="breadcrumb" class="mb-3">
+    <div class="container-fluid">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/Tournaments">Tournaments</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.FullName</li>
+        </ol>
+    </div>
+</nav>
+
 <!-- Tournament Header -->
 <div class="tournament-header">
     <div class="container-fluid">
         <div class="row align-items-center">
             <div class="col-md-2">
                 <div class="tournament-logo">
-                    <img src="@Model.BannerUrl" alt="@Model.FullName" class="img-fluid rounded" />
+                    <img src="@Model.BannerUrl" alt="@Model.FullName - @Model.Game?.FullName Tournament Banner" class="img-fluid rounded" loading="lazy" />
                 </div>
             </div>
             <div class="col-md-8">

@@ -176,7 +176,7 @@ namespace Balkana.Controllers
                 var players = await _context.Players
                     .Include(p => p.GameProfiles)
                     .Where(p => p.Nickname.Contains(query) || 
-                               (p.FirstName + " " + p.LastName).Contains(query))
+                               ((p.FirstName ?? "") + " " + (p.LastName ?? "")).Trim().Contains(query))
                     .Take(10)
                     .Select(p => new
                     {

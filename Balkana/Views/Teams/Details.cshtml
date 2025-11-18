@@ -1,7 +1,17 @@
 ﻿@using Balkana.Data.Models
 @model TeamDetailsServiceModel
 @{
-    ViewData["Title"] = $"[{Model.Tag}] {Model.FullName}";
+    // Format title: TeamFullName - Balkana [Game FullName]
+    // e.g. "TROHARITE - Balkana Counter-Strike"
+    var gameName = !string.IsNullOrWhiteSpace(Model.GameName) ? $" {Model.GameName}" : "";
+    ViewData["Title"] = $"{Model.FullName} - Balkana{gameName}";
+    
+    // Set team logo for Open Graph/Twitter Card
+    var baseUrl = Context.Request.Scheme + "://" + Context.Request.Host;
+    var teamImage = !string.IsNullOrEmpty(Model.LogoURL) 
+        ? (Model.LogoURL.StartsWith("http") ? Model.LogoURL : baseUrl + Model.LogoURL)
+        : baseUrl + "/Balkana.png";
+    ViewData["Image"] = teamImage;
 }
 
 <link rel="stylesheet" href="~/css/team-details.css" />

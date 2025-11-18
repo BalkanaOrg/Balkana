@@ -51,7 +51,7 @@ namespace Balkana.Services.Players
 
         public PlayerDetailsServiceModel Profile(int id, string? gameFilter = null)
         {
-            var defaultPic = "https://media.istockphoto.com/id/1618846975/photo/smile-black-woman-and-hand-pointing-in-studio-for-news-deal-or-coming-soon-announcement-on.jpg?s=612x612&w=0&k=20&c=LUvvJu4sGaIry5WLXmfQV7RStbGG5hEQNo8hEFxZSGY=";
+            var defaultPic = "/uploads/PlayerProfiles/_defaultPfp.png";
 
             // Optimized single query with all includes
             var player = this.data.Players

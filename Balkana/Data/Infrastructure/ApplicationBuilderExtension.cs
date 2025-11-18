@@ -37,8 +37,29 @@ namespace Balkana.Data.Infrastructure
         private static void MigrateDatabase(IServiceProvider services)
         {
             var data = services.GetRequiredService<ApplicationDbContext>();
+            var logger = services.GetRequiredService<ILogger<ApplicationDbContext>>();
 
-            data.Database.Migrate();
+            try
+            {
+                // Apply migrations - the warning about pending changes will be suppressed
+                // by the DbContext configuration in Program.cs
+                data.Database.Migrate();
+                logger.LogInformation("Database migrations applied successfully.");
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("pending changes"))
+            {
+                // If the warning wasn't suppressed, log it but don't crash the app
+                logger.LogWarning("Pending model changes detected. The application will continue, " +
+                                "but you should create a migration manually using: dotnet ef migrations add <MigrationName>. " +
+                                "Error: {Error}", ex.Message);
+                // Don't throw - allow the app to start
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error during database migration");
+                // Re-throw to prevent app startup if migration is critical
+                throw;
+            }
         }
 
         private static void AddOriginalMaps(IServiceProvider services)

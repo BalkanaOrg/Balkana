@@ -86,7 +86,7 @@
             if (team == null) return null;
 
             var now = DateTime.UtcNow;
-            var defaultPic = "https://media.istockphoto.com/id/1618846975/photo/smile-black-woman-and-hand-pointing-in-studio-for-news-deal-or-coming-soon-announcement-on.jpg?s=612x612&w=0&k=20&c=LUvvJu4sGaIry5WLXmfQV7RStbGG5hEQNo8hEFxZSGY=";
+            var defaultPic = "/uploads/PlayerProfiles/_defaultPfp.png";
 
             // Build comprehensive team details
             var teamDetails = new TeamDetailsServiceModel

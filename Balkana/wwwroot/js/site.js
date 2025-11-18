@@ -53,32 +53,12 @@
             body.classList.remove('menu-open');
         }
         
-        // Remove any existing listeners by cloning
-        const newBtn = menuBtn.cloneNode(true);
-        menuBtn.parentNode.replaceChild(newBtn, menuBtn);
-        menuBtn = newBtn;
-        
-        // Use event delegation on document for better compatibility
-        document.addEventListener('click', function(e) {
-            if (e.target.closest && e.target.closest('#mobileMenuBtn')) {
-                toggleMenu(e);
-            }
-        }, true);
-        
-        document.addEventListener('touchstart', function(e) {
-            if (e.target.closest && e.target.closest('#mobileMenuBtn')) {
-                toggleMenu(e);
-            }
-        }, true);
-        
-        // Also add direct listeners as fallback
-        menuBtn.onclick = function(e) {
+        // Simple click handler - works on both mobile and desktop
+        menuBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             toggleMenu(e);
-        };
-        
-        menuBtn.ontouchstart = function(e) {
-            toggleMenu(e);
-        };
+        }, false);
         
         overlay.addEventListener('click', closeMenu);
         overlay.addEventListener('touchstart', closeMenu);

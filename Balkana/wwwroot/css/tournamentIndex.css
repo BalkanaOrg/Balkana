@@ -55,6 +55,7 @@
     transition: all 0.4s ease;
     border: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
+    isolation: isolate;
 }
 
     .tournament-card:hover {
@@ -73,11 +74,24 @@
         background: linear-gradient(90deg, #8b0000, #2d1b69);
     }
 
-.tournament-image {
+.tournament-image-container {
     width: 100%;
     height: 200px;
-    object-fit: cover;
+    overflow: hidden;
+    border-radius: 20px 20px 0 0;
     position: relative;
+}
+
+.tournament-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.tournament-card .tournament-content {
+    border-radius: 0 0 20px 20px;
+    overflow: hidden;
 }
 
 .tournament-image-placeholder {
@@ -165,10 +179,21 @@
     color: #ffffff;
 }
 
+.tournament-teams {
+    position: relative;
+}
+
 .teams-grid {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+    position: relative;
+}
+
+.team-logo-link {
+    display: inline-block;
+    text-decoration: none;
+    transition: all 0.3s ease;
 }
 
 .team-logo {
@@ -177,12 +202,146 @@
     border-radius: 50%;
     border: 2px solid rgba(255, 255, 255, 0.3);
     transition: all 0.3s ease;
+    display: block;
+    object-fit: cover;
 }
 
-    .team-logo:hover {
-        transform: scale(1.1);
-        border-color: #8b0000;
+.team-logo-link:hover .team-logo {
+    transform: scale(1.1);
+    border-color: #8b0000;
+}
+
+.team-more-container {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.team-more-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+    margin: 0;
+}
+
+.team-more-btn:hover {
+    transform: scale(1.1);
+    border-color: #8b0000;
+    background: rgba(139, 0, 0, 0.3) !important;
+}
+
+.remaining-teams-popup {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    min-width: 340px;
+    max-width: 340px;
+    animation: fadeInDown 0.3s ease;
+    pointer-events: auto;
+    margin-top: 0;
+    display: none;
+}
+
+/* Ensure popup doesn't affect parent height */
+.tournament-teams {
+    position: relative;
+    overflow: visible;
+}
+
+.tournament-card {
+    overflow: hidden;
+    position: relative;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
     }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.remaining-teams-content {
+    width: 100%;
+}
+
+.remaining-teams-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 8px;
+    width: 100%;
+}
+
+/* Mobile: Hide +X button and show all teams */
+.mobile-remaining-teams {
+    display: none;
+}
+
+.desktop-only {
+    display: inline-block;
+}
+
+/* Ensure popup is visible when explicitly set to block via inline style */
+.remaining-teams-popup[style*="display: block"] {
+    display: block !important;
+}
+
+@media (max-width: 768px) {
+    .desktop-only {
+        display: none !important;
+    }
+    
+    .mobile-remaining-teams {
+        display: contents;
+    }
+    
+    .remaining-teams-popup {
+        display: none !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .remaining-teams-popup {
+        min-width: 280px;
+        max-width: 280px;
+    }
+    
+    .remaining-teams-grid {
+        grid-template-columns: repeat(8, 1fr);
+    }
+}
+
+@media (max-width: 400px) {
+    .remaining-teams-popup {
+        min-width: 240px;
+        max-width: 240px;
+    }
+    
+    .remaining-teams-grid {
+        grid-template-columns: repeat(8, 1fr);
+    }
+}
+
+.remaining-teams-popup .team-logo-link {
+    display: inline-block;
+}
 
 .tournament-action {
     margin-top: auto;

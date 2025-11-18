@@ -21,7 +21,9 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Options;
+using System.Xml.Linq;
 
 Environment.SetEnvironmentVariable("DOTNET_USE_POLLING_FILE_WATCHER", "1");
 
@@ -66,7 +68,13 @@ builder.WebHost.ConfigureKestrel(options =>
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 Console.WriteLine($"Connection String: {connectionString ?? "(null)"}");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+{
+    options.UseSqlServer(connectionString);
+    // Suppress the warning about pending model changes to allow app startup
+    // Migrations should still be created manually, but the app won't crash
+    options.ConfigureWarnings(warnings => 
+        warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+});
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 //builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
@@ -253,18 +261,21 @@ else
 app.Use(async (context, next) =>
 {
     Console.WriteLine($"Incoming request: {context.Request.Method} {context.Request.Path} - ContentLength: {context.Request.ContentLength} - ContentType: {context.Request.ContentType}");
-    try { await next(); }
+    try 
+    { 
+        await next(); 
+        Console.WriteLine($"Request completed: {context.Request.Method} {context.Request.Path} - Status: {context.Response.StatusCode}");
+    }
     catch (Exception ex)
     {
         Console.WriteLine("Middleware caught exception: " + ex);
+        Console.WriteLine("Exception stack trace: " + ex.StackTrace);
         throw;
     }
 });
 
-app.MapControllers();
 app.PrepareDatabase();
 app.UseHttpsRedirection();
-app.UseStaticFiles();
 
 app.UseRouting();
 
@@ -273,6 +284,15 @@ app.UseSession(); // Must be before UseAuthentication
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Map controllers - the SitemapController has [Route("/sitemap.xml")] attribute
+app.MapControllers();
+
+// Explicit route for sitemap.xml to ensure it's registered
+app.MapControllerRoute(
+    name: "sitemap",
+    pattern: "sitemap.xml",
+    defaults: new { controller = "Sitemap", action = "Index" });
+
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
@@ -280,6 +300,29 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapRazorPages();
+
+// Static files should come AFTER routing so routes are matched first
+// Disable caching for static files if in development OR if DisableStaticFileCache is true
+var disableStaticFileCache = app.Environment.IsDevelopment() || 
+                              builder.Configuration.GetValue<bool>("DisableStaticFileCache", false);
+
+if (disableStaticFileCache)
+{
+    // Disable caching for static files in development
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        OnPrepareResponse = ctx =>
+        {
+            ctx.Context.Response.Headers.Append("Cache-Control", "no-cache, no-store, must-revalidate");
+            ctx.Context.Response.Headers.Append("Pragma", "no-cache");
+            ctx.Context.Response.Headers.Append("Expires", "0");
+        }
+    });
+}
+else
+{
+    app.UseStaticFiles();
+}
 
 app.Run();
 

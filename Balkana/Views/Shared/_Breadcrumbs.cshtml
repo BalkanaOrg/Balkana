@@ -1,0 +1,82 @@
+@*
+    Breadcrumb partial view for SEO
+    Usage: @await Html.PartialAsync("_Breadcrumbs", new { Items = new[] { 
+        new { Name = "Home", Url = "/" },
+        new { Name = "Tournaments", Url = "/Tournaments" },
+        new { Name = "Tournament Name", Url = "/Tournaments/Details/1" }
+    }})
+*@
+
+@{
+    var items = ViewData["Breadcrumbs"] as dynamic;
+    if (items == null) return;
+    
+    var baseUrl = Context.Request.Scheme + "://" + Context.Request.Host;
+    var breadcrumbItems = new List<dynamic>();
+    
+    // Always start with Home
+    breadcrumbItems.Add(new { Name = "Home", Url = baseUrl });
+    
+    // Add custom items
+    if (items is IEnumerable<dynamic> itemList)
+    {
+        foreach (var item in itemList)
+        {
+            var url = item.Url?.ToString() ?? "";
+            if (!url.StartsWith("http"))
+            {
+                url = baseUrl + (url.StartsWith("/") ? url : "/" + url);
+            }
+            breadcrumbItems.Add(new { Name = item.Name?.ToString() ?? "", Url = url });
+        }
+    }
+}
+
+@if (breadcrumbItems.Count > 1)
+{
+    <nav aria-label="breadcrumb" class="breadcrumb-nav">
+        <ol class="breadcrumb" itemscope itemtype="https://schema.org/BreadcrumbList">
+            @for (int i = 0; i < breadcrumbItems.Count; i++)
+            {
+                var item = breadcrumbItems[i];
+                var isLast = i == breadcrumbItems.Count - 1;
+                <li class="breadcrumb-item @(isLast ? "active" : "")" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                    @if (isLast)
+                    {
+                        <span itemprop="name">@item.Name</span>
+                    }
+                    else
+                    {
+                        <a href="@item.Url" itemprop="item">
+                            <span itemprop="name">@item.Name</span>
+                        </a>
+                    }
+                    <meta itemprop="position" content="@(i + 1)" />
+                </li>
+            }
+        </ol>
+    </nav>
+
+    <!-- Breadcrumb Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+        "@@context": "https://schema.org",
+        "@@type": "BreadcrumbList",
+        "itemListElement": [
+            @for (int i = 0; i < breadcrumbItems.Count; i++)
+            {
+                var item = breadcrumbItems[i];
+                var url = item.Url?.ToString() ?? "";
+                <text>{
+                    "@@type": "ListItem",
+                    "position": @(i + 1),
+                    "name": "@Html.Raw(item.Name?.ToString().Replace("\"", "\\\""))",
+                    "item": "@url"
+                }</text>
+                if (i < breadcrumbItems.Count - 1) { <text>,</text> }
+            }
+        ]
+    }
+    </script>
+}
+

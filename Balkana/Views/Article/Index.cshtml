@@ -1,96 +1,33 @@
 ﻿@model IEnumerable<Balkana.Data.Models.Article>
 
 @{
-    ViewData["Title"] = "Articles";
+    ViewData["Title"] = "News";
 }
 
-<h2 class="mb-4">Latest Articles</h2>
+<div class="articles-page">
+    <div class="articles-header">
+        <h1 class="articles-title">Latest News</h1>
+        <p class="articles-subtitle">Stay updated with the latest esports news, tournament updates, and community highlights from Balkana.</p>
+    </div>
 
-
-
-<div class="articles-list">
-    @foreach (var article in Model)
-    {
-        <a asp-action="Details" asp-route-id="@article.Id" class="article-row">
-            <div class="article-thumb">
-                <img src="@article.ThumbnailUrl" alt="@article.Title" />
-            </div>
-
-            <div class="article-content">
-                <h3 class="article-title">@article.Title</h3>
-
-                <p class="article-snippet">
-                    @article.Content.StripHtml(600)
-                </p>
-
-                <div class="article-footer">
-                    <span class="article-author">By @article.Author.FirstName @article.Author.LastName</span>
-                    <span class="article-date">@article.PublishedAt?.ToString("dd MMM yyyy")</span>
+    <div class="news-grid">
+        @foreach (var article in Model)
+        {
+            <a asp-action="Details" asp-route-id="@article.Id" class="news-card">
+                <div class="news-card-thumb">
+                    <img src="@article.ThumbnailUrl" alt="@article.Title" loading="lazy" />
                 </div>
-            </div>
-        </a>
-    }
-</div>
-
-<style>
-    .articles-list {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-
-    .article-row {
-        display: flex;
-        gap: 1.5rem;
-        background: #1e1e2f;
-        border-radius: 12px;
-        overflow: hidden;
-        text-decoration: none;
-        color: inherit;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        padding: 1rem;
-    }
-
-        .article-row:hover {
-            transform: scale(1.02);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+                <div class="news-card-content">
+                    <h3 class="news-card-title">@article.Title</h3>
+                    <p class="news-card-snippet">
+                        @article.Content.StripHtml(150)
+                    </p>
+                    <div class="news-card-footer">
+                        <span class="news-card-author">@article.Author.FirstName @article.Author.LastName</span>
+                        <span class="news-card-date">@article.PublishedAt?.ToString("dd MMM yyyy")</span>
+                    </div>
+                </div>
+            </a>
         }
-
-    /* Thumbnail */
-    .article-thumb img {
-        width: 220px;
-        height: 140px;
-        object-fit: cover;
-        border-radius: 8px;
-        flex-shrink: 0;
-    }
-
-    /* Content */
-    .article-content {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        flex: 1;
-    }
-
-    .article-title {
-        margin: 0 0 0.5rem 0;
-        font-size: 1.4rem;
-    }
-
-    .article-snippet {
-        flex-grow: 1;
-        font-size: 0.95rem;
-        opacity: 0.85;
-        margin-bottom: 0.75rem;
-    }
-
-    /* Footer */
-    .article-footer {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.85rem;
-        opacity: 0.7;
-    }
-
-</style>
+    </div>
+</div>

@@ -4,28 +4,61 @@
     ViewData["Title"] = "Write Article";
 }
 
-<h2 class="mb-4">Write a New Article</h2>
+<div class="article-form-page">
+    <div class="article-form-container">
+        <div class="article-form-header">
+            <h1 class="article-form-title">Write a New Article</h1>
+            <p class="article-form-subtitle">Create engaging content for the Balkana community</p>
+        </div>
 
-<form asp-action="Create" method="post" enctype="multipart/form-data">
-    <div class="mb-3">
-        <label asp-for="Title" class="form-label"></label>
-        <input asp-for="Title" class="form-control" />
-        <span asp-validation-for="Title" class="text-danger"></span>
+        <form asp-action="Create" method="post" enctype="multipart/form-data" class="article-form">
+            <div class="form-group-modern">
+                <label asp-for="Title" class="form-label-modern">
+                    <i class="fi fi-rr-heading"></i>
+                    Article Title
+                </label>
+                <input asp-for="Title" class="form-input-modern" placeholder="Enter a compelling title..." />
+                <span asp-validation-for="Title" class="form-error"></span>
+            </div>
+
+            <div class="form-group-modern">
+                <label asp-for="File" class="form-label-modern">
+                    <i class="fi fi-rr-picture"></i>
+                    Thumbnail Image
+                </label>
+                <div class="file-upload-wrapper">
+                    <input asp-for="File" type="file" class="form-file-modern" accept="image/*" />
+                    <div class="file-upload-label">
+                        <i class="fi fi-rr-upload"></i>
+                        <span>Choose an image or drag it here</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group-modern">
+                <label asp-for="Content" class="form-label-modern">
+                    <i class="fi fi-rr-document"></i>
+                    Article Content
+                </label>
+                <div class="editor-wrapper">
+                    <textarea asp-for="Content" id="editor" class="form-textarea-modern"></textarea>
+                </div>
+                <span asp-validation-for="Content" class="form-error"></span>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-modern btn-modern-primary">
+                    <i class="fi fi-rr-disk"></i>
+                    Save Draft
+                </button>
+                <a asp-action="Index" class="btn-modern btn-modern-secondary">
+                    <i class="fi fi-rr-cross"></i>
+                    Cancel
+                </a>
+            </div>
+        </form>
     </div>
-
-    <div class="mb-3">
-        <label asp-for="File"></label>
-        <input asp-for="File" type="file" class="form-control" />
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Content" class="form-label"></label>
-        <textarea asp-for="Content" id="editor" class="form-control"></textarea>
-        <span asp-validation-for="Content" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Save Draft</button>
-</form>
+</div>
 
 @section Scripts {
     <script src="https://cdn.ckeditor.com/ckeditor5/41.3.1/super-build/ckeditor.js"></script>
