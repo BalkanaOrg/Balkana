@@ -1,0 +1,131 @@
+@model Balkana.Models.Accounts.GoogleRegisterViewModel
+
+@{
+    ViewData["Title"] = "Complete Registration";
+    Layout = "_Layout";
+}
+<link rel="stylesheet" href="~/css/authentication.css" />
+
+<div class="auth-container">
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+    <div class="particle particle-1"></div>
+    <div class="particle particle-2"></div>
+    <div class="particle particle-3"></div>
+
+    <div class="auth-card auth-card-register">
+        <div class="auth-header">
+            <div class="logo-container">
+                <div class="logo-box">
+                    <div class="logo-inner">
+                        <span class="logo-letter">B</span>
+                    </div>
+                </div>
+            </div>
+            <h1 class="auth-title">BALKANA</h1>
+            <p class="auth-subtitle">Complete Your Registration</p>
+        </div>
+
+        <div class="form-container">
+            <h2 class="form-title">Almost There!</h2>
+            <p class="form-subtitle">Please complete your profile information</p>
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+            }
+
+            <form asp-action="GoogleRegister" method="post" enctype="multipart/form-data">
+                @* Hidden fields to preserve Google info *@
+                <input type="hidden" asp-for="GoogleId" />
+                <input type="hidden" asp-for="GoogleEmail" />
+                <input type="hidden" asp-for="GoogleFirstName" />
+                <input type="hidden" asp-for="GoogleLastName" />
+                <input type="hidden" asp-for="GoogleProfilePicture" />
+                
+                <div class="form-group">
+                    <label asp-for="Username">Username</label>
+                    <input asp-for="Username" placeholder="Choose a username" autocomplete="username" />
+                    <span asp-validation-for="Username" class="validation-error"></span>
+                    <small class="form-text text-muted">You can change your username (default: @Model.GoogleEmail?.Split('@')[0])</small>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label asp-for="FirstName">First Name</label>
+                        <input asp-for="FirstName" placeholder="First name" autocomplete="given-name" />
+                        <span asp-validation-for="FirstName" class="validation-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="LastName">Last Name</label>
+                        <input asp-for="LastName" placeholder="Last name" autocomplete="family-name" />
+                        <span asp-validation-for="LastName" class="validation-error"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Email">Email Address</label>
+                    <input asp-for="Email" type="email" placeholder="your@email.com" autocomplete="email" readonly />
+                    <span asp-validation-for="Email" class="validation-error"></span>
+                    <small class="form-text text-muted">Email from your Google account</small>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="NationalityId">Country</label>
+                    <select asp-for="NationalityId">
+                        <option value="">Select your country</option>
+                        @if (Model.Nationalities != null)
+                        {
+                            @foreach (var nationality in Model.Nationalities)
+                            {
+                                <option value="@nationality.Id">@nationality.Name</option>
+                            }
+                        }
+                        else
+                        {
+                            <option value="1">Bulgaria</option>
+                            <option value="2">Romania</option>
+                            <option value="3">Serbia</option>
+                            <option value="4">Greece</option>
+                            <option value="5">Turkey</option>
+                            <option value="6">North Macedonia</option>
+                            <option value="7">Albania</option>
+                            <option value="8">Croatia</option>
+                            <option value="9">Bosnia and Herzegovina</option>
+                            <option value="10">Montenegro</option>
+                            <option value="11">Slovenia</option>
+                            <option value="12">Kosovo</option>
+                        }
+                    </select>
+                    <span asp-validation-for="NationalityId" class="validation-error"></span>
+                </div>
+
+                @* For Google registration, profile picture is automatically set from Google - no upload needed *@
+                @if (!string.IsNullOrEmpty(Model.GoogleProfilePicture))
+                {
+                    <div class="form-group">
+                        <label>Profile Picture</label>
+                        <div style="margin-top: 10px;">
+                            <img src="@Model.GoogleProfilePicture" alt="Google Profile Picture" style="max-width: 100px; max-height: 100px; border-radius: 50%; border: 2px solid #4a90e2;" />
+                        </div>
+                        <small class="form-text text-muted">Your Google profile picture will be used automatically.</small>
+                    </div>
+                }
+
+                <button type="submit" class="btn-submit">Complete Registration</button>
+
+                <div class="auth-footer">
+                    <p>Already have an account? <a asp-action="Login">Sign in</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+

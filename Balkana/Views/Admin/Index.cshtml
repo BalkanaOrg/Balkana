@@ -1,7 +1,370 @@
 ﻿@{
     ViewData["Title"] = "Admin Panel";
+    // Disable caching for this page
+    Context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+    Context.Response.Headers["Pragma"] = "no-cache";
+    Context.Response.Headers["Expires"] = "0";
 }
 
-<a class="dropdown-item" asp-controller="Admin" asp-action="Players" asp-route-id="Index">All Players</a>
-<a class="dropdown-item" asp-controller="Admin" asp-action="AddPlayer">Add New Player</a>
-<a class="dropdown-item" asp-controller="Admin" asp-action="AddGameProfile">Add Game Profile</a>
+<div class="admin-dashboard">
+    <div class="admin-header">
+        <h1 class="admin-title">Administration Dashboard</h1>
+        <p class="admin-subtitle">Manage all aspects of the Balkana platform</p>
+    </div>
+
+    <!-- User Management Section -->
+    <div class="admin-section">
+        <h2 class="section-title">
+            <i class="fi fi-rr-users-alt"></i>
+            User Management
+        </h2>
+        <div class="admin-cards-grid">
+            <a asp-controller="Admin" asp-action="Users" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-users"></i>
+                </div>
+                <h3 class="admin-card-title">All Users</h3>
+                <p class="admin-card-description">View and manage all registered users, roles, and player links</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- Player Management Section -->
+    <div class="admin-section">
+        <h2 class="section-title">
+            <i class="fi fi-rr-user"></i>
+            Player Management
+        </h2>
+        <div class="admin-cards-grid">
+            <a asp-controller="Admin" asp-action="Players" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-users-alt"></i>
+                </div>
+                <h3 class="admin-card-title">All Players</h3>
+                <p class="admin-card-description">View and manage all players and their game profiles</p>
+            </a>
+            <a asp-controller="Admin" asp-action="AddPlayer" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-user-add"></i>
+                </div>
+                <h3 class="admin-card-title">Add New Player</h3>
+                <p class="admin-card-description">Create a new player profile in the system</p>
+            </a>
+            <a asp-controller="Admin" asp-action="AddGameProfile" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-gamepad"></i>
+                </div>
+                <h3 class="admin-card-title">Add Game Profile</h3>
+                <p class="admin-card-description">Link FACEIT or Riot game profiles to players</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- FACEIT Management Section -->
+    <div class="admin-section">
+        <h2 class="section-title">
+            <i class="fi fi-brands-steam"></i>
+            FACEIT Management
+        </h2>
+        <div class="admin-cards-grid">
+            <a asp-controller="Admin" asp-action="FaceitClubs" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-users-alt"></i>
+                </div>
+                <h3 class="admin-card-title">FACEIT Clubs</h3>
+                <p class="admin-card-description">View and manage all FACEIT clubs</p>
+            </a>
+            <a asp-controller="Admin" asp-action="AddFaceitClub" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-user-add"></i>
+                </div>
+                <h3 class="admin-card-title">Add FACEIT Club</h3>
+                <p class="admin-card-description">Register a new FACEIT club</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- Discord Management Section -->
+    <div class="admin-section">
+        <h2 class="section-title">
+            <i class="fi fi-brands-discord"></i>
+            Discord Bot Management
+        </h2>
+        <div class="admin-cards-grid">
+            <a asp-controller="Admin" asp-action="Discord" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-apps"></i>
+                </div>
+                <h3 class="admin-card-title">Discord Dashboard</h3>
+                <p class="admin-card-description">Overview of Discord bot management</p>
+            </a>
+            <a asp-controller="Admin" asp-action="DiscordCommands" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-terminal"></i>
+                </div>
+                <h3 class="admin-card-title">Discord Commands</h3>
+                <p class="admin-card-description">View all available Discord bot commands</p>
+            </a>
+            <a asp-controller="Admin" asp-action="DiscordTest" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-flask"></i>
+                </div>
+                <h3 class="admin-card-title">Test Commands</h3>
+                <p class="admin-card-description">Test Discord bot commands before deployment</p>
+            </a>
+            <a asp-controller="Admin" asp-action="DiscordDiagnostic" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-stethoscope"></i>
+                </div>
+                <h3 class="admin-card-title">Discord Diagnostic</h3>
+                <p class="admin-card-description">Diagnostic information for Discord bot</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- Riot Tournament Management Section -->
+    <div class="admin-section">
+        <h2 class="section-title">
+            <i class="fi fi-rr-trophy"></i>
+            Riot Tournament Management
+        </h2>
+        <div class="admin-cards-grid">
+            <a asp-controller="Admin" asp-action="RiotTournaments" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-list"></i>
+                </div>
+                <h3 class="admin-card-title">Riot Tournaments</h3>
+                <p class="admin-card-description">View and manage all Riot tournaments and codes</p>
+            </a>
+            <a asp-controller="Admin" asp-action="CreateRiotTournament" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-plus"></i>
+                </div>
+                <h3 class="admin-card-title">Create Riot Tournament</h3>
+                <p class="admin-card-description">Create a new Riot tournament and generate codes</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- Store Management Section -->
+    <div class="admin-section">
+        <h2 class="section-title">
+            <i class="fi fi-rr-shopping-cart"></i>
+            Store Management
+        </h2>
+        <div class="admin-cards-grid">
+            <a asp-controller="Admin" asp-action="StoreProducts" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-box"></i>
+                </div>
+                <h3 class="admin-card-title">Products</h3>
+                <p class="admin-card-description">View and manage all store products</p>
+            </a>
+            <a asp-controller="Admin" asp-action="CreateProduct" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-plus"></i>
+                </div>
+                <h3 class="admin-card-title">Create Product</h3>
+                <p class="admin-card-description">Add a new product to the store</p>
+            </a>
+            <a asp-controller="Admin" asp-action="StoreOrders" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-shopping-bag"></i>
+                </div>
+                <h3 class="admin-card-title">Orders</h3>
+                <p class="admin-card-description">View and manage customer orders</p>
+            </a>
+            <a asp-controller="Admin" asp-action="Inventory" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-warehouse"></i>
+                </div>
+                <h3 class="admin-card-title">Inventory</h3>
+                <p class="admin-card-description">Monitor inventory levels and low stock items</p>
+            </a>
+            <a asp-controller="Admin" asp-action="StoreCollections" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-folder"></i>
+                </div>
+                <h3 class="admin-card-title">Collections</h3>
+                <p class="admin-card-description">Manage product collections and categories</p>
+            </a>
+            <a asp-controller="Admin" asp-action="CreateCollection" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-folder-plus"></i>
+                </div>
+                <h3 class="admin-card-title">Create Collection</h3>
+                <p class="admin-card-description">Create a new product collection</p>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .admin-dashboard {
+        padding: 60px 40px;
+        max-width: 1400px;
+        margin: 0 auto;
+        min-height: calc(100vh - 200px);
+    }
+
+    .admin-header {
+        text-align: center;
+        margin-bottom: 60px;
+    }
+
+    .admin-title {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 900;
+        margin-bottom: 15px;
+        background: linear-gradient(45deg, #fff, #2d1b69, #8b0000);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 50px rgba(45, 27, 105, 0.5);
+    }
+
+    .admin-subtitle {
+        font-size: 1.2rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin: 0;
+    }
+
+    .admin-section {
+        margin-bottom: 60px;
+    }
+
+    .admin-section .section-title {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 30px;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .admin-section .section-title i {
+        font-size: 1.8rem;
+        color: #8b0000;
+    }
+
+    .admin-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 25px;
+    }
+
+    .admin-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 35px 25px;
+        text-align: center;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .admin-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(45, 27, 105, 0.1), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .admin-card:hover::before {
+        left: 100%;
+    }
+
+    .admin-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        border-color: rgba(45, 27, 105, 0.5);
+        box-shadow: 0 20px 40px rgba(45, 27, 105, 0.3);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+    }
+
+    .admin-card-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+        background: linear-gradient(45deg, #2d1b69, #8b0000);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+        position: relative;
+        z-index: 2;
+        box-shadow: 0 8px 25px rgba(45, 27, 105, 0.4);
+        transition: all 0.4s ease;
+    }
+
+    .admin-card:hover .admin-card-icon {
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 12px 35px rgba(45, 27, 105, 0.6);
+    }
+
+    .admin-card-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: white;
+        position: relative;
+        z-index: 2;
+    }
+
+    .admin-card-description {
+        font-size: 0.95rem;
+        color: rgba(255, 255, 255, 0.7);
+        line-height: 1.5;
+        margin: 0;
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .admin-dashboard {
+            padding: 40px 20px;
+        }
+
+        .admin-cards-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .admin-section .section-title {
+            font-size: 1.5rem;
+        }
+
+        .admin-card {
+            padding: 30px 20px;
+        }
+
+        .admin-card-icon {
+            width: 70px;
+            height: 70px;
+            font-size: 1.8rem;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .admin-title {
+            font-size: 2rem;
+        }
+
+        .admin-subtitle {
+            font-size: 1rem;
+        }
+    }
+</style>

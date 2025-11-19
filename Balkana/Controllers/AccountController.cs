@@ -7,6 +7,8 @@ using Balkana.Data;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using System.Net.Http;
 
 namespace Balkana.Controllers
 {
@@ -442,6 +444,373 @@ namespace Balkana.Controllers
             model.TotalUsers = totalUsers;
             model.Users = userViewModels;
 
+            return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult GoogleLogin(string returnUrl = null)
+        {
+            // Set the redirect URI to our controller action
+            // The OAuth middleware will process the callback at /signin-google
+            // Then redirect to this URL, which is our controller action
+            var callbackUrl = Url.Action(nameof(GoogleCallback), "Account", new { returnUrl }, Request.Scheme, Request.Host.Value);
+            
+            // Force HTTPS if needed
+            if (!callbackUrl.StartsWith("https://"))
+            {
+                var uri = new UriBuilder(callbackUrl) { Scheme = "https", Port = 4444 };
+                callbackUrl = uri.ToString();
+            }
+            
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties("Google", callbackUrl);
+            
+            // Store returnUrl in the properties so we can retrieve it in the callback
+            if (!string.IsNullOrEmpty(returnUrl))
+            {
+                properties.Items["returnUrl"] = returnUrl;
+            }
+            
+            return Challenge(properties, "Google");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GoogleCallback(string returnUrl = null, string remoteError = null)
+        {
+            try
+            {
+                // Log for debugging
+                Console.WriteLine($"GoogleCallback called - returnUrl: {returnUrl}, remoteError: {remoteError}");
+                Console.WriteLine($"Request QueryString: {Request.QueryString}");
+                
+                if (remoteError != null)
+                {
+                    TempData["ErrorMessage"] = $"Error from external provider: {remoteError}";
+                    return RedirectToAction(nameof(Login));
+                }
+
+                // Get external login info - this consumes the OAuth cookie
+                var info = await _signInManager.GetExternalLoginInfoAsync();
+                Console.WriteLine($"ExternalLoginInfo is null: {info == null}");
+                
+                if (info == null)
+                {
+                    Console.WriteLine("ERROR: ExternalLoginInfo is null - OAuth cookie may have been consumed already");
+                    Console.WriteLine("This usually means the callback was called twice or the OAuth flow failed");
+                    
+                    TempData["ErrorMessage"] = "Error loading external login information. Please try signing in again.";
+                    return RedirectToAction(nameof(Login));
+                }
+                
+                Console.WriteLine($"ExternalLoginInfo retrieved - Provider: {info.LoginProvider}, Key: {info.ProviderKey}");
+                
+                // Note: ExternalLoginInfo doesn't have a Properties property
+                // The returnUrl should come from the query string or route parameter
+                // If it's not provided, we'll use null and redirect to home
+
+                // Sign in the user with this external login provider if the user already has a login
+                var signInResult = await _signInManager.ExternalLoginSignInAsync(
+                    info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+
+                if (signInResult.Succeeded)
+                {
+                    return RedirectToLocal(returnUrl);
+                }
+
+                // If the user does not have an account, then we need to create one
+                if (signInResult.IsLockedOut)
+                {
+                    TempData["ErrorMessage"] = "Your account has been locked out.";
+                    return RedirectToAction(nameof(Login));
+                }
+
+                // Get the email claim value
+                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+                var firstName = info.Principal.FindFirstValue(ClaimTypes.GivenName) ?? 
+                               info.Principal.FindFirstValue(ClaimTypes.Name)?.Split(' ').FirstOrDefault() ?? "";
+                var lastName = info.Principal.FindFirstValue(ClaimTypes.Surname) ?? 
+                              info.Principal.FindFirstValue(ClaimTypes.Name)?.Split(' ').Skip(1).FirstOrDefault() ?? "";
+                var picture = info.Principal.FindFirstValue("urn:google:picture") ?? 
+                             info.Principal.FindFirstValue("picture") ?? "";
+
+                // Check if user already exists by email
+                var existingUser = await _userManager.FindByEmailAsync(email);
+                if (existingUser != null)
+                {
+                    // User exists but doesn't have Google login linked, add it
+                    var addLoginResult = await _userManager.AddLoginAsync(existingUser, info);
+                    if (addLoginResult.Succeeded)
+                    {
+                        await _signInManager.SignInAsync(existingUser, isPersistent: false);
+                        return RedirectToLocal(returnUrl);
+                    }
+                    else
+                    {
+                        TempData["ErrorMessage"] = "Unable to link Google account. Please try again.";
+                        return RedirectToAction(nameof(Login));
+                    }
+                }
+
+                // User doesn't exist, redirect to complete registration
+                var model = new GoogleRegisterViewModel
+                {
+                    Email = email,
+                    FirstName = firstName,
+                    LastName = lastName,
+                    GoogleId = info.ProviderKey,
+                    GoogleEmail = email,
+                    GoogleFirstName = firstName,
+                    GoogleLastName = lastName,
+                    GoogleProfilePicture = picture,
+                    Username = email?.Split('@')[0] ?? "user" // Default username from email
+                };
+
+                model.Nationalities = await _context.Nationalities.ToListAsync();
+                return View("GoogleRegister", model);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR in GoogleCallback: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                TempData["ErrorMessage"] = "An error occurred during Google authentication. Please try again.";
+                return RedirectToAction(nameof(Login));
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GoogleRegister()
+        {
+            // Try to get external login info from the authentication cookie
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
+            {
+                TempData["ErrorMessage"] = "External login information expired. Please try again.";
+                return RedirectToAction(nameof(Login));
+            }
+
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            var firstName = info.Principal.FindFirstValue(ClaimTypes.GivenName) ?? 
+                           info.Principal.FindFirstValue(ClaimTypes.Name)?.Split(' ').FirstOrDefault() ?? "";
+            var lastName = info.Principal.FindFirstValue(ClaimTypes.Surname) ?? 
+                          info.Principal.FindFirstValue(ClaimTypes.Name)?.Split(' ').Skip(1).FirstOrDefault() ?? "";
+            var picture = info.Principal.FindFirstValue("urn:google:picture") ?? 
+                         info.Principal.FindFirstValue("picture") ?? "";
+
+            var model = new GoogleRegisterViewModel
+            {
+                Email = email,
+                FirstName = firstName,
+                LastName = lastName,
+                GoogleId = info.ProviderKey,
+                GoogleEmail = email,
+                GoogleFirstName = firstName,
+                GoogleLastName = lastName,
+                GoogleProfilePicture = picture,
+                Username = email?.Split('@')[0] ?? "user",
+                Nationalities = await _context.Nationalities.ToListAsync()
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GoogleRegister(GoogleRegisterViewModel model)
+        {
+            Console.WriteLine($"GoogleRegister POST - Username: {model.Username}, Email: {model.Email}, NationalityId: {model.NationalityId}");
+            Console.WriteLine($"GoogleProfilePicture: '{model.GoogleProfilePicture}'");
+            
+            // Remove validation errors for fields that shouldn't be validated
+            ModelState.Remove(nameof(model.Nationalities));
+            ModelState.Remove(nameof(model.GoogleProfilePicture));
+            ModelState.Remove(nameof(model.GoogleId));
+            ModelState.Remove(nameof(model.GoogleEmail));
+            ModelState.Remove(nameof(model.GoogleFirstName));
+            ModelState.Remove(nameof(model.GoogleLastName));
+            ModelState.Remove(nameof(model.ProfilePicture)); // File upload not used for Google registration
+            
+            if (!ModelState.IsValid)
+            {
+                Console.WriteLine("ModelState is invalid. Errors:");
+                foreach (var error in ModelState)
+                {
+                    if (error.Value.Errors.Any())
+                    {
+                        Console.WriteLine($"  {error.Key}: {string.Join(", ", error.Value.Errors.Select(e => e.ErrorMessage))}");
+                    }
+                }
+                
+                // Ensure GoogleProfilePicture is preserved
+                if (string.IsNullOrEmpty(model.GoogleProfilePicture))
+                {
+                    // Try to get it from external login info if available
+                    var externalInfo = await _signInManager.GetExternalLoginInfoAsync();
+                    if (externalInfo != null)
+                    {
+                        var picture = externalInfo.Principal.FindFirstValue("urn:google:picture") ?? 
+                                     externalInfo.Principal.FindFirstValue("picture") ?? "";
+                        model.GoogleProfilePicture = picture;
+                    }
+                }
+                
+                model.Nationalities = await _context.Nationalities.ToListAsync();
+                return View(model);
+            }
+
+            // Get external login info
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
+            {
+                TempData["ErrorMessage"] = "External login information expired. Please try again.";
+                return RedirectToAction(nameof(Login));
+            }
+
+            // Check if username is already taken
+            var existingUser = await _userManager.FindByNameAsync(model.Username);
+            if (existingUser != null)
+            {
+                ModelState.AddModelError(nameof(model.Username), "Username is already taken.");
+                model.Nationalities = await _context.Nationalities.ToListAsync();
+                return View(model);
+            }
+
+            // Check if email is already taken
+            existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser != null)
+            {
+                ModelState.AddModelError(nameof(model.Email), "Email is already registered.");
+                model.Nationalities = await _context.Nationalities.ToListAsync();
+                return View(model);
+            }
+
+            // Check if nationality exists
+            if (!await _context.Nationalities.AnyAsync(n => n.Id == model.NationalityId))
+            {
+                ModelState.AddModelError(nameof(model.NationalityId), "Invalid nationality selected.");
+                model.Nationalities = await _context.Nationalities.ToListAsync();
+                return View(model);
+            }
+
+            // Download and save Google profile picture, or use default
+            string profilePictureUrl;
+            if (!string.IsNullOrEmpty(model.GoogleProfilePicture))
+            {
+                try
+                {
+                    using (var httpClient = new HttpClient())
+                    {
+                        httpClient.Timeout = TimeSpan.FromSeconds(10);
+                        var imageBytes = await httpClient.GetByteArrayAsync(model.GoogleProfilePicture);
+                        
+                        // Determine file extension from content type or URL
+                        string extension = ".jpg"; // default
+                        var uri = new Uri(model.GoogleProfilePicture);
+                        var path = uri.AbsolutePath.ToLower();
+                        if (path.EndsWith(".png"))
+                            extension = ".png";
+                        else if (path.EndsWith(".gif"))
+                            extension = ".gif";
+                        else if (path.EndsWith(".webp"))
+                            extension = ".webp";
+                        
+                        var fileName = $"{Guid.NewGuid()}{extension}";
+                        var uploadsPath = Path.Combine(_env.WebRootPath, "uploads", "Accounts");
+                        
+                        // Ensure directory exists
+                        if (!Directory.Exists(uploadsPath))
+                        {
+                            Directory.CreateDirectory(uploadsPath);
+                        }
+                        
+                        var filePath = Path.Combine(uploadsPath, fileName);
+                        await System.IO.File.WriteAllBytesAsync(filePath, imageBytes);
+                        
+                        profilePictureUrl = $"/uploads/Accounts/{fileName}";
+                        Console.WriteLine($"Downloaded and saved Google profile picture to: {profilePictureUrl}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error downloading Google profile picture: {ex.Message}");
+                    Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                    // Use default if download fails
+                    profilePictureUrl = "/uploads/Accounts/_default.png";
+                    Console.WriteLine($"Using default profile picture: {profilePictureUrl}");
+                }
+            }
+            else
+            {
+                // No Google profile picture, use default
+                profilePictureUrl = "/uploads/Accounts/_default.png";
+                Console.WriteLine($"No Google profile picture, using default: {profilePictureUrl}");
+            }
+            
+            Console.WriteLine($"Creating user with profile picture: '{profilePictureUrl}'");
+            
+            var user = new ApplicationUser
+            {
+                UserName = model.Username,
+                Email = model.Email,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                NationalityId = model.NationalityId,
+                ProfilePictureUrl = profilePictureUrl
+            };
+
+            // Create user without password (Google OAuth users don't need passwords)
+            // We'll use a random secure password that the user will never know
+            var randomPassword = Guid.NewGuid().ToString() + "!@#$%^&*()" + Guid.NewGuid().ToString();
+            var result = await _userManager.CreateAsync(user, randomPassword);
+
+            Console.WriteLine($"User creation result - Succeeded: {result.Succeeded}");
+            if (!result.Succeeded)
+            {
+                Console.WriteLine("User creation errors:");
+                foreach (var error in result.Errors)
+                {
+                    Console.WriteLine($"  {error.Code}: {error.Description}");
+                }
+            }
+
+            if (result.Succeeded)
+            {
+                Console.WriteLine($"User created successfully - ID: {user.Id}, Username: {user.UserName}");
+                
+                // Add default role
+                var roleResult = await _userManager.AddToRoleAsync(user, "Member");
+                Console.WriteLine($"Add to role 'Member' - Succeeded: {roleResult.Succeeded}");
+
+                // Add external login
+                var addLoginResult = await _userManager.AddLoginAsync(user, info);
+                Console.WriteLine($"Add external login - Succeeded: {addLoginResult.Succeeded}");
+                
+                if (addLoginResult.Succeeded)
+                {
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    Console.WriteLine("User signed in successfully, redirecting to Home");
+                    TempData["SuccessMessage"] = "Account created successfully with Google!";
+                    return RedirectToAction("Index", "Home");
+                }
+                else
+                {
+                    // If adding login fails, delete the user and show error
+                    Console.WriteLine("Failed to add external login, deleting user");
+                    await _userManager.DeleteAsync(user);
+                    foreach (var error in addLoginResult.Errors)
+                    {
+                        Console.WriteLine($"  AddLogin error: {error.Code}: {error.Description}");
+                        ModelState.AddModelError("", error.Description);
+                    }
+                    model.Nationalities = await _context.Nationalities.ToListAsync();
+                    return View(model);
+                }
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+
+            model.Nationalities = await _context.Nationalities.ToListAsync();
             return View(model);
         }
     }

@@ -88,7 +88,7 @@
         "@@context": "https://schema.org",
         "@@type": "Organization",
         "name": "Balkana",
-        "alternateName": "Balkan Championship",
+        "alternateName": "BalkanaOrg",
         "url": "@baseUrl",
         "logo": "@(baseUrl)/Balkana.png",
         "description": "Premier esports tournament organizer in the Balkans, hosting competitive events for Counter-Strike, League of Legends, Valorant, and more.",
@@ -159,7 +159,7 @@
             <!-- Logo at top with animation -->
             <div class="navbar-logo">
                 <a asp-controller="Home" asp-action="Index" aria-label="Balkana Home">
-                    <img src="~/Balkana.png" alt="Balkana - Balkan Esports Championship Logo" width="120" height="120">
+                    <img src="~/Balkana.png" alt="Balkana - Logo" width="120" height="120">
                 </a>
             </div>
 
@@ -185,6 +185,82 @@
                     <i class="fi fi-rr-info"></i>
                     <span>About</span>
                 </a>
+
+                <!-- Author/Editor Navigation Section -->
+                @if (User.IsInRole("Author") || User.IsInRole("Editor"))
+                {
+                    <div class="dropdown desktop-only-dropdown">
+                        <button class="dropdown-btn">
+                            <i class="fi fi-rr-pen-nib"></i>
+                            <span>Author</span>
+                        </button>
+                        <div class="dropdown-content">
+                            <a asp-controller="Article" asp-action="Create">
+                                <i class="fi fi-rr-edit"></i>
+                                Write Article
+                            </a>
+                            <a asp-controller="Article" asp-action="MyArticles">
+                                <i class="fi fi-rr-document"></i>
+                                My Articles
+                            </a>
+                            @if (User.IsInRole("Editor"))
+                            {
+                                <a asp-controller="Article" asp-action="Drafts">
+                                    <i class="fi fi-rr-clock"></i>
+                                    Drafts
+                                </a>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Mobile access to author links -->
+                    <a asp-controller="Article" asp-action="Create" class="nav-link mobile-only-link" data-page="article-create">
+                        <i class="fi fi-rr-edit"></i>
+                        <span>Write Article</span>
+                    </a>
+                    <a asp-controller="Article" asp-action="MyArticles" class="nav-link mobile-only-link" data-page="my-articles">
+                        <i class="fi fi-rr-document"></i>
+                        <span>My Articles</span>
+                    </a>
+                    @if (User.IsInRole("Editor"))
+                    {
+                        <a asp-controller="Article" asp-action="Drafts" class="nav-link mobile-only-link" data-page="drafts">
+                            <i class="fi fi-rr-clock"></i>
+                            <span>Drafts</span>
+                        </a>
+                    }
+                }
+
+                <!-- Administrator Navigation Section -->
+                @if (User.IsInRole("Administrator"))
+                {
+                    <div class="dropdown desktop-only-dropdown">
+                        <button class="dropdown-btn">
+                            <i class="fi fi-rr-settings"></i>
+                            <span>Admin</span>
+                        </button>
+                        <div class="dropdown-content">
+                            <a asp-area="Admin" asp-controller="Admin" asp-action="Index">
+                                <i class="fi fi-rr-apps"></i>
+                                Dashboard
+                            </a>
+                            <a asp-area="Players" asp-controller="Admin" asp-action="Index">
+                                <i class="fi fi-rr-users-alt"></i>
+                                Players
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Mobile access to admin links -->
+                    <a asp-area="Admin" asp-controller="Admin" asp-action="Index" class="nav-link mobile-only-link" data-page="admin-home">
+                        <i class="fi fi-rr-apps"></i>
+                        <span>Admin</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="Players" asp-action="Index" class="nav-link mobile-only-link" data-page="admin-players">
+                        <i class="fi fi-rr-users-alt"></i>
+                        <span>Players</span>
+                    </a>
+                }
 
                 <!-- Mobile-only nav links (shown instead of dropdown on mobile) -->
                 <a href="#" class="nav-link mobile-only-link" data-page="fantasy">

@@ -38,6 +38,7 @@ namespace Balkana.Controllers
             _context = context;
         }
 
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Index() => View();
 
         // List all users

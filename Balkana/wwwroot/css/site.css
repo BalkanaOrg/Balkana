@@ -242,6 +242,26 @@ body.menu-open {
         line-height: 1.2;
     }
 
+/* Navigation Section Divider */
+.nav-section-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    margin: 15px 0;
+    position: relative;
+}
+
+.nav-section-divider::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(45, 27, 105, 0.5), rgba(139, 0, 0, 0.5), transparent);
+}
+
 /* Dropdown */
 .dropdown {
     position: relative;
@@ -2003,28 +2023,145 @@ a:visited {
     overflow: hidden;
 }
 
+/* CKEditor Dark Theme Styling */
 .editor-wrapper .ck-editor {
     background: transparent;
 }
 
+.editor-wrapper .ck-editor__main {
+    background: transparent;
+}
+
 .editor-wrapper .ck-editor__editable {
-    background: rgba(255, 255, 255, 0.05);
-    color: white;
+    background: rgba(0, 0, 0, 0.3) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
     min-height: 400px;
     padding: 20px;
+    border: none !important;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.editor-wrapper .ck-editor__editable.ck-focused {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
 }
 
 .editor-wrapper .ck-toolbar {
-    background: rgba(0, 0, 0, 0.3);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.5) !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding: 8px;
+}
+
+.editor-wrapper .ck-toolbar__separator {
+    background: rgba(255, 255, 255, 0.2) !important;
 }
 
 .editor-wrapper .ck-button {
-    color: white;
+    color: rgba(255, 255, 255, 0.8) !important;
+    background: transparent !important;
+    border: none !important;
 }
 
 .editor-wrapper .ck-button:hover {
-    background: rgba(45, 27, 105, 0.3);
+    background: rgba(45, 27, 105, 0.4) !important;
+    color: white !important;
+}
+
+.editor-wrapper .ck-button.ck-on {
+    background: rgba(45, 27, 105, 0.5) !important;
+    color: white !important;
+}
+
+.editor-wrapper .ck-button__label {
+    color: inherit !important;
+}
+
+.editor-wrapper .ck-dropdown__panel {
+    background: rgba(0, 0, 0, 0.9) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+}
+
+.editor-wrapper .ck-list__item {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.editor-wrapper .ck-list__item:hover {
+    background: rgba(45, 27, 105, 0.4) !important;
+    color: white !important;
+}
+
+.editor-wrapper .ck-input-text {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+}
+
+.editor-wrapper .ck-input-text:focus {
+    border-color: rgba(45, 27, 105, 0.5) !important;
+    box-shadow: 0 0 0 2px rgba(45, 27, 105, 0.2) !important;
+}
+
+.editor-wrapper .ck-heading-dropdown .ck-button__label {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Style headings and text in editor */
+.editor-wrapper .ck-editor__editable h1,
+.editor-wrapper .ck-editor__editable h2,
+.editor-wrapper .ck-editor__editable h3,
+.editor-wrapper .ck-editor__editable h4,
+.editor-wrapper .ck-editor__editable h5,
+.editor-wrapper .ck-editor__editable h6 {
+    color: white !important;
+}
+
+.editor-wrapper .ck-editor__editable p {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.editor-wrapper .ck-editor__editable a {
+    color: #8b0000 !important;
+}
+
+.editor-wrapper .ck-editor__editable blockquote {
+    border-left-color: #2d1b69 !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.editor-wrapper .ck-editor__editable code {
+    background: rgba(0, 0, 0, 0.5) !important;
+    color: #8b0000 !important;
+}
+
+.editor-wrapper .ck-editor__editable pre {
+    background: rgba(0, 0, 0, 0.5) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Image upload styling */
+.editor-wrapper .ck-upload-placeholder {
+    background: rgba(45, 27, 105, 0.2) !important;
+    border: 2px dashed rgba(45, 27, 105, 0.5) !important;
+}
+
+/* Balloon panel styling */
+.editor-wrapper .ck-balloon-panel {
+    background: rgba(0, 0, 0, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+.editor-wrapper .ck-balloon-panel .ck-button {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.editor-wrapper .ck-balloon-panel .ck-button:hover {
+    background: rgba(45, 27, 105, 0.4) !important;
+    color: white !important;
 }
 
 .form-error {
