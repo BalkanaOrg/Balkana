@@ -513,6 +513,12 @@
     margin: 0 auto;
 }
 
+.linked-accounts-grid,
+.social-accounts-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    margin-top: 2rem;
+}
+
 .settings-grid {
     display: grid;
     gap: 1.5rem;
@@ -562,6 +568,114 @@
 .setting-content p {
     color: #9ca3af;
     margin: 0 0 1rem;
+}
+
+.setting-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.account-status {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+}
+
+.account-status.linked {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border-color: rgba(34, 197, 94, 0.35);
+}
+
+.account-status.not-linked {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.35);
+}
+
+.account-detail {
+    color: white;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.account-detail.muted {
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+.setting-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.inline-form {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin: 0;
+}
+
+.setting-btn.subtle {
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #93c5fd;
+}
+
+.setting-btn.subtle:hover {
+    background: rgba(59, 130, 246, 0.25);
+    color: #ffffff;
+}
+
+.ghost-btn {
+    padding: 0.6rem 1.25rem;
+    border-radius: 999px;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.ghost-btn:hover {
+    background: rgba(239, 68, 68, 0.25);
+    color: white;
+    border-color: rgba(239, 68, 68, 0.6);
+}
+
+.social-link-form {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.social-input {
+    flex: 1;
+    min-width: 180px;
+    padding: 0.75rem 1rem;
+    background: rgba(31, 41, 55, 0.8);
+    border: 1px solid rgba(75, 85, 99, 0.4);
+    border-radius: 8px;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.social-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 /* Edit Profile Styles */

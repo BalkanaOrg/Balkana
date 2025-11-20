@@ -232,6 +232,171 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Linked Accounts Section -->
+                    <div class="linked-accounts-section" style="margin-top: 2rem;">
+                        <div class="section-header">
+                            <h3><i class="fi fi-rr-link"></i> Linked Accounts</h3>
+                            <p>Connect your gaming and social media accounts</p>
+                        </div>
+
+                        <div class="settings-grid linked-accounts-grid">
+                            <!-- Discord -->
+                            @{
+                                var discordLink = Model.LinkedAccounts?.FirstOrDefault(la => la.Type == "Discord");
+                            }
+                            <div class="setting-card linked-account-card">
+                                <div class="setting-icon">
+                                    <i class="fi fi-brands-discord"></i>
+                                </div>
+                                <div class="setting-content">
+                                    <div class="setting-title-row">
+                                        <h4>Discord</h4>
+                                        <span class="account-status @(discordLink != null ? "linked" : "not-linked")">
+                                            @(discordLink != null ? "Linked" : "Not Linked")
+                                        </span>
+                                    </div>
+                                    @if (discordLink != null)
+                                    {
+                                        <p class="account-detail">ID: @discordLink.Identifier</p>
+                                        <div class="setting-actions">
+                                            <form asp-action="UnlinkAccount" method="post" class="inline-form">
+                                                <input type="hidden" name="type" value="Discord" />
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="ghost-btn">
+                                                    <i class="fi fi-rr-unlink"></i>
+                                                    Unlink
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p class="account-detail muted">Connect your Discord account to show your community status.</p>
+                                        <div class="setting-actions">
+                                            <a asp-action="LinkDiscord" class="setting-btn subtle">
+                                                <i class="fi fi-rr-link"></i>
+                                                Link Discord
+                                            </a>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- FaceIt -->
+                            @{
+                                var faceItLink = Model.LinkedAccounts?.FirstOrDefault(la => la.Type == "FaceIt");
+                            }
+                            <div class="setting-card linked-account-card">
+                                <div class="setting-icon">
+                                    <i class="fi fi-rr-gamepad"></i>
+                                </div>
+                                <div class="setting-content">
+                                    <div class="setting-title-row">
+                                        <h4>FaceIt</h4>
+                                        <span class="account-status @(faceItLink != null ? "linked" : "not-linked")">
+                                            @(faceItLink != null ? "Linked" : "Not Linked")
+                                        </span>
+                                    </div>
+                                    @if (faceItLink != null)
+                                    {
+                                        <p class="account-detail">UUID: @faceItLink.Identifier</p>
+                                        <div class="setting-actions">
+                                            <form asp-action="UnlinkAccount" method="post" class="inline-form">
+                                                <input type="hidden" name="type" value="FaceIt" />
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="ghost-btn">
+                                                    <i class="fi fi-rr-unlink"></i>
+                                                    Unlink
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p class="account-detail muted">Link FaceIt to showcase your competitive profile.</p>
+                                        <div class="setting-actions">
+                                            <a asp-action="LinkFaceIt" class="setting-btn subtle">
+                                                <i class="fi fi-rr-link"></i>
+                                                Link FaceIt
+                                            </a>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Social Media Links -->
+                        <div class="social-media-section" style="margin-top: 2rem;">
+                            <div class="section-header">
+                                <h3><i class="fi fi-rr-share"></i> Social Media Links</h3>
+                                <p>Add your social media profiles</p>
+                            </div>
+
+                            <div class="settings-grid social-accounts-grid">
+                                @{
+                                    var socialTypes = new[] { "Instagram", "Facebook", "YouTube", "Twitch", "Twitter", "TikTok", "LinkedIn" };
+                                    var socialIcons = new Dictionary<string, string>
+                                    {
+                                        { "Instagram", "fi-brands-instagram" },
+                                        { "Facebook", "fi-brands-facebook" },
+                                        { "YouTube", "fi-brands-youtube" },
+                                        { "Twitch", "fi-brands-twitch" },
+                                        { "Twitter", "fi-brands-twitter" },
+                                        { "TikTok", "fi-brands-tiktok" },
+                                        { "LinkedIn", "fi-brands-linkedin" }
+                                    };
+                                }
+
+                                @foreach (var socialType in socialTypes)
+                                {
+                                    var socialLink = Model.LinkedAccounts?.FirstOrDefault(la => la.Type == socialType);
+                                    var iconClass = socialIcons.ContainsKey(socialType) ? socialIcons[socialType] : "fi-rr-link";
+                                    
+                                    <div class="setting-card social-account-card">
+                                        <div class="setting-icon">
+                                            <i class="fi @iconClass"></i>
+                                        </div>
+                                        <div class="setting-content">
+                                            <div class="setting-title-row">
+                                                <h4>@socialType</h4>
+                                                <span class="account-status @(socialLink != null ? "linked" : "not-linked")">
+                                                    @(socialLink != null ? "Linked" : "Not Linked")
+                                                </span>
+                                            </div>
+                                            @if (socialLink != null)
+                                            {
+                                                <p class="account-detail">@socialLink.Identifier</p>
+                                                <div class="setting-actions">
+                                                    <form asp-action="UnlinkAccount" method="post" class="inline-form">
+                                                        <input type="hidden" name="type" value="@socialType" />
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="ghost-btn">
+                                                            <i class="fi fi-rr-unlink"></i>
+                                                            Remove
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <p class="account-detail muted">Add your @socialType handle so fans can follow you.</p>
+                                                <form asp-action="LinkSocialMedia" method="post" class="social-link-form">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="type" value="@socialType" />
+                                                    <input type="text" name="identifier" placeholder="@socialType username or URL" class="social-input" required />
+                                                    <button type="submit" class="setting-btn subtle">
+                                                        <i class="fi fi-rr-link"></i>
+                                                        Add
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         }

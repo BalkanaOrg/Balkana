@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace Balkana.Models.Accounts
 {
@@ -17,8 +18,8 @@ namespace Balkana.Models.Accounts
         [Required, Display(Name = "Nationality")]
         public int NationalityId { get; set; }
 
-        [Display(Name = "Profile Picture URL")]
-        public string ProfilePictureUrl { get; set; }
+        [Display(Name = "Profile Picture")]
+        public IFormFile ProfilePicture { get; set; }
 
         [Required, EmailAddress]
         public string Email { get; set; }

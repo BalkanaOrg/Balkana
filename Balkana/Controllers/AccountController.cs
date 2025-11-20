@@ -9,6 +9,9 @@ using AutoMapper;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using System.Net.Http;
+using Microsoft.Extensions.Configuration;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Balkana.Controllers
 {
@@ -40,6 +43,58 @@ namespace Balkana.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
+            // Handle profile picture upload
+            string profilePictureUrl = "/uploads/Accounts/_default.png"; // Default image
+            
+            if (model.ProfilePicture != null && model.ProfilePicture.Length > 0)
+            {
+                try
+                {
+                    // Validate file type
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                    var fileExtension = Path.GetExtension(model.ProfilePicture.FileName).ToLowerInvariant();
+                    
+                    if (!allowedExtensions.Contains(fileExtension))
+                    {
+                        ModelState.AddModelError(nameof(model.ProfilePicture), "Invalid file type. Please upload a JPG, PNG, GIF, or WebP image.");
+                        return View(model);
+                    }
+
+                    // Validate file size (max 5MB)
+                    const long maxFileSize = 5 * 1024 * 1024; // 5MB
+                    if (model.ProfilePicture.Length > maxFileSize)
+                    {
+                        ModelState.AddModelError(nameof(model.ProfilePicture), "File size exceeds 5MB limit.");
+                        return View(model);
+                    }
+
+                    // Generate unique filename
+                    var fileName = $"{Guid.NewGuid()}{fileExtension}";
+                    var uploadsPath = Path.Combine(_env.WebRootPath, "uploads", "Accounts");
+                    
+                    // Ensure directory exists
+                    if (!Directory.Exists(uploadsPath))
+                    {
+                        Directory.CreateDirectory(uploadsPath);
+                    }
+                    
+                    // Save file
+                    var filePath = Path.Combine(uploadsPath, fileName);
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await model.ProfilePicture.CopyToAsync(fileStream);
+                    }
+                    
+                    profilePictureUrl = $"/uploads/Accounts/{fileName}";
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error uploading profile picture: {ex.Message}");
+                    ModelState.AddModelError(nameof(model.ProfilePicture), "An error occurred while uploading the profile picture. Please try again.");
+                    return View(model);
+                }
+            }
+
             var user = new ApplicationUser
             {
                 UserName = model.Username,
@@ -47,7 +102,7 @@ namespace Balkana.Controllers
                 FirstName = model.FirstName,
                 LastName = model.LastName,
                 NationalityId = model.NationalityId,
-                ProfilePictureUrl = model.ProfilePictureUrl
+                ProfilePictureUrl = profilePictureUrl
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
@@ -132,6 +187,21 @@ namespace Balkana.Controllers
             // Determine user status based on role priority
             var status = DetermineUserStatus(userRoles, user.PlayerId.HasValue);
 
+            // Get linked accounts (handle case where table doesn't exist yet)
+            List<UserLinkedAccount> linkedAccounts = new List<UserLinkedAccount>();
+            try
+            {
+                linkedAccounts = await _context.UserLinkedAccounts
+                    .Where(ula => ula.UserId == userId)
+                    .ToListAsync();
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Message.Contains("Invalid object name"))
+            {
+                // Table doesn't exist yet - migration hasn't been applied
+                // Return empty list, migration will be applied on next app restart
+                linkedAccounts = new List<UserLinkedAccount>();
+            }
+
             var model = new UserProfileViewModel
             {
                 Id = user.Id,
@@ -147,7 +217,8 @@ namespace Balkana.Controllers
                 Nationalities = await _context.Nationalities.ToListAsync(),
                 IsCurrentUser = userId == currentUserId,
                 UserStatus = status,
-                UserRoles = userRoles
+                UserRoles = userRoles,
+                LinkedAccounts = linkedAccounts
             };
 
             return View(model);
@@ -812,6 +883,481 @@ namespace Balkana.Controllers
 
             model.Nationalities = await _context.Nationalities.ToListAsync();
             return View(model);
+        }
+
+        [HttpGet]
+        [Authorize]
+        public IActionResult LinkDiscord()
+        {
+            var callbackUrl = Url.Action(nameof(DiscordCallback), "Account", null, Request.Scheme, Request.Host.Value);
+            
+            if (!callbackUrl.StartsWith("https://"))
+            {
+                var uri = new UriBuilder(callbackUrl) { Scheme = "https", Port = 4444 };
+                callbackUrl = uri.ToString();
+            }
+            
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties("Discord", callbackUrl);
+            return Challenge(properties, "Discord");
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> DiscordCallback()
+        {
+            try
+            {
+                var info = await _signInManager.GetExternalLoginInfoAsync();
+                if (info == null)
+                {
+                    TempData["ErrorMessage"] = "Error loading Discord account information.";
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null) return NotFound();
+
+                // Get Discord user ID from the provider key
+                var discordId = info.ProviderKey; // This is the Discord user ID (snowflake)
+
+                // Check if this Discord account is already linked to another user
+                var existingLink = await _context.UserLinkedAccounts
+                    .FirstOrDefaultAsync(ula => ula.Type == "Discord" && ula.Identifier == discordId);
+                
+                if (existingLink != null && existingLink.UserId != currentUser.Id)
+                {
+                    TempData["ErrorMessage"] = "This Discord account is already linked to another user.";
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                // Check if current user already has a Discord link
+                var userDiscordLink = await _context.UserLinkedAccounts
+                    .FirstOrDefaultAsync(ula => ula.UserId == currentUser.Id && ula.Type == "Discord");
+
+                if (userDiscordLink != null)
+                {
+                    // Update existing link
+                    userDiscordLink.Identifier = discordId;
+                }
+                else
+                {
+                    // Create new link
+                    userDiscordLink = new UserLinkedAccount
+                    {
+                        UserId = currentUser.Id,
+                        Type = "Discord",
+                        Identifier = discordId
+                    };
+                    _context.UserLinkedAccounts.Add(userDiscordLink);
+                }
+
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Discord account linked successfully!";
+                return RedirectToAction(nameof(Profile));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR in DiscordCallback: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                TempData["ErrorMessage"] = "An error occurred while linking your Discord account.";
+                return RedirectToAction(nameof(Profile));
+            }
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> LinkFaceIt()
+        {
+            try
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null) return NotFound();
+                
+                // FaceIt OAuth URL
+                var clientId = HttpContext.RequestServices.GetRequiredService<IConfiguration>()["Faceit:OAuthClientId"];
+                
+                if (string.IsNullOrEmpty(clientId))
+                {
+                    TempData["ErrorMessage"] = "FaceIt OAuth is not configured. Please contact an administrator.";
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                // Build redirect URI - use the host from the request (Cloudflare handles port routing)
+                var redirectUri = Url.Action(nameof(FaceItCallback), "Account", null, Request.Scheme, Request.Host.Value);
+                
+                // Ensure HTTPS (Cloudflare handles the port routing, so we don't need to specify port 4444)
+                if (!redirectUri.StartsWith("https://"))
+                {
+                    var uri = new UriBuilder(redirectUri) { Scheme = "https" };
+                    redirectUri = uri.ToString();
+                }
+                
+                // Remove any port from the redirect URI since Cloudflare handles routing
+                var redirectUriBuilder = new UriBuilder(redirectUri);
+                if (redirectUriBuilder.Port == 4444 || redirectUriBuilder.Port == 443)
+                {
+                    redirectUriBuilder.Port = -1; // Remove port from URI
+                }
+                redirectUri = redirectUriBuilder.ToString();
+
+                // FaceIt OAuth authorization URL - use standard redirect (not popup)
+                var state = Guid.NewGuid().ToString();
+                var codeVerifier = GenerateCodeVerifier();
+                var codeChallenge = GenerateCodeChallenge(codeVerifier);
+                
+                // Store state in database instead of session (more reliable across redirects)
+                var oauthState = new OAuthState
+                {
+                    State = state,
+                    UserId = currentUser.Id,
+                    Provider = "FaceIt",
+                    CreatedAt = DateTime.UtcNow,
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(10), // State valid for 10 minutes
+                    CodeVerifier = codeVerifier
+                };
+                
+                // Remove any existing states for this user/provider
+                var existingStates = _context.OAuthStates
+                    .Where(os => os.UserId == currentUser.Id && os.Provider == "FaceIt");
+                _context.OAuthStates.RemoveRange(existingStates);
+                
+                _context.OAuthStates.Add(oauthState);
+                await _context.SaveChangesAsync();
+                
+                // FaceIt OAuth 2.0 authorization endpoint
+                // Request scopes: openid (required) and profile (needed for GUID/user info)
+                var scopes = "openid profile";
+                var authUrl = $"https://accounts.faceit.com/?client_id={clientId}&redirect_uri={Uri.EscapeDataString(redirectUri)}&response_type=code&state={state}&scope={Uri.EscapeDataString(scopes)}&code_challenge={codeChallenge}&code_challenge_method=S256&redirect_popup=true";
+                
+                Console.WriteLine($"FaceIt OAuth redirect URL: {authUrl}");
+                Console.WriteLine($"FaceIt OAuth redirect URI: {redirectUri}");
+                
+                return Redirect(authUrl);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR in LinkFaceIt: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                TempData["ErrorMessage"] = "An error occurred while initiating FaceIt OAuth. Please try again.";
+                return RedirectToAction(nameof(Profile));
+            }
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> FaceItCallback(string code, string state, string error = null)
+        {
+            try
+            {
+                Console.WriteLine($"FaceItCallback called - code: {(code != null ? "present" : "null")}, state: {state}, error: {error}");
+                Console.WriteLine($"FaceItCallback QueryString: {Request.QueryString}");
+                Console.WriteLine($"FaceItCallback Headers: {string.Join("; ", Request.Headers.Select(h => $"{h.Key}={h.Value}"))}");
+                
+                // Check for OAuth errors
+                if (!string.IsNullOrEmpty(error))
+                {
+                    Console.WriteLine($"FaceIt OAuth error: {error}");
+                    TempData["ErrorMessage"] = $"FaceIt authorization failed: {error}";
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                // Check if code is missing
+                if (string.IsNullOrEmpty(code))
+                {
+                    Console.WriteLine("FaceIt OAuth callback received without authorization code");
+                    TempData["ErrorMessage"] = "FaceIt authorization was cancelled or failed. Please try again.";
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                // Verify state from database
+                var oauthState = await _context.OAuthStates
+                    .FirstOrDefaultAsync(os => os.State == state && os.Provider == "FaceIt");
+                
+                if (oauthState == null)
+                {
+                    Console.WriteLine($"FaceIt OAuth state not found - received: {state}");
+                    TempData["ErrorMessage"] = "Invalid OAuth state. Please try again.";
+                    return RedirectToAction(nameof(Profile));
+                }
+                
+                // Get current user before verifying state ownership
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null)
+                {
+                    Console.WriteLine("Current user not found in FaceItCallback");
+                    return NotFound();
+                }
+                
+                // Check if state has expired
+                if (oauthState.ExpiresAt < DateTime.UtcNow)
+                {
+                    Console.WriteLine($"FaceIt OAuth state expired - state: {state}, expired at: {oauthState.ExpiresAt}");
+                    _context.OAuthStates.Remove(oauthState);
+                    await _context.SaveChangesAsync();
+                    TempData["ErrorMessage"] = "OAuth state has expired. Please try again.";
+                    return RedirectToAction(nameof(Profile));
+                }
+                
+                // Capture code verifier
+                var codeVerifier = oauthState.CodeVerifier;
+                if (string.IsNullOrEmpty(codeVerifier))
+                {
+                    Console.WriteLine("FaceIt OAuth state missing code verifier");
+                    _context.OAuthStates.Remove(oauthState);
+                    await _context.SaveChangesAsync();
+                    TempData["ErrorMessage"] = "OAuth state is invalid. Please try again.";
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                // Verify the state belongs to the current user
+                if (oauthState.UserId != currentUser.Id)
+                {
+                    Console.WriteLine($"FaceIt OAuth state user mismatch - state user: {oauthState.UserId}, current user: {currentUser.Id}");
+                    TempData["ErrorMessage"] = "OAuth state does not match your account. Please try again.";
+                    return RedirectToAction(nameof(Profile));
+                }
+                
+                // Remove the used state
+                _context.OAuthStates.Remove(oauthState);
+                await _context.SaveChangesAsync();
+
+                var configuration = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+                var clientId = configuration["Faceit:OAuthClientId"];
+                var clientSecret = configuration["Faceit:OAuthClientSecret"];
+                
+                if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
+                {
+                    Console.WriteLine("FaceIt OAuth credentials not configured");
+                    TempData["ErrorMessage"] = "FaceIt OAuth is not properly configured. Please contact an administrator.";
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                // Build redirect URI - use the host from the request (Cloudflare handles port routing)
+                var redirectUri = Url.Action(nameof(FaceItCallback), "Account", null, Request.Scheme, Request.Host.Value);
+                
+                // Ensure HTTPS (Cloudflare handles the port routing, so we don't need to specify port 4444)
+                if (!redirectUri.StartsWith("https://"))
+                {
+                    var uri = new UriBuilder(redirectUri) { Scheme = "https" };
+                    redirectUri = uri.ToString();
+                }
+                
+                // Remove any port from the redirect URI since Cloudflare handles routing
+                var redirectUriBuilder = new UriBuilder(redirectUri);
+                if (redirectUriBuilder.Port == 4444 || redirectUriBuilder.Port == 443)
+                {
+                    redirectUriBuilder.Port = -1; // Remove port from URI
+                }
+                redirectUri = redirectUriBuilder.ToString();
+
+                Console.WriteLine($"Exchanging FaceIt authorization code for access token...");
+
+                // Exchange code for access token
+                using (var httpClient = new HttpClient())
+                {
+                    var tokenRequest = new FormUrlEncodedContent(new[]
+                    {
+                        new KeyValuePair<string, string>("grant_type", "authorization_code"),
+                        new KeyValuePair<string, string>("code", code),
+                        new KeyValuePair<string, string>("redirect_uri", redirectUri),
+                        new KeyValuePair<string, string>("code_verifier", codeVerifier)
+                    });
+
+                    var basicAuthValue = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{clientId}:{clientSecret}"));
+                    httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", basicAuthValue);
+
+                    var tokenResponse = await httpClient.PostAsync("https://api.faceit.com/auth/v1/oauth/token", tokenRequest);
+                    var tokenResponseContent = await tokenResponse.Content.ReadAsStringAsync();
+                    
+                    Console.WriteLine($"FaceIt token response status: {tokenResponse.StatusCode}");
+                    Console.WriteLine($"FaceIt token response: {tokenResponseContent}");
+                    Console.WriteLine($"FaceIt token request URL: https://api.faceit.com/auth/v1/oauth/token");
+                    Console.WriteLine($"FaceIt client_id: {clientId}");
+                    Console.WriteLine($"FaceIt redirect_uri: {redirectUri}");
+                    
+                    if (!tokenResponse.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine($"Failed to exchange FaceIt authorization code. Status: {tokenResponse.StatusCode}, Response: {tokenResponseContent}");
+                        TempData["ErrorMessage"] = $"Failed to authenticate with FaceIt. Error: {tokenResponseContent}. Please check your OAuth client configuration in FaceIt's developer portal.";
+                        return RedirectToAction(nameof(Profile));
+                    }
+
+                    var tokenJson = System.Text.Json.JsonDocument.Parse(tokenResponseContent);
+                    
+                    if (!tokenJson.RootElement.TryGetProperty("access_token", out var accessTokenElement))
+                    {
+                        Console.WriteLine($"FaceIt token response missing access_token: {tokenResponseContent}");
+                        TempData["ErrorMessage"] = "Invalid response from FaceIt. Please try again.";
+                        return RedirectToAction(nameof(Profile));
+                    }
+                    
+                    var accessToken = accessTokenElement.GetString();
+
+                    Console.WriteLine($"Retrieving FaceIt user information...");
+
+                    // Get user info using access token
+                    httpClient.DefaultRequestHeaders.Clear();
+                    httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                    var userInfoResponse = await httpClient.GetAsync("https://api.faceit.com/auth/v1/resources/userinfo");
+                    var userInfoContent = await userInfoResponse.Content.ReadAsStringAsync();
+                    
+                    Console.WriteLine($"FaceIt userinfo response status: {userInfoResponse.StatusCode}");
+                    Console.WriteLine($"FaceIt userinfo response: {userInfoContent}");
+                    Console.WriteLine($"FaceIt userinfo request URL: https://api.faceit.com/auth/v1/resources/userinfo");
+                    
+                    if (!userInfoResponse.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine($"Failed to retrieve FaceIt user info. Status: {userInfoResponse.StatusCode}, Response: {userInfoContent}");
+                        TempData["ErrorMessage"] = $"Failed to retrieve FaceIt user information. Error: {userInfoContent}. Please try again.";
+                        return RedirectToAction(nameof(Profile));
+                    }
+
+                    var userInfoJson = System.Text.Json.JsonDocument.Parse(userInfoContent);
+                    
+                    if (!userInfoJson.RootElement.TryGetProperty("guid", out var guidElement))
+                    {
+                        Console.WriteLine($"FaceIt userinfo response missing guid: {userInfoContent}");
+                        TempData["ErrorMessage"] = "Invalid user information from FaceIt. Please try again.";
+                        return RedirectToAction(nameof(Profile));
+                    }
+                    
+                    var faceItGuid = guidElement.GetString();
+                    Console.WriteLine($"FaceIt GUID retrieved: {faceItGuid}");
+
+                    // Check if this FaceIt account is already linked to another user
+                    var existingLink = await _context.UserLinkedAccounts
+                        .FirstOrDefaultAsync(ula => ula.Type == "FaceIt" && ula.Identifier == faceItGuid);
+                    
+                    if (existingLink != null && existingLink.UserId != currentUser.Id)
+                    {
+                        TempData["ErrorMessage"] = "This FaceIt account is already linked to another user.";
+                        return RedirectToAction(nameof(Profile));
+                    }
+
+                    // Check if current user already has a FaceIt link
+                    var userFaceItLink = await _context.UserLinkedAccounts
+                        .FirstOrDefaultAsync(ula => ula.UserId == currentUser.Id && ula.Type == "FaceIt");
+
+                    if (userFaceItLink != null)
+                    {
+                        // Update existing link
+                        userFaceItLink.Identifier = faceItGuid;
+                    }
+                    else
+                    {
+                        // Create new link
+                        userFaceItLink = new UserLinkedAccount
+                        {
+                            UserId = currentUser.Id,
+                            Type = "FaceIt",
+                            Identifier = faceItGuid
+                        };
+                        _context.UserLinkedAccounts.Add(userFaceItLink);
+                    }
+
+                    await _context.SaveChangesAsync();
+                    Console.WriteLine($"FaceIt account linked successfully for user {currentUser.Id}");
+                    TempData["SuccessMessage"] = "FaceIt account linked successfully!";
+                    return RedirectToAction(nameof(Profile));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR in FaceItCallback: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                TempData["ErrorMessage"] = "An error occurred while linking your FaceIt account. Please try again.";
+                return RedirectToAction(nameof(Profile));
+            }
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UnlinkAccount(string type)
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            var link = await _context.UserLinkedAccounts
+                .FirstOrDefaultAsync(ula => ula.UserId == currentUser.Id && ula.Type == type);
+
+            if (link != null)
+            {
+                _context.UserLinkedAccounts.Remove(link);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = $"{type} account unlinked successfully!";
+            }
+
+            return RedirectToAction(nameof(Profile));
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LinkSocialMedia(string type, string identifier)
+        {
+            if (string.IsNullOrWhiteSpace(type) || string.IsNullOrWhiteSpace(identifier))
+            {
+                TempData["ErrorMessage"] = "Type and identifier are required.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var validTypes = new[] { "Instagram", "Facebook", "YouTube", "Twitch", "Twitter", "TikTok", "LinkedIn" };
+            if (!validTypes.Contains(type))
+            {
+                TempData["ErrorMessage"] = "Invalid social media type.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
+
+            // Check if current user already has a link of this type
+            var existingLink = await _context.UserLinkedAccounts
+                .FirstOrDefaultAsync(ula => ula.UserId == currentUser.Id && ula.Type == type);
+
+            if (existingLink != null)
+            {
+                // Update existing link
+                existingLink.Identifier = identifier;
+            }
+            else
+            {
+                // Create new link
+                existingLink = new UserLinkedAccount
+                {
+                    UserId = currentUser.Id,
+                    Type = type,
+                    Identifier = identifier
+                };
+                _context.UserLinkedAccounts.Add(existingLink);
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = $"{type} account linked successfully!";
+            return RedirectToAction(nameof(Profile));
+        }
+
+        private static string GenerateCodeVerifier()
+        {
+            var bytes = new byte[64];
+            RandomNumberGenerator.Fill(bytes);
+            return Base64UrlEncode(bytes);
+        }
+
+        private static string GenerateCodeChallenge(string codeVerifier)
+        {
+            using var sha256 = SHA256.Create();
+            var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(codeVerifier));
+            return Base64UrlEncode(bytes);
+        }
+
+        private static string Base64UrlEncode(byte[] bytes)
+        {
+            return Convert.ToBase64String(bytes)
+                .Replace("+", "-")
+                .Replace("/", "_")
+                .Replace("=", "");
         }
     }
 }

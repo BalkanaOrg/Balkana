@@ -30,7 +30,7 @@
             <h2 class="form-title">Create Account</h2>
             <p class="form-subtitle">Join the championship</p>
 
-            <form asp-action="Register" method="post">
+            <form asp-action="Register" method="post" enctype="multipart/form-data">
                 <div class="form-group">
                     <label asp-for="Username">Username</label>
                     <input asp-for="Username" placeholder="Choose a username" autocomplete="username" />
@@ -78,9 +78,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label asp-for="ProfilePictureUrl">Profile Picture URL (Optional)</label>
-                    <input asp-for="ProfilePictureUrl" placeholder="https://example.com/image.jpg" />
-                    <span asp-validation-for="ProfilePictureUrl" class="validation-error"></span>
+                    <label asp-for="ProfilePicture">Profile Picture (Optional)</label>
+                    <input asp-for="ProfilePicture" type="file" accept="image/*" />
+                    <span asp-validation-for="ProfilePicture" class="validation-error"></span>
+                    <small class="form-text text-muted">Upload a profile picture (JPG, PNG, GIF, or WebP)</small>
                 </div>
 
                 <div class="form-group">

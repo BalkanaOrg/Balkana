@@ -291,6 +291,38 @@ void ConfigureServices(IServiceCollection services)
             // The OAuth middleware will automatically redirect after processing
             // We need to handle this in the controller action instead
             
+        })
+        .AddDiscord(options =>
+        {
+            options.ClientId = builder.Configuration["Discord:ClientId"] ?? "";
+            options.ClientSecret = builder.Configuration["Discord:ClientSecret"] ?? "";
+            options.CallbackPath = "/signin-discord";
+            options.SaveTokens = true;
+            
+            options.CorrelationCookie.HttpOnly = true;
+            options.CorrelationCookie.SameSite = SameSiteMode.Lax;
+            options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            options.CorrelationCookie.Path = "/";
+            options.CorrelationCookie.IsEssential = true;
+            options.CorrelationCookie.MaxAge = TimeSpan.FromMinutes(10);
+            
+            options.Scope.Add("identify");
+            
+            options.Events.OnRemoteFailure = context =>
+            {
+                Console.WriteLine($"Discord OAuth RemoteFailure: {context.Failure?.Message}");
+                context.HandleResponse();
+                context.Response.Redirect("/Account/Profile?error=discord_oauth_failed");
+                return Task.CompletedTask;
+            };
+            
+            options.Events.OnAccessDenied = context =>
+            {
+                Console.WriteLine($"Discord OAuth AccessDenied");
+                context.HandleResponse();
+                context.Response.Redirect("/Account/Profile?error=discord_access_denied");
+                return Task.CompletedTask;
+            };
         });
 
     // Add HttpClient for our importers

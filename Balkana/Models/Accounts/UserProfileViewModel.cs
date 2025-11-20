@@ -20,6 +20,7 @@ namespace Balkana.Models.Accounts
         public bool IsCurrentUser { get; set; }
         public string UserStatus { get; set; }
         public IEnumerable<string> UserRoles { get; set; } = new List<string>();
+        public IEnumerable<Balkana.Data.Models.UserLinkedAccount> LinkedAccounts { get; set; } = new List<Balkana.Data.Models.UserLinkedAccount>();
     }
 
 

@@ -324,7 +324,7 @@
                 {
                     <a asp-controller="Account" asp-action="Profile" class="login-btn profile-link">
                         @await Component.InvokeAsync("UserProfilePicture")
-                        <span>@User.Identity.Name</span>
+                        <span>Profile</span>
                     </a>
                     <form asp-controller="Account" asp-action="Logout" method="post" class="inline">
                         <button type="submit" class="login-btn">

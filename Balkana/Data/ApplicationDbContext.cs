@@ -91,6 +91,12 @@
         public DbSet<GamblingSession> GamblingSessions { get; set; }
         public DbSet<GamblingLeaderboard> GamblingLeaderboards { get; set; }
 
+        //User Linked Accounts
+        public DbSet<UserLinkedAccount> UserLinkedAccounts { get; set; }
+        
+        //OAuth State Storage
+        public DbSet<OAuthState> OAuthStates { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -561,6 +567,27 @@
             modelBuilder.Entity<Order>()
                 .HasIndex(o => o.OrderNumber)
                 .IsUnique();
+
+            // UserLinkedAccount relationship
+            modelBuilder.Entity<UserLinkedAccount>()
+                .HasOne(ula => ula.User)
+                .WithMany()
+                .HasForeignKey(ula => ula.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Unique constraint: one account per type per user
+            modelBuilder.Entity<UserLinkedAccount>()
+                .HasIndex(ula => new { ula.UserId, ula.Type })
+                .IsUnique();
+
+            // OAuthState configuration
+            modelBuilder.Entity<OAuthState>()
+                .HasKey(os => os.State);
+            modelBuilder.Entity<OAuthState>()
+                .Property(os => os.CodeVerifier)
+                .HasMaxLength(512);
+            
+            // Auto-delete expired OAuth states (cleanup job can handle this, or we can use a background service)
 
             foreach (var fk in modelBuilder.Model.GetEntityTypes()
              .SelectMany(e => e.GetForeignKeys()))
