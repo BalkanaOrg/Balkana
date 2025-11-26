@@ -57,8 +57,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.ListenAnyIP(3333); // HTTP
-    options.ListenAnyIP(4444, listenOptions =>
+    options.ListenAnyIP(80); // HTTP
+    options.ListenAnyIP(443, listenOptions =>
     {
         listenOptions.UseHttps("/etc/letsencrypt/live/balkana.org/balkana.pfx", "SilnaParola123");
     });
