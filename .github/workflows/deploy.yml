@@ -16,16 +16,29 @@ jobs:
         host: ${{ secrets.VPS_HOST }}
         username: ${{ secrets.VPS_USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
+        port: 22
+        timeout: 30s
         script: |
           set -e
+          echo "=== SSH Connection Successful ==="
+          echo "Connected as: $(whoami)"
+          echo "Current directory: $(pwd)"
+          
           echo "=== Starting deployment ==="
           
           # Navigate to the project directory
           cd ~/balkana/balkana
           
+          # Check if git is initialized
+          if [ ! -d ".git" ]; then
+            echo "Initializing git repository..."
+            git init
+            git remote add origin https://github.com/BalkanaOrg/Balkana.git || git remote set-url origin https://github.com/BalkanaOrg/Balkana.git
+          fi
+          
           # Pull latest code from GitHub
           echo "Pulling latest code from GitHub..."
-          git fetch origin
+          git fetch origin master
           git reset --hard origin/master
           git clean -fd
           
