@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Deploy to VPS
       uses: appleboy/ssh-action@v1.0.3
@@ -17,70 +17,76 @@ jobs:
         username: ${{ secrets.VPS_USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
         port: 22
-        timeout: 120s
+        timeout: 300s  # Increased timeout for builds
         script: |
-          echo "=== SSH Connection Successful ==="
-          echo "Connected as: $(whoami)"
-          echo "Current directory: $(pwd)"
-          
           echo "=== Starting deployment ==="
-          
+
           # Navigate to the project directory
           cd ~/balkana/balkana || { echo "ERROR: ~/balkana/balkana not found!"; exit 1; }
-          
+
           # Check if git is initialized
           if [ ! -d ".git" ]; then
             echo "Initializing git repository..."
             git init
             git remote add origin https://github.com/BalkanaOrg/Balkana.git || git remote set-url origin https://github.com/BalkanaOrg/Balkana.git
           fi
-          
+
           # Pull latest code from GitHub
           echo "Pulling latest code from GitHub..."
           git fetch origin master || { echo "ERROR: git fetch failed!"; exit 1; }
           git reset --hard origin/master || { echo "ERROR: git reset failed!"; exit 1; }
           git clean -fd
-          
+
           echo "Code pulled successfully. Latest commit:"
           git log -1 --oneline
-          
+
+          # Verify structure
+          echo "=== Verifying project structure ==="
+          ls -la
+          ls -la Balkana/ || echo "Balkana directory not found!"
+          ls -la Balkana/Balkana.csproj || echo "Balkana.csproj not found!"
+
           # Go to parent directory for docker-compose
           cd ~/balkana || { echo "ERROR: ~/balkana not found!"; exit 1; }
-          
+
           # Check if docker-compose.yml exists
           if [ ! -f "docker-compose.yml" ]; then
             echo "ERROR: docker-compose.yml not found in ~/balkana!"
             ls -la
             exit 1
           fi
-          
+
           echo "Found docker-compose.yml"
-          
+
           # Check current container status
           echo "=== Current container status ==="
           docker compose ps balkana-app || echo "Container check completed"
-          
-          # Rebuild the Docker image
-          echo "=== Building Docker image ==="
-          docker compose build balkana-app || { echo "ERROR: Build failed!"; exit 1; }
-          
+
+          # Rebuild the Docker image with detailed output
+          echo "=== Building Docker image (this may take a few minutes) ==="
+          docker compose build --progress=plain --no-cache balkana-app 2>&1 || {
+            echo "ERROR: Build failed! Showing last 100 lines of build output:"
+            docker compose build balkana-app 2>&1 | tail -100
+            exit 1
+          }
+
           echo "Build successful!"
-          
+
           # Force restart: stop, remove, then start
           echo "=== Stopping old container ==="
           docker compose stop balkana-app || echo "Container was not running"
-          
+
           echo "=== Removing old container ==="
           docker compose rm -f balkana-app || echo "Container removal completed"
-          
+
           # Start new container with the rebuilt image
           echo "=== Starting new container ==="
           docker compose up -d balkana-app || { echo "ERROR: Failed to start container!"; exit 1; }
-          
+
           # Wait for container to start
           echo "Waiting for container to start..."
           sleep 10
-          
+
           # Verify container is running
           echo "=== Verifying container status ==="
           CONTAINER_STATUS=$(docker compose ps balkana-app | grep -c "Up" || echo "0")
@@ -95,12 +101,12 @@ jobs:
             docker compose logs --tail=50 balkana-app
             exit 1
           fi
-          
+
           # Show recent logs
           echo "=== Deployment completed successfully ==="
           echo "Container logs (last 30 lines):"
           docker compose logs --tail=30 balkana-app
-          
+
           echo ""
           echo "=== Container info ==="
           docker compose ps balkana-app

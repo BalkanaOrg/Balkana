@@ -2,6 +2,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
+# Copy solution file if it exists (optional)
+COPY *.sln . 2>/dev/null || true
+
 # Copy only csproj first to take advantage of Docker caching
 COPY Balkana/*.csproj Balkana/
 RUN dotnet restore Balkana/Balkana.csproj
@@ -9,10 +12,9 @@ RUN dotnet restore Balkana/Balkana.csproj
 # Copy the rest of the app
 COPY Balkana/ Balkana/
 
-# Build & publish
+# Build & publish with detailed errors
 WORKDIR /src/Balkana
-RUN dotnet publish -c Release -o /app/publish
-
+RUN dotnet publish -c Release -o /app/publish || { echo "Build failed! Showing errors:"; dotnet build -c Release; exit 1; }
 
 # RUNTIME STAGE
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
