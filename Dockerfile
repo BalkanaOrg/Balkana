@@ -12,11 +12,10 @@ RUN dotnet restore Balkana/Balkana.csproj
 # Copy the rest of the app
 COPY Balkana/ Balkana/
 
-# Build & publish - treat nullable warnings as warnings, not errors
+# Build & publish - don't treat warnings as errors
 WORKDIR /src/Balkana
 RUN dotnet publish -c Release -o /app/publish \
     -p:TreatWarningsAsErrors=false \
-    -p:WarningsNotAsErrors="CS8602;CS8603;CS8629" \
     --verbosity normal
 
 # RUNTIME STAGE
