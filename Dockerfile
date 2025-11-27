@@ -14,7 +14,10 @@ COPY Balkana/ Balkana/
 
 # Build & publish - treat nullable warnings as warnings, not errors
 WORKDIR /src/Balkana
-RUN dotnet publish -c Release -o /app/publish /p:TreatWarningsAsErrors=false /p:WarningsAsErrors= /p:WarningsNotAsErrors=CS8602;CS8603;CS8629 --verbosity normal
+RUN dotnet publish -c Release -o /app/publish \
+    -p:TreatWarningsAsErrors=false \
+    -p:WarningsNotAsErrors="CS8602;CS8603;CS8629" \
+    --verbosity normal
 
 # RUNTIME STAGE
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
