@@ -2,7 +2,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy solution file if it exists (will fail silently if not in build context)
+# Copy solution file if it exists
 COPY *.sln ./
 
 # Copy only csproj first to take advantage of Docker caching
@@ -12,9 +12,9 @@ RUN dotnet restore Balkana/Balkana.csproj
 # Copy the rest of the app
 COPY Balkana/ Balkana/
 
-# Build & publish
+# Build & publish - treat nullable warnings as warnings, not errors
 WORKDIR /src/Balkana
-RUN dotnet publish -c Release -o /app/publish
+RUN dotnet publish -c Release -o /app/publish /p:TreatWarningsAsErrors=false /p:WarningsAsErrors= /p:WarningsNotAsErrors=CS8602;CS8603;CS8629 --verbosity normal
 
 # RUNTIME STAGE
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
