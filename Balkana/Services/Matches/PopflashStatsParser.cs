@@ -21,8 +21,8 @@ namespace Balkana.Services.Matches
                 .Where(l => !string.IsNullOrEmpty(l))
                 .ToList();
 
-            // Find all category headers
-            var categoryHeaders = new Dictionary<string, int>();
+            // Find all category headers - store all occurrences
+            var categoryHeaders = new Dictionary<string, List<int>>();
             var categories = new[] { "BASIC STATS", "FLASH STATS", "KILLS", "TRADE INFO", "SHOTS FIRED", "EXTRA STATS" };
             
             for (int i = 0; i < lines.Count; i++)
@@ -31,7 +31,11 @@ namespace Balkana.Services.Matches
                 {
                     if (lines[i].StartsWith(category))
                     {
-                        categoryHeaders[category] = i;
+                        if (!categoryHeaders.ContainsKey(category))
+                        {
+                            categoryHeaders[category] = new List<int>();
+                        }
+                        categoryHeaders[category].Add(i);
                     }
                 }
             }
@@ -47,23 +51,32 @@ namespace Balkana.Services.Matches
             return result;
         }
 
-        private void ParseBasicStats(List<string> lines, Dictionary<string, int> headers, ParsedStats result)
+        private void ParseBasicStats(List<string> lines, Dictionary<string, List<int>> headers, ParsedStats result)
         {
-            if (!headers.ContainsKey("BASIC STATS")) return;
+            if (!headers.ContainsKey("BASIC STATS") || headers["BASIC STATS"].Count == 0) return;
 
-            var headerIndex = headers["BASIC STATS"];
+            var basicStatsHeaders = headers["BASIC STATS"];
+            var headerIndex = basicStatsHeaders[0]; // First occurrence = Team A
+            
+            // Find next category after first BASIC STATS
             var nextCategoryIndex = FindNextCategoryIndex(lines, headerIndex, headers);
 
             // Parse Team A (first occurrence)
             var teamAEnd = FindCategoryEnd(lines, headerIndex, nextCategoryIndex);
             var teamAStats = ParseBasicStatsForTeam(lines, headerIndex + 1, teamAEnd);
             
-            // Parse Team B (second occurrence - find next BASIC STATS)
-            var teamBStart = FindNextCategoryHeader(lines, "BASIC STATS", headerIndex + 1);
-            if (teamBStart > 0)
+            // Parse Team B (second occurrence)
+            if (basicStatsHeaders.Count > 1)
             {
+                var teamBStart = basicStatsHeaders[1]; // Second occurrence = Team B
                 var teamBEnd = FindCategoryEnd(lines, teamBStart, lines.Count);
                 var teamBStats = ParseBasicStatsForTeam(lines, teamBStart + 1, teamBEnd);
+                
+                // Initialize Team B stats if needed
+                while (result.TeamBStats.Count < teamBStats.Count)
+                {
+                    result.TeamBStats.Add(new PlayerStatsViewModel());
+                }
                 
                 // Merge Team B stats into result
                 for (int i = 0; i < teamBStats.Count && i < result.TeamBStats.Count; i++)
@@ -111,35 +124,20 @@ namespace Balkana.Services.Matches
 
             while (currentIndex < endIndex && playersFound < 5)
             {
-                // Skip ping (first line after header or after previous player) - it's a number
-                if (currentIndex < endIndex && IsNumeric(lines[currentIndex]) && !lines[currentIndex].Contains("."))
-                {
-                    // Check if it's likely a ping (small number) vs a stat
-                    if (int.TryParse(lines[currentIndex], out int potentialPing) && potentialPing < 200)
-                    {
-                        currentIndex++;
-                    }
-                }
-
-                // Skip empty line
-                while (currentIndex < endIndex && string.IsNullOrWhiteSpace(lines[currentIndex]))
+                // Skip ping (first line after header or after previous player) - it's a number, typically < 200
+                if (currentIndex < endIndex && int.TryParse(lines[currentIndex], out int potentialPing) && potentialPing < 200)
                 {
                     currentIndex++;
                 }
 
-                // Skip player name (non-numeric, non-category header line)
-                if (currentIndex < endIndex && !IsNumeric(lines[currentIndex]) && !IsCategoryHeader(lines[currentIndex]) && !lines[currentIndex].Contains("%"))
+                // Skip player name (non-numeric, non-category header line, doesn't contain % or .)
+                if (currentIndex < endIndex && !IsNumeric(lines[currentIndex]) && !IsCategoryHeader(lines[currentIndex]) && 
+                    !lines[currentIndex].Contains("%") && !lines[currentIndex].Contains("."))
                 {
                     currentIndex++;
                 }
 
-                // Skip another empty line if present
-                while (currentIndex < endIndex && string.IsNullOrWhiteSpace(lines[currentIndex]))
-                {
-                    currentIndex++;
-                }
-
-                // Now we should be at the stats
+                // Now we should be at the stats (11 values: K, A, D, ADR, HLTV, CK, HS, UD, TAR, RP, next ping)
                 if (currentIndex >= endIndex) break;
 
                 var playerStat = new PlayerStatsViewModel();
@@ -223,50 +221,45 @@ namespace Balkana.Services.Matches
                     currentIndex++;
                 }
 
-                // Next player's ping (ignore) - line 10
-                if (currentIndex < endIndex && IsNumeric(lines[currentIndex]))
+                // Next player's ping (ignore) - line 10 (this is the ping for the next player)
+                if (currentIndex < endIndex && int.TryParse(lines[currentIndex], out int nextPing) && nextPing < 200)
                 {
                     currentIndex++;
                 }
 
                 stats.Add(playerStat);
                 playersFound++;
-
-                // Skip empty lines before next player
-                while (currentIndex < endIndex && string.IsNullOrWhiteSpace(lines[currentIndex]))
-                {
-                    currentIndex++;
-                }
             }
 
             return stats;
         }
 
-        private void ParseFlashStats(List<string> lines, Dictionary<string, int> headers, ParsedStats result)
+        private void ParseFlashStats(List<string> lines, Dictionary<string, List<int>> headers, ParsedStats result)
         {
-            if (!headers.ContainsKey("FLASH STATS")) return;
-
             // Flash stats don't seem to be used in PlayerStatsViewModel based on the model
             // But we can parse Flashes if needed - it appears in EXTRA STATS or might be in FLASH STATS
             // For now, skip this category as it's not in the model
         }
 
-        private void ParseKills(List<string> lines, Dictionary<string, int> headers, ParsedStats result)
+        private void ParseKills(List<string> lines, Dictionary<string, List<int>> headers, ParsedStats result)
         {
-            if (!headers.ContainsKey("KILLS")) return;
+            if (!headers.ContainsKey("KILLS") || headers["KILLS"].Count == 0) return;
 
-            var headerIndex = headers["KILLS"];
+            var killsHeaders = headers["KILLS"];
+            var headerIndex = killsHeaders[0]; // First occurrence = Team A
+            
+            // Find next category after first KILLS
             var nextCategoryIndex = FindNextCategoryIndex(lines, headerIndex, headers);
 
             // Parse Team A
             var teamAEnd = FindCategoryEnd(lines, headerIndex, nextCategoryIndex);
             var teamAKills = ParseKillsForTeam(lines, headerIndex + 1, teamAEnd);
 
-            // Parse Team B
-            var teamBStart = FindNextCategoryHeader(lines, "KILLS", headerIndex + 1);
+            // Parse Team B (second occurrence)
             List<Dictionary<string, int>> teamBKills = new();
-            if (teamBStart > 0)
+            if (killsHeaders.Count > 1)
             {
+                var teamBStart = killsHeaders[1]; // Second occurrence = Team B
                 var teamBEnd = FindCategoryEnd(lines, teamBStart, lines.Count);
                 teamBKills = ParseKillsForTeam(lines, teamBStart + 1, teamBEnd);
             }
@@ -312,20 +305,15 @@ namespace Balkana.Services.Matches
 
             while (currentIndex < endIndex && playersFound < 5)
             {
-                // Skip ping
-                if (IsNumeric(lines[currentIndex]))
+                // Skip ping (first line after header or after previous player)
+                if (currentIndex < endIndex && int.TryParse(lines[currentIndex], out int potentialPing) && potentialPing < 200)
                 {
                     currentIndex++;
                 }
 
-                // Skip empty line
-                if (currentIndex < endIndex && string.IsNullOrWhiteSpace(lines[currentIndex]))
-                {
-                    currentIndex++;
-                }
-
-                // Skip player name
-                if (currentIndex < endIndex && !IsNumeric(lines[currentIndex]) && !IsCategoryHeader(lines[currentIndex]))
+                // Skip player name (non-numeric, non-category header line, doesn't contain % or .)
+                if (currentIndex < endIndex && !IsNumeric(lines[currentIndex]) && !IsCategoryHeader(lines[currentIndex]) && 
+                    !lines[currentIndex].Contains("%") && !lines[currentIndex].Contains("."))
                 {
                     currentIndex++;
                 }
@@ -411,41 +399,38 @@ namespace Balkana.Services.Matches
                     currentIndex++;
                 }
 
-                // Next player's ping (ignore)
-                if (currentIndex < endIndex && IsNumeric(lines[currentIndex]))
+                // Next player's ping (ignore) - this is the ping for the next player
+                if (currentIndex < endIndex && int.TryParse(lines[currentIndex], out int nextPing) && nextPing < 200)
                 {
                     currentIndex++;
                 }
 
                 stats.Add(playerKills);
                 playersFound++;
-
-                // Skip empty line
-                if (currentIndex < endIndex && string.IsNullOrWhiteSpace(lines[currentIndex]))
-                {
-                    currentIndex++;
-                }
             }
 
             return stats;
         }
 
-        private void ParseTradeInfo(List<string> lines, Dictionary<string, int> headers, ParsedStats result)
+        private void ParseTradeInfo(List<string> lines, Dictionary<string, List<int>> headers, ParsedStats result)
         {
-            if (!headers.ContainsKey("TRADE INFO")) return;
+            if (!headers.ContainsKey("TRADE INFO") || headers["TRADE INFO"].Count == 0) return;
 
-            var headerIndex = headers["TRADE INFO"];
+            var tradeInfoHeaders = headers["TRADE INFO"];
+            var headerIndex = tradeInfoHeaders[0]; // First occurrence = Team A
+            
+            // Find next category after first TRADE INFO
             var nextCategoryIndex = FindNextCategoryIndex(lines, headerIndex, headers);
 
             // Parse Team A
             var teamAEnd = FindCategoryEnd(lines, headerIndex, nextCategoryIndex);
             var teamATrade = ParseTradeInfoForTeam(lines, headerIndex + 1, teamAEnd);
 
-            // Parse Team B
-            var teamBStart = FindNextCategoryHeader(lines, "TRADE INFO", headerIndex + 1);
+            // Parse Team B (second occurrence)
             List<Dictionary<string, object>> teamBTrade = new();
-            if (teamBStart > 0)
+            if (tradeInfoHeaders.Count > 1)
             {
+                var teamBStart = tradeInfoHeaders[1]; // Second occurrence = Team B
                 var teamBEnd = FindCategoryEnd(lines, teamBStart, lines.Count);
                 teamBTrade = ParseTradeInfoForTeam(lines, teamBStart + 1, teamBEnd);
             }
@@ -491,20 +476,15 @@ namespace Balkana.Services.Matches
 
             while (currentIndex < endIndex && playersFound < 5)
             {
-                // Skip ping
-                if (IsNumeric(lines[currentIndex]))
+                // Skip ping (first line after header or after previous player)
+                if (currentIndex < endIndex && int.TryParse(lines[currentIndex], out int potentialPing) && potentialPing < 200)
                 {
                     currentIndex++;
                 }
 
-                // Skip empty line
-                if (currentIndex < endIndex && string.IsNullOrWhiteSpace(lines[currentIndex]))
-                {
-                    currentIndex++;
-                }
-
-                // Skip player name
-                if (currentIndex < endIndex && !IsNumeric(lines[currentIndex]) && !IsCategoryHeader(lines[currentIndex]))
+                // Skip player name (non-numeric, non-category header line, doesn't contain % or .)
+                if (currentIndex < endIndex && !IsNumeric(lines[currentIndex]) && !IsCategoryHeader(lines[currentIndex]) && 
+                    !lines[currentIndex].Contains("%") && !lines[currentIndex].Contains("."))
                 {
                     currentIndex++;
                 }
@@ -556,47 +536,44 @@ namespace Balkana.Services.Matches
                     currentIndex++;
                 }
 
-                // Next player's ping (ignore)
-                if (currentIndex < endIndex && IsNumeric(lines[currentIndex]))
+                // Next player's ping (ignore) - this is the ping for the next player
+                if (currentIndex < endIndex && int.TryParse(lines[currentIndex], out int nextPing) && nextPing < 200)
                 {
                     currentIndex++;
                 }
 
                 stats.Add(playerTrade);
                 playersFound++;
-
-                // Skip empty line
-                if (currentIndex < endIndex && string.IsNullOrWhiteSpace(lines[currentIndex]))
-                {
-                    currentIndex++;
-                }
             }
 
             return stats;
         }
 
-        private void ParseShotsFired(List<string> lines, Dictionary<string, int> headers, ParsedStats result)
+        private void ParseShotsFired(List<string> lines, Dictionary<string, List<int>> headers, ParsedStats result)
         {
             // Shots fired stats don't seem to be in PlayerStatsViewModel
             // Skip this category
         }
 
-        private void ParseExtraStats(List<string> lines, Dictionary<string, int> headers, ParsedStats result)
+        private void ParseExtraStats(List<string> lines, Dictionary<string, List<int>> headers, ParsedStats result)
         {
-            if (!headers.ContainsKey("EXTRA STATS")) return;
+            if (!headers.ContainsKey("EXTRA STATS") || headers["EXTRA STATS"].Count == 0) return;
 
-            var headerIndex = headers["EXTRA STATS"];
+            var extraStatsHeaders = headers["EXTRA STATS"];
+            var headerIndex = extraStatsHeaders[0]; // First occurrence = Team A
+            
+            // Find next category after first EXTRA STATS
             var nextCategoryIndex = FindNextCategoryIndex(lines, headerIndex, headers);
 
             // Parse Team A
             var teamAEnd = FindCategoryEnd(lines, headerIndex, nextCategoryIndex);
             var teamAExtra = ParseExtraStatsForTeam(lines, headerIndex + 1, teamAEnd);
 
-            // Parse Team B
-            var teamBStart = FindNextCategoryHeader(lines, "EXTRA STATS", headerIndex + 1);
+            // Parse Team B (second occurrence)
             List<Dictionary<string, int>> teamBExtra = new();
-            if (teamBStart > 0)
+            if (extraStatsHeaders.Count > 1)
             {
+                var teamBStart = extraStatsHeaders[1]; // Second occurrence = Team B
                 var teamBEnd = FindCategoryEnd(lines, teamBStart, lines.Count);
                 teamBExtra = ParseExtraStatsForTeam(lines, teamBStart + 1, teamBEnd);
             }
@@ -630,20 +607,15 @@ namespace Balkana.Services.Matches
 
             while (currentIndex < endIndex && playersFound < 5)
             {
-                // Skip ping
-                if (IsNumeric(lines[currentIndex]))
+                // Skip ping (first line after header or after previous player)
+                if (currentIndex < endIndex && int.TryParse(lines[currentIndex], out int potentialPing) && potentialPing < 200)
                 {
                     currentIndex++;
                 }
 
-                // Skip empty line
-                if (currentIndex < endIndex && string.IsNullOrWhiteSpace(lines[currentIndex]))
-                {
-                    currentIndex++;
-                }
-
-                // Skip player name
-                if (currentIndex < endIndex && !IsNumeric(lines[currentIndex]) && !IsCategoryHeader(lines[currentIndex]))
+                // Skip player name (non-numeric, non-category header line, doesn't contain % or .)
+                if (currentIndex < endIndex && !IsNumeric(lines[currentIndex]) && !IsCategoryHeader(lines[currentIndex]) && 
+                    !lines[currentIndex].Contains("%") && !lines[currentIndex].Contains("."))
                 {
                     currentIndex++;
                 }
@@ -723,48 +695,33 @@ namespace Balkana.Services.Matches
                     currentIndex++;
                 }
 
-                // Next player's ping (ignore)
-                if (currentIndex < endIndex && IsNumeric(lines[currentIndex]))
+                // Next player's ping (ignore) - this is the ping for the next player
+                if (currentIndex < endIndex && int.TryParse(lines[currentIndex], out int nextPing) && nextPing < 200)
                 {
                     currentIndex++;
                 }
 
                 stats.Add(playerExtra);
                 playersFound++;
-
-                // Skip empty line
-                if (currentIndex < endIndex && string.IsNullOrWhiteSpace(lines[currentIndex]))
-                {
-                    currentIndex++;
-                }
             }
 
             return stats;
         }
 
-        private int FindNextCategoryIndex(List<string> lines, int currentIndex, Dictionary<string, int> headers)
+        private int FindNextCategoryIndex(List<string> lines, int currentIndex, Dictionary<string, List<int>> headers)
         {
             int minNext = int.MaxValue;
-            foreach (var header in headers.Values)
+            foreach (var headerList in headers.Values)
             {
-                if (header > currentIndex && header < minNext)
+                foreach (var header in headerList)
                 {
-                    minNext = header;
+                    if (header > currentIndex && header < minNext)
+                    {
+                        minNext = header;
+                    }
                 }
             }
             return minNext == int.MaxValue ? lines.Count : minNext;
-        }
-
-        private int FindNextCategoryHeader(List<string> lines, string categoryName, int startIndex)
-        {
-            for (int i = startIndex; i < lines.Count; i++)
-            {
-                if (lines[i].StartsWith(categoryName))
-                {
-                    return i;
-                }
-            }
-            return -1;
         }
 
         private int FindCategoryEnd(List<string> lines, int startIndex, int maxIndex)

@@ -2237,84 +2237,95 @@
         }
 
         function populateFormFields(data) {
-            // Populate Team A stats
-            if (data.TeamAStats && data.TeamAStats.length > 0) {
-                for (let i = 0; i < Math.min(data.TeamAStats.length, 5); i++) {
+            console.log('Populating form fields with data:', data);
+            
+            // Populate Team A stats - handle both camelCase and PascalCase
+            const teamAStats = data.teamAStats || data.TeamAStats;
+            if (teamAStats && teamAStats.length > 0) {
+                console.log(`Found ${teamAStats.length} Team A players`);
+                for (let i = 0; i < Math.min(teamAStats.length, 5); i++) {
                     const playerNum = i + 1;
-                    const stats = data.TeamAStats[i];
+                    const stats = teamAStats[i];
+                    console.log(`Populating Team A Player ${playerNum} stats:`, stats);
                     
-                    setFieldValue(`TeamAPlayer${playerNum}Stats.Kills`, stats.Kills);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats.Assists`, stats.Assists);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats.Deaths`, stats.Deaths);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats.Damage`, stats.Damage);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats.TsideRoundsWon`, stats.TsideRoundsWon);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats.CTsideRoundsWon`, stats.CTsideRoundsWon);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats.RoundsPlayed`, stats.RoundsPlayed);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats.KAST`, stats.KAST);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats.HSkills`, stats.HSkills);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats.HLTV1`, stats.HLTV1);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats.UD`, stats.UD);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats.FK`, stats.FK);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats.FD`, stats.FD);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats._1k`, stats._1k);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats._2k`, stats._2k);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats._3k`, stats._3k);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats._4k`, stats._4k);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats._5k`, stats._5k);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats._1v1`, stats._1v1);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats._1v2`, stats._1v2);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats._1v3`, stats._1v3);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats._1v4`, stats._1v4);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats._1v5`, stats._1v5);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats.SniperKills`, stats.SniperKills);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats.PistolKills`, stats.PistolKills);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats.KnifeKills`, stats.KnifeKills);
-                    setFieldValue(`TeamAPlayer${playerNum}Stats.Flashes`, stats.Flashes);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.Kills`, stats.kills || stats.Kills || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.Assists`, stats.assists || stats.Assists || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.Deaths`, stats.deaths || stats.Deaths || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.Damage`, stats.damage || stats.Damage || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.TsideRoundsWon`, stats.tsideRoundsWon || stats.TsideRoundsWon || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.CTsideRoundsWon`, stats.cTsideRoundsWon || stats.CTsideRoundsWon || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.RoundsPlayed`, stats.roundsPlayed || stats.RoundsPlayed || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.KAST`, stats.kast || stats.KAST || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.HSkills`, stats.hSkills || stats.HSkills || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.HLTV1`, stats.hltV1 || stats.HLTV1 || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.UD`, stats.ud || stats.UD || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.FK`, stats.fk || stats.FK || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.FD`, stats.fd || stats.FD || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._1k`, stats._1k || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._2k`, stats._2k || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._3k`, stats._3k || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._4k`, stats._4k || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._5k`, stats._5k || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._1v1`, stats._1v1 || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._1v2`, stats._1v2 || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._1v3`, stats._1v3 || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._1v4`, stats._1v4 || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._1v5`, stats._1v5 || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.SniperKills`, stats.sniperKills || stats.SniperKills || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.PistolKills`, stats.pistolKills || stats.PistolKills || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.KnifeKills`, stats.knifeKills || stats.KnifeKills || 0);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.Flashes`, stats.flashes || stats.Flashes || 0);
                 }
             }
 
-            // Populate Team B stats
-            if (data.TeamBStats && data.TeamBStats.length > 0) {
-                for (let i = 0; i < Math.min(data.TeamBStats.length, 5); i++) {
+            // Populate Team B stats - handle both camelCase and PascalCase
+            const teamBStats = data.teamBStats || data.TeamBStats;
+            if (teamBStats && teamBStats.length > 0) {
+                console.log(`Found ${teamBStats.length} Team B players`);
+                for (let i = 0; i < Math.min(teamBStats.length, 5); i++) {
                     const playerNum = i + 1;
-                    const stats = data.TeamBStats[i];
+                    const stats = teamBStats[i];
+                    console.log(`Populating Team B Player ${playerNum} stats:`, stats);
                     
-                    setFieldValue(`TeamBPlayer${playerNum}Stats.Kills`, stats.Kills);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats.Assists`, stats.Assists);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats.Deaths`, stats.Deaths);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats.Damage`, stats.Damage);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats.TsideRoundsWon`, stats.TsideRoundsWon);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats.CTsideRoundsWon`, stats.CTsideRoundsWon);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats.RoundsPlayed`, stats.RoundsPlayed);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats.KAST`, stats.KAST);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats.HSkills`, stats.HSkills);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats.HLTV1`, stats.HLTV1);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats.UD`, stats.UD);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats.FK`, stats.FK);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats.FD`, stats.FD);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats._1k`, stats._1k);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats._2k`, stats._2k);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats._3k`, stats._3k);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats._4k`, stats._4k);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats._5k`, stats._5k);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats._1v1`, stats._1v1);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats._1v2`, stats._1v2);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats._1v3`, stats._1v3);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats._1v4`, stats._1v4);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats._1v5`, stats._1v5);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats.SniperKills`, stats.SniperKills);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats.PistolKills`, stats.PistolKills);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats.KnifeKills`, stats.KnifeKills);
-                    setFieldValue(`TeamBPlayer${playerNum}Stats.Flashes`, stats.Flashes);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.Kills`, stats.kills || stats.Kills || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.Assists`, stats.assists || stats.Assists || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.Deaths`, stats.deaths || stats.Deaths || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.Damage`, stats.damage || stats.Damage || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.TsideRoundsWon`, stats.tsideRoundsWon || stats.TsideRoundsWon || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.CTsideRoundsWon`, stats.cTsideRoundsWon || stats.CTsideRoundsWon || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.RoundsPlayed`, stats.roundsPlayed || stats.RoundsPlayed || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.KAST`, stats.kast || stats.KAST || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.HSkills`, stats.hSkills || stats.HSkills || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.HLTV1`, stats.hltV1 || stats.HLTV1 || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.UD`, stats.ud || stats.UD || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.FK`, stats.fk || stats.FK || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.FD`, stats.fd || stats.FD || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._1k`, stats._1k || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._2k`, stats._2k || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._3k`, stats._3k || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._4k`, stats._4k || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._5k`, stats._5k || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._1v1`, stats._1v1 || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._1v2`, stats._1v2 || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._1v3`, stats._1v3 || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._1v4`, stats._1v4 || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._1v5`, stats._1v5 || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.SniperKills`, stats.sniperKills || stats.SniperKills || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.PistolKills`, stats.pistolKills || stats.PistolKills || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.KnifeKills`, stats.knifeKills || stats.KnifeKills || 0);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.Flashes`, stats.flashes || stats.Flashes || 0);
                 }
             }
 
             // Set rounds if available
-            if (data.TeamARounds !== null && data.TeamARounds !== undefined) {
-                setFieldValue('TeamARounds', data.TeamARounds);
+            const teamARounds = data.teamARounds !== undefined ? data.teamARounds : data.TeamARounds;
+            const teamBRounds = data.teamBRounds !== undefined ? data.teamBRounds : data.TeamBRounds;
+            
+            if (teamARounds !== null && teamARounds !== undefined) {
+                setFieldValue('TeamARounds', teamARounds);
             }
-            if (data.TeamBRounds !== null && data.TeamBRounds !== undefined) {
-                setFieldValue('TeamBRounds', data.TeamBRounds);
+            if (teamBRounds !== null && teamBRounds !== undefined) {
+                setFieldValue('TeamBRounds', teamBRounds);
             }
         }
 
@@ -2326,6 +2337,8 @@
                 field.value = value;
                 // Trigger change event to update any dependent fields
                 field.dispatchEvent(new Event('change', { bubbles: true }));
+            } else {
+                console.warn(`Field not found: ${fieldName}`);
             }
         }
     });
