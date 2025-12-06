@@ -1,0 +1,497 @@
+@model Balkana.Models.Stats.YearlyGameStatsViewModel
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/stats.css" asp-append-version="true" />
+    <style>
+        .yearly-stats-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .yearly-header {
+            background: linear-gradient(135deg, rgba(0, 123, 255, 0.1), rgba(220, 53, 69, 0.1));
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .yearly-title {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+        }
+
+        .yearly-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .filter-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .filter-input, .filter-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .filter-input:focus, .filter-select:focus {
+            outline: none;
+            border-color: #007bff;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: linear-gradient(135deg, #007bff, #dc3545);
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .stats-table thead {
+            background: rgba(0, 123, 255, 0.2);
+        }
+
+        .stats-table th {
+            padding: 15px;
+            text-align: left;
+            color: white;
+            font-weight: 600;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-table th.sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        .stats-table th.sortable:hover {
+            background: rgba(0, 123, 255, 0.3);
+        }
+
+        .stats-table th.sortable::after {
+            content: ' ↕';
+            opacity: 0.5;
+            font-size: 0.8em;
+        }
+
+        .stats-table th.sort-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+
+        .stats-table th.sort-desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+
+        .stats-table tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background 0.2s ease;
+        }
+
+        .stats-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-table td {
+            padding: 12px 15px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .player-name-cell {
+            font-weight: 600;
+            color: white;
+        }
+
+        .player-nickname-cell {
+            font-size: 0.85em;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 2px;
+        }
+
+        .stat-value {
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .no-data i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .export-btn {
+            background: rgba(40, 167, 69, 0.8);
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            background: rgba(40, 167, 69, 1);
+            transform: translateY(-1px);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+    </style>
+}
+
+<div class="yearly-stats-container">
+    <div class="yearly-header">
+        <h1 class="yearly-title">@Model.GameName - @Model.Year Statistics</h1>
+        <p class="yearly-subtitle">All players who participated in tournaments during @Model.Year</p>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <h4 style="color: white; margin-bottom: 15px;">Filter Options</h4>
+        <div class="filter-grid">
+            <div class="filter-group">
+                <label class="filter-label">Search Player</label>
+                <input type="text" id="playerSearch" class="filter-input" placeholder="Search by name or nickname..." />
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Min Tournaments</label>
+                <input type="number" id="minTournaments" class="filter-input" step="1" placeholder="0" />
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Min Maps</label>
+                <input type="number" id="minMaps" class="filter-input" step="1" placeholder="0" />
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Min K/D Ratio</label>
+                <input type="number" id="minKDRatio" class="filter-input" step="0.1" placeholder="0.0" />
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Min ADR</label>
+                <input type="number" id="minADR" class="filter-input" step="1" placeholder="0" />
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Min HLTV Rating</label>
+                <input type="number" id="minHLTV" class="filter-input" step="0.01" placeholder="0.00" />
+            </div>
+        </div>
+        <div class="filter-actions">
+            <button class="filter-btn" onclick="applyFilters()">
+                <i class="fi fi-rr-search"></i>
+                Apply Filters
+            </button>
+            <button class="filter-btn" onclick="clearFilters()" style="background: rgba(220, 53, 69, 0.8);">
+                <i class="fi fi-rr-cross"></i>
+                Clear Filters
+            </button>
+        </div>
+    </div>
+
+    @if (Model.PlayerStats.Any())
+    {
+        <div class="table-header">
+            <h3 style="color: white; margin: 0;">Player Performance (@Model.PlayerStats.Count players)</h3>
+            <button class="export-btn" onclick="exportToCSV()">
+                <i class="fi fi-rr-download"></i>
+                Export CSV
+            </button>
+        </div>
+
+        <table class="stats-table" id="statsTable">
+            <thead>
+                <tr>
+                    <th class="sortable" data-column="playerName">Player</th>
+                    <th class="sortable" data-column="tournaments">Tournaments</th>
+                    <th class="sortable" data-column="maps">Maps</th>
+                    <th class="sortable" data-column="hltvRating">HLTV Rating</th>
+                    <th class="sortable" data-column="kills">Kills (HS)</th>
+                    <th class="sortable" data-column="deaths">Deaths</th>
+                    <th class="sortable" data-column="assists">Assists</th>
+                    <th class="sortable" data-column="kdRatio">K/D Ratio</th>
+                    <th class="sortable" data-column="adr">ADR</th>
+                    <th class="sortable" data-column="kast">KAST</th>
+                    <th class="sortable" data-column="5k">5K</th>
+                    <th class="sortable" data-column="4k">4K</th>
+                    <th class="sortable" data-column="3k">3K</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var player in Model.PlayerStats)
+                {
+                    @if (player.CS2Stats != null)
+                    {
+                        <tr data-player-name="@player.PlayerName.ToLower()" data-player-nickname="@player.PlayerNickname.ToLower()" 
+                            data-tournaments="@player.TournamentCount" data-maps="@player.MapCount"
+                            data-kd-ratio="@player.CS2Stats.KDRatio" 
+                            data-adr="@player.CS2Stats.ADR" data-hltv="@player.HLTVRating"
+                            data-5k="@player.CS2Stats._5k" data-4k="@player.CS2Stats._4k" data-3k="@player.CS2Stats._3k">
+                            <td>
+                                <div class="player-name-cell">@player.PlayerName</div>
+                                <div class="player-nickname-cell">@player.PlayerNickname</div>
+                            </td>
+                            <td class="stat-value">@player.TournamentCount</td>
+                            <td class="stat-value">@player.MapCount</td>
+                            <td class="stat-value">@player.HLTVRating.ToString("F2")</td>
+                            <td class="stat-value">@player.CS2Stats.TotalKills (@player.CS2Stats.Headshots)</td>
+                            <td class="stat-value">@player.CS2Stats.TotalDeaths</td>
+                            <td class="stat-value">@player.CS2Stats.TotalAssists</td>
+                            <td class="stat-value">@player.CS2Stats.KDRatio.ToString("F2")</td>
+                            <td class="stat-value">@player.CS2Stats.ADR.ToString("F1")</td>
+                            <td class="stat-value">@player.CS2Stats.KAST.ToString("F1")%</td>
+                            <td class="stat-value">@player.CS2Stats._5k</td>
+                            <td class="stat-value">@player.CS2Stats._4k</td>
+                            <td class="stat-value">@player.CS2Stats._3k</td>
+                        </tr>
+                    }
+                    else if (player.LoLStats != null)
+                    {
+                        <tr data-player-name="@player.PlayerName.ToLower()" data-player-nickname="@player.PlayerNickname.ToLower()" 
+                            data-tournaments="@player.TournamentCount" data-maps="@player.MapCount"
+                            data-kd-ratio="@player.LoLStats.KDRatio" 
+                            data-hltv="@player.HLTVRating">
+                            <td>
+                                <div class="player-name-cell">@player.PlayerName</div>
+                                <div class="player-nickname-cell">@player.PlayerNickname</div>
+                            </td>
+                            <td class="stat-value">@player.TournamentCount</td>
+                            <td class="stat-value">@player.MapCount</td>
+                            <td class="stat-value">@player.HLTVRating.ToString("F2")</td>
+                            <td class="stat-value">@player.LoLStats.TotalKills</td>
+                            <td class="stat-value">@player.LoLStats.TotalDeaths</td>
+                            <td class="stat-value">@player.LoLStats.TotalAssists</td>
+                            <td class="stat-value">@player.LoLStats.KDRatio.ToString("F2")</td>
+                            <td class="stat-value">-</td>
+                            <td class="stat-value">-</td>
+                            <td class="stat-value">-</td>
+                            <td class="stat-value">-</td>
+                            <td class="stat-value">-</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="no-data">
+            <i class="fi fi-rr-chart-line-up"></i>
+            <h3>No Statistics Available</h3>
+            <p>No players participated in tournaments for @Model.GameName during @Model.Year.</p>
+        </div>
+    }
+</div>
+
+<script>
+    let sortColumn = null;
+    let sortDirection = 'desc';
+
+    // Table sorting
+    document.querySelectorAll('.sortable').forEach(header => {
+        header.addEventListener('click', () => {
+            const column = header.dataset.column;
+            const tbody = document.querySelector('#statsTable tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            // Remove existing sort classes
+            document.querySelectorAll('.sortable').forEach(h => {
+                h.classList.remove('sort-asc', 'sort-desc');
+            });
+
+            // Determine sort direction
+            if (sortColumn === column) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = column;
+                sortDirection = 'asc';
+            }
+
+            // Add sort class
+            header.classList.add(sortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+
+            // Sort rows
+            rows.sort((a, b) => {
+                let aVal, bVal;
+
+                switch (column) {
+                    case 'playerName':
+                        aVal = a.dataset.playerName || '';
+                        bVal = b.dataset.playerName || '';
+                        return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                    case 'tournaments':
+                        aVal = parseInt(a.dataset.tournaments) || 0;
+                        bVal = parseInt(b.dataset.tournaments) || 0;
+                        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+                    case 'maps':
+                        aVal = parseInt(a.dataset.maps) || 0;
+                        bVal = parseInt(b.dataset.maps) || 0;
+                        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+                    case 'hltvRating':
+                        aVal = parseFloat(a.dataset.hltv) || 0;
+                        bVal = parseFloat(b.dataset.hltv) || 0;
+                        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+                    case 'kdRatio':
+                        aVal = parseFloat(a.dataset.kdRatio) || 0;
+                        bVal = parseFloat(b.dataset.kdRatio) || 0;
+                        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+                    case 'adr':
+                        aVal = parseFloat(a.dataset.adr) || 0;
+                        bVal = parseFloat(b.dataset.adr) || 0;
+                        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+                    default:
+                        return 0;
+                }
+            });
+
+            // Re-append sorted rows
+            rows.forEach(row => tbody.appendChild(row));
+        });
+    });
+
+    // Filter functionality
+    function applyFilters() {
+        const playerSearch = document.getElementById('playerSearch').value.toLowerCase();
+        const minTournaments = parseInt(document.getElementById('minTournaments').value) || 0;
+        const minMaps = parseInt(document.getElementById('minMaps').value) || 0;
+        const minKDRatio = parseFloat(document.getElementById('minKDRatio').value) || 0;
+        const minADR = parseFloat(document.getElementById('minADR').value) || 0;
+        const minHLTV = parseFloat(document.getElementById('minHLTV').value) || 0;
+
+        const rows = document.querySelectorAll('#statsTable tbody tr');
+        rows.forEach(row => {
+            const playerName = (row.dataset.playerName || '').toLowerCase();
+            const playerNickname = (row.dataset.playerNickname || '').toLowerCase();
+            const tournaments = parseInt(row.dataset.tournaments) || 0;
+            const maps = parseInt(row.dataset.maps) || 0;
+            const kdRatio = parseFloat(row.dataset.kdRatio) || 0;
+            const adr = parseFloat(row.dataset.adr) || 0;
+            const hltv = parseFloat(row.dataset.hltv) || 0;
+
+            const matchesSearch = !playerSearch || 
+                playerName.includes(playerSearch) || 
+                playerNickname.includes(playerSearch);
+            const matchesTournaments = tournaments >= minTournaments;
+            const matchesMaps = maps >= minMaps;
+            const matchesKD = kdRatio >= minKDRatio;
+            const matchesADR = adr >= minADR;
+            const matchesHLTV = hltv >= minHLTV;
+
+            if (matchesSearch && matchesTournaments && matchesMaps && matchesKD && matchesADR && matchesHLTV) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    function clearFilters() {
+        document.getElementById('playerSearch').value = '';
+        document.getElementById('minTournaments').value = '';
+        document.getElementById('minMaps').value = '';
+        document.getElementById('minKDRatio').value = '';
+        document.getElementById('minADR').value = '';
+        document.getElementById('minHLTV').value = '';
+
+        const rows = document.querySelectorAll('#statsTable tbody tr');
+        rows.forEach(row => row.style.display = '');
+    }
+
+    // Export to CSV
+    function exportToCSV() {
+        const rows = Array.from(document.querySelectorAll('#statsTable tbody tr:not([style*="display: none"])'));
+        const headers = Array.from(document.querySelectorAll('#statsTable thead th')).map(th => th.textContent.trim());
+        
+        let csv = headers.join(',') + '\n';
+        
+        rows.forEach(row => {
+            const cells = Array.from(row.querySelectorAll('td')).map(td => {
+                let text = td.textContent.trim();
+                // Escape commas and quotes
+                if (text.includes(',') || text.includes('"')) {
+                    text = '"' + text.replace(/"/g, '""') + '"';
+                }
+                return text;
+            });
+            csv += cells.join(',') + '\n';
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = '@(Model.GameName)_@(Model.Year)_Stats.csv'.replace(/\s+/g, '_');
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+</script>
+

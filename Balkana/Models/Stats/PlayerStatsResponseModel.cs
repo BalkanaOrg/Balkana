@@ -127,4 +127,28 @@ namespace Balkana.Models.Stats
         public double WinRate { get; set; }
         public double AverageKDRatio { get; set; }
     }
+    
+    public class YearlyGameStatsViewModel
+    {
+        public int GameId { get; set; }
+        public string GameName { get; set; }
+        public int Year { get; set; }
+        public List<YearlyPlayerStatsModel> PlayerStats { get; set; } = new();
+    }
+    
+    public class YearlyPlayerStatsModel
+    {
+        public int PlayerId { get; set; }
+        public string PlayerName { get; set; }
+        public string PlayerNickname { get; set; }
+        public int TournamentCount { get; set; }
+        public int MapCount { get; set; } // Total matches/maps played
+        public double HLTVRating { get; set; }
+        
+        // CS2 Stats (if applicable)
+        public CS2StatsModel? CS2Stats { get; set; }
+        
+        // LoL Stats (if applicable)
+        public LoLStatsModel? LoLStats { get; set; }
+    }
 }
