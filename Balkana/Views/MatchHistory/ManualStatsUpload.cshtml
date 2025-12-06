@@ -103,6 +103,24 @@
                         </div>
                     </div>
 
+                    <!-- Import from Paste Section -->
+                    <div class="form-section" style="background-color: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+                        <h3 class="section-title" style="color: #495057;">
+                            <i class="fas fa-paste"></i> Import from Popflash Paste
+                        </h3>
+                        <p style="color: #6c757d; margin-bottom: 15px;">
+                            Paste the match statistics from Popflash below. The system will automatically parse and populate the player statistics fields.
+                        </p>
+                        <div class="form-group">
+                            <label for="popflashPaste" class="form-label">Paste Popflash Statistics</label>
+                            <textarea id="popflashPaste" class="form-control" rows="10" placeholder="Paste the match statistics here..."></textarea>
+                        </div>
+                        <button type="button" id="importFromPasteBtn" class="btn btn-primary" style="margin-top: 10px;">
+                            <i class="fas fa-upload"></i> Import from Paste
+                        </button>
+                        <div id="importStatus" style="margin-top: 10px; display: none;"></div>
+                    </div>
+
                     <!-- Team A Players Section -->
                     <div class="form-section">
                         <h3 class="section-title team-a-title">
@@ -2152,4 +2170,163 @@
             }
         });
     }
+
+    // Import from Popflash Paste functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const importBtn = document.getElementById('importFromPasteBtn');
+        const pasteTextarea = document.getElementById('popflashPaste');
+        const importStatus = document.getElementById('importStatus');
+
+        if (importBtn && pasteTextarea) {
+            importBtn.addEventListener('click', async function() {
+                const pastedText = pasteTextarea.value.trim();
+                
+                if (!pastedText) {
+                    showStatus('Please paste the match statistics first.', 'error');
+                    return;
+                }
+
+                importBtn.disabled = true;
+                importBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Parsing...';
+                showStatus('Parsing statistics...', 'info');
+
+                try {
+                    const response = await fetch('@Url.Action("ParsePopflashStats", "MatchHistory")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ PastedText: pastedText })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success && result.data) {
+                        populateFormFields(result.data);
+                        showStatus('Statistics imported successfully! Please review and adjust if needed.', 'success');
+                        // Scroll to the first stats section
+                        document.querySelector('.stats-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else {
+                        showStatus(result.error || 'Failed to parse statistics. Please check the format.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Import error:', error);
+                    showStatus('An error occurred while importing. Please try again.', 'error');
+                } finally {
+                    importBtn.disabled = false;
+                    importBtn.innerHTML = '<i class="fas fa-upload"></i> Import from Paste';
+                }
+            });
+        }
+
+        function showStatus(message, type) {
+            if (!importStatus) return;
+            
+            importStatus.style.display = 'block';
+            importStatus.className = 'alert';
+            
+            if (type === 'success') {
+                importStatus.classList.add('alert-success');
+            } else if (type === 'error') {
+                importStatus.classList.add('alert-danger');
+            } else {
+                importStatus.classList.add('alert-info');
+            }
+            
+            importStatus.textContent = message;
+        }
+
+        function populateFormFields(data) {
+            // Populate Team A stats
+            if (data.TeamAStats && data.TeamAStats.length > 0) {
+                for (let i = 0; i < Math.min(data.TeamAStats.length, 5); i++) {
+                    const playerNum = i + 1;
+                    const stats = data.TeamAStats[i];
+                    
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.Kills`, stats.Kills);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.Assists`, stats.Assists);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.Deaths`, stats.Deaths);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.Damage`, stats.Damage);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.TsideRoundsWon`, stats.TsideRoundsWon);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.CTsideRoundsWon`, stats.CTsideRoundsWon);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.RoundsPlayed`, stats.RoundsPlayed);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.KAST`, stats.KAST);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.HSkills`, stats.HSkills);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.HLTV1`, stats.HLTV1);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.UD`, stats.UD);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.FK`, stats.FK);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.FD`, stats.FD);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._1k`, stats._1k);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._2k`, stats._2k);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._3k`, stats._3k);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._4k`, stats._4k);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._5k`, stats._5k);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._1v1`, stats._1v1);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._1v2`, stats._1v2);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._1v3`, stats._1v3);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._1v4`, stats._1v4);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats._1v5`, stats._1v5);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.SniperKills`, stats.SniperKills);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.PistolKills`, stats.PistolKills);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.KnifeKills`, stats.KnifeKills);
+                    setFieldValue(`TeamAPlayer${playerNum}Stats.Flashes`, stats.Flashes);
+                }
+            }
+
+            // Populate Team B stats
+            if (data.TeamBStats && data.TeamBStats.length > 0) {
+                for (let i = 0; i < Math.min(data.TeamBStats.length, 5); i++) {
+                    const playerNum = i + 1;
+                    const stats = data.TeamBStats[i];
+                    
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.Kills`, stats.Kills);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.Assists`, stats.Assists);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.Deaths`, stats.Deaths);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.Damage`, stats.Damage);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.TsideRoundsWon`, stats.TsideRoundsWon);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.CTsideRoundsWon`, stats.CTsideRoundsWon);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.RoundsPlayed`, stats.RoundsPlayed);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.KAST`, stats.KAST);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.HSkills`, stats.HSkills);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.HLTV1`, stats.HLTV1);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.UD`, stats.UD);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.FK`, stats.FK);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.FD`, stats.FD);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._1k`, stats._1k);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._2k`, stats._2k);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._3k`, stats._3k);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._4k`, stats._4k);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._5k`, stats._5k);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._1v1`, stats._1v1);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._1v2`, stats._1v2);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._1v3`, stats._1v3);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._1v4`, stats._1v4);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats._1v5`, stats._1v5);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.SniperKills`, stats.SniperKills);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.PistolKills`, stats.PistolKills);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.KnifeKills`, stats.KnifeKills);
+                    setFieldValue(`TeamBPlayer${playerNum}Stats.Flashes`, stats.Flashes);
+                }
+            }
+
+            // Set rounds if available
+            if (data.TeamARounds !== null && data.TeamARounds !== undefined) {
+                setFieldValue('TeamARounds', data.TeamARounds);
+            }
+            if (data.TeamBRounds !== null && data.TeamBRounds !== undefined) {
+                setFieldValue('TeamBRounds', data.TeamBRounds);
+            }
+        }
+
+        function setFieldValue(fieldName, value) {
+            if (value === null || value === undefined) return;
+            
+            const field = document.querySelector(`[name="${fieldName}"]`);
+            if (field) {
+                field.value = value;
+                // Trigger change event to update any dependent fields
+                field.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+    });
 </script>

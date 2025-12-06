@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace Balkana.Controllers
 {
@@ -1116,6 +1117,34 @@ namespace Balkana.Controllers
             }
 
             return Json(tournament);
+        }
+
+        [HttpPost]
+        [IgnoreAntiforgeryToken]
+        [Authorize(Roles = "Administrator,Moderator")]
+        public IActionResult ParsePopflashStats([FromBody] ParsePopflashRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.PastedText))
+            {
+                return BadRequest(new { error = "Pasted text is required" });
+            }
+
+            try
+            {
+                var parser = new PopflashStatsParser();
+                var parsedStats = parser.Parse(request.PastedText);
+
+                return Json(new { success = true, data = parsedStats });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = $"Failed to parse stats: {ex.Message}" });
+            }
+        }
+
+        public class ParsePopflashRequest
+        {
+            public string PastedText { get; set; } = string.Empty;
         }
     }
 }
