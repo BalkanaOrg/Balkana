@@ -111,6 +111,25 @@
                             @Model.PublishedAt?.ToString("MMMM dd, yyyy")
                         </time>
                     </div>
+                    @if (User.IsInRole("Editor"))
+                    {
+                        <div class="article-meta-actions">
+                            <form asp-action="Unpublish" asp-route-id="@Model.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn-action btn-action-secondary">
+                                    <i class="fi fi-rr-lock"></i>
+                                    Unpublish
+                                </button>
+                            </form>
+                            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn-action btn-action-danger">
+                                    <i class="fi fi-rr-trash"></i>
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    }
                 </div>
             </header>
 

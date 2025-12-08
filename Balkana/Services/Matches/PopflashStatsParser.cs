@@ -578,22 +578,24 @@ namespace Balkana.Services.Matches
                 teamBExtra = ParseExtraStatsForTeam(lines, teamBStart + 1, teamBEnd);
             }
 
-            // Apply to Team A
+            // Apply to Team A (only overwrite sniper kills if not already set)
             for (int i = 0; i < teamAExtra.Count && i < result.TeamAStats.Count; i++)
             {
                 result.TeamAStats[i].FK = teamAExtra[i].GetValueOrDefault("FK", 0);
                 result.TeamAStats[i].FD = teamAExtra[i].GetValueOrDefault("FD", 0);
-                result.TeamAStats[i].SniperKills = teamAExtra[i].GetValueOrDefault("SK", 0); // Might override from KILLS
+                if (result.TeamAStats[i].SniperKills == 0)
+                    result.TeamAStats[i].SniperKills = teamAExtra[i].GetValueOrDefault("SK", 0);
                 result.TeamAStats[i].PistolKills = teamAExtra[i].GetValueOrDefault("PK", 0);
                 result.TeamAStats[i].KnifeKills = teamAExtra[i].GetValueOrDefault("NK", 0);
             }
 
-            // Apply to Team B
+            // Apply to Team B (only overwrite sniper kills if not already set)
             for (int i = 0; i < teamBExtra.Count && i < result.TeamBStats.Count; i++)
             {
                 result.TeamBStats[i].FK = teamBExtra[i].GetValueOrDefault("FK", 0);
                 result.TeamBStats[i].FD = teamBExtra[i].GetValueOrDefault("FD", 0);
-                result.TeamBStats[i].SniperKills = teamBExtra[i].GetValueOrDefault("SK", 0); // Might override from KILLS
+                if (result.TeamBStats[i].SniperKills == 0)
+                    result.TeamBStats[i].SniperKills = teamBExtra[i].GetValueOrDefault("SK", 0);
                 result.TeamBStats[i].PistolKills = teamBExtra[i].GetValueOrDefault("PK", 0);
                 result.TeamBStats[i].KnifeKills = teamBExtra[i].GetValueOrDefault("NK", 0);
             }

@@ -17,11 +17,9 @@ namespace Balkana.Data.Models
         public string Nickname { get; set; }
 
         [MaxLength(NameMaxLength)]
-        [MinLength(NameMinLength)]
         public string? FirstName { get; set; }
 
         [MaxLength(NameMaxLength)]
-        [MinLength(NameMinLength)]
         public string? LastName { get; set; }
 
         [Required]

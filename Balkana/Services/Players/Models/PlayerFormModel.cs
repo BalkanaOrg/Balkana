@@ -14,15 +14,13 @@ namespace Balkana.Services.Players.Models
         [StringLength(NameMaxLength, MinimumLength = NameMinLength)]
         public string Nickname { get; init; }
 
-        [Required]
         [Display(Name = "First name")]
-        [StringLength(NameMaxLength, MinimumLength = NameMinLength)]
-        public string FirstName { get; init; }
+        [StringLength(NameMaxLength)]
+        public string? FirstName { get; init; }
 
-        [Required]
         [Display(Name = "Last name")]
-        [StringLength(NameMaxLength, MinimumLength = NameMinLength)]
-        public string LastName { get; init; }
+        [StringLength(NameMaxLength)]
+        public string? LastName { get; init; }
 
         [Required]
         [Display(Name = "Nationality")]

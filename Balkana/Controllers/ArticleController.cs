@@ -274,11 +274,15 @@ namespace Balkana.Controllers
             }
 
             // Only show published articles publicly
-            if (article.Status != "Published" && !User.IsInRole("Moderator") && !User.IsInRole("Administrator") && !User.IsInRole("Editor"))
+            if (article.Status != "Published")
             {
-                // Authors can view their own drafts
                 var user = await _userManager.GetUserAsync(User);
-                if (user == null || article.AuthorId != user.Id)
+                var isPrivileged =
+                    User.IsInRole("Editor") ||
+                    User.IsInRole("Administrator") ||
+                    (user != null && article.AuthorId == user.Id);
+
+                if (!isPrivileged)
                 {
                     return Forbid();
                 }
@@ -307,6 +311,41 @@ namespace Balkana.Controllers
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction("Drafts", "Article");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Editor")]
+        public async Task<IActionResult> Unpublish(int id)
+        {
+            var article = await _context.Articles.FindAsync(id);
+            if (article == null)
+            {
+                return NotFound();
+            }
+
+            article.Status = "Draft";
+            article.PublishedAt = null;
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Drafts));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Editor")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var article = await _context.Articles.FindAsync(id);
+            if (article == null)
+            {
+                return NotFound();
+            }
+
+            _context.Articles.Remove(article);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Drafts));
         }
     }
 }
