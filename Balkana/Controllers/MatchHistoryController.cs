@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
+using System.Globalization;
 
 namespace Balkana.Controllers
 {
@@ -834,7 +835,7 @@ namespace Balkana.Controllers
                 return View(model);
             }
 
-            // Get the teams
+            // Get the teams (initial selection)
             var teamA = await _db.Teams.FirstOrDefaultAsync(t => t.Id == model.TeamAId);
             var teamB = await _db.Teams.FirstOrDefaultAsync(t => t.Id == model.TeamBId);
 
@@ -843,6 +844,18 @@ namespace Balkana.Controllers
                 ModelState.AddModelError("", "Invalid teams selected.");
                 return View(model);
             }
+
+            // Resolve teams based on selected players and transfers at match date (fallback to selected team)
+            var resolvedTeamA = await ResolveTeamFromPlayersAsync(
+                new[] { model.TeamAPlayer1Id, model.TeamAPlayer2Id, model.TeamAPlayer3Id, model.TeamAPlayer4Id, model.TeamAPlayer5Id },
+                model.PlayedAt);
+
+            var resolvedTeamB = await ResolveTeamFromPlayersAsync(
+                new[] { model.TeamBPlayer1Id, model.TeamBPlayer2Id, model.TeamBPlayer3Id, model.TeamBPlayer4Id, model.TeamBPlayer5Id },
+                model.PlayedAt);
+
+            if (resolvedTeamA != null) teamA = resolvedTeamA;
+            if (resolvedTeamB != null) teamB = resolvedTeamB;
 
             // Create the match
             var match = new MatchCS
@@ -895,7 +908,7 @@ namespace Balkana.Controllers
 
             var playerUuidMap = players.ToDictionary(
                 p => p.Id,
-                p => p.GameProfiles.FirstOrDefault(gp => gp.Provider == "Faceit")?.UUID ?? ""
+                p => p.GameProfiles.FirstOrDefault(gp => gp.Provider.Equals("FACEIT", StringComparison.OrdinalIgnoreCase))?.UUID ?? ""
             );
 
             // Create player statistics for Team A
@@ -1145,6 +1158,44 @@ namespace Balkana.Controllers
         public class ParsePopflashRequest
         {
             public string PastedText { get; set; } = string.Empty;
+        }
+
+        /// <summary>
+        /// Resolve a team by checking transfers for the provided players that were active at the match date.
+        /// Mirrors the Faceit importer logic but uses player IDs from the manual form.
+        /// </summary>
+        private async Task<Team?> ResolveTeamFromPlayersAsync(IEnumerable<int> playerIds, DateTime matchDate)
+        {
+            var ids = playerIds.Where(id => id > 0).ToList();
+            if (!ids.Any()) return null;
+
+            var teams = await _db.Teams
+                .Include(t => t.Transfers)
+                    .ThenInclude(tr => tr.Player)
+                        .ThenInclude(p => p.GameProfiles)
+                .ToListAsync();
+
+            Team? bestMatch = null;
+            int maxMatches = 0;
+
+            foreach (var team in teams)
+            {
+                var matchingPlayers = team.Transfers
+                    .Where(tr =>
+                        ids.Contains(tr.PlayerId) &&
+                        tr.Status == PlayerTeamStatus.Active &&
+                        tr.StartDate <= matchDate &&
+                        (tr.EndDate == null || tr.EndDate >= matchDate))
+                    .Count();
+
+                if (matchingPlayers > maxMatches)
+                {
+                    maxMatches = matchingPlayers;
+                    bestMatch = team;
+                }
+            }
+
+            return bestMatch;
         }
     }
 }
