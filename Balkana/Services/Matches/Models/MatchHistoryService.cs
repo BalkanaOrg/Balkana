@@ -36,6 +36,9 @@ public class MatchHistoryService
 
     public async Task<ICollection<ExternalMatchSummary>> GetHistoryAsync(string source, string profileId)
     {
+        if (string.IsNullOrEmpty(source))
+            throw new ArgumentException("Source cannot be null or empty", nameof(source));
+
         if (!_importers.TryGetValue(source, out var importer))
             throw new ArgumentException($"No importer for source {source}");
 

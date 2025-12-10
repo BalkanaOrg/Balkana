@@ -275,11 +275,13 @@
                     <th class="sortable" data-column="tournaments">Tournaments</th>
                     <th class="sortable" data-column="maps">Maps</th>
                     <th class="sortable" data-column="hltvRating">HLTV Rating</th>
-                    <th class="sortable" data-column="kills">Kills (HS)</th>
+                    <th class="sortable" data-column="kills">Kills</th>
+                    <th class="sortable" data-column="hs">HS%</th>
                     <th class="sortable" data-column="deaths">Deaths</th>
                     <th class="sortable" data-column="assists">Assists</th>
-                    <th class="sortable" data-column="kdRatio">K/D Ratio</th>
+                    <th class="sortable" data-column="kdRatio">K/D</th>
                     <th class="sortable" data-column="adr">ADR</th>
+                    <th class="sortable" data-column="fk">FK</th>
                     <th class="sortable" data-column="kast">KAST</th>
                     <th class="sortable" data-column="5k">5K</th>
                     <th class="sortable" data-column="4k">4K</th>
@@ -291,10 +293,13 @@
                 {
                     @if (player.CS2Stats != null)
                     {
-                        <tr data-player-name="@player.PlayerName.ToLower()" data-player-nickname="@player.PlayerNickname.ToLower()" 
+                        <tr data-player-id="@player.PlayerId"
+                            data-player-name="@player.PlayerName.ToLower()" data-player-nickname="@player.PlayerNickname.ToLower()" 
                             data-tournaments="@player.TournamentCount" data-maps="@player.MapCount"
                             data-kd-ratio="@player.CS2Stats.KDRatio" 
                             data-adr="@player.CS2Stats.ADR" data-hltv="@player.HLTVRating"
+                            data-hs="@((player.CS2Stats.TotalKills > 0 ? (double)player.CS2Stats.Headshots / player.CS2Stats.TotalKills * 100 : 0).ToString("F1"))"
+                            data-fk="@player.CS2Stats.FirstKills"
                             data-5k="@player.CS2Stats._5k" data-4k="@player.CS2Stats._4k" data-3k="@player.CS2Stats._3k">
                             <td>
                                 <div class="player-name-cell">@player.PlayerName</div>
@@ -303,11 +308,13 @@
                             <td class="stat-value">@player.TournamentCount</td>
                             <td class="stat-value">@player.MapCount</td>
                             <td class="stat-value">@player.HLTVRating.ToString("F2")</td>
-                            <td class="stat-value">@player.CS2Stats.TotalKills (@player.CS2Stats.Headshots)</td>
+                            <td class="stat-value">@player.CS2Stats.TotalKills</td>
+                            <td class="stat-value">@((player.CS2Stats.TotalKills > 0 ? (double)player.CS2Stats.Headshots / player.CS2Stats.TotalKills * 100 : 0).ToString("F0"))%</td>
                             <td class="stat-value">@player.CS2Stats.TotalDeaths</td>
                             <td class="stat-value">@player.CS2Stats.TotalAssists</td>
                             <td class="stat-value">@player.CS2Stats.KDRatio.ToString("F2")</td>
                             <td class="stat-value">@player.CS2Stats.ADR.ToString("F1")</td>
+                            <td class="stat-value">@player.CS2Stats.FirstKills</td>
                             <td class="stat-value">@player.CS2Stats.KAST.ToString("F1")%</td>
                             <td class="stat-value">@player.CS2Stats._5k</td>
                             <td class="stat-value">@player.CS2Stats._4k</td>
@@ -316,7 +323,8 @@
                     }
                     else if (player.LoLStats != null)
                     {
-                        <tr data-player-name="@player.PlayerName.ToLower()" data-player-nickname="@player.PlayerNickname.ToLower()" 
+                        <tr data-player-id="@player.PlayerId"
+                            data-player-name="@player.PlayerName.ToLower()" data-player-nickname="@player.PlayerNickname.ToLower()" 
                             data-tournaments="@player.TournamentCount" data-maps="@player.MapCount"
                             data-kd-ratio="@player.LoLStats.KDRatio" 
                             data-hltv="@player.HLTVRating">
@@ -328,9 +336,11 @@
                             <td class="stat-value">@player.MapCount</td>
                             <td class="stat-value">@player.HLTVRating.ToString("F2")</td>
                             <td class="stat-value">@player.LoLStats.TotalKills</td>
+                            <td class="stat-value">-</td>
                             <td class="stat-value">@player.LoLStats.TotalDeaths</td>
                             <td class="stat-value">@player.LoLStats.TotalAssists</td>
                             <td class="stat-value">@player.LoLStats.KDRatio.ToString("F2")</td>
+                            <td class="stat-value">-</td>
                             <td class="stat-value">-</td>
                             <td class="stat-value">-</td>
                             <td class="stat-value">-</td>
@@ -352,9 +362,79 @@
     }
 </div>
 
+@if (Model.PlayerStats.Any(p => p.CS2Stats != null))
+{
+    <div class="advanced-stats-section">
+        <h3>Advanced Statistics</h3>
+        <div class="advanced-stats-table-container">
+            <table class="advanced-stats-table" id="advancedTable">
+                <thead>
+                    <tr>
+                        <th class="player-col">Player</th>
+                        <th class="damage-col">Damage</th>
+                        <th class="rounds-col">Rounds</th>
+                        <th class="multi-col">Multi Kills</th>
+                        <th class="fk-col">First Kills</th>
+                        <th class="clutch-col">Clutches</th>
+                        <th class="sniper-col">Sniper</th>
+                        <th class="pistol-col">Pistol</th>
+                        <th class="knife-col">Knife</th>
+                        <th class="flash-col">Flashes</th>
+                        <th class="utility-col">Utility</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var player in Model.PlayerStats.Where(p => p.CS2Stats != null))
+                    {
+                        <tr data-player-id="@player.PlayerId">
+                            <td class="player-cell">
+                                <div class="player-name-cell">@player.PlayerName</div>
+                                <div class="player-nickname-cell">@player.PlayerNickname</div>
+                            </td>
+                            <td class="damage-cell">@player.CS2Stats.TotalDamage</td>
+                            <td class="rounds-cell">@player.CS2Stats.TotalRounds</td>
+                            <td class="multi-cell">@player.CS2Stats.MultiKills</td>
+                            <td class="fk-cell">@player.CS2Stats.FirstKills</td>
+                            <td class="clutch-cell">@player.CS2Stats.Clutches</td>
+                            <td class="sniper-cell">@player.CS2Stats.SniperKills</td>
+                            <td class="pistol-cell">@player.CS2Stats.PistolKills</td>
+                            <td class="knife-cell">@player.CS2Stats.KnifeKills</td>
+                            <td class="flash-cell">@player.CS2Stats.Flashes</td>
+                            <td class="utility-cell">@player.CS2Stats.UtilityUsage</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
 <script>
     let sortColumn = null;
     let sortDirection = 'desc';
+
+    function syncAdvancedOrder() {
+        const advBody = document.querySelector('#advancedTable tbody');
+        if (!advBody) return;
+
+        const rowsMap = {};
+        advBody.querySelectorAll('tr').forEach(r => {
+            rowsMap[r.dataset.playerId] = r;
+        });
+
+        const frag = document.createDocumentFragment();
+        document.querySelectorAll('#statsTable tbody tr').forEach(mainRow => {
+            const playerId = mainRow.dataset.playerId;
+            const advRow = rowsMap[playerId];
+            if (advRow) {
+                advRow.style.display = mainRow.style.display === 'none' ? 'none' : '';
+                frag.appendChild(advRow);
+            }
+        });
+
+        advBody.innerHTML = '';
+        advBody.appendChild(frag);
+    }
 
     // Table sorting
     document.querySelectorAll('.sortable').forEach(header => {
@@ -408,6 +488,14 @@
                         aVal = parseFloat(a.dataset.adr) || 0;
                         bVal = parseFloat(b.dataset.adr) || 0;
                         return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+                    case 'hs':
+                        aVal = parseFloat(a.dataset.hs) || 0;
+                        bVal = parseFloat(b.dataset.hs) || 0;
+                        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+                    case 'fk':
+                        aVal = parseInt(a.dataset.fk) || 0;
+                        bVal = parseInt(b.dataset.fk) || 0;
+                        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
                     default:
                         return 0;
                 }
@@ -415,6 +503,8 @@
 
             // Re-append sorted rows
             rows.forEach(row => tbody.appendChild(row));
+
+            syncAdvancedOrder();
         });
     });
 
@@ -452,6 +542,8 @@
                 row.style.display = 'none';
             }
         });
+
+        syncAdvancedOrder();
     }
 
     function clearFilters() {
@@ -464,6 +556,8 @@
 
         const rows = document.querySelectorAll('#statsTable tbody tr');
         rows.forEach(row => row.style.display = '');
+
+        syncAdvancedOrder();
     }
 
     // Export to CSV

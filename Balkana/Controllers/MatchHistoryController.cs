@@ -58,6 +58,11 @@ namespace Balkana.Controllers
             }
 
             // RIOT flow stays the same
+            if (string.IsNullOrEmpty(source))
+            {
+                return BadRequest("Source parameter is required");
+            }
+
             var riotMatches = await _history.GetHistoryAsync(source, profileId);
             ViewBag.Source = source;
             return View(riotMatches);
@@ -364,16 +369,35 @@ namespace Balkana.Controllers
             Console.WriteLine($"🚀 Attempting to advance winner from series {currentSeries.Id}");
             Console.WriteLine($"🚀 Series finished: {currentSeries.isFinished}, NextSeriesId: {currentSeries.NextSeriesId}");
             
-            if (!currentSeries.isFinished || currentSeries.NextSeriesId == null)
+            if (!currentSeries.isFinished)
             {
-                Console.WriteLine($"❌ Cannot advance - series not finished or no next series");
+                Console.WriteLine($"❌ Cannot advance - series not finished");
                 return;
             }
 
-            var nextSeries = await _db.Series
-                .Include(s => s.TeamA)
-                .Include(s => s.TeamB)
-                .FirstOrDefaultAsync(s => s.Id == currentSeries.NextSeriesId);
+            Series nextSeries = null;
+
+            // If NextSeriesId is set, use it
+            if (currentSeries.NextSeriesId != null)
+            {
+                nextSeries = await _db.Series
+                    .Include(s => s.TeamA)
+                    .Include(s => s.TeamB)
+                    .FirstOrDefaultAsync(s => s.Id == currentSeries.NextSeriesId);
+            }
+
+            // If NextSeriesId is null, try to find the next series dynamically based on bracket structure
+            if (nextSeries == null)
+            {
+                Console.WriteLine($"⚠️ NextSeriesId is null, attempting to find next series dynamically");
+                nextSeries = await FindNextSeriesDynamically(currentSeries);
+            }
+
+            if (nextSeries == null)
+            {
+                Console.WriteLine($"❌ Cannot advance - no next series found");
+                return;
+            }
 
             if (nextSeries == null)
             {
@@ -397,27 +421,52 @@ namespace Balkana.Controllers
             var teamSlot = DetermineNextSeriesTeamSlot(currentSeries, nextSeries);
             Console.WriteLine($"🎯 Team slot to fill: {teamSlot}");
 
-            //teamSlot == "TeamA" && 
-            if (nextSeries.TeamAId == null)
+            // Try to fill the determined slot first, but fallback to the other slot if needed
+            bool advanced = false;
+            
+            if (teamSlot == "TeamA")
             {
-                nextSeries.TeamAId = winner.Id;
-                nextSeries.TeamA = winner;
-                Console.WriteLine($"✅ Advanced {winner.FullName} to TeamA of series {nextSeries.Id}");
+                if (nextSeries.TeamAId == null)
+                {
+                    nextSeries.TeamAId = winner.Id;
+                    nextSeries.TeamA = winner;
+                    Console.WriteLine($"✅ Advanced {winner.FullName} to TeamA of series {nextSeries.Id}");
+                    advanced = true;
+                }
+                else if (nextSeries.TeamBId == null)
+                {
+                    // TeamA is filled, try TeamB as fallback
+                    nextSeries.TeamBId = winner.Id;
+                    nextSeries.TeamB = winner;
+                    Console.WriteLine($"⚠️ TeamA already filled by {nextSeries.TeamA?.FullName}, advanced {winner.FullName} to TeamB of series {nextSeries.Id}");
+                    advanced = true;
+                }
+                else
+                {
+                    Console.WriteLine($"❌ Cannot advance - both TeamA ({nextSeries.TeamA?.FullName}) and TeamB ({nextSeries.TeamB?.FullName}) are already filled");
+                }
             }
-            //teamSlot == "TeamB" && 
-            else if (nextSeries.TeamBId == null)
+            else if (teamSlot == "TeamB")
             {
-                nextSeries.TeamBId = winner.Id;
-                nextSeries.TeamB = winner;
-                Console.WriteLine($"✅ Advanced {winner.FullName} to TeamB of series {nextSeries.Id}");
-            }
-            else if (teamSlot == "TeamA" && nextSeries.TeamAId != null)
-            {
-                Console.WriteLine($"❌ Cannot advance to TeamA - slot already filled by {nextSeries.TeamA?.FullName}");
-            }
-            else if (teamSlot == "TeamB" && nextSeries.TeamBId != null)
-            {
-                Console.WriteLine($"❌ Cannot advance to TeamB - slot already filled by {nextSeries.TeamB?.FullName}");
+                if (nextSeries.TeamBId == null)
+                {
+                    nextSeries.TeamBId = winner.Id;
+                    nextSeries.TeamB = winner;
+                    Console.WriteLine($"✅ Advanced {winner.FullName} to TeamB of series {nextSeries.Id}");
+                    advanced = true;
+                }
+                else if (nextSeries.TeamAId == null)
+                {
+                    // TeamB is filled, try TeamA as fallback
+                    nextSeries.TeamAId = winner.Id;
+                    nextSeries.TeamA = winner;
+                    Console.WriteLine($"⚠️ TeamB already filled by {nextSeries.TeamB?.FullName}, advanced {winner.FullName} to TeamA of series {nextSeries.Id}");
+                    advanced = true;
+                }
+                else
+                {
+                    Console.WriteLine($"❌ Cannot advance - both TeamA ({nextSeries.TeamA?.FullName}) and TeamB ({nextSeries.TeamB?.FullName}) are already filled");
+                }
             }
             else
             {
@@ -432,6 +481,88 @@ namespace Balkana.Controllers
             }
 
             await _db.SaveChangesAsync();
+        }
+
+        private async Task<Series> FindNextSeriesDynamically(Series currentSeries)
+        {
+            // For lower bracket, find the next series in the same bracket with the same or next round
+            if (currentSeries.Bracket == BracketType.Lower)
+            {
+                // Find the next lower bracket series in the same tournament
+                // Typically, lower bracket winners advance to the next round in lower bracket
+                var nextRound = currentSeries.Round + 1;
+                
+                // First, try to find a series in the next round of lower bracket
+                var nextSeries = await _db.Series
+                    .Include(s => s.TeamA)
+                    .Include(s => s.TeamB)
+                    .Where(s => s.TournamentId == currentSeries.TournamentId &&
+                               s.Bracket == BracketType.Lower &&
+                               s.Round == nextRound &&
+                               (s.TeamAId == null || s.TeamBId == null))
+                    .OrderBy(s => s.Position)
+                    .FirstOrDefaultAsync();
+
+                if (nextSeries != null)
+                {
+                    Console.WriteLine($"✅ Found next lower bracket series dynamically: {nextSeries.Id} (Round {nextSeries.Round})");
+                    return nextSeries;
+                }
+
+                // If no next round in lower bracket, check if we should go to Grand Final
+                var grandFinal = await _db.Series
+                    .Include(s => s.TeamA)
+                    .Include(s => s.TeamB)
+                    .Where(s => s.TournamentId == currentSeries.TournamentId &&
+                               s.Bracket == BracketType.GrandFinal &&
+                               (s.TeamAId == null || s.TeamBId == null))
+                    .FirstOrDefaultAsync();
+
+                if (grandFinal != null)
+                {
+                    Console.WriteLine($"✅ Found Grand Final dynamically: {grandFinal.Id}");
+                    return grandFinal;
+                }
+            }
+            // For upper bracket, similar logic
+            else if (currentSeries.Bracket == BracketType.Upper)
+            {
+                var nextRound = currentSeries.Round + 1;
+                
+                var nextSeries = await _db.Series
+                    .Include(s => s.TeamA)
+                    .Include(s => s.TeamB)
+                    .Where(s => s.TournamentId == currentSeries.TournamentId &&
+                               s.Bracket == BracketType.Upper &&
+                               s.Round == nextRound &&
+                               (s.TeamAId == null || s.TeamBId == null))
+                    .OrderBy(s => s.Position)
+                    .FirstOrDefaultAsync();
+
+                if (nextSeries != null)
+                {
+                    Console.WriteLine($"✅ Found next upper bracket series dynamically: {nextSeries.Id} (Round {nextSeries.Round})");
+                    return nextSeries;
+                }
+
+                // Upper bracket final winner goes to Grand Final
+                var grandFinal = await _db.Series
+                    .Include(s => s.TeamA)
+                    .Include(s => s.TeamB)
+                    .Where(s => s.TournamentId == currentSeries.TournamentId &&
+                               s.Bracket == BracketType.GrandFinal &&
+                               (s.TeamAId == null || s.TeamBId == null))
+                    .FirstOrDefaultAsync();
+
+                if (grandFinal != null)
+                {
+                    Console.WriteLine($"✅ Found Grand Final dynamically: {grandFinal.Id}");
+                    return grandFinal;
+                }
+            }
+
+            Console.WriteLine($"❌ Could not find next series dynamically for series {currentSeries.Id}");
+            return null;
         }
 
         private Team DetermineSeriesWinner(Series series)
@@ -844,7 +975,11 @@ namespace Balkana.Controllers
                 ModelState.AddModelError("", "Invalid teams selected.");
                 return View(model);
             }
-
+            Console.WriteLine($"PlayerId = {model.TeamAPlayer1Id}");
+            Console.WriteLine($"PlayerId = {model.TeamAPlayer2Id}");
+            Console.WriteLine($"PlayerId = {model.TeamAPlayer3Id}");
+            Console.WriteLine($"PlayerId = {model.TeamAPlayer4Id}");
+            Console.WriteLine($"PlayerId = {model.TeamAPlayer5Id}");
             // Resolve teams based on selected players and transfers at match date (fallback to selected team)
             var resolvedTeamA = await ResolveTeamFromPlayersAsync(
                 new[] { model.TeamAPlayer1Id, model.TeamAPlayer2Id, model.TeamAPlayer3Id, model.TeamAPlayer4Id, model.TeamAPlayer5Id },
@@ -906,10 +1041,28 @@ namespace Balkana.Controllers
                 .Where(p => playerIds.Contains(p.Id))
                 .ToListAsync();
 
-            var playerUuidMap = players.ToDictionary(
-                p => p.Id,
-                p => p.GameProfiles.FirstOrDefault(gp => gp.Provider.Equals("FACEIT", StringComparison.OrdinalIgnoreCase))?.UUID ?? ""
-            );
+            string GetPlayerUuid(int playerId)
+            {
+                var player = players.FirstOrDefault(p => p.Id == playerId);
+                if (player == null)
+                {
+                    Console.WriteLine("Player not found"); 
+                    return string.Empty;
+                }
+
+                // Prefer FACEIT provider (case-insensitive)
+                var faceitProfile = player.GameProfiles
+                    .FirstOrDefault(gp => gp.Provider != null &&
+                                          gp.Provider.Equals("FACEIT", StringComparison.OrdinalIgnoreCase));
+                Console.WriteLine("Found UUID: " + faceitProfile?.UUID);
+                if (faceitProfile != null && !string.IsNullOrWhiteSpace(faceitProfile.UUID))
+                {
+                    return faceitProfile.UUID;
+                }
+
+                // Fallback to any available profile UUID
+                return player.GameProfiles.FirstOrDefault().UUID;
+            }
 
             // Create player statistics for Team A
             var teamAPlayerStats = new[]
@@ -925,14 +1078,14 @@ namespace Balkana.Controllers
             {
                 var stats = teamAPlayerStats[i];
                 var playerId = teamAPlayerIds[i];
-                var uuid = playerUuidMap.GetValueOrDefault(playerId, "");
+                var uuid = GetPlayerUuid(playerId);
 
                 var playerStat = new PlayerStatistic_CS2
                 {
                     PlayerUUID = uuid,
                     Source = "MANUAL",
-                    Team = "TeamA",
-                    IsWinner = model.WinningTeam == "TeamA",
+                    Team = teamA.Id.ToString(), // store actual team id for consistency
+                    IsWinner = model.WinningTeam == teamA.Id.ToString(),
                     Kills = stats.Kills,
                     Assists = stats.Assists,
                     Deaths = stats.Deaths,
@@ -979,14 +1132,14 @@ namespace Balkana.Controllers
             {
                 var stats = teamBPlayerStats[i];
                 var playerId = teamBPlayerIds[i];
-                var uuid = playerUuidMap.GetValueOrDefault(playerId, "");
+                var uuid = GetPlayerUuid(playerId);
 
                 var playerStat = new PlayerStatistic_CS2
                 {
                     PlayerUUID = uuid,
                     Source = "MANUAL",
-                    Team = "TeamB",
-                    IsWinner = model.WinningTeam == "TeamB",
+                    Team = teamB.Id.ToString(), // store actual team id for consistency
+                    IsWinner = model.WinningTeam == teamB.Id.ToString(),
                     Kills = stats.Kills,
                     Assists = stats.Assists,
                     Deaths = stats.Deaths,
@@ -1064,7 +1217,7 @@ namespace Balkana.Controllers
         {
             var query = _db.Players
                 .Include(p => p.GameProfiles)
-                .Where(p => p.GameProfiles.Any(gp => gp.Provider == "Faceit"));
+                .Where(p => p.GameProfiles.Any(gp => gp.Provider == "FACEIT"));
 
             // If term is provided and has at least 2 characters, filter by it
             if (!string.IsNullOrEmpty(term) && term.Length >= 2)

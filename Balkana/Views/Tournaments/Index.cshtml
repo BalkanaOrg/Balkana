@@ -169,6 +169,26 @@
     </div>
 </div>
 
+<style>
+    .remaining-teams-layer {
+        position: absolute;
+        z-index: 2000;
+        background: #0f1116;
+        border: 1px solid rgba(255,255,255,0.12);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+        border-radius: 10px;
+        padding: 10px;
+        min-width: 220px;
+        max-width: 320px;
+        display: none;
+    }
+    .remaining-teams-layer .remaining-teams-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+        gap: 8px;
+    }
+</style>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const cards = document.querySelectorAll('.tournament-card.loading');
@@ -179,6 +199,8 @@
         });
 
         // Toggle remaining teams popup
+        // Floating popover for remaining teams (escapes card overflow)
+        let floatingLayer = null;
         const moreButtons = document.querySelectorAll('.team-more-btn');
         moreButtons.forEach(button => {
             button.addEventListener('click', function(e) {
@@ -186,39 +208,46 @@
                 e.stopPropagation();
                 const tournamentId = this.getAttribute('data-tournament-id');
                 const popup = document.getElementById('remaining-teams-' + tournamentId);
-                
-                if (popup) {
-                    const isVisible = popup.style.display !== 'none';
-                    // Hide all other popups first
-                    document.querySelectorAll('.remaining-teams-popup').forEach(p => {
-                        if (p.id !== popup.id) {
-                            p.style.display = 'none';
-                        }
-                    });
-                    
-                    if (!isVisible) {
-                        // Position popup relative to button
-                        const buttonRect = this.getBoundingClientRect();
-                        const container = this.closest('.team-more-container');
-                        const containerRect = container.getBoundingClientRect();
-                        
-                        // Calculate position relative to container
-                        popup.style.left = '0';
-                        popup.style.top = 'calc(100% + 8px)';
-                        popup.style.display = 'block';
-                    } else {
-                        popup.style.display = 'none';
-                    }
+                if (!popup) return;
+
+                // Lazy-create floating layer
+                if (!floatingLayer) {
+                    floatingLayer = document.createElement('div');
+                    floatingLayer.className = 'remaining-teams-layer';
+                    document.body.appendChild(floatingLayer);
+                }
+
+                // Toggle
+                const isVisible = floatingLayer.style.display === 'block' && floatingLayer.dataset.owner === tournamentId;
+                floatingLayer.style.display = 'none';
+
+                if (!isVisible) {
+                    // Move content into floating layer to escape overflow
+                    floatingLayer.innerHTML = popup.innerHTML;
+                    floatingLayer.dataset.owner = tournamentId;
+
+                    const buttonRect = this.getBoundingClientRect();
+                    const layerRect = floatingLayer.getBoundingClientRect();
+                    const top = buttonRect.bottom + 8 + window.scrollY;
+                    let left = buttonRect.left + window.scrollX - 10;
+
+                    // Keep within viewport
+                    const maxLeft = window.scrollX + window.innerWidth - 20 - (layerRect.width || 300);
+                    left = Math.max(window.scrollX + 10, Math.min(left, maxLeft));
+
+                    floatingLayer.style.top = `${top}px`;
+                    floatingLayer.style.left = `${left}px`;
+                    floatingLayer.style.display = 'block';
                 }
             });
         });
 
         // Close popup when clicking outside
         document.addEventListener('click', function(e) {
-            if (!e.target.closest('.team-more-btn') && !e.target.closest('.remaining-teams-popup')) {
-                document.querySelectorAll('.remaining-teams-popup').forEach(popup => {
-                    popup.style.display = 'none';
-                });
+            if (!e.target.closest('.team-more-btn') && !e.target.closest('.remaining-teams-layer')) {
+                if (floatingLayer) {
+                    floatingLayer.style.display = 'none';
+                }
             }
         });
     });

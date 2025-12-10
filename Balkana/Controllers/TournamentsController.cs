@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using PuppeteerSharp;
+using Balkana.Services.Images;
+using System.IO;
 
 namespace Balkana.Controllers
 {
@@ -142,40 +144,19 @@ namespace Balkana.Controllers
 
             if (model.LogoFile != null && model.LogoFile.Length > 0)
             {
-                var uploadsFolder = Path.Combine(env.WebRootPath, "uploads", "Tournaments");
-                Directory.CreateDirectory(uploadsFolder);
-
-                var ext = Path.GetExtension(model.LogoFile.FileName);
-                var finalFileName = $"{Guid.NewGuid()}{ext}";
-                var finalPath = Path.Combine(uploadsFolder, finalFileName);
-
-                // write to temp first
-                var tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ext);
-
                 try
                 {
-                    Console.WriteLine($">>> Writing upload to temp: {tempFile}");
-                    await using (var tempStream = new FileStream(tempFile, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, useAsync: true))
-                    {
-                        await model.LogoFile.CopyToAsync(tempStream);
-                        await tempStream.FlushAsync();
-                    }
-
-                    // move to final destination atomically
-                    Console.WriteLine($">>> Moving temp file to final path: {finalPath}");
-                    if (System.IO.File.Exists(finalPath))
-                    {
-                        Console.WriteLine($">>> Final path already exists, deleting: {finalPath}");
-                        System.IO.File.Delete(finalPath);
-                    }
-                    System.IO.File.Move(tempFile, finalPath);
-
-                    logoPath = $"/uploads/Tournaments/{finalFileName}";
+                    logoPath = await ImageOptimizer.SaveWebpAsync(
+                        model.LogoFile,
+                        env.WebRootPath,
+                        Path.Combine("uploads", "Tournaments"),
+                        maxWidth: 1920,
+                        maxHeight: 1080,
+                        quality: 85);
                 }
                 catch (IOException ioEx)
                 {
                     Console.WriteLine("❌ IO Exception while saving file: " + ioEx);
-                    try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); } catch { }
                     ModelState.AddModelError("", "File write error: " + ioEx.Message);
                     var vm = new TournamentFormViewModel
                     {
@@ -188,7 +169,6 @@ namespace Balkana.Controllers
                 catch (Exception ex)
                 {
                     Console.WriteLine("❌ General Exception while saving file: " + ex);
-                    try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); } catch { }
                     ModelState.AddModelError("", "Unexpected error while saving file.");
                     var vm = new TournamentFormViewModel
                     {
@@ -292,6 +272,31 @@ namespace Balkana.Controllers
             tournament.GameId = model.GameId;
             tournament.PointsConfiguration = model.PointsConfiguration;
             tournament.PrizeConfiguration = model.PrizeConfiguration;
+
+            if (model.LogoFile != null && model.LogoFile.Length > 0)
+            {
+                try
+                {
+                    tournament.BannerUrl = await ImageOptimizer.SaveWebpAsync(
+                        model.LogoFile,
+                        env.WebRootPath,
+                        Path.Combine("uploads", "Tournaments"),
+                        maxWidth: 1920,
+                        maxHeight: 1080,
+                        quality: 85);
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", $"Error saving banner: {ex.Message}");
+                    model.Games = AllGames();
+                    model.Organizers = AllOrganizers();
+                    model.EliminationTypes = AllEliminationTypes();
+                    model.AvailableTeams = await _context.Teams
+                        .Select(t => new TeamSelectItem { Id = t.Id, FullName = t.FullName })
+                        .ToListAsync();
+                    return View(model);
+                }
+            }
 
             // ✅ Update participating teams
             _context.TournamentTeams.RemoveRange(tournament.TournamentTeams);

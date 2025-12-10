@@ -12,6 +12,8 @@ using System.Net.Http;
 using Microsoft.Extensions.Configuration;
 using System.Security.Cryptography;
 using System.Text;
+using System.IO;
+using Balkana.Services.Images;
 
 namespace Balkana.Controllers
 {
@@ -50,17 +52,15 @@ namespace Balkana.Controllers
             {
                 try
                 {
-                    // Validate file type
                     var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
                     var fileExtension = Path.GetExtension(model.ProfilePicture.FileName).ToLowerInvariant();
-                    
+
                     if (!allowedExtensions.Contains(fileExtension))
                     {
                         ModelState.AddModelError(nameof(model.ProfilePicture), "Invalid file type. Please upload a JPG, PNG, GIF, or WebP image.");
                         return View(model);
                     }
 
-                    // Validate file size (max 5MB)
                     const long maxFileSize = 5 * 1024 * 1024; // 5MB
                     if (model.ProfilePicture.Length > maxFileSize)
                     {
@@ -68,24 +68,13 @@ namespace Balkana.Controllers
                         return View(model);
                     }
 
-                    // Generate unique filename
-                    var fileName = $"{Guid.NewGuid()}{fileExtension}";
-                    var uploadsPath = Path.Combine(_env.WebRootPath, "uploads", "Accounts");
-                    
-                    // Ensure directory exists
-                    if (!Directory.Exists(uploadsPath))
-                    {
-                        Directory.CreateDirectory(uploadsPath);
-                    }
-                    
-                    // Save file
-                    var filePath = Path.Combine(uploadsPath, fileName);
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await model.ProfilePicture.CopyToAsync(fileStream);
-                    }
-                    
-                    profilePictureUrl = $"/uploads/Accounts/{fileName}";
+                    profilePictureUrl = await ImageOptimizer.SaveWebpAsync(
+                        model.ProfilePicture,
+                        _env.WebRootPath,
+                        Path.Combine("uploads", "Accounts"),
+                        maxWidth: 512,
+                        maxHeight: 512,
+                        quality: 85);
                 }
                 catch (Exception ex)
                 {
@@ -399,33 +388,15 @@ namespace Balkana.Controllers
 
             if (model.ProfilePicture != null && model.ProfilePicture.Length > 0)
             {
-                var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "Accounts");
-                Directory.CreateDirectory(uploadsFolder);
-
-                var ext = Path.GetExtension(model.ProfilePicture.FileName);
-                var finalFileName = $"{Guid.NewGuid()}{ext}";
-                var finalPath = Path.Combine(uploadsFolder, finalFileName);
-
-                // write to temp first
-                var tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ext);
-
                 try
                 {
-                    Console.WriteLine($">>> Writing upload to temp: {tempFile}");
-                    await using (var tempStream = new FileStream(tempFile, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, useAsync: true))
-                    {
-                        await model.ProfilePicture.CopyToAsync(tempStream);
-                        await tempStream.FlushAsync();
-                    }
-
-                    // move to final destination atomically
-                    Console.WriteLine($">>> Moving temp file to final path: {finalPath}");
-                    if (System.IO.File.Exists(finalPath))
-                    {
-                        Console.WriteLine($">>> Final path already exists, deleting: {finalPath}");
-                        System.IO.File.Delete(finalPath);
-                    }
-                    System.IO.File.Move(tempFile, finalPath);
+                    var newUrl = await ImageOptimizer.SaveWebpAsync(
+                        model.ProfilePicture,
+                        _env.WebRootPath,
+                        Path.Combine("uploads", "Accounts"),
+                        maxWidth: 512,
+                        maxHeight: 512,
+                        quality: 85);
 
                     // Delete old profile picture if it exists
                     if (!string.IsNullOrEmpty(user.ProfilePictureUrl) && user.ProfilePictureUrl.StartsWith("/uploads/Accounts/"))
@@ -437,7 +408,7 @@ namespace Balkana.Controllers
                         }
                     }
 
-                    user.ProfilePictureUrl = $"/uploads/Accounts/{finalFileName}";
+                    user.ProfilePictureUrl = newUrl;
                     await _userManager.UpdateAsync(user);
 
                     TempData["SuccessMessage"] = "Profile picture updated successfully!";
@@ -446,14 +417,12 @@ namespace Balkana.Controllers
                 catch (IOException ioEx)
                 {
                     Console.WriteLine("❌ IO Exception while saving file: " + ioEx);
-                    try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); } catch { }
                     ModelState.AddModelError("", "File write error: " + ioEx.Message);
                     return View(model);
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine("❌ General Exception while saving file: " + ex);
-                    try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); } catch { }
                     ModelState.AddModelError("", "Unexpected error while saving file.");
                     return View(model);
                 }

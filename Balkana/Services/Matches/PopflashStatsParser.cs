@@ -81,14 +81,14 @@ namespace Balkana.Services.Matches
                 // Merge Team B stats into result
                 for (int i = 0; i < teamBStats.Count && i < result.TeamBStats.Count; i++)
                 {
-                    result.TeamBStats[i].Kills = teamBStats[i].Kills;
-                    result.TeamBStats[i].Assists = teamBStats[i].Assists;
-                    result.TeamBStats[i].Deaths = teamBStats[i].Deaths;
-                    result.TeamBStats[i].Damage = teamBStats[i].Damage;
-                    result.TeamBStats[i].HLTV1 = teamBStats[i].HLTV1;
-                    result.TeamBStats[i].HSkills = teamBStats[i].HSkills;
-                    result.TeamBStats[i].UD = teamBStats[i].UD;
-                    result.TeamBStats[i].RoundsPlayed = teamBStats[i].RoundsPlayed;
+                result.TeamBStats[i].Kills = teamBStats[i].Kills;
+                result.TeamBStats[i].Assists = teamBStats[i].Assists;
+                result.TeamBStats[i].Deaths = teamBStats[i].Deaths;
+                // Damage is set from SHOTS FIRED section (DD), not from BASIC STATS (ADR)
+                result.TeamBStats[i].HLTV1 = teamBStats[i].HLTV1;
+                result.TeamBStats[i].HSkills = teamBStats[i].HSkills;
+                result.TeamBStats[i].UD = teamBStats[i].UD;
+                result.TeamBStats[i].RoundsPlayed = teamBStats[i].RoundsPlayed;
                 }
             }
 
@@ -102,7 +102,7 @@ namespace Balkana.Services.Matches
                 result.TeamAStats[i].Kills = teamAStats[i].Kills;
                 result.TeamAStats[i].Assists = teamAStats[i].Assists;
                 result.TeamAStats[i].Deaths = teamAStats[i].Deaths;
-                result.TeamAStats[i].Damage = teamAStats[i].Damage;
+                // Damage is set from SHOTS FIRED section (DD), not from BASIC STATS (ADR)
                 result.TeamAStats[i].HLTV1 = teamAStats[i].HLTV1;
                 result.TeamAStats[i].HSkills = teamAStats[i].HSkills;
                 result.TeamAStats[i].UD = teamAStats[i].UD;
@@ -130,11 +130,21 @@ namespace Balkana.Services.Matches
                     currentIndex++;
                 }
 
-                // Skip player name (non-numeric, non-category header line, doesn't contain % or .)
-                if (currentIndex < endIndex && !IsNumeric(lines[currentIndex]) && !IsCategoryHeader(lines[currentIndex]) && 
-                    !lines[currentIndex].Contains("%") && !lines[currentIndex].Contains("."))
+                // Skip player name - it's the next non-numeric, non-category header line
+                // We verify it's a name by checking that the NEXT line is numeric (the first stat value)
+                if (currentIndex < endIndex && !IsNumeric(lines[currentIndex]) && !IsCategoryHeader(lines[currentIndex]))
                 {
-                    currentIndex++;
+                    // Verify the next line is numeric (first stat: Kills) to confirm this is a player name
+                    if (currentIndex + 1 < endIndex && int.TryParse(lines[currentIndex + 1], out _))
+                    {
+                        // This is definitely a player name, skip it
+                        currentIndex++;
+                    }
+                    else
+                    {
+                        // Next line isn't numeric, might be empty line or something else, skip anyway
+                        currentIndex++;
+                    }
                 }
 
                 // Now we should be at the stats (11 values: K, A, D, ADR, HLTV, CK, HS, UD, TAR, RP, next ping)
@@ -163,10 +173,9 @@ namespace Balkana.Services.Matches
                     currentIndex++;
                 }
 
-                // ADR (Damage) - line 3
-                if (currentIndex < endIndex && double.TryParse(lines[currentIndex], out double adr))
+                // ADR (ignore - we'll get Damage from SHOTS FIRED section) - line 3
+                if (currentIndex < endIndex)
                 {
-                    playerStat.Damage = (int)Math.Round(adr); // Store ADR as Damage (rounded to int)
                     currentIndex++;
                 }
 
@@ -311,11 +320,21 @@ namespace Balkana.Services.Matches
                     currentIndex++;
                 }
 
-                // Skip player name (non-numeric, non-category header line, doesn't contain % or .)
-                if (currentIndex < endIndex && !IsNumeric(lines[currentIndex]) && !IsCategoryHeader(lines[currentIndex]) && 
-                    !lines[currentIndex].Contains("%") && !lines[currentIndex].Contains("."))
+                // Skip player name - it's the next non-numeric, non-category header line
+                // We verify it's a name by checking that the NEXT line is numeric (the first stat value)
+                if (currentIndex < endIndex && !IsNumeric(lines[currentIndex]) && !IsCategoryHeader(lines[currentIndex]))
                 {
-                    currentIndex++;
+                    // Verify the next line is numeric (first stat value) to confirm this is a player name
+                    if (currentIndex + 1 < endIndex && (int.TryParse(lines[currentIndex + 1], out _) || double.TryParse(lines[currentIndex + 1], out _)))
+                    {
+                        // This is definitely a player name, skip it
+                        currentIndex++;
+                    }
+                    else
+                    {
+                        // Next line isn't numeric, might be empty line or something else, skip anyway
+                        currentIndex++;
+                    }
                 }
 
                 if (currentIndex >= endIndex) break;
@@ -482,11 +501,21 @@ namespace Balkana.Services.Matches
                     currentIndex++;
                 }
 
-                // Skip player name (non-numeric, non-category header line, doesn't contain % or .)
-                if (currentIndex < endIndex && !IsNumeric(lines[currentIndex]) && !IsCategoryHeader(lines[currentIndex]) && 
-                    !lines[currentIndex].Contains("%") && !lines[currentIndex].Contains("."))
+                // Skip player name - it's the next non-numeric, non-category header line
+                // We verify it's a name by checking that the NEXT line is numeric (the first stat value)
+                if (currentIndex < endIndex && !IsNumeric(lines[currentIndex]) && !IsCategoryHeader(lines[currentIndex]))
                 {
-                    currentIndex++;
+                    // Verify the next line is numeric (first stat value) to confirm this is a player name
+                    if (currentIndex + 1 < endIndex && (int.TryParse(lines[currentIndex + 1], out _) || double.TryParse(lines[currentIndex + 1], out _)))
+                    {
+                        // This is definitely a player name, skip it
+                        currentIndex++;
+                    }
+                    else
+                    {
+                        // Next line isn't numeric, might be empty line or something else, skip anyway
+                        currentIndex++;
+                    }
                 }
 
                 if (currentIndex >= endIndex) break;
@@ -551,8 +580,99 @@ namespace Balkana.Services.Matches
 
         private void ParseShotsFired(List<string> lines, Dictionary<string, List<int>> headers, ParsedStats result)
         {
-            // Shots fired stats don't seem to be in PlayerStatsViewModel
-            // Skip this category
+            if (!headers.ContainsKey("SHOTS FIRED") || headers["SHOTS FIRED"].Count == 0) return;
+
+            var shotsFiredHeaders = headers["SHOTS FIRED"];
+            var headerIndex = shotsFiredHeaders[0]; // First occurrence = Team A
+            
+            // Find next category after first SHOTS FIRED
+            var nextCategoryIndex = FindNextCategoryIndex(lines, headerIndex, headers);
+
+            // Parse Team A
+            var teamAEnd = FindCategoryEnd(lines, headerIndex, nextCategoryIndex);
+            var teamADamage = ParseShotsFiredForTeam(lines, headerIndex + 1, teamAEnd);
+
+            // Parse Team B (second occurrence)
+            List<int> teamBDamage = new();
+            if (shotsFiredHeaders.Count > 1)
+            {
+                var teamBStart = shotsFiredHeaders[1]; // Second occurrence = Team B
+                var teamBEnd = FindCategoryEnd(lines, teamBStart, lines.Count);
+                teamBDamage = ParseShotsFiredForTeam(lines, teamBStart + 1, teamBEnd);
+            }
+
+            // Apply to Team A
+            for (int i = 0; i < teamADamage.Count && i < result.TeamAStats.Count; i++)
+            {
+                result.TeamAStats[i].Damage = teamADamage[i];
+            }
+
+            // Apply to Team B
+            for (int i = 0; i < teamBDamage.Count && i < result.TeamBStats.Count; i++)
+            {
+                result.TeamBStats[i].Damage = teamBDamage[i];
+            }
+        }
+
+        private List<int> ParseShotsFiredForTeam(List<string> lines, int startIndex, int endIndex)
+        {
+            var damageValues = new List<int>();
+            int currentIndex = startIndex;
+            int playersFound = 0;
+
+            while (currentIndex < endIndex && playersFound < 5)
+            {
+                // Skip ping (first line after header or after previous player)
+                if (currentIndex < endIndex && int.TryParse(lines[currentIndex], out int potentialPing) && potentialPing < 200)
+                {
+                    currentIndex++;
+                }
+
+                // Skip player name - it's the next non-numeric, non-category header line
+                // We verify it's a name by checking that the NEXT line is numeric (the first stat value)
+                if (currentIndex < endIndex && !IsNumeric(lines[currentIndex]) && !IsCategoryHeader(lines[currentIndex]))
+                {
+                    // Verify the next line is numeric (first stat value) to confirm this is a player name
+                    if (currentIndex + 1 < endIndex && (int.TryParse(lines[currentIndex + 1], out _) || double.TryParse(lines[currentIndex + 1], out _)))
+                    {
+                        // This is definitely a player name, skip it
+                        currentIndex++;
+                    }
+                    else
+                    {
+                        // Next line isn't numeric, might be empty line or something else, skip anyway
+                        currentIndex++;
+                    }
+                }
+
+                if (currentIndex >= endIndex) break;
+
+                // SHOTS FIRED structure: RF, RH, HD, UT, LT, RA, LA, RL, LL, DD (10 values total)
+                // Skip first 9 values (RF, RH, HD, UT, LT, RA, LA, RL, LL)
+                for (int i = 0; i < 9 && currentIndex < endIndex; i++)
+                {
+                    currentIndex++;
+                }
+
+                // DD (Damage Dealt) - line 9 (0-indexed)
+                int damage = 0;
+                if (currentIndex < endIndex && int.TryParse(lines[currentIndex], out int dd))
+                {
+                    damage = dd;
+                    currentIndex++;
+                }
+
+                // Next player's ping (ignore) - this is the ping for the next player
+                if (currentIndex < endIndex && int.TryParse(lines[currentIndex], out int nextPing) && nextPing < 200)
+                {
+                    currentIndex++;
+                }
+
+                damageValues.Add(damage);
+                playersFound++;
+            }
+
+            return damageValues;
         }
 
         private void ParseExtraStats(List<string> lines, Dictionary<string, List<int>> headers, ParsedStats result)
@@ -615,11 +735,21 @@ namespace Balkana.Services.Matches
                     currentIndex++;
                 }
 
-                // Skip player name (non-numeric, non-category header line, doesn't contain % or .)
-                if (currentIndex < endIndex && !IsNumeric(lines[currentIndex]) && !IsCategoryHeader(lines[currentIndex]) && 
-                    !lines[currentIndex].Contains("%") && !lines[currentIndex].Contains("."))
+                // Skip player name - it's the next non-numeric, non-category header line
+                // We verify it's a name by checking that the NEXT line is numeric (the first stat value)
+                if (currentIndex < endIndex && !IsNumeric(lines[currentIndex]) && !IsCategoryHeader(lines[currentIndex]))
                 {
-                    currentIndex++;
+                    // Verify the next line is numeric (first stat value) to confirm this is a player name
+                    if (currentIndex + 1 < endIndex && (int.TryParse(lines[currentIndex + 1], out _) || double.TryParse(lines[currentIndex + 1], out _)))
+                    {
+                        // This is definitely a player name, skip it
+                        currentIndex++;
+                    }
+                    else
+                    {
+                        // Next line isn't numeric, might be empty line or something else, skip anyway
+                        currentIndex++;
+                    }
                 }
 
                 if (currentIndex >= endIndex) break;

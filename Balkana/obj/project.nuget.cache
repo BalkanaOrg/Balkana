@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "9a1gaTK4WG8=",
+  "dgSpecHash": "tMfmk6wS7wc=",
   "success": true,
   "projectFilePath": "/mnt/storage/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
   "expectedPackageFiles": [
@@ -74,6 +74,7 @@
     "/home/moh4o/.nuget/packages/newtonsoft.json/13.0.3/newtonsoft.json.13.0.3.nupkg.sha512",
     "/home/moh4o/.nuget/packages/nsec.cryptography/25.4.0/nsec.cryptography.25.4.0.nupkg.sha512",
     "/home/moh4o/.nuget/packages/puppeteersharp/20.2.4/puppeteersharp.20.2.4.nupkg.sha512",
+    "/home/moh4o/.nuget/packages/sixlabors.imagesharp/3.1.4/sixlabors.imagesharp.3.1.4.nupkg.sha512",
     "/home/moh4o/.nuget/packages/system.clientmodel/1.0.0/system.clientmodel.1.0.0.nupkg.sha512",
     "/home/moh4o/.nuget/packages/system.codedom/6.0.0/system.codedom.6.0.0.nupkg.sha512",
     "/home/moh4o/.nuget/packages/system.collections.immutable/8.0.0/system.collections.immutable.8.0.0.nupkg.sha512",
@@ -113,5 +114,54 @@
     "/home/moh4o/.nuget/packages/system.valuetuple/4.5.0/system.valuetuple.4.5.0.nupkg.sha512",
     "/home/moh4o/.nuget/packages/system.windows.extensions/6.0.0/system.windows.extensions.6.0.0.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "message": "Package 'SixLabors.ImageSharp' 3.1.4 has a known high severity vulnerability, https://github.com/advisories/GHSA-2cmq-823j-5qj8",
+      "projectPath": "/mnt/storage/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
+      "warningLevel": 1,
+      "filePath": "/mnt/storage/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
+      "libraryId": "SixLabors.ImageSharp",
+      "targetGraphs": [
+        "net9.0"
+      ]
+    },
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "message": "Package 'SixLabors.ImageSharp' 3.1.4 has a known high severity vulnerability, https://github.com/advisories/GHSA-63p8-c4ww-9cg7",
+      "projectPath": "/mnt/storage/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
+      "warningLevel": 1,
+      "filePath": "/mnt/storage/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
+      "libraryId": "SixLabors.ImageSharp",
+      "targetGraphs": [
+        "net9.0"
+      ]
+    },
+    {
+      "code": "NU1902",
+      "level": "Warning",
+      "message": "Package 'SixLabors.ImageSharp' 3.1.4 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-qxrv-gp6x-rc23",
+      "projectPath": "/mnt/storage/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
+      "warningLevel": 1,
+      "filePath": "/mnt/storage/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
+      "libraryId": "SixLabors.ImageSharp",
+      "targetGraphs": [
+        "net9.0"
+      ]
+    },
+    {
+      "code": "NU1902",
+      "level": "Warning",
+      "message": "Package 'SixLabors.ImageSharp' 3.1.4 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-rxmq-m78w-7wmc",
+      "projectPath": "/mnt/storage/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
+      "warningLevel": 1,
+      "filePath": "/mnt/storage/Programming/Csharp/Balkana/Balkana/Balkana.csproj",
+      "libraryId": "SixLabors.ImageSharp",
+      "targetGraphs": [
+        "net9.0"
+      ]
+    }
+  ]
 }

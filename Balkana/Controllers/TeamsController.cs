@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Authorization;
 using IOFile = System.IO.File;
+using Balkana.Services.Images;
+using System.IO;
 
 namespace Balkana.Controllers
 {
@@ -92,40 +94,19 @@ namespace Balkana.Controllers
 
             if (team.LogoFile != null && team.LogoFile.Length > 0)
             {
-                var uploadsFolder = Path.Combine(env.WebRootPath, "uploads", "TeamLogos");
-                Directory.CreateDirectory(uploadsFolder);
-
-                var ext = Path.GetExtension(team.LogoFile.FileName);
-                var finalFileName = $"{Guid.NewGuid()}{ext}";
-                var finalPath = Path.Combine(uploadsFolder, finalFileName);
-
-                // write to temp first
-                var tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ext);
-
                 try
                 {
-                    Console.WriteLine($">>> Writing upload to temp: {tempFile}");
-                    await using (var tempStream = new FileStream(tempFile, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, useAsync: true))
-                    {
-                        await team.LogoFile.CopyToAsync(tempStream);
-                        await tempStream.FlushAsync();
-                    }
-
-                    // move to final destination atomically
-                    Console.WriteLine($">>> Moving temp file to final path: {finalPath}");
-                    if (System.IO.File.Exists(finalPath))
-                    {
-                        Console.WriteLine($">>> Final path already exists, deleting: {finalPath}");
-                        System.IO.File.Delete(finalPath);
-                    }
-                    System.IO.File.Move(tempFile, finalPath);
-
-                    logoPath = $"/uploads/TeamLogos/{finalFileName}";
+                    logoPath = await ImageOptimizer.SaveWebpAsync(
+                        team.LogoFile,
+                        env.WebRootPath,
+                        Path.Combine("uploads", "TeamLogos"),
+                        maxWidth: 512,
+                        maxHeight: 512,
+                        quality: 85);
                 }
                 catch (IOException ioEx)
                 {
                     Console.WriteLine("❌ IO Exception while saving file: " + ioEx);
-                    try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); } catch { }
                     ModelState.AddModelError("", "File write error: " + ioEx.Message);
                     team.CategoriesGames = this.teams.AllGames();
                     return View(team);
@@ -133,7 +114,6 @@ namespace Balkana.Controllers
                 catch (Exception ex)
                 {
                     Console.WriteLine("❌ General Exception while saving file: " + ex);
-                    try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); } catch { }
                     ModelState.AddModelError("", "Unexpected error while saving file.");
                     team.CategoriesGames = this.teams.AllGames();
                     return View(team);
@@ -208,34 +188,18 @@ namespace Balkana.Controllers
 
             if (model.LogoFile != null && model.LogoFile.Length > 0)
             {
-                var uploadsFolder = Path.Combine(env.WebRootPath, "uploads", "TeamLogos");
-                Directory.CreateDirectory(uploadsFolder);
-
-                var ext = Path.GetExtension(model.LogoFile.FileName);
-                var finalFileName = $"{Guid.NewGuid()}{ext}";
-                var finalPath = Path.Combine(uploadsFolder, finalFileName);
-
-                var tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ext);
-
                 try
                 {
-                    await using (var tempStream = new FileStream(tempFile, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, useAsync: true))
-                    {
-                        await model.LogoFile.CopyToAsync(tempStream);
-                        await tempStream.FlushAsync();
-                    }
-
-                    if (System.IO.File.Exists(finalPath))
-                    {
-                        System.IO.File.Delete(finalPath);
-                    }
-                    System.IO.File.Move(tempFile, finalPath);
-
-                    logoPath = $"/uploads/TeamLogos/{finalFileName}";
+                    logoPath = await ImageOptimizer.SaveWebpAsync(
+                        model.LogoFile,
+                        env.WebRootPath,
+                        Path.Combine("uploads", "TeamLogos"),
+                        maxWidth: 512,
+                        maxHeight: 512,
+                        quality: 85);
                 }
                 catch
                 {
-                    if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile);
                     ModelState.AddModelError("", "Error saving uploaded file.");
                     model.CategoriesGames = this.teams.AllGames();
                     return View(model);

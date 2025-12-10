@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Balkana.Models.Article;
+using Balkana.Services.Images;
+using System.IO;
 
 namespace Balkana.Controllers
 {
@@ -71,47 +73,25 @@ namespace Balkana.Controllers
 
             if (model.File != null && model.File.Length > 0)
             {
-                var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "News", "Thumbnails");
-                Directory.CreateDirectory(uploadsFolder);
-
-                var ext = Path.GetExtension(model.File.FileName);
-                var finalFileName = $"{Guid.NewGuid()}{ext}";
-                var finalPath = Path.Combine(uploadsFolder, finalFileName);
-
-                // write to temp first
-                var tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ext);
-
                 try
                 {
-                    Console.WriteLine($">>> Writing upload to temp: {tempFile}");
-                    await using (var tempStream = new FileStream(tempFile, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, useAsync: true))
-                    {
-                        await model.File.CopyToAsync(tempStream);
-                        await tempStream.FlushAsync();
-                    }
-
-                    // move to final destination atomically
-                    Console.WriteLine($">>> Moving temp file to final path: {finalPath}");
-                    if (System.IO.File.Exists(finalPath))
-                    {
-                        Console.WriteLine($">>> Final path already exists, deleting: {finalPath}");
-                        System.IO.File.Delete(finalPath);
-                    }
-                    System.IO.File.Move(tempFile, finalPath);
-
-                    logoPath = $"/uploads/News/Thumbnails/{finalFileName}";
+                    logoPath = await ImageOptimizer.SaveWebpAsync(
+                        model.File,
+                        _env.WebRootPath,
+                        Path.Combine("uploads", "News", "Thumbnails"),
+                        maxWidth: 1280,
+                        maxHeight: 720,
+                        quality: 85);
                 }
                 catch (IOException ioEx)
                 {
                     Console.WriteLine("❌ IO Exception while saving file: " + ioEx);
-                    try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); } catch { }
                     ModelState.AddModelError("", "File write error: " + ioEx.Message);
                     return View(model);
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine("❌ General Exception while saving file: " + ex);
-                    try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); } catch { }
                     ModelState.AddModelError("", "Unexpected error while saving file.");
                     return View(model);
                 }
@@ -198,47 +178,25 @@ namespace Balkana.Controllers
 
                 if (model.File != null && model.File.Length > 0)
                 {
-                    var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "News", "Thumbnails");
-                    Directory.CreateDirectory(uploadsFolder);
-
-                    var ext = Path.GetExtension(model.File.FileName);
-                    var finalFileName = $"{Guid.NewGuid()}{ext}";
-                    var finalPath = Path.Combine(uploadsFolder, finalFileName);
-
-                    // write to temp first
-                    var tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ext);
-
                     try
                     {
-                        Console.WriteLine($">>> Writing upload to temp: {tempFile}");
-                        await using (var tempStream = new FileStream(tempFile, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, useAsync: true))
-                        {
-                            await model.File.CopyToAsync(tempStream);
-                            await tempStream.FlushAsync();
-                        }
-
-                        // move to final destination atomically
-                        Console.WriteLine($">>> Moving temp file to final path: {finalPath}");
-                        if (System.IO.File.Exists(finalPath))
-                        {
-                            Console.WriteLine($">>> Final path already exists, deleting: {finalPath}");
-                            System.IO.File.Delete(finalPath);
-                        }
-                        System.IO.File.Move(tempFile, finalPath);
-
-                        logoPath = $"/uploads/News/Thumbnails/{finalFileName}";
+                        logoPath = await ImageOptimizer.SaveWebpAsync(
+                            model.File,
+                            _env.WebRootPath,
+                            Path.Combine("uploads", "News", "Thumbnails"),
+                            maxWidth: 1280,
+                            maxHeight: 720,
+                            quality: 85);
                     }
                     catch (IOException ioEx)
                     {
                         Console.WriteLine("❌ IO Exception while saving file: " + ioEx);
-                        try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); } catch { }
                         ModelState.AddModelError("", "File write error: " + ioEx.Message);
                         return View(model);
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine("❌ General Exception while saving file: " + ex);
-                        try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); } catch { }
                         ModelState.AddModelError("", "Unexpected error while saving file.");
                         return View(model);
                     }
