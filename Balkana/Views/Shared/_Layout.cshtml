@@ -157,18 +157,34 @@
     <nav class="top-navbar" id="topNavbar">
         <div class="navbar-container">
             <!-- Logo at top with animation -->
-            <div class="navbar-logo">
+            @* <div class="navbar-logo">
                 <a asp-controller="Home" asp-action="Index" aria-label="Balkana Home">
                     <img src="~/Balkana.png" alt="Balkana - Logo" width="120" height="120">
                 </a>
-            </div>
+            </div> *@
 
             <!-- Vertical navigation links -->
             <div class="nav-links">
-                <a asp-controller="Home" asp-action="Index" class="nav-link active" data-page="home">
-                    <i class="fi fi-rr-home"></i>
-                    <span>Home</span>
-                </a>
+                <div class="navbar-logo">
+                    <a asp-controller="Home" asp-action="Index" aria-label="Balkana Home">
+                        <img src="~/Balkana.png" alt="Balkana - Logo" width="120" height="120">
+                    </a>
+                </div>
+                
+                <!-- Search Box -->
+                <div class="search-container">
+                    <div class="search-wrapper">
+                        <i class="fi fi-rr-search search-icon"></i>
+                        <input type="text" 
+                               id="globalSearchInput" 
+                               class="search-input" 
+                               placeholder="Search..."
+                               autocomplete="off"
+                               aria-label="Search">
+                        <div id="searchResults" class="search-results" style="display: none;"></div>
+                    </div>
+                </div>
+                
                 <a asp-controller="Tournaments" asp-action="Index" class="nav-link">
                     <i class="fi fi-rr-trophy"></i>
                     <span>Tournaments</span>

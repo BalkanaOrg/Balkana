@@ -4,77 +4,161 @@
     ViewData["Title"] = "Edit Team";
 }
 
-<h2 class="mb-4">Edit Team</h2>
-
-<form asp-action="Edit" method="post" enctype="multipart/form-data" class="row g-4">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-    <input type="hidden" asp-for="LogoPath" />
-
-    <div class="col-lg-8">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-8">
-                        <label asp-for="FullName" class="form-label"></label>
-                        <input asp-for="FullName" class="form-control" />
-                        <span asp-validation-for="FullName" class="text-danger small"></span>
-                    </div>
-                    <div class="col-md-4">
-                        <label asp-for="Tag" class="form-label"></label>
-                        <input asp-for="Tag" class="form-control" />
-                        <span asp-validation-for="Tag" class="text-danger small"></span>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label asp-for="YearFounded" class="form-label"></label>
-                        <input asp-for="YearFounded" class="form-control" type="number" />
-                        <span asp-validation-for="YearFounded" class="text-danger small"></span>
-                    </div>
-
-                    <div class="col-md-8">
-                        <label asp-for="GameId" class="form-label"></label>
-                        <select asp-for="GameId" class="form-select"
-                                asp-items="@(new SelectList(Model.CategoriesGames, "Id", "FullName"))">
-                            <option value="">-- Select Game --</option>
-                        </select>
-                        <span asp-validation-for="GameId" class="text-danger small"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="team-form-container">
+    <div class="form-header">
+        <h2>Edit Team</h2>
+        <p>Update team details and refresh the logo to match your brand.</p>
     </div>
 
-    <div class="col-lg-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-body d-flex flex-column gap-3">
-                <div>
-                    <label asp-for="LogoFile" class="form-label">Team Logo</label>
-                    @if (!string.IsNullOrEmpty(Model.LogoPath))
-                    {
-                        <div class="mb-2 text-center">
-                            <img src="@Model.LogoPath"
-                                 alt="Current Logo"
-                                 class="img-fluid rounded border"
-                                 style="max-height:160px; object-fit:contain;" />
-                            <div class="text-muted small mt-1">Current logo</div>
+    <div class="form-card">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data" class="team-form row g-4">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="LogoPath" />
+
+            <div class="col-lg-8">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label asp-for="FullName" class="form-label">Team Name *</label>
+                                <input asp-for="FullName" class="form-control" placeholder="Full organization name" required />
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Tag" class="form-label">Tag *</label>
+                                <input asp-for="Tag" class="form-control" placeholder="3-5 letters" required />
+                                <span asp-validation-for="Tag" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label asp-for="YearFounded" class="form-label">Founded</label>
+                                <input asp-for="YearFounded" class="form-control" type="number" placeholder="YYYY" />
+                                <span asp-validation-for="YearFounded" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-8">
+                                <label asp-for="GameId" class="form-label">Game *</label>
+                                <select asp-for="GameId" class="form-select"
+                                        asp-items="@(new SelectList(Model.CategoriesGames, "Id", "FullName"))" required>
+                                    <option value="">-- Select Game --</option>
+                                </select>
+                                <span asp-validation-for="GameId" class="text-danger small"></span>
+                            </div>
                         </div>
-                    }
-                    <input asp-for="LogoFile" type="file" class="form-control" accept="image/*" />
-                    <div class="form-text small">
-                        Uses WebP on save. Recommended: square logo up to 512px, max ~5MB.
                     </div>
-                    <span asp-validation-for="LogoFile" class="text-danger small"></span>
-                </div>
-
-                <div class="d-flex gap-2 mt-auto">
-                    <button type="submit" class="btn btn-primary flex-grow-1">Save Changes</button>
-                    <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </div>
-        </div>
+
+            <div class="col-lg-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body d-flex flex-column gap-3">
+                        <div>
+                            <label asp-for="LogoFile" class="form-label">Team Logo</label>
+                            <div class="logo-upload">
+                                <input asp-for="LogoFile" type="file" class="form-control" accept="image/*" id="EditLogoFileInput" />
+                                <div class="upload-hint small text-muted mt-1">
+                                    WebP on save; recommend square up to 512px, ~5MB max.
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(Model.LogoPath))
+                                {
+                                    <div class="mb-2 text-center">
+                                        <img src="@Model.LogoPath"
+                                             alt="Current Logo"
+                                             class="img-fluid rounded border"
+                                             style="max-height:150px; object-fit:contain;" />
+                                        <div class="text-muted small mt-1">Current logo</div>
+                                    </div>
+                                }
+
+                                <div class="logo-preview mt-2" style="display:none;">
+                                    <img id="editLogoPreviewImg" class="img-fluid rounded border" style="max-height:150px; object-fit:contain;" />
+                                    <div class="text-muted small mt-1">New logo preview</div>
+                                </div>
+                            </div>
+                            <span asp-validation-for="LogoFile" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-auto">
+                            <a asp-action="Index" class="btn btn-outline-secondary flex-grow-1">Cancel</a>
+                            <button type="submit" class="btn btn-primary flex-grow-1">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
-</form>
+</div>
+
+<style>
+    .team-form-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 10px;
+    }
+    .team-form-container .form-header h2 { margin-bottom: 4px; }
+    .team-form-container .form-header p { margin: 0 0 12px; color: #a7acb7; }
+    .team-form-container .form-card {
+        background: linear-gradient(145deg, #111722, #0c1018);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    }
+    .team-form .card {
+        background: #0f141d;
+        border: 1px solid rgba(255,255,255,0.06);
+    }
+    .team-form .form-label {
+        font-weight: 600;
+        color: #dfe3ea;
+    }
+    .team-form .form-control,
+    .team-form .form-select {
+        background: #121826;
+        border-color: rgba(255,255,255,0.08);
+        color: #e5e8ef;
+    }
+    .team-form .form-control:focus,
+    .team-form .form-select:focus {
+        box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        border-color: #0d6efd;
+    }
+    .logo-upload input[type="file"] {
+        background: #121826;
+        color: #e5e8ef;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #1b6ef3, #3b8dff);
+        border: none;
+    }
+    .btn-primary:hover { filter: brightness(1.05); }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const fileInput = document.getElementById('EditLogoFileInput');
+        const previewWrapper = document.querySelector('.logo-preview');
+        const previewImg = document.getElementById('editLogoPreviewImg');
+
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files?.[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = ev => {
+                        previewImg.src = ev.target?.result;
+                        previewWrapper.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    previewWrapper.style.display = 'none';
+                    previewImg.src = '';
+                }
+            });
+        }
+    });
+</script>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

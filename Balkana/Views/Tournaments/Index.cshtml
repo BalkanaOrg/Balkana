@@ -9,8 +9,11 @@
 
 <div class="tournament-container">
     <div class="tournament-header">
-        <h2>Tournaments</h2>
-        <a asp-action="Add" class="add-tournament-btn">Add New Tournament</a>
+        <h2>Balkana Tournaments</h2>
+        @if (User.IsInRole("Administrator"))
+        {
+            <a asp-action="Add" class="add-tournament-btn">Add New Tournament</a>
+        }
     </div>
 
     <div class="tournament-grid">
