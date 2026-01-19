@@ -13,5 +13,10 @@ namespace Balkana.Controllers
         {
             return View();
         }
+
+        public IActionResult TOS()
+        {
+            return View();
+        }
     }
 }
