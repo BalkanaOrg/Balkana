@@ -29,6 +29,10 @@
         public int GameId { get; set; }
         public Game Game { get; set; }
 
+        public int? BrandId { get; set; }
+        [ForeignKey(nameof(BrandId))]
+        public Branding? Brand { get; set; }
+
         public ICollection<Series> SeriesAsTeam1 { get; set; } = new List<Series>();
         public ICollection<Series> SeriesAsTeam2 { get; set; } = new List<Series>();
         public ICollection<PlayerTeamTransfer> Transfers { get; set; } = new List<PlayerTeamTransfer>();

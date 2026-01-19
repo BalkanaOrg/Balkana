@@ -6,6 +6,7 @@ using Balkana.Data.Repositories;
 using Balkana.Data.Seed;
 using Balkana.Services;
 using Balkana.Services.Admin;
+using Balkana.Services.Brandings;
 using Balkana.Services.Bracket;
 using Balkana.Services.Discord;
 using Balkana.Services.Matches;
@@ -214,6 +215,7 @@ void ConfigureServices(IServiceCollection services)
     services.AddTransient<IOrganizerService, OrganizerService>();
     services.AddTransient<IMatchService, MatchService>();
     services.AddTransient<IStatsService, StatsService>();
+    services.AddTransient<IBrandingService, BrandingService>();
 
     //USER IDENTITY
     builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>

@@ -1762,7 +1762,7 @@ a:visited {
 }
 
 .article-detail-body a {
-    color: #8b0000;
+    color: #d00202;
     text-decoration: underline;
     transition: color 0.3s ease;
 }

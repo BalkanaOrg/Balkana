@@ -1,0 +1,140 @@
+@using Balkana.Data.Models
+@using Balkana.Data.Infrastructure.Extensions
+@using Balkana.Services.Brandings.Models
+@model BrandingDetailsServiceModel
+@{
+    ViewData["Title"] = $"{Model.FullName} - Balkana Branding";
+    
+    var baseUrl = Context.Request.Scheme + "://" + Context.Request.Host;
+    var brandingImage = !string.IsNullOrEmpty(Model.LogoURL) 
+        ? (Model.LogoURL.StartsWith("http") ? Model.LogoURL : baseUrl + Model.LogoURL)
+        : baseUrl + "/Balkana.png";
+    ViewData["Image"] = brandingImage;
+}
+
+<link rel="stylesheet" href="~/css/team-details.css" />
+
+<div class="team-details-container">
+    <!-- Branding Header -->
+    <div class="team-header">
+        <div class="team-header-content">
+            <div class="team-logo-section">
+                <img src="@Model.LogoURL" 
+                     alt="@Model.FullName" 
+                     class="team-logo"
+                     onerror="this.src='https://ui-avatars.com/api/?name=@Model.Tag&background=8b0000&color=fff&size=200'" />
+            </div>
+            
+            <div class="team-info-section">
+                <h1 class="team-name">@Model.FullName</h1>
+                <div class="team-meta">
+                    <span class="founded-year">Founded @Model.yearFounded</span>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.FounderName) || !string.IsNullOrEmpty(Model.ManagerName))
+                {
+                    <div class="quick-stats">
+                        @if (!string.IsNullOrEmpty(Model.FounderName))
+                        {
+                            <div class="stat-item">
+                                <div class="stat-label">Founder</div>
+                                <div class="stat-number">@Model.FounderName</div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.ManagerName))
+                        {
+                            <div class="stat-item">
+                                <div class="stat-label">Manager</div>
+                                <div class="stat-number">@Model.ManagerName</div>
+                            </div>
+                        }
+                        <div class="stat-item">
+                            <div class="stat-number">@Model.Teams.Count()</div>
+                            <div class="stat-label">Teams</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="team-tabs">
+        <button class="tab-button active" onclick="showTab('teams')">Teams</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+        <!-- Teams Tab -->
+        <div id="teams-tab" class="tab-panel active">
+            <div class="section-header">
+                <h2>Associated Teams</h2>
+                <span class="roster-count">@Model.Teams.Count() teams</span>
+            </div>
+            
+            @if (Model.Teams.Any())
+            {
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+                    @foreach (var team in Model.Teams)
+                    {
+                        <div class="col">
+                            <a asp-controller="Teams"
+                               asp-action="Details"
+                               asp-route-id="@team.Id"
+                               asp-route-information="@team.GetInformation()"
+                               style="text-decoration: none; color: inherit;">
+                                <div class="card h-100" style="background: #0f141d; border: 1px solid rgba(255,255,255,0.1); transition: transform 0.2s;">
+                                    <div class="card-body text-center">
+                                        <img src="@team.LogoURL"
+                                             alt="@team.FullName"
+                                             class="img-fluid mb-3"
+                                             style="max-height: 80px; width: auto; object-fit: contain;"
+                                             onerror="this.src='https://ui-avatars.com/api/?name=@team.Tag&background=8b0000&color=fff&size=80'" />
+                                        <h5 class="card-title text-white">@team.FullName</h5>
+                                        <p class="card-text text-muted small">[@team.Tag]</p>
+                                        @if (!string.IsNullOrEmpty(team.GameName))
+                                        {
+                                            <p class="card-text text-muted small">@team.GameName</p>
+                                        }
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="no-data">
+                    <p>No teams associated with this branding</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function showTab(tabName) {
+        // Hide all tab panels
+        const panels = document.querySelectorAll('.tab-panel');
+        panels.forEach(panel => panel.classList.remove('active'));
+        
+        // Remove active class from all tab buttons
+        const buttons = document.querySelectorAll('.tab-button');
+        buttons.forEach(button => button.classList.remove('active'));
+        
+        // Show selected tab panel
+        document.getElementById(tabName + '-tab').classList.add('active');
+        
+        // Add active class to clicked button
+        event.target.classList.add('active');
+    }
+</script>
+
+<style>
+    .card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(255,255,255,0.2) !important;
+    }
+</style>
+

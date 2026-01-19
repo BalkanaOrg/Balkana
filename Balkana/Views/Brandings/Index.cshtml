@@ -1,0 +1,195 @@
+@using Balkana.Models.Brandings
+@model AllBrandsQueryModel
+@{
+    ViewData["Title"] = "Balkana Brandings";
+}
+
+<link rel="stylesheet" href="~/css/rankings.css" />
+
+<div class="rankings-container">
+    <!-- Header Section -->
+    <div class="rankings-header">
+        <div class="header-content">
+            <h1 class="main-title">BALKANA </h1>
+            <h1 class="main-title">BRANDINGS</h1>
+            <div class="title-underline"></div>
+            <p class="subtitle">Organizations</p>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="search-filter-section">
+        <form method="get" class="rankings-form" id="filterForm">
+            <div class="search-container">
+                <input asp-for="SearchTerm"
+                       class="search-input"
+                       placeholder="Search brandings by tag or name..." />
+                <div class="search-icon">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Rankings Grid -->
+    <div class="rankings-grid">
+        <partial name="_BrandingsPartial" model="@Model.Brandings" />
+    </div>
+
+    <!-- No Results Message -->
+    @if (!Model.Brandings.Any())
+    {
+        <div class="no-results">
+            <div class="no-results-icon">🔍</div>
+            <h3 class="no-results-title">No brandings found</h3>
+            <p class="no-results-text">Try adjusting your search criteria</p>
+        </div>
+    }
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Loading more brandings...</p>
+    </div>
+
+    <!-- Footer Stats -->
+    <div class="footer-stats">
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-number" id="renderedBrandingsCount">@Model.Brandings.Count()</div>
+                <div class="stat-text">Brandings</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-box">
+                <div class="stat-number">@Model.AbsoluteNumberOfBrandings</div>
+                <div class="stat-text">Total</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentPage = @Model.CurrentPage;
+    let currentRank = @((Model.CurrentPage - 1) * AllBrandsQueryModel.BrandingsPerPage + Model.Brandings.Count());
+    let renderedBrandingsCount = @Model.Brandings.Count();
+    let isLoading = false;
+    let hasMoreData = true;
+    const searchTerm = '@Model.SearchTerm';
+    const brandingsPerPage = @AllBrandsQueryModel.BrandingsPerPage;
+
+    // Lazy loading on scroll
+    window.addEventListener('scroll', function() {
+        if (isLoading || !hasMoreData) return;
+
+        const scrollPosition = window.innerHeight + window.scrollY;
+        const documentHeight = document.documentElement.scrollHeight;
+        const threshold = 200; // Load when 200px from bottom
+
+        if (scrollPosition >= documentHeight - threshold) {
+            loadMoreBrandings();
+        }
+    });
+
+    function loadMoreBrandings() {
+        if (isLoading || !hasMoreData) return;
+
+        isLoading = true;
+        showLoadingIndicator();
+
+        const nextPage = currentPage + 1;
+        const url = buildUrl(nextPage);
+
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const rankingsGridInResponse = doc.querySelector('.rankings-grid');
+                const newBrandings = rankingsGridInResponse ? rankingsGridInResponse.querySelectorAll('.team-card') : [];
+                
+                if (newBrandings.length === 0) {
+                    hasMoreData = false;
+                } else {
+                    const rankingsGrid = document.querySelector('.rankings-grid');
+                    newBrandings.forEach((branding, index) => {
+                        currentRank++;
+                        renderedBrandingsCount++;
+                        const rank = currentRank;
+                        
+                        // Update rank badge
+                        const rankBadge = branding.querySelector('.rank-badge');
+                        if (rankBadge) {
+                            rankBadge.textContent = rank;
+                            
+                            // Update rank classes
+                            rankBadge.className = 'rank-badge';
+                            branding.className = 'team-card';
+                            
+                            if (rank === 1) {
+                                rankBadge.classList.add('rank-1');
+                                branding.classList.add('rank-1');
+                            } else if (rank === 2) {
+                                rankBadge.classList.add('rank-2');
+                                branding.classList.add('rank-2');
+                            } else if (rank === 3) {
+                                rankBadge.classList.add('rank-3');
+                                branding.classList.add('rank-3');
+                            }
+                        }
+                        
+                        // Update data-rank attribute
+                        branding.setAttribute('data-rank', rank);
+                        
+                        rankingsGrid.appendChild(branding);
+                    });
+                    
+                    // Update the rendered brandings counter
+                    const renderedBrandingsCounter = document.getElementById('renderedBrandingsCount');
+                    if (renderedBrandingsCounter) {
+                        renderedBrandingsCounter.textContent = renderedBrandingsCount;
+                    }
+                    
+                    currentPage = nextPage;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading more brandings:', error);
+                hasMoreData = false;
+            })
+            .finally(() => {
+                isLoading = false;
+                hideLoadingIndicator();
+            });
+    }
+
+    function buildUrl(page) {
+        let url = `/Brandings/Index?currentPage=${page}`;
+        
+        if (searchTerm) url += `&searchTerm=${encodeURIComponent(searchTerm)}`;
+        
+        return url;
+    }
+
+    function showLoadingIndicator() {
+        document.getElementById('loadingIndicator').style.display = 'block';
+    }
+
+    function hideLoadingIndicator() {
+        document.getElementById('loadingIndicator').style.display = 'none';
+    }
+
+    // Reset lazy loading when filters change
+    document.getElementById('filterForm').addEventListener('submit', function() {
+        currentPage = 1;
+        renderedBrandingsCount = @Model.Brandings.Count();
+        hasMoreData = true;
+        // Reset counter on filter change
+        const renderedBrandingsCounter = document.getElementById('renderedBrandingsCount');
+        if (renderedBrandingsCounter) {
+            renderedBrandingsCounter.textContent = renderedBrandingsCount;
+        }
+    });
+</script>
+

@@ -17,6 +17,7 @@
 
         public DbSet<Team> Teams { get; set; }
         public DbSet<TeamPosition> Positions { get; set; }
+        public DbSet<Branding> Brandings { get; set; }
 
         public DbSet<Player> Players { get; set; }
         public DbSet<PlayerPicture> Pictures { get; set; }
@@ -156,6 +157,27 @@
                 .HasOne(t => t.Game)
                 .WithMany(g => g.Teams)
                 .HasForeignKey(t => t.GameId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Branding → Teams (One-to-Many)
+            modelBuilder.Entity<Team>()
+                .HasOne(t => t.Brand)
+                .WithMany(b => b.Teams)
+                .HasForeignKey(t => t.BrandId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Branding → Founder (ApplicationUser)
+            modelBuilder.Entity<Branding>()
+                .HasOne(b => b.Founder)
+                .WithMany()
+                .HasForeignKey(b => b.FounderId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Branding → Manager (ApplicationUser)
+            modelBuilder.Entity<Branding>()
+                .HasOne(b => b.Manager)
+                .WithMany()
+                .HasForeignKey(b => b.ManagerId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             // Tournament → Game

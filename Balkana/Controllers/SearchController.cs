@@ -1,6 +1,7 @@
 using Balkana.Data;
 using Balkana.Data.Models;
 using Balkana.Data.Infrastructure.Extensions;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,10 +12,12 @@ namespace Balkana.Controllers
     public class SearchController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public SearchController(ApplicationDbContext context)
+        public SearchController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         [HttpGet("autocomplete")]
@@ -96,6 +99,36 @@ namespace Balkana.Controllers
                 tournaments,
                 articles
             });
+        }
+
+        [HttpGet("users")]
+        public async Task<IActionResult> SearchUsers([FromQuery] string query, [FromQuery] int limit = 10)
+        {
+            if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
+            {
+                return Ok(new List<object>());
+            }
+
+            var searchTerm = query.ToLower().Trim();
+            var searchLimit = Math.Min(limit, 10);
+
+            var users = await _userManager.Users
+                .Where(u => u.UserName.ToLower().Contains(searchTerm) ||
+                           (u.FirstName != null && u.FirstName.ToLower().Contains(searchTerm)) ||
+                           (u.LastName != null && u.LastName.ToLower().Contains(searchTerm)) ||
+                           u.Email.ToLower().Contains(searchTerm))
+                .Take(searchLimit)
+                .Select(u => new
+                {
+                    id = u.Id,
+                    userName = u.UserName,
+                    firstName = u.FirstName,
+                    lastName = u.LastName,
+                    email = u.Email
+                })
+                .ToListAsync();
+
+            return Ok(users);
         }
     }
 }
