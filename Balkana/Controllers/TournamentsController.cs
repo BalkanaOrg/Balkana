@@ -1196,7 +1196,7 @@ namespace Balkana.Controllers
             var trophyService = new TrophyService(_context);
             var mvpEVPService = new MVPEVPService(_context);
 
-            // Handle trophy image upload
+            // Handle trophy image upload (only for Champion Trophy)
             string? trophyImagePath = null;
             if (model.TrophyImageFile != null && model.TrophyImageFile.Length > 0)
             {
@@ -1219,7 +1219,7 @@ namespace Balkana.Controllers
                 }
             }
 
-            // Award MVP trophy
+            // Award MVP trophy (uses default MVP image, not trophy image)
             if (model.SelectedMVPId.HasValue)
             {
                 var mvpPlayer = await _context.Players.FindAsync(model.SelectedMVPId.Value);
@@ -1230,7 +1230,7 @@ namespace Balkana.Controllers
                         "MVP",
                         $"MVP of {tournament.FullName}",
                         tournament.Id,
-                        trophyImagePath);
+                        null); // MVP uses default image, not trophy image
                 }
             }
 
@@ -1308,7 +1308,7 @@ namespace Balkana.Controllers
                     "EVP",
                     $"EVP of {tournament.FullName}",
                     tournament.Id,
-                    trophyImagePath);
+                    null); // EVP uses default image, not trophy image
             }
 
             // Award points for placements
