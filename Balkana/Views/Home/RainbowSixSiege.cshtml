@@ -1,0 +1,351 @@
+@model List<Balkana.Data.Models.Tournament>
+@{
+    ViewData["Title"] = "Rainbow Six Siege - Balkana";
+}
+
+<!-- Hero Section -->
+<section class="game-hero">
+    <div class="game-hero-content">
+        <div class="game-logo-large">R6</div>
+        <h1 class="game-hero-title">Rainbow Six Siege</h1>
+        <p class="game-hero-subtitle">Tactical Destruction</p>
+    </div>
+</section>
+
+<!-- Game Description Section -->
+<section class="game-description-section">
+    <div class="game-description-container">
+        <h2 class="game-description-title">About Rainbow Six Siege</h2>
+        <p class="game-description-text">
+            Rainbow Six Siege is a high-stakes, tactical 5v5 shooter that emphasizes strategy, teamwork, and environmental destruction. Attackers and Defenders engage in intense close-quarters combat where every wall can be breached, every floor can be destroyed, and every angle matters. With over 60 unique operators, each bringing their own gadgets and abilities, Rainbow Six Siege offers endless tactical possibilities.
+        </p>
+        <p class="game-description-text">
+            In Rainbow Six Siege, information is power. Drones, cameras, and sound cues are just as important as precise aim. Teams must coordinate their attacks, manage utility, and adapt to their opponents' strategies in real-time. The destructible environment means no two rounds play the same, creating a dynamic competitive experience that rewards creativity, communication, and tactical thinking.
+        </p>
+    </div>
+</section>
+
+<!-- Tournaments Section -->
+<section class="game-tournaments-section">
+    <div class="game-tournaments-header">
+        <h2 class="game-tournaments-title">Latest Tournaments</h2>
+        <a href="/Tournaments" class="see-all">See All Tournaments →</a>
+    </div>
+    <p class="game-tournaments-subtitle">Explore the latest Rainbow Six Siege tournaments organized by Balkana.</p>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="tournaments-grid">
+            @foreach (var tournament in Model)
+            {
+                <a href="/Tournaments/Details/@tournament.Id" class="tournament-card-link">
+                    <div class="tournament-card-content">
+                        <div class="tournament-card-image">
+                            <img src="@tournament.BannerUrl" alt="@tournament.FullName" />
+                        </div>
+                        <div class="tournament-card-info">
+                            <h3 class="tournament-card-title">@tournament.FullName</h3>
+                            <p class="tournament-card-description">
+                                @(tournament.Description?.Length > 120 ? tournament.Description.Substring(0, 120) + "..." : tournament.Description ?? "No description available")
+                            </p>
+                            <div class="tournament-card-footer">
+                                <span class="tournament-card-date">
+                                    <i class="fi fi-rr-calendar"></i>
+                                    @tournament.StartDate.ToString("dd MMM yyyy")
+                                </span>
+                                @if (tournament.PrizePool > 0)
+                                {
+                                    <span class="tournament-card-prize">
+                                        <i class="fi fi-rr-trophy"></i>
+                                        €@((int)tournament.PrizePool)
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="no-tournaments">
+            <i class="fi fi-rr-trophy"></i>
+            <p>No tournaments available yet. Check back soon for upcoming Rainbow Six Siege events!</p>
+        </div>
+    }
+</section>
+
+@section Styles {
+    <style>
+        .game-hero {
+            height: 60vh;
+            min-height: 400px;
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.5)), 
+                        radial-gradient(circle at 30% 20%, rgba(45, 27, 105, 0.3) 0%, transparent 50%), 
+                        radial-gradient(circle at 70% 80%, rgba(139, 0, 0, 0.3) 0%, transparent 50%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-hero-content {
+            z-index: 2;
+            max-width: 1000px;
+            padding: 0 20px;
+        }
+
+        .game-logo-large {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 30px;
+            background: linear-gradient(45deg, #2d1b69, #8b0000);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: white;
+            box-shadow: 0 10px 40px rgba(45, 27, 105, 0.5);
+        }
+
+        .game-hero-title {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #fff, #2d1b69, #8b0000);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .game-hero-subtitle {
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+        }
+
+        .game-description-section {
+            padding: 80px 40px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .game-description-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .game-description-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 30px;
+            color: white;
+            text-align: center;
+        }
+
+        .game-description-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 20px;
+        }
+
+        .game-tournaments-section {
+            padding: 80px 40px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+        }
+
+        .game-tournaments-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto 50px;
+        }
+
+        .game-tournaments-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: white;
+        }
+
+        .see-all {
+            color: #8b0000;
+            text-decoration: none;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .see-all:hover {
+            color: #2d1b69;
+        }
+
+        .game-tournaments-subtitle {
+            max-width: 1400px;
+            margin: 0 auto;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+        }
+
+        .tournaments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .tournament-card-link {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.4s ease;
+        }
+
+        .tournament-card-link:hover {
+            transform: translateY(-10px);
+        }
+
+        .tournament-card-content {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tournament-card-link:hover .tournament-card-content {
+            border-color: rgba(45, 27, 105, 0.5);
+            box-shadow: 0 20px 40px rgba(45, 27, 105, 0.3);
+        }
+
+        .tournament-card-image {
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .tournament-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .tournament-card-link:hover .tournament-card-image img {
+            transform: scale(1.1);
+        }
+
+        .tournament-card-info {
+            padding: 25px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tournament-card-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: white;
+            line-height: 1.3;
+        }
+
+        .tournament-card-description {
+            flex-grow: 1;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.5;
+        }
+
+        .tournament-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .tournament-card-date,
+        .tournament-card-prize {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tournament-card-date i,
+        .tournament-card-prize i {
+            color: #8b0000;
+            font-size: 14px;
+        }
+
+        .no-tournaments {
+            text-align: center;
+            padding: 80px 20px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            max-width: 600px;
+            margin: 50px auto 0;
+        }
+
+        .no-tournaments i {
+            font-size: 4rem;
+            color: rgba(255, 255, 255, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .no-tournaments p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .game-hero {
+                height: 50vh;
+                min-height: 300px;
+            }
+
+            .game-logo-large {
+                width: 120px;
+                height: 120px;
+                font-size: 2.5rem;
+            }
+
+            .game-description-section,
+            .game-tournaments-section {
+                padding: 60px 20px;
+            }
+
+            .game-tournaments-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .tournaments-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+}
+
