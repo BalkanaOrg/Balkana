@@ -13,7 +13,7 @@ namespace Balkana.Services.Tournaments
             _context = context;
         }
 
-        public async Task AwardChampionTrophyAsync(int tournamentId, int teamId, string trophyDescription)
+        public async Task AwardChampionTrophyAsync(int tournamentId, int teamId, string trophyDescription, string? trophyImagePath = null)
         {
             // Get tournament to use its end date
             var tournament = await _context.Tournaments
@@ -25,7 +25,7 @@ namespace Balkana.Services.Tournaments
                 Name = $"Champion of {tournament.FullName}",
                 TournamentId = tournamentId,
                 Description = trophyDescription,
-                IconURL = "/uploads/Tournaments/Trophies/default_trophy.png", // Default champion icon
+                IconURL = trophyImagePath ?? "/uploads/Tournaments/Trophies/default_trophy.png", // Use provided image or default
                 AwardType = "Trophy",
                 AwardDate = tournament?.EndDate ?? DateTime.UtcNow
             };
@@ -63,7 +63,8 @@ namespace Balkana.Services.Tournaments
                     var playerTrophy = new PlayerTrophy
                     {
                         PlayerId = playerId,
-                        TrophyId = tournamentTrophy.Id
+                        TrophyId = tournamentTrophy.Id,
+                        DateAwarded = tournament?.EndDate ?? DateTime.UtcNow
                     };
 
                     _context.PlayerTrophies.Add(playerTrophy);
@@ -73,7 +74,7 @@ namespace Balkana.Services.Tournaments
             await _context.SaveChangesAsync();
         }
 
-        public async Task AwardPlayerTrophyAsync(int playerId, string awardType, string description, int tournamentId)
+        public async Task AwardPlayerTrophyAsync(int playerId, string awardType, string description, int tournamentId, string? trophyImagePath = null)
         {
             // Get tournament to use its end date
             var tournament = await _context.Tournaments
@@ -85,7 +86,7 @@ namespace Balkana.Services.Tournaments
                 Name = $"Champion of {tournament.FullName}",
                 TournamentId = tournamentId,
                 Description = description,
-                IconURL = GetTrophyIconForAwardType(awardType),
+                IconURL = trophyImagePath ?? GetTrophyIconForAwardType(awardType),
                 AwardType = awardType,
                 AwardDate = tournament?.EndDate ?? DateTime.UtcNow
             };
@@ -97,14 +98,15 @@ namespace Balkana.Services.Tournaments
             var playerTrophy = new PlayerTrophy
             {
                 PlayerId = playerId,
-                TrophyId = tournamentTrophy.Id
+                TrophyId = tournamentTrophy.Id,
+                DateAwarded = tournament?.EndDate ?? DateTime.UtcNow
             };
 
             _context.PlayerTrophies.Add(playerTrophy);
             await _context.SaveChangesAsync();
         }
 
-        public async Task AwardMultiplePlayerTrophiesAsync(List<int> playerIds, string awardType, string description, int tournamentId)
+        public async Task AwardMultiplePlayerTrophiesAsync(List<int> playerIds, string awardType, string description, int tournamentId, string? trophyImagePath = null)
         {
             if (!playerIds.Any()) return;
 
@@ -118,7 +120,7 @@ namespace Balkana.Services.Tournaments
                 Name = $"Champion of {tournament.FullName}",
                 TournamentId = tournamentId,
                 Description = description,
-                IconURL = GetTrophyIconForAwardType(awardType),
+                IconURL = trophyImagePath ?? GetTrophyIconForAwardType(awardType),
                 AwardType = awardType,
                 AwardDate = tournament?.EndDate ?? DateTime.UtcNow
             };
@@ -132,7 +134,8 @@ namespace Balkana.Services.Tournaments
                 var playerTrophy = new PlayerTrophy
                 {
                     PlayerId = playerId,
-                    TrophyId = tournamentTrophy.Id
+                    TrophyId = tournamentTrophy.Id,
+                    DateAwarded = tournament?.EndDate ?? DateTime.UtcNow
                 };
 
                 _context.PlayerTrophies.Add(playerTrophy);

@@ -190,7 +190,7 @@
                         </p>
                     </div>
                     <div class="tournament-conclude-body">
-                    <form asp-action="Conclude" method="post">
+                    <form asp-action="Conclude" method="post" enctype="multipart/form-data">
                         <input asp-for="TournamentId" type="hidden" />
                         <input asp-for="TournamentName" type="hidden" />
                         <input asp-for="TotalTeams" type="hidden" />
@@ -212,6 +212,12 @@
                                     <label asp-for="ChampionTrophyDescription" class="form-label">Trophy Description</label>
                                     <input asp-for="ChampionTrophyDescription" class="form-control" />
                                     <span asp-validation-for="ChampionTrophyDescription" class="text-danger"></span>
+                                </div>
+                                <div class="mt-3">
+                                    <label asp-for="TrophyImageFile" class="form-label">Trophy Image</label>
+                                    <input asp-for="TrophyImageFile" type="file" accept="image/*" class="form-control" />
+                                    <small class="form-text">Upload trophy image (will be used for Champion, MVP, and EVP trophies)</small>
+                                    <span asp-validation-for="TrophyImageFile" class="text-danger"></span>
                                 </div>
                             </div>
                         </div>
@@ -241,6 +247,8 @@
                                                 </option>
                                             }
                                         </select>
+                                        <input type="text" id="mvpManualSearch" class="form-control mt-2" placeholder="Type player name to search..." style="display: none;" />
+                                        <div id="mvpSearchResults" class="list-group mt-2" style="display: none; max-height: 200px; overflow-y: auto;"></div>
                                     </div>
                                 </div>
 
@@ -250,43 +258,47 @@
                                     <div class="row">
                                         <div class="col-md-3">
                                             <label asp-for="MVFormulaConfig.HLTVRatingPoints" class="form-label">HLTV Rating Points</label>
-                                            <input asp-for="MVFormulaConfig.HLTVRatingPoints" class="form-control" type="number" min="0" />
+                                            <input asp-for="MVFormulaConfig.HLTVRatingPoints" class="form-control" type="number" min="0" value="5" />
                                         </div>
                                         <div class="col-md-3">
                                             <label asp-for="MVFormulaConfig.KillPerRoundPoints" class="form-label">Kill/Round Points</label>
-                                            <input asp-for="MVFormulaConfig.KillPerRoundPoints" class="form-control" type="number" min="0" />
+                                            <input asp-for="MVFormulaConfig.KillPerRoundPoints" class="form-control" type="number" min="0" value="5" />
                                         </div>
                                         <div class="col-md-3">
-                                            <label asp-for="MVFormulaConfig.DamagePerRoundPoints" class="form-label">Damage/Round Points</label>
-                                            <input asp-for="MVFormulaConfig.DamagePerRoundPoints" class="form-control" type="number" min="0" />
+                                            <label asp-for="MVFormulaConfig.ImpactPoints" class="form-label">Impact Points</label>
+                                            <input asp-for="MVFormulaConfig.ImpactPoints" class="form-control" type="number" min="0" value="5" />
                                         </div>
                                         <div class="col-md-3">
-                                            <label asp-for="MVFormulaConfig.DeathsPerRoundPoints" class="form-label">Deaths/Round Points</label>
-                                            <input asp-for="MVFormulaConfig.DeathsPerRoundPoints" class="form-control" type="number" min="0" />
+                                            <label asp-for="MVFormulaConfig.UtilityScorePoints" class="form-label">Utility Score Points</label>
+                                            <input asp-for="MVFormulaConfig.UtilityScorePoints" class="form-control" type="number" min="0" value="5" />
                                         </div>
                                     </div>
                                     <div class="row mt-2">
-                                        <div class="col-md-3">
-                                            <label asp-for="MVFormulaConfig.UtilityDamagePoints" class="form-label">Utility Damage Points</label>
-                                            <input asp-for="MVFormulaConfig.UtilityDamagePoints" class="form-control" type="number" min="0" />
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label asp-for="MVFormulaConfig.AWPkillsPoints" class="form-label">AWP Kills Points</label>
-                                            <input asp-for="MVFormulaConfig.AWPkillsPoints" class="form-control" type="number" min="0" />
-                                        </div>
                                         <div class="col-md-3">
                                             <label asp-for="MVFormulaConfig.FirstKillsPoints" class="form-label">First Kills Points</label>
-                                            <input asp-for="MVFormulaConfig.FirstKillsPoints" class="form-control" type="number" min="0" />
+                                            <input asp-for="MVFormulaConfig.FirstKillsPoints" class="form-control" type="number" min="0" value="3" />
                                         </div>
                                         <div class="col-md-3">
-                                            <label asp-for="MVFormulaConfig.Commentator1Points" class="form-label">Commentator 1 Points</label>
-                                            <input asp-for="MVFormulaConfig.Commentator1Points" class="form-control" type="number" min="0" />
+                                            <label asp-for="MVFormulaConfig.SniperPoints" class="form-label">Sniper Points</label>
+                                            <input asp-for="MVFormulaConfig.SniperPoints" class="form-control" type="number" min="0" value="3" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label asp-for="MVFormulaConfig.ADRPoints" class="form-label">ADR Points</label>
+                                            <input asp-for="MVFormulaConfig.ADRPoints" class="form-control" type="number" min="0" value="3" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label asp-for="MVFormulaConfig.DPRPoints" class="form-label">DPR Points (Lowest Wins)</label>
+                                            <input asp-for="MVFormulaConfig.DPRPoints" class="form-control" type="number" min="0" value="2" />
                                         </div>
                                     </div>
                                     <div class="row mt-2">
                                         <div class="col-md-3">
-                                            <label asp-for="MVFormulaConfig.Commentator2Points" class="form-label">Commentator 2 Points</label>
-                                            <input asp-for="MVFormulaConfig.Commentator2Points" class="form-control" type="number" min="0" />
+                                            <label asp-for="MVFormulaConfig.Commentator1Points" class="form-label">@Model.MVFormulaConfig.Commentator1Name Points</label>
+                                            <input asp-for="MVFormulaConfig.Commentator1Points" class="form-control" type="number" min="0" value="5" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label asp-for="MVFormulaConfig.Commentator2Points" class="form-label">@Model.MVFormulaConfig.Commentator2Name Points</label>
+                                            <input asp-for="MVFormulaConfig.Commentator2Points" class="form-control" type="number" min="0" value="5" />
                                         </div>
                                     </div>
                                 </div>
@@ -348,11 +360,12 @@
                                                     <th>Total Score</th>
                                                     <th>HLTV</th>
                                                     <th>K/R</th>
-                                                    <th>D/R</th>
-                                                    <th>Deaths/R</th>
+                                                    <th>Impact</th>
                                                     <th>Utility</th>
-                                                    <th>AWP</th>
                                                     <th>FK</th>
+                                                    <th>Sniper</th>
+                                                    <th>ADR</th>
+                                                    <th>DPR</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -364,11 +377,12 @@
                                                         <td><strong>@candidate.FormulaScore.TotalScore.ToString("F2")</strong></td>
                                                         <td>@candidate.FormulaScore.HLTVRatingScore.ToString("F2")</td>
                                                         <td>@candidate.FormulaScore.KillPerRoundScore.ToString("F2")</td>
-                                                        <td>@candidate.FormulaScore.DamagePerRoundScore.ToString("F2")</td>
-                                                        <td>@candidate.FormulaScore.DeathsPerRoundScore.ToString("F2")</td>
-                                                        <td>@candidate.FormulaScore.UtilityDamageScore.ToString("F0")</td>
-                                                        <td>@candidate.FormulaScore.AWPkillsScore.ToString("F0")</td>
+                                                        <td>@candidate.FormulaScore.ImpactScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.UtilityScore.ToString("F2")</td>
                                                         <td>@candidate.FormulaScore.FirstKillsScore.ToString("F0")</td>
+                                                        <td>@candidate.FormulaScore.SniperScore.ToString("F0")</td>
+                                                        <td>@candidate.FormulaScore.ADRScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.DPRScore.ToString("F2")</td>
                                                     </tr>
                                                 }
                                             </tbody>
@@ -402,6 +416,9 @@
                                                 </option>
                                             }
                                         </select>
+                                        <input type="text" id="evpManualSearch" class="form-control mt-2" placeholder="Type player name to search..." style="display: none;" />
+                                        <div id="evpSearchResults" class="list-group mt-2" style="display: none; max-height: 200px; overflow-y: auto;"></div>
+                                        <div id="evpSelectedList" class="mt-2"></div>
                                         <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple EVPs. Maximum 3 per team.</small>
                                     </div>
                                 </div>
@@ -418,11 +435,12 @@
                                                     <th>Total Score</th>
                                                     <th>HLTV</th>
                                                     <th>K/R</th>
-                                                    <th>D/R</th>
-                                                    <th>Deaths/R</th>
+                                                    <th>Impact</th>
                                                     <th>Utility</th>
-                                                    <th>AWP</th>
                                                     <th>FK</th>
+                                                    <th>Sniper</th>
+                                                    <th>ADR</th>
+                                                    <th>DPR</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -434,11 +452,12 @@
                                                         <td><strong>@candidate.FormulaScore.TotalScore.ToString("F2")</strong></td>
                                                         <td>@candidate.FormulaScore.HLTVRatingScore.ToString("F2")</td>
                                                         <td>@candidate.FormulaScore.KillPerRoundScore.ToString("F2")</td>
-                                                        <td>@candidate.FormulaScore.DamagePerRoundScore.ToString("F2")</td>
-                                                        <td>@candidate.FormulaScore.DeathsPerRoundScore.ToString("F2")</td>
-                                                        <td>@candidate.FormulaScore.UtilityDamageScore.ToString("F0")</td>
-                                                        <td>@candidate.FormulaScore.AWPkillsScore.ToString("F0")</td>
+                                                        <td>@candidate.FormulaScore.ImpactScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.UtilityScore.ToString("F2")</td>
                                                         <td>@candidate.FormulaScore.FirstKillsScore.ToString("F0")</td>
+                                                        <td>@candidate.FormulaScore.SniperScore.ToString("F0")</td>
+                                                        <td>@candidate.FormulaScore.ADRScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.DPRScore.ToString("F2")</td>
                                                     </tr>
                                                 }
                                             </tbody>
@@ -467,20 +486,32 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
+            var mvpSearchTimeout;
+            var evpSearchTimeout;
+            var selectedEVPIds = [];
+
             // Handle MVP source type change
             $('#mvpSourceType').change(function() {
                 if ($(this).val() === 'Formula') {
                     $('#mvpFormulaConfig').show();
+                    $('#mvpSelection').show();
+                    $('#mvpManualSearch').hide();
+                    $('#mvpSearchResults').hide();
                     // Auto-select top candidate
                     $('#mvpSelection').val($('#mvpSelection option:first').next().val());
                 } else {
                     $('#mvpFormulaConfig').hide();
+                    $('#mvpSelection').hide();
+                    $('#mvpManualSearch').show();
                 }
             });
 
             // Handle EVP source type change
             $('#evpSourceType').change(function() {
                 if ($(this).val() === 'Formula') {
+                    $('#evpSelection').show();
+                    $('#evpManualSearch').hide();
+                    $('#evpSearchResults').hide();
                     // Auto-select top candidates (excluding MVP)
                     var mvpId = $('#mvpSelection').val();
                     var evpOptions = $('#evpSelection option').not('[value=""]');
@@ -489,8 +520,129 @@
                             $(this).prop('selected', true);
                         }
                     });
+                } else {
+                    $('#evpSelection').hide();
+                    $('#evpManualSearch').show();
                 }
             });
+
+            // MVP Manual Search
+            $('#mvpManualSearch').on('input', function() {
+                var query = $(this).val();
+                if (query.length < 2) {
+                    $('#mvpSearchResults').hide().empty();
+                    return;
+                }
+
+                clearTimeout(mvpSearchTimeout);
+                mvpSearchTimeout = setTimeout(function() {
+                    $.get('/api/players/search', { query: query, limit: 20 })
+                        .done(function(players) {
+                            var resultsHtml = '';
+                            if (players.length === 0) {
+                                resultsHtml = '<div class="list-group-item">No players found</div>';
+                            } else {
+                                players.forEach(function(player) {
+                                    resultsHtml += '<a href="#" class="list-group-item list-group-item-action" data-player-id="' + player.id + '" data-player-name="' + player.name + '">' + player.name + '</a>';
+                                });
+                            }
+                            $('#mvpSearchResults').html(resultsHtml).show();
+                        })
+                        .fail(function() {
+                            $('#mvpSearchResults').html('<div class="list-group-item text-danger">Error searching players</div>').show();
+                        });
+                }, 300);
+            });
+
+            // MVP Search Result Click
+            $(document).on('click', '#mvpSearchResults a', function(e) {
+                e.preventDefault();
+                var playerId = $(this).data('player-id');
+                var playerName = $(this).data('player-name');
+                $('#mvpSelection').val(playerId);
+                $('#SelectedMVPId').val(playerId);
+                $('#mvpManualSearch').val(playerName);
+                $('#mvpSearchResults').hide();
+            });
+
+            // EVP Manual Search
+            $('#evpManualSearch').on('input', function() {
+                var query = $(this).val();
+                if (query.length < 2) {
+                    $('#evpSearchResults').hide().empty();
+                    return;
+                }
+
+                clearTimeout(evpSearchTimeout);
+                evpSearchTimeout = setTimeout(function() {
+                    $.get('/api/players/search', { query: query, limit: 20 })
+                        .done(function(players) {
+                            var resultsHtml = '';
+                            if (players.length === 0) {
+                                resultsHtml = '<div class="list-group-item">No players found</div>';
+                            } else {
+                                players.forEach(function(player) {
+                                    if (!selectedEVPIds.includes(player.id)) {
+                                        resultsHtml += '<a href="#" class="list-group-item list-group-item-action" data-player-id="' + player.id + '" data-player-name="' + player.name + '">' + player.name + '</a>';
+                                    }
+                                });
+                            }
+                            $('#evpSearchResults').html(resultsHtml).show();
+                        })
+                        .fail(function() {
+                            $('#evpSearchResults').html('<div class="list-group-item text-danger">Error searching players</div>').show();
+                        });
+                }, 300);
+            });
+
+            // EVP Search Result Click
+            $(document).on('click', '#evpSearchResults a', function(e) {
+                e.preventDefault();
+                var playerId = $(this).data('player-id');
+                var playerName = $(this).data('player-name');
+                
+                if (!selectedEVPIds.includes(playerId)) {
+                    selectedEVPIds.push(playerId);
+                    updateEVPSelection();
+                    $('#evpManualSearch').val('');
+                    $('#evpSearchResults').hide();
+                }
+            });
+
+            // Update EVP Selection
+            function updateEVPSelection() {
+                var html = '';
+                selectedEVPIds.forEach(function(playerId) {
+                    // Find player name from search results or use ID
+                    var playerName = $('#evpSearchResults a[data-player-id="' + playerId + '"]').data('player-name') || 'Player ' + playerId;
+                    html += '<span class="badge bg-primary me-2 mb-2">' + playerName + 
+                            ' <button type="button" class="btn-close btn-close-white" data-player-id="' + playerId + '" aria-label="Remove"></button></span>';
+                });
+                $('#evpSelectedList').html(html);
+                
+                // Update hidden form field
+                var hiddenInput = $('<input>').attr('type', 'hidden').attr('name', 'SelectedEVPIds').val(selectedEVPIds.join(','));
+                $('input[name="SelectedEVPIds"]').remove();
+                $('form').append(hiddenInput);
+            }
+
+            // Remove EVP
+            $(document).on('click', '#evpSelectedList .btn-close', function() {
+                var playerId = parseInt($(this).data('player-id'));
+                selectedEVPIds = selectedEVPIds.filter(id => id !== playerId);
+                updateEVPSelection();
+            });
+
+            // Initialize from existing EVP selection
+            $('#evpSelection option:selected').each(function() {
+                var playerId = parseInt($(this).val());
+                if (playerId && !selectedEVPIds.includes(playerId)) {
+                    selectedEVPIds.push(playerId);
+                }
+            });
+            if (selectedEVPIds.length > 0) {
+                updateEVPSelection();
+            }
 
             // Initialize visibility
             $('#mvpSourceType').trigger('change');
@@ -514,6 +666,15 @@
                         $(this).val([]);
                     }
                 }
+            });
+
+            // Update form submission to include EVP IDs
+            $('form').on('submit', function() {
+                // Create hidden inputs for each selected EVP (ASP.NET Core expects array format)
+                $('input[name^="SelectedEVPIds"]').remove();
+                selectedEVPIds.forEach(function(playerId) {
+                    $('<input>').attr('type', 'hidden').attr('name', 'SelectedEVPIds').val(playerId).appendTo($(this));
+                }.bind(this));
             });
         });
     </script>

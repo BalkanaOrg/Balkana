@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace Balkana.Models.Tournaments
 {
@@ -23,6 +24,7 @@ namespace Balkana.Models.Tournaments
         // Trophy Information
         public bool AwardChampionTrophy { get; set; } = true;
         public string ChampionTrophyDescription { get; set; }
+        public IFormFile? TrophyImageFile { get; set; }
     }
 
     public enum MVPSourceType
@@ -62,11 +64,12 @@ namespace Balkana.Models.Tournaments
         public double TotalScore { get; set; }
         public double HLTVRatingScore { get; set; }
         public double KillPerRoundScore { get; set; }
-        public double DamagePerRoundScore { get; set; }
-        public double DeathsPerRoundScore { get; set; }
-        public double UtilityDamageScore { get; set; }
-        public double AWPkillsScore { get; set; }
+        public double ImpactScore { get; set; }
+        public double UtilityScore { get; set; }
         public double FirstKillsScore { get; set; }
+        public double SniperScore { get; set; }
+        public double ADRScore { get; set; }
+        public double DPRScore { get; set; }
         public double Commentator1Score { get; set; }
         public double Commentator2Score { get; set; }
     }
@@ -76,18 +79,19 @@ namespace Balkana.Models.Tournaments
         // Points for each category (configurable)
         public int HLTVRatingPoints { get; set; } = 5;
         public int KillPerRoundPoints { get; set; } = 5;
-        public int DamagePerRoundPoints { get; set; } = 2;
-        public int DeathsPerRoundPoints { get; set; } = 2;
-        public int UtilityDamagePoints { get; set; } = 3;
-        public int AWPkillsPoints { get; set; } = 2;
+        public int ImpactPoints { get; set; } = 5;
+        public int UtilityScorePoints { get; set; } = 5;
         public int FirstKillsPoints { get; set; } = 3;
+        public int SniperPoints { get; set; } = 3;
+        public int ADRPoints { get; set; } = 3;
+        public int DPRPoints { get; set; } = 2;
         public int Commentator1Points { get; set; } = 5;
         public int Commentator2Points { get; set; } = 5;
 
         // Commentator selections
         public int? Commentator1SelectedPlayerId { get; set; }
         public int? Commentator2SelectedPlayerId { get; set; }
-        public string Commentator1Name { get; set; } = "Commentator A";
-        public string Commentator2Name { get; set; } = "Commentator B";
+        public string Commentator1Name { get; set; } = "A Stream";
+        public string Commentator2Name { get; set; } = "B Stream";
     }
 }

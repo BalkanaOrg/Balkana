@@ -238,23 +238,30 @@ namespace Balkana.Services.Tournaments
             var totalKills = stats.Sum(s => s.Kills);
             var totalDeaths = stats.Sum(s => s.Deaths);
             var totalDamage = stats.Sum(s => s.Damage);
-            var totalAWPkills = stats.Sum(s => s.SniperKills);
+            var totalAssists = stats.Sum(s => s.Assists);
+            var totalSniperKills = stats.Sum(s => s.SniperKills);
             var totalFirstKills = stats.Sum(s => s.FK);
-            var totalUtilityDamage = stats.Sum(s => s.UtilityUsage);
+            var totalUtilityUsage = stats.Sum(s => s.UtilityUsage);
 
             var avgHLTV = stats.Average(s => s.HLTV1);
             var killPerRound = totalRounds > 0 ? (double)totalKills / totalRounds : 0;
+            var assistsPerRound = totalRounds > 0 ? (double)totalAssists / totalRounds : 0;
             var damagePerRound = totalRounds > 0 ? (double)totalDamage / totalRounds : 0;
             var deathsPerRound = totalRounds > 0 ? (double)totalDeaths / totalRounds : 0;
+            var utilityScorePerRound = totalRounds > 0 ? (double)totalUtilityUsage / totalRounds : 0;
+
+            // Calculate Impact: 2.13*KPR - 0.42*Assists per round - 0.41
+            var impact = 2.13 * killPerRound - 0.42 * assistsPerRound - 0.41;
 
             return new MVFormulaScore
             {
                 HLTVRatingScore = avgHLTV,
                 KillPerRoundScore = killPerRound,
-                DamagePerRoundScore = damagePerRound,
-                DeathsPerRoundScore = deathsPerRound,
-                UtilityDamageScore = totalUtilityDamage,
-                AWPkillsScore = totalAWPkills,
+                ImpactScore = impact,
+                UtilityScore = utilityScorePerRound,
+                SniperScore = totalSniperKills,
+                ADRScore = damagePerRound,
+                DPRScore = deathsPerRound,
                 FirstKillsScore = totalFirstKills,
                 Commentator1Score = 0, // Manual input required
                 Commentator2Score = 0, // Manual input required
@@ -381,22 +388,24 @@ namespace Balkana.Services.Tournaments
             // Award points only to the top player in each category
             var hltvWinner = candidates.OrderByDescending(c => c.FormulaScore.HLTVRatingScore).First();
             var killPerRoundWinner = candidates.OrderByDescending(c => c.FormulaScore.KillPerRoundScore).First();
-            var damagePerRoundWinner = candidates.OrderByDescending(c => c.FormulaScore.DamagePerRoundScore).First();
-            var deathsPerRoundWinner = candidates.OrderByDescending(c => c.FormulaScore.DeathsPerRoundScore).Last();
-            var utilityDamageWinner = candidates.OrderByDescending(c => c.FormulaScore.UtilityDamageScore).First();
-            var awpKillsWinner = candidates.OrderByDescending(c => c.FormulaScore.AWPkillsScore).First();
+            var impactWinner = candidates.OrderByDescending(c => c.FormulaScore.ImpactScore).First();
+            var utilityScoreWinner = candidates.OrderByDescending(c => c.FormulaScore.UtilityScore).First();
             var firstKillsWinner = candidates.OrderByDescending(c => c.FormulaScore.FirstKillsScore).First();
+            var sniperWinner = candidates.OrderByDescending(c => c.FormulaScore.SniperScore).First();
+            var adrWinner = candidates.OrderByDescending(c => c.FormulaScore.ADRScore).First();
+            var dprWinner = candidates.OrderBy(c => c.FormulaScore.DPRScore).First(); // Lowest DPR wins
 
             // Reset all scores to 0 first
             foreach (var candidate in candidates)
             {
                 candidate.FormulaScore.HLTVRatingScore = 0;
                 candidate.FormulaScore.KillPerRoundScore = 0;
-                candidate.FormulaScore.DamagePerRoundScore = 0;
-                candidate.FormulaScore.DeathsPerRoundScore = 0;
-                candidate.FormulaScore.UtilityDamageScore = 0;
-                candidate.FormulaScore.AWPkillsScore = 0;
+                candidate.FormulaScore.ImpactScore = 0;
+                candidate.FormulaScore.UtilityScore = 0;
                 candidate.FormulaScore.FirstKillsScore = 0;
+                candidate.FormulaScore.SniperScore = 0;
+                candidate.FormulaScore.ADRScore = 0;
+                candidate.FormulaScore.DPRScore = 0;
                 candidate.FormulaScore.Commentator1Score = 0;
                 candidate.FormulaScore.Commentator2Score = 0;
                 candidate.FormulaScore.TotalScore = 0;
@@ -405,11 +414,12 @@ namespace Balkana.Services.Tournaments
             // Award points to winners
             hltvWinner.FormulaScore.HLTVRatingScore = config.HLTVRatingPoints;
             killPerRoundWinner.FormulaScore.KillPerRoundScore = config.KillPerRoundPoints;
-            damagePerRoundWinner.FormulaScore.DamagePerRoundScore = config.DamagePerRoundPoints;
-            deathsPerRoundWinner.FormulaScore.DeathsPerRoundScore = config.DeathsPerRoundPoints;
-            utilityDamageWinner.FormulaScore.UtilityDamageScore = config.UtilityDamagePoints;
-            awpKillsWinner.FormulaScore.AWPkillsScore = config.AWPkillsPoints;
+            impactWinner.FormulaScore.ImpactScore = config.ImpactPoints;
+            utilityScoreWinner.FormulaScore.UtilityScore = config.UtilityScorePoints;
             firstKillsWinner.FormulaScore.FirstKillsScore = config.FirstKillsPoints;
+            sniperWinner.FormulaScore.SniperScore = config.SniperPoints;
+            adrWinner.FormulaScore.ADRScore = config.ADRPoints;
+            dprWinner.FormulaScore.DPRScore = config.DPRPoints;
 
             // Award commentator points if selected
             if (config.Commentator1SelectedPlayerId.HasValue)
@@ -436,11 +446,12 @@ namespace Balkana.Services.Tournaments
                 candidate.FormulaScore.TotalScore = 
                     candidate.FormulaScore.HLTVRatingScore +
                     candidate.FormulaScore.KillPerRoundScore +
-                    candidate.FormulaScore.DamagePerRoundScore +
-                    candidate.FormulaScore.DeathsPerRoundScore +
-                    candidate.FormulaScore.UtilityDamageScore +
-                    candidate.FormulaScore.AWPkillsScore +
+                    candidate.FormulaScore.ImpactScore +
+                    candidate.FormulaScore.UtilityScore +
                     candidate.FormulaScore.FirstKillsScore +
+                    candidate.FormulaScore.SniperScore +
+                    candidate.FormulaScore.ADRScore +
+                    candidate.FormulaScore.DPRScore +
                     candidate.FormulaScore.Commentator1Score +
                     candidate.FormulaScore.Commentator2Score;
             }
@@ -455,22 +466,24 @@ namespace Balkana.Services.Tournaments
             // Award points only to the top player in each category
             var hltvWinner = candidates.OrderByDescending(c => c.FormulaScore.HLTVRatingScore).First();
             var killPerRoundWinner = candidates.OrderByDescending(c => c.FormulaScore.KillPerRoundScore).First();
-            var damagePerRoundWinner = candidates.OrderByDescending(c => c.FormulaScore.DamagePerRoundScore).First();
-            var deathsPerRoundWinner = candidates.OrderByDescending(c => c.FormulaScore.DeathsPerRoundScore).First();
-            var utilityDamageWinner = candidates.OrderByDescending(c => c.FormulaScore.UtilityDamageScore).First();
-            var awpKillsWinner = candidates.OrderByDescending(c => c.FormulaScore.AWPkillsScore).First();
+            var impactWinner = candidates.OrderByDescending(c => c.FormulaScore.ImpactScore).First();
+            var utilityScoreWinner = candidates.OrderByDescending(c => c.FormulaScore.UtilityScore).First();
             var firstKillsWinner = candidates.OrderByDescending(c => c.FormulaScore.FirstKillsScore).First();
+            var sniperWinner = candidates.OrderByDescending(c => c.FormulaScore.SniperScore).First();
+            var adrWinner = candidates.OrderByDescending(c => c.FormulaScore.ADRScore).First();
+            var dprWinner = candidates.OrderBy(c => c.FormulaScore.DPRScore).First(); // Lowest DPR wins
 
             // Reset all scores to 0 first
             foreach (var candidate in candidates)
             {
                 candidate.FormulaScore.HLTVRatingScore = 0;
                 candidate.FormulaScore.KillPerRoundScore = 0;
-                candidate.FormulaScore.DamagePerRoundScore = 0;
-                candidate.FormulaScore.DeathsPerRoundScore = 0;
-                candidate.FormulaScore.UtilityDamageScore = 0;
-                candidate.FormulaScore.AWPkillsScore = 0;
+                candidate.FormulaScore.ImpactScore = 0;
+                candidate.FormulaScore.UtilityScore = 0;
                 candidate.FormulaScore.FirstKillsScore = 0;
+                candidate.FormulaScore.SniperScore = 0;
+                candidate.FormulaScore.ADRScore = 0;
+                candidate.FormulaScore.DPRScore = 0;
                 candidate.FormulaScore.Commentator1Score = 0;
                 candidate.FormulaScore.Commentator2Score = 0;
                 candidate.FormulaScore.TotalScore = 0;
@@ -479,11 +492,12 @@ namespace Balkana.Services.Tournaments
             // Award points to winners
             hltvWinner.FormulaScore.HLTVRatingScore = config.HLTVRatingPoints;
             killPerRoundWinner.FormulaScore.KillPerRoundScore = config.KillPerRoundPoints;
-            damagePerRoundWinner.FormulaScore.DamagePerRoundScore = config.DamagePerRoundPoints;
-            deathsPerRoundWinner.FormulaScore.DeathsPerRoundScore = config.DeathsPerRoundPoints;
-            utilityDamageWinner.FormulaScore.UtilityDamageScore = config.UtilityDamagePoints;
-            awpKillsWinner.FormulaScore.AWPkillsScore = config.AWPkillsPoints;
+            impactWinner.FormulaScore.ImpactScore = config.ImpactPoints;
+            utilityScoreWinner.FormulaScore.UtilityScore = config.UtilityScorePoints;
             firstKillsWinner.FormulaScore.FirstKillsScore = config.FirstKillsPoints;
+            sniperWinner.FormulaScore.SniperScore = config.SniperPoints;
+            adrWinner.FormulaScore.ADRScore = config.ADRPoints;
+            dprWinner.FormulaScore.DPRScore = config.DPRPoints;
 
             // Award commentator points if selected
             if (config.Commentator1SelectedPlayerId.HasValue)
@@ -510,11 +524,12 @@ namespace Balkana.Services.Tournaments
                 candidate.FormulaScore.TotalScore = 
                     candidate.FormulaScore.HLTVRatingScore +
                     candidate.FormulaScore.KillPerRoundScore +
-                    candidate.FormulaScore.DamagePerRoundScore +
-                    candidate.FormulaScore.DeathsPerRoundScore +
-                    candidate.FormulaScore.UtilityDamageScore +
-                    candidate.FormulaScore.AWPkillsScore +
+                    candidate.FormulaScore.ImpactScore +
+                    candidate.FormulaScore.UtilityScore +
                     candidate.FormulaScore.FirstKillsScore +
+                    candidate.FormulaScore.SniperScore +
+                    candidate.FormulaScore.ADRScore +
+                    candidate.FormulaScore.DPRScore +
                     candidate.FormulaScore.Commentator1Score +
                     candidate.FormulaScore.Commentator2Score;
             }

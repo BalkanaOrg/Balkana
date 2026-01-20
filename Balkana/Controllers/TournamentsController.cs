@@ -1196,6 +1196,29 @@ namespace Balkana.Controllers
             var trophyService = new TrophyService(_context);
             var mvpEVPService = new MVPEVPService(_context);
 
+            // Handle trophy image upload
+            string? trophyImagePath = null;
+            if (model.TrophyImageFile != null && model.TrophyImageFile.Length > 0)
+            {
+                try
+                {
+                    trophyImagePath = await ImageOptimizer.SaveWebpAsync(
+                        model.TrophyImageFile,
+                        env.WebRootPath,
+                        Path.Combine("uploads", "Tournaments", "Trophies"),
+                        maxWidth: 1920,
+                        maxHeight: 1080,
+                        quality: 85);
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", $"Error saving trophy image: {ex.Message}");
+                    model.MVPCandidates = await mvpEVPService.CalculateRankedMVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
+                    model.EVPCandidates = await mvpEVPService.CalculateRankedEVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
+                    return View(model);
+                }
+            }
+
             // Award MVP trophy
             if (model.SelectedMVPId.HasValue)
             {
@@ -1206,20 +1229,64 @@ namespace Balkana.Controllers
                         model.SelectedMVPId.Value,
                         "MVP",
                         $"MVP of {tournament.FullName}",
-                        tournament.Id);
+                        tournament.Id,
+                        trophyImagePath);
                 }
             }
 
             // Award EVP trophies
             if (model.SelectedEVPIds.Any())
             {
-                // Validate EVP selection
-                var isValid = mvpEVPService.ValidateEVPSelection(model.SelectedEVPIds, model.EVPCandidates);
-                if (!isValid)
+                // Validate EVP selection - check team limits
+                var evpPlayers = await _context.Players
+                    .Where(p => model.SelectedEVPIds.Contains(p.Id))
+                    .Include(p => p.Transfers.Where(t => t.Status == PlayerTeamStatus.Active && 
+                        t.StartDate <= tournament.EndDate && 
+                        (t.EndDate == null || t.EndDate >= tournament.StartDate)))
+                    .ToListAsync();
+
+                // Get MVP player's team if MVP is selected
+                int? mvpTeamId = null;
+                if (model.SelectedMVPId.HasValue)
+                {
+                    var mvpPlayer = evpPlayers.FirstOrDefault(p => p.Id == model.SelectedMVPId.Value);
+                    if (mvpPlayer == null)
+                    {
+                        mvpPlayer = await _context.Players
+                            .Include(p => p.Transfers.Where(t => t.Status == PlayerTeamStatus.Active && 
+                                t.StartDate <= tournament.EndDate && 
+                                (t.EndDate == null || t.EndDate >= tournament.StartDate)))
+                            .FirstOrDefaultAsync(p => p.Id == model.SelectedMVPId.Value);
+                    }
+                    if (mvpPlayer != null && mvpPlayer.Transfers.Any())
+                    {
+                        mvpTeamId = mvpPlayer.Transfers.First().TeamId;
+                    }
+                }
+
+                // Count awards per team (only for players with teams)
+                var teamCounts = new Dictionary<int, int>();
+                foreach (var player in evpPlayers)
+                {
+                    if (player.Transfers.Any())
+                    {
+                        var teamId = player.Transfers.First().TeamId;
+                        teamCounts[teamId] = teamCounts.GetValueOrDefault(teamId, 0) + 1;
+                    }
+                }
+
+                // Add MVP to count if same team
+                if (mvpTeamId.HasValue)
+                {
+                    teamCounts[mvpTeamId.Value] = teamCounts.GetValueOrDefault(mvpTeamId.Value, 0) + 1;
+                }
+
+                // Check if any team has more than 3 awards (only validate teams that exist)
+                if (teamCounts.Values.Any(count => count > 3))
                 {
                     ModelState.AddModelError("", "One team cannot win more than 3 MVP+EVP awards.");
-                model.MVPCandidates = await mvpEVPService.CalculateRankedMVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
-                model.EVPCandidates = await mvpEVPService.CalculateRankedEVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
+                    model.MVPCandidates = await mvpEVPService.CalculateRankedMVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
+                    model.EVPCandidates = await mvpEVPService.CalculateRankedEVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
                     return View(model);
                 }
 
@@ -1227,7 +1294,8 @@ namespace Balkana.Controllers
                     model.SelectedEVPIds,
                     "EVP",
                     $"EVP of {tournament.FullName}",
-                    tournament.Id);
+                    tournament.Id,
+                    trophyImagePath);
             }
 
             // Award points for placements
@@ -1307,10 +1375,31 @@ namespace Balkana.Controllers
 
                 if (champion != null)
                 {
+                    // Use trophy image if provided, otherwise null (will use default)
+                    string? championTrophyImagePath = null;
+                    if (model.TrophyImageFile != null && model.TrophyImageFile.Length > 0)
+                    {
+                        try
+                        {
+                            championTrophyImagePath = await ImageOptimizer.SaveWebpAsync(
+                                model.TrophyImageFile,
+                                env.WebRootPath,
+                                Path.Combine("uploads", "Tournaments", "Trophies"),
+                                maxWidth: 1920,
+                                maxHeight: 1080,
+                                quality: 85);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"⚠️ Error saving champion trophy image: {ex.Message}");
+                        }
+                    }
+                    
                     await trophyService.AwardChampionTrophyAsync(
                         tournament.Id, 
                         champion.TeamId, 
-                        model.ChampionTrophyDescription);
+                        model.ChampionTrophyDescription,
+                        championTrophyImagePath);
                     Console.WriteLine($"🏆 Awarded champion trophy to team {champion.TeamId} for tournament {tournament.Id}");
                 }
                 else
@@ -1496,6 +1585,9 @@ namespace Balkana.Controllers
         {
             Console.WriteLine($"🎯 Starting double elimination placement generation for {participatingTeams.Count} teams");
 
+            // Track placed team IDs to prevent duplicates
+            var placedTeamIds = new HashSet<int>();
+
             // Find grand final
             var grandFinal = allSeries
                 .Where(s => s.Bracket == BracketType.GrandFinal)
@@ -1504,14 +1596,19 @@ namespace Balkana.Controllers
             if (grandFinal?.isFinished == true && grandFinal.WinnerTeam != null)
             {
                 // 1st place - winner of grand final
-                placements.Add(CreatePlacement(tournament, grandFinal.WinnerTeam, 1));
-                Console.WriteLine($"🏆 1st place: {grandFinal.WinnerTeam.FullName}");
+                if (!placedTeamIds.Contains(grandFinal.WinnerTeam.Id))
+                {
+                    placements.Add(CreatePlacement(tournament, grandFinal.WinnerTeam, 1));
+                    placedTeamIds.Add(grandFinal.WinnerTeam.Id);
+                    Console.WriteLine($"🏆 1st place: {grandFinal.WinnerTeam.FullName}");
+                }
 
                 // 2nd place - loser of grand final
                 var runnerUp = grandFinal.TeamA == grandFinal.WinnerTeam ? grandFinal.TeamB : grandFinal.TeamA;
-                if (runnerUp != null)
+                if (runnerUp != null && !placedTeamIds.Contains(runnerUp.Id))
                 {
                     placements.Add(CreatePlacement(tournament, runnerUp, 2));
+                    placedTeamIds.Add(runnerUp.Id);
                     Console.WriteLine($"🥈 2nd place: {runnerUp.FullName}");
                 }
 
@@ -1524,9 +1621,10 @@ namespace Balkana.Controllers
                 if (upperBracketFinal?.isFinished == true)
                 {
                     var upperBracketLoser = upperBracketFinal.TeamA == grandFinal.WinnerTeam ? upperBracketFinal.TeamB : upperBracketFinal.TeamA;
-                    if (upperBracketLoser != null && upperBracketLoser.Id != runnerUp?.Id)
+                    if (upperBracketLoser != null && upperBracketLoser.Id != runnerUp?.Id && !placedTeamIds.Contains(upperBracketLoser.Id))
                     {
                         placements.Add(CreatePlacement(tournament, upperBracketLoser, 3));
+                        placedTeamIds.Add(upperBracketLoser.Id);
                         Console.WriteLine($"🥉 3rd place: {upperBracketLoser.FullName}");
                     }
                 }
@@ -1546,12 +1644,13 @@ namespace Balkana.Controllers
                     if (series.WinnerTeam != null)
                     {
                         var loser = series.TeamA == series.WinnerTeam ? series.TeamB : series.TeamA;
-                        if (loser != null && !placements.Any(p => p.TeamId == loser.Id))
+                        if (loser != null && !placedTeamIds.Contains(loser.Id))
                         {
                             // Teams eliminated in upper bracket final get 4th place
                             if (series.Round == upperBracketFinal.Round)
                             {
                                 placements.Add(CreatePlacement(tournament, loser, 4));
+                                placedTeamIds.Add(loser.Id);
                                 Console.WriteLine($"4th place: {loser.FullName}");
                             }
                             else
@@ -1559,7 +1658,8 @@ namespace Balkana.Controllers
                                 // Other upper bracket eliminations
                                 if (!eliminatedTeams.ContainsKey(series.Round))
                                     eliminatedTeams[series.Round] = new List<Team>();
-                                eliminatedTeams[series.Round].Add(loser);
+                                if (!eliminatedTeams[series.Round].Any(t => t.Id == loser.Id))
+                                    eliminatedTeams[series.Round].Add(loser);
                             }
                         }
                     }
@@ -1577,11 +1677,12 @@ namespace Balkana.Controllers
                     if (series.WinnerTeam != null)
                     {
                         var loser = series.TeamA == series.WinnerTeam ? series.TeamB : series.TeamA;
-                        if (loser != null && !placements.Any(p => p.TeamId == loser.Id))
+                        if (loser != null && !placedTeamIds.Contains(loser.Id))
                         {
                             if (!eliminatedTeams.ContainsKey(series.Round + 100)) // Offset to separate from upper bracket
                                 eliminatedTeams[series.Round + 100] = new List<Team>();
-                            eliminatedTeams[series.Round + 100].Add(loser);
+                            if (!eliminatedTeams[series.Round + 100].Any(t => t.Id == loser.Id))
+                                eliminatedTeams[series.Round + 100].Add(loser);
                         }
                     }
                 }
@@ -1592,10 +1693,11 @@ namespace Balkana.Controllers
                 
                 foreach (var elimination in sortedEliminations)
                 {
-                    var teamsInThisElimination = elimination.Value;
+                    var teamsInThisElimination = elimination.Value.Where(t => !placedTeamIds.Contains(t.Id)).ToList();
                     foreach (var team in teamsInThisElimination)
                     {
                         placements.Add(CreatePlacement(tournament, team, currentPlacement));
+                        placedTeamIds.Add(team.Id);
                         Console.WriteLine($"Place {currentPlacement}: {team.FullName}");
                     }
                     currentPlacement += teamsInThisElimination.Count;
@@ -1603,7 +1705,6 @@ namespace Balkana.Controllers
             }
 
             // Ensure ALL teams are placed (fallback for any missing teams)
-            var placedTeamIds = placements.Select(p => p.TeamId).ToHashSet();
             var unplacedTeams = participatingTeams.Where(t => !placedTeamIds.Contains(t.Id)).ToList();
             
             if (unplacedTeams.Any())
@@ -1612,8 +1713,12 @@ namespace Balkana.Controllers
                 int lastPlacement = placements.Any() ? placements.Max(p => p.Placement) + 1 : 1;
                 foreach (var team in unplacedTeams)
                 {
-                    placements.Add(CreatePlacement(tournament, team, lastPlacement));
-                    Console.WriteLine($"Unplaced team {lastPlacement}: {team.FullName}");
+                    if (!placedTeamIds.Contains(team.Id))
+                    {
+                        placements.Add(CreatePlacement(tournament, team, lastPlacement));
+                        placedTeamIds.Add(team.Id);
+                        Console.WriteLine($"Unplaced team {lastPlacement}: {team.FullName}");
+                    }
                 }
             }
 
@@ -1623,6 +1728,13 @@ namespace Balkana.Controllers
             Console.WriteLine($"   Total placements created: {placements.Count}");
             Console.WriteLine($"   Placed team IDs: [{string.Join(", ", placements.Select(p => p.TeamId).OrderBy(id => id))}]");
             Console.WriteLine($"   Participating team IDs: [{string.Join(", ", participatingTeams.Select(t => t.Id).OrderBy(id => id))}]");
+            
+            // Check for duplicates
+            var duplicateTeamIds = placements.GroupBy(p => p.TeamId).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+            if (duplicateTeamIds.Any())
+            {
+                Console.WriteLine($"❌ ERROR: Found duplicate team placements! Team IDs: [{string.Join(", ", duplicateTeamIds)}]");
+            }
             
             if (placements.Count != participatingTeams.Count)
             {
@@ -1778,6 +1890,31 @@ namespace Balkana.Controllers
                     stackTrace = ex.StackTrace
                 });
             }
+        }
+
+        /// <summary>
+        /// API endpoint for searching players (for manual MVP/EVP selection)
+        /// </summary>
+        [HttpGet("api/players/search")]
+        public async Task<IActionResult> SearchPlayers([FromQuery] string query, [FromQuery] int limit = 20)
+        {
+            if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
+            {
+                return Ok(new List<object>());
+            }
+
+            var players = await _context.Players
+                .Where(p => p.Nickname.Contains(query))
+                .OrderBy(p => p.Nickname)
+                .Take(limit)
+                .Select(p => new
+                {
+                    id = p.Id,
+                    name = p.Nickname
+                })
+                .ToListAsync();
+
+            return Ok(players);
         }
     }
 }
