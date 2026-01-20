@@ -1260,7 +1260,11 @@ namespace Balkana.Controllers
                     }
                     if (mvpPlayer != null && mvpPlayer.Transfers.Any())
                     {
-                        mvpTeamId = mvpPlayer.Transfers.First().TeamId;
+                        var transfer = mvpPlayer.Transfers.First();
+                        if (transfer.TeamId.HasValue)
+                        {
+                            mvpTeamId = transfer.TeamId.Value;
+                        }
                     }
                 }
 
@@ -1270,15 +1274,24 @@ namespace Balkana.Controllers
                 {
                     if (player.Transfers.Any())
                     {
-                        var teamId = player.Transfers.First().TeamId;
-                        teamCounts[teamId] = teamCounts.GetValueOrDefault(teamId, 0) + 1;
+                        var transfer = player.Transfers.First();
+                        if (transfer.TeamId.HasValue)
+                        {
+                            int teamId = transfer.TeamId.Value;
+                            if (!teamCounts.ContainsKey(teamId))
+                                teamCounts[teamId] = 0;
+                            teamCounts[teamId] += 1;
+                        }
                     }
                 }
 
                 // Add MVP to count if same team
                 if (mvpTeamId.HasValue)
                 {
-                    teamCounts[mvpTeamId.Value] = teamCounts.GetValueOrDefault(mvpTeamId.Value, 0) + 1;
+                    int mvpTeam = mvpTeamId.Value;
+                    if (!teamCounts.ContainsKey(mvpTeam))
+                        teamCounts[mvpTeam] = 0;
+                    teamCounts[mvpTeam] += 1;
                 }
 
                 // Check if any team has more than 3 awards (only validate teams that exist)
