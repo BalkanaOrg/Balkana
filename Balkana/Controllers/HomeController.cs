@@ -42,6 +42,15 @@ namespace Balkana.Controllers
             return View();
         }
 
+        public IActionResult AboutUs()
+        {
+            ViewData["Title"] = "About Balkana";
+            ViewData["Description"] = "Learn more about the people behind Balkana, our mission, and what we stand for in the Balkan esports ecosystem.";
+            ViewData["Keywords"] = "Balkana, about us, founders, mission, values, esports, Balkans, gaming community";
+
+            return View();
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

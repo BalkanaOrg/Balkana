@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialize animations
     initializeAnimations();
+
+    // Initialize About page carousel (if present)
+    initializeAboutCarousel();
 });
 
 // Handle navigation
@@ -371,13 +374,123 @@ function initializeAnimations() {
     const elementsToAnimate = [
         ...document.querySelectorAll('.game-card'),
         ...document.querySelectorAll('.stat-card'),
-        ...document.querySelectorAll('.footer-section')
+        ...document.querySelectorAll('.footer-section'),
+        ...document.querySelectorAll('.about-pillar-card'),
+        ...document.querySelectorAll('.about-carousel-card')
     ];
 
     elementsToAnimate.forEach(element => {
         element.style.opacity = '0';
         observer.observe(element);
     });
+}
+
+// About page carousel
+function initializeAboutCarousel() {
+    const carousel = document.querySelector('[data-carousel]');
+    if (!carousel) {
+        return;
+    }
+
+    const track = carousel.querySelector('[data-carousel-track]');
+    const slides = Array.from(track.children);
+    const prevBtn = carousel.querySelector('[data-carousel-prev]');
+    const nextBtn = carousel.querySelector('[data-carousel-next]');
+    const dotsContainer = document.querySelector('[data-carousel-dots]');
+
+    if (!track || slides.length === 0 || !prevBtn || !nextBtn || !dotsContainer) {
+        return;
+    }
+
+    let currentIndex = 0;
+    let autoTimer = null;
+
+    // Build dots
+    slides.forEach((_, index) => {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'about-carousel-dot' + (index === 0 ? ' is-active' : '');
+        dot.setAttribute('aria-label', 'Go to slide ' + (index + 1));
+        dot.addEventListener('click', function () {
+            goToSlide(index);
+            restartAuto();
+        });
+        dotsContainer.appendChild(dot);
+    });
+
+    const dots = Array.from(dotsContainer.children);
+
+    function goToSlide(index) {
+        if (index < 0) {
+            index = slides.length - 1;
+        } else if (index >= slides.length) {
+            index = 0;
+        }
+
+        currentIndex = index;
+        const offset = -index * 100;
+        track.style.transform = 'translateX(' + offset + '%)';
+
+        slides.forEach((slide, slideIndex) => {
+            if (slideIndex === index) {
+                slide.classList.add('is-active');
+            } else {
+                slide.classList.remove('is-active');
+            }
+        });
+
+        dots.forEach((dot, dotIndex) => {
+            if (dotIndex === index) {
+                dot.classList.add('is-active');
+            } else {
+                dot.classList.remove('is-active');
+            }
+        });
+    }
+
+    function next() {
+        goToSlide(currentIndex + 1);
+    }
+
+    function prev() {
+        goToSlide(currentIndex - 1);
+    }
+
+    function startAuto() {
+        if (autoTimer) {
+            return;
+        }
+        autoTimer = setInterval(next, 8000);
+    }
+
+    function stopAuto() {
+        if (autoTimer) {
+            clearInterval(autoTimer);
+            autoTimer = null;
+        }
+    }
+
+    function restartAuto() {
+        stopAuto();
+        startAuto();
+    }
+
+    nextBtn.addEventListener('click', function () {
+        next();
+        restartAuto();
+    });
+
+    prevBtn.addEventListener('click', function () {
+        prev();
+        restartAuto();
+    });
+
+    carousel.addEventListener('mouseenter', stopAuto);
+    carousel.addEventListener('mouseleave', startAuto);
+
+    // Initial state
+    goToSlide(0);
+    startAuto();
 }
 
 // Handle social media links

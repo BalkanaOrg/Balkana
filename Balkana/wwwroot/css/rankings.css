@@ -102,7 +102,7 @@
     width: 100%;
 }
 
-.search-input {
+.search-input-ranking {
     width: 100%;
     padding: 1rem 1rem 1rem 3rem;
     background: rgba(0, 0, 0, 0.4);
@@ -114,13 +114,13 @@
     backdrop-filter: blur(10px);
 }
 
-    .search-input:focus {
+    .search-input-ranking:focus {
         outline: none;
         border-color: #8b0000;
         box-shadow: 0 0 20px rgba(139, 0, 0, 0.3);
     }
 
-    .search-input::placeholder {
+    .search-input-ranking::placeholder {
         color: rgba(255, 255, 255, 0.6);
     }
 
