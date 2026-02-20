@@ -75,10 +75,38 @@ namespace Balkana.Services.Tournaments
             }
         }
 
+        /// <summary>Normalizes region to Riot ProviderRegistrationParametersV5 legal values: BR, EUNE, EUW, JP, LAN, LAS, NA, OCE, PBE, RU, TR, KR, PH, SG, TH, TW, VN</summary>
+        private static string NormalizeProviderRegion(string region)
+        {
+            var r = (region ?? "").Trim().ToUpperInvariant();
+            if (string.IsNullOrEmpty(r)) return "EUNE";
+
+            return r switch
+            {
+                "BR" or "BR1" => "BR",
+                "EUNE" or "EUNE1" or "EUN1" => "EUNE",
+                "EUW" or "EUW1" => "EUW",
+                "JP" or "JP1" => "JP",
+                "LAN" or "LA1" => "LAN",
+                "LAS" or "LA2" => "LAS",
+                "NA" or "NA1" => "NA",
+                "OCE" or "OC1" => "OCE",
+                "PBE" => "PBE",
+                "RU" => "RU",
+                "TR" or "TR1" => "TR",
+                "KR" => "KR",
+                "PH" or "PH2" => "PH",
+                "SG" or "SG2" => "SG",
+                "TH" or "TH2" => "TH",
+                "TW" or "TW2" => "TW",
+                "VN" or "VN2" => "VN",
+                _ => r.EndsWith("1") ? r[..^1] : (r.EndsWith("2") ? r[..^1] : r)
+            };
+        }
+
         public async Task<int> RegisterProviderAsync(string region, string callbackUrl = "")
         {
-            // Tournament API expects platform ID (EUW1, NA1, EUN1, etc.) - do not strip the "1"
-            var regionFormatted = region.Trim().ToUpperInvariant();
+            var regionFormatted = NormalizeProviderRegion(region);
 
             var request = new RiotProviderRegistrationDto
             {
@@ -89,7 +117,7 @@ namespace Balkana.Services.Tournaments
             var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
             
             Console.WriteLine($"[RIOT TOURNAMENT API] POST {_httpClient.BaseAddress}providers");
-            Console.WriteLine($"[RIOT TOURNAMENT API] Original Region: {region.ToUpper()}, Formatted: {regionFormatted}");
+            Console.WriteLine($"[RIOT TOURNAMENT API] Original Region: {region}, Normalized: {regionFormatted}");
             Console.WriteLine($"[RIOT TOURNAMENT API] Callback: {callbackUrl}");
             Console.WriteLine($"[RIOT TOURNAMENT API] Request Body: {JsonSerializer.Serialize(request)}");
             
