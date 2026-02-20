@@ -1,4 +1,4 @@
-﻿using Balkana.Data;
+using Balkana.Data;
 using Balkana.Data.Models;
 using Balkana.Data.Models.Store;
 using Balkana.Models.Admin;
@@ -581,29 +581,10 @@ namespace Balkana.Controllers
 
             try
             {
-                // Test API key first
-                var apiKeyValid = await tournamentService.TestApiKeyAsync();
-                if (!apiKeyValid)
-                {
-                    ModelState.AddModelError("", "API key is invalid or lacks permissions for Tournament-stub API");
-                    
-                    var tournaments = await _context.Tournaments
-                        .Where(t => t.Game.FullName == "League of Legends")
-                        .Select(t => new SelectListItem
-                        {
-                            Value = t.Id.ToString(),
-                            Text = t.FullName
-                        })
-                        .ToListAsync();
-
-                    model.InternalTournaments = tournaments;
-                    return View("RiotTournaments/Create", model);
-                }
-
-                // If no provider ID, register one
+                // If no provider ID, register one (POST /providers - validates API key and creates provider)
                 if (!model.ProviderId.HasValue)
                 {
-                    model.ProviderId = await tournamentService.RegisterProviderAsync(model.Region);
+                    model.ProviderId = await tournamentService.RegisterProviderAsync(model.Region, callbackUrl: null);
                 }
 
                 var tournament = await tournamentService.CreateTournamentAsync(
@@ -617,7 +598,10 @@ namespace Balkana.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", $"Error creating tournament: {ex.Message}");
+                var msg = ex.Message;
+                if (msg.Contains("403") || msg.Contains("Forbidden"))
+                    msg = "API key is invalid or lacks tournament-v5 permissions. Ensure your production key has tournament access and the correct region (americas/europe).";
+                ModelState.AddModelError("", $"Error creating tournament: {msg}");
                 
                 var tournaments = await _context.Tournaments
                     .Where(t => t.Game.FullName == "League of Legends")

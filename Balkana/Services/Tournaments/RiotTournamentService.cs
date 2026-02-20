@@ -33,46 +33,13 @@ namespace Balkana.Services.Tournaments
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36");
             _httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-GB,en;q=0.7");
             _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8");
-            _httpClient.DefaultRequestHeaders.Add("Origin", "https://developer.riotgames.com");
+            _httpClient.DefaultRequestHeaders.Add("Origin", "https://balkana.org");
             // X-Riot-Token header can also work, but portal uses api_key - try this first
             
             Console.WriteLine($"[RIOT TOURNAMENT API] Configured Base URL: {_httpClient.BaseAddress}");
             Console.WriteLine($"[RIOT TOURNAMENT API] Routing Cluster: {_routingCluster}");
             Console.WriteLine($"[RIOT TOURNAMENT API] API Key Length: {_apiKey?.Length ?? 0}");
             Console.WriteLine($"[RIOT TOURNAMENT API] API Key Format: {(_apiKey?.StartsWith("RGAPI-") == true ? "Valid RGAPI format" : "Invalid format")}");
-        }
-
-        public async Task<bool> TestApiKeyAsync()
-        {
-            try
-            {
-                Console.WriteLine($"[RIOT TOURNAMENT API] Testing configured cluster {_routingCluster} via {_httpClient.BaseAddress}providers");
-
-                var response = await _httpClient.GetAsync("providers");
-                Console.WriteLine($"[RIOT TOURNAMENT API] API Key Test (GET providers) - Status: {response.StatusCode}");
-                
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    Console.WriteLine($"[RIOT TOURNAMENT API] API Key is valid - providers endpoint accessible");
-                    return true;
-                }
-                
-                var errorContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"[RIOT TOURNAMENT API] Error Response: {errorContent}");
-
-                if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
-                {
-                    Console.WriteLine($"[RIOT TOURNAMENT API] 403 Forbidden - API key may lack tournament-v5 permissions or use wrong auth/URL");
-                    return false;
-                }
-                
-                return response.IsSuccessStatusCode;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[RIOT TOURNAMENT API] API Key Test Error: {ex.Message}");
-                return false;
-            }
         }
 
         /// <summary>Normalizes region to Riot ProviderRegistrationParametersV5 legal values: BR, EUNE, EUW, JP, LAN, LAS, NA, OCE, PBE, RU, TR, KR, PH, SG, TH, TW, VN</summary>
@@ -108,17 +75,21 @@ namespace Balkana.Services.Tournaments
         {
             var regionFormatted = NormalizeProviderRegion(region);
 
+            var callback = string.IsNullOrWhiteSpace(callbackUrl)
+                ? (_configuration["Riot:CallbackUrl"] ?? _configuration["BaseUrl"] ?? "https://balkana.org")
+                : callbackUrl;
+
             var request = new RiotProviderRegistrationDto
             {
                 region = regionFormatted,
-                url = string.IsNullOrEmpty(callbackUrl) ? "" : callbackUrl  // Empty for testing
+                url = callback.Trim()
             };
 
             var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
             
             Console.WriteLine($"[RIOT TOURNAMENT API] POST {_httpClient.BaseAddress}providers");
             Console.WriteLine($"[RIOT TOURNAMENT API] Original Region: {region}, Normalized: {regionFormatted}");
-            Console.WriteLine($"[RIOT TOURNAMENT API] Callback: {callbackUrl}");
+            Console.WriteLine($"[RIOT TOURNAMENT API] Callback: {callback}");
             Console.WriteLine($"[RIOT TOURNAMENT API] Request Body: {JsonSerializer.Serialize(request)}");
             
             var response = await _httpClient.PostAsync("providers", content);

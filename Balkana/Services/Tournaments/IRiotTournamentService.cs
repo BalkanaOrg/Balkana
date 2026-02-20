@@ -5,11 +5,6 @@ namespace Balkana.Services.Tournaments
     public interface IRiotTournamentService
     {
         /// <summary>
-        /// Test if the API key is valid for Tournament-stub API
-        /// </summary>
-        Task<bool> TestApiKeyAsync();
-
-        /// <summary>
         /// Register a provider with Riot API (one-time setup)
         /// </summary>
         Task<int> RegisterProviderAsync(string region, string callbackUrl = "");
