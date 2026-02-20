@@ -24,7 +24,7 @@ namespace Balkana.Services.Tournaments
             _apiKey = _configuration["Riot:ApiKey"];
 
             _routingCluster = ResolveRoutingCluster(_configuration["Riot:TournamentRegion"]);
-            _httpClient.BaseAddress = new Uri($"https://{_routingCluster}.api.riotgames.com/lol/tournament-stub/v5/");
+            _httpClient.BaseAddress = new Uri($"https://{_routingCluster}.api.riotgames.com/lol/tournament-v5/v5/");
             _httpClient.DefaultRequestHeaders.Clear();
             
             // Tournament-stub API uses api_key parameter instead of X-Riot-Token header
