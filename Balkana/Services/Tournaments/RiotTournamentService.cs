@@ -225,7 +225,7 @@ namespace Balkana.Services.Tournaments
                     PickType = pickType,
                     SpectatorType = spectatorType,
                     TeamSize = teamSize,
-                    AllowedSummonerIds = allowedSummonerIds != null ? string.Join(",", allowedSummonerIds) : null,
+                    AllowedSummonerIds = allowedSummonerIds != null && allowedSummonerIds.Count > 0 ? string.Join(",", allowedSummonerIds) : "",
                     CreatedAt = DateTime.UtcNow,
                     IsUsed = false
                 };
