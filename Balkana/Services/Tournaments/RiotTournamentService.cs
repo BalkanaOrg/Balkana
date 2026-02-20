@@ -32,7 +32,7 @@ namespace Balkana.Services.Tournaments
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36");
             _httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-GB,en;q=0.7");
-            _httpClient.DefaultRequestHeaders.Add("Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8");
+            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8");
             _httpClient.DefaultRequestHeaders.Add("Origin", "https://developer.riotgames.com");
             // X-Riot-Token header can also work, but portal uses api_key - try this first
             
