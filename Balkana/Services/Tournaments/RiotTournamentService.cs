@@ -24,7 +24,8 @@ namespace Balkana.Services.Tournaments
             // Trim to avoid newlines/whitespace from .env or config
             _apiKey = (_configuration["Riot:ApiKey"] ?? "").Trim();
 
-            _routingCluster = ResolveRoutingCluster(_configuration["Riot:TournamentRegion"]);
+            //_routingCluster = ResolveRoutingCluster(_configuration["Riot:TournamentRegion"]);
+            _routingCluster = "americas";
             // Production tournament-v5 path is /lol/tournament/v5/ (per Riot docs)
             _httpClient.BaseAddress = new Uri($"https://{_routingCluster}.api.riotgames.com/lol/tournament/v5/");
             _httpClient.DefaultRequestHeaders.Clear();
