@@ -28,12 +28,12 @@ namespace Balkana.Services.Tournaments
             // Production tournament-v5 path is /lol/tournament/v5/ (per Riot docs)
             _httpClient.BaseAddress = new Uri($"https://{_routingCluster}.api.riotgames.com/lol/tournament/v5/");
             _httpClient.DefaultRequestHeaders.Clear();
+            _httpClient.DefaultRequestHeaders.Add("X-Riot-Token", _apiKey);
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-            // User-Agent matching browser - some APIs return 403 for default/bot User-Agents
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36");
             _httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-GB,en;q=0.7");
-            
-            // Use api_key query param (matches Riot Developer Portal "Try it")
+            _httpClient.DefaultRequestHeaders.Add("Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8");
+            _httpClient.DefaultRequestHeaders.Add("Origin", "https://developer.riotgames.com");
             // X-Riot-Token header can also work, but portal uses api_key - try this first
             
             Console.WriteLine($"[RIOT TOURNAMENT API] Configured Base URL: {_httpClient.BaseAddress}");
@@ -42,21 +42,13 @@ namespace Balkana.Services.Tournaments
             Console.WriteLine($"[RIOT TOURNAMENT API] API Key Format: {(_apiKey?.StartsWith("RGAPI-") == true ? "Valid RGAPI format" : "Invalid format")}");
         }
 
-        /// <summary>Appends api_key to the path/query (Riot supports both api_key and X-Riot-Token).</summary>
-        private string WithApiKey(string path)
-        {
-            var sep = path.Contains('?') ? "&" : "?";
-            return $"{path}{sep}api_key={Uri.EscapeDataString(_apiKey)}";
-        }
-
         public async Task<bool> TestApiKeyAsync()
         {
             try
             {
-                var url = WithApiKey("providers");
-                Console.WriteLine($"[RIOT TOURNAMENT API] Testing configured cluster {_routingCluster} via {_httpClient.BaseAddress}{url}");
+                Console.WriteLine($"[RIOT TOURNAMENT API] Testing configured cluster {_routingCluster} via {_httpClient.BaseAddress}providers");
 
-                var response = await _httpClient.GetAsync(url);
+                var response = await _httpClient.GetAsync("providers");
                 Console.WriteLine($"[RIOT TOURNAMENT API] API Key Test (GET providers) - Status: {response.StatusCode}");
                 
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
@@ -95,14 +87,13 @@ namespace Balkana.Services.Tournaments
             };
 
             var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-            var url = WithApiKey("providers");
             
-            Console.WriteLine($"[RIOT TOURNAMENT API] POST {_httpClient.BaseAddress}{url}");
+            Console.WriteLine($"[RIOT TOURNAMENT API] POST {_httpClient.BaseAddress}providers");
             Console.WriteLine($"[RIOT TOURNAMENT API] Original Region: {region.ToUpper()}, Formatted: {regionFormatted}");
             Console.WriteLine($"[RIOT TOURNAMENT API] Callback: {callbackUrl}");
             Console.WriteLine($"[RIOT TOURNAMENT API] Request Body: {JsonSerializer.Serialize(request)}");
             
-            var response = await _httpClient.PostAsync(url, content);
+            var response = await _httpClient.PostAsync("providers", content);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -152,7 +143,7 @@ namespace Balkana.Services.Tournaments
             };
 
             var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync(WithApiKey("tournaments"), content);
+            var response = await _httpClient.PostAsync("tournaments", content);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -209,7 +200,7 @@ namespace Balkana.Services.Tournaments
             };
 
             var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync(WithApiKey($"codes?tournamentId={riotTournamentId}&count={count}"), content);
+            var response = await _httpClient.PostAsync($"codes?tournamentId={riotTournamentId}&count={count}", content);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -250,7 +241,7 @@ namespace Balkana.Services.Tournaments
 
         public async Task<RiotTournamentCode> GetTournamentCodeDetailsAsync(string code)
         {
-            var response = await _httpClient.GetAsync(WithApiKey($"codes/{code}"));
+            var response = await _httpClient.GetAsync($"codes/{code}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -277,7 +268,7 @@ namespace Balkana.Services.Tournaments
 
         public async Task<List<long>> GetMatchIdsByTournamentCodeAsync(string code)
         {
-            var response = await _httpClient.GetAsync(WithApiKey($"matches/by-code/{code}/ids"));
+            var response = await _httpClient.GetAsync($"matches/by-code/{code}/ids");
 
             if (!response.IsSuccessStatusCode)
             {
