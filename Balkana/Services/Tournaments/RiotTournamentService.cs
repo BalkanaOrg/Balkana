@@ -21,16 +21,17 @@ namespace Balkana.Services.Tournaments
             _httpClient = httpClient;
             _context = context;
             _configuration = configuration;
-            _apiKey = _configuration["Riot:ApiKey"];
+            // Trim to avoid newlines/whitespace from .env or config
+            _apiKey = (_configuration["Riot:ApiKey"] ?? "").Trim();
 
             _routingCluster = ResolveRoutingCluster(_configuration["Riot:TournamentRegion"]);
-            // Production tournament-v5 path is /lol/tournament/v5/ (not tournament-v5)
+            // Production tournament-v5 path is /lol/tournament/v5/ (per Riot docs)
             _httpClient.BaseAddress = new Uri($"https://{_routingCluster}.api.riotgames.com/lol/tournament/v5/");
             _httpClient.DefaultRequestHeaders.Clear();
-            
-            // Production tournament-v5 requires X-Riot-Token header (same as other Riot APIs)
-            _httpClient.DefaultRequestHeaders.Add("X-Riot-Token", _apiKey);
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+            
+            // Use api_key query param (matches Riot Developer Portal "Try it" which works for user)
+            // X-Riot-Token header can also work, but portal uses api_key - try this first
             
             Console.WriteLine($"[RIOT TOURNAMENT API] Configured Base URL: {_httpClient.BaseAddress}");
             Console.WriteLine($"[RIOT TOURNAMENT API] Routing Cluster: {_routingCluster}");
@@ -38,13 +39,21 @@ namespace Balkana.Services.Tournaments
             Console.WriteLine($"[RIOT TOURNAMENT API] API Key Format: {(_apiKey?.StartsWith("RGAPI-") == true ? "Valid RGAPI format" : "Invalid format")}");
         }
 
+        /// <summary>Appends api_key to the path/query (Riot supports both api_key and X-Riot-Token).</summary>
+        private string WithApiKey(string path)
+        {
+            var sep = path.Contains('?') ? "&" : "?";
+            return $"{path}{sep}api_key={Uri.EscapeDataString(_apiKey)}";
+        }
+
         public async Task<bool> TestApiKeyAsync()
         {
             try
             {
-                Console.WriteLine($"[RIOT TOURNAMENT API] Testing configured cluster {_routingCluster} via {_httpClient.BaseAddress}providers");
+                var url = WithApiKey("providers");
+                Console.WriteLine($"[RIOT TOURNAMENT API] Testing configured cluster {_routingCluster} via {_httpClient.BaseAddress}{url}");
 
-                var response = await _httpClient.GetAsync("providers");
+                var response = await _httpClient.GetAsync(url);
                 Console.WriteLine($"[RIOT TOURNAMENT API] API Key Test (GET providers) - Status: {response.StatusCode}");
                 
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
@@ -73,13 +82,8 @@ namespace Balkana.Services.Tournaments
 
         public async Task<int> RegisterProviderAsync(string region, string callbackUrl = "")
         {
-            // Tournament API expects platform ID format (e.g. EUW1, NA1)
-            // Try without the "1" suffix first (EUNE1 -> EUNE)
-            var regionFormatted = region.ToUpper();
-            if (regionFormatted.EndsWith("1"))
-            {
-                regionFormatted = regionFormatted.Substring(0, regionFormatted.Length - 1);
-            }
+            // Tournament API expects platform ID (EUW1, NA1, EUN1, etc.) - do not strip the "1"
+            var regionFormatted = region.Trim().ToUpperInvariant();
 
             var request = new RiotProviderRegistrationDto
             {
@@ -88,13 +92,14 @@ namespace Balkana.Services.Tournaments
             };
 
             var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+            var url = WithApiKey("providers");
             
-            Console.WriteLine($"[RIOT TOURNAMENT API] POST {_httpClient.BaseAddress}providers");
+            Console.WriteLine($"[RIOT TOURNAMENT API] POST {_httpClient.BaseAddress}{url}");
             Console.WriteLine($"[RIOT TOURNAMENT API] Original Region: {region.ToUpper()}, Formatted: {regionFormatted}");
             Console.WriteLine($"[RIOT TOURNAMENT API] Callback: {callbackUrl}");
             Console.WriteLine($"[RIOT TOURNAMENT API] Request Body: {JsonSerializer.Serialize(request)}");
             
-            var response = await _httpClient.PostAsync("providers", content);
+            var response = await _httpClient.PostAsync(url, content);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -144,7 +149,7 @@ namespace Balkana.Services.Tournaments
             };
 
             var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync("tournaments", content);
+            var response = await _httpClient.PostAsync(WithApiKey("tournaments"), content);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -201,7 +206,7 @@ namespace Balkana.Services.Tournaments
             };
 
             var content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync($"codes?tournamentId={riotTournamentId}&count={count}", content);
+            var response = await _httpClient.PostAsync(WithApiKey($"codes?tournamentId={riotTournamentId}&count={count}"), content);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -242,7 +247,7 @@ namespace Balkana.Services.Tournaments
 
         public async Task<RiotTournamentCode> GetTournamentCodeDetailsAsync(string code)
         {
-            var response = await _httpClient.GetAsync($"codes/{code}");
+            var response = await _httpClient.GetAsync(WithApiKey($"codes/{code}"));
 
             if (!response.IsSuccessStatusCode)
             {
@@ -269,7 +274,7 @@ namespace Balkana.Services.Tournaments
 
         public async Task<List<long>> GetMatchIdsByTournamentCodeAsync(string code)
         {
-            var response = await _httpClient.GetAsync($"matches/by-code/{code}/ids");
+            var response = await _httpClient.GetAsync(WithApiKey($"matches/by-code/{code}/ids"));
 
             if (!response.IsSuccessStatusCode)
             {
