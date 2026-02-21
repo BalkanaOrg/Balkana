@@ -45,25 +45,25 @@ namespace Balkana.Data.Models
         /// Description/label for this code (e.g., "Match 1 - Team A vs Team B")
         /// </summary>
         [MaxLength(500)]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         /// <summary>
         /// Map type (e.g., SUMMONERS_RIFT, HOWLING_ABYSS)
         /// </summary>
         [MaxLength(50)]
-        public string MapType { get; set; }
+        public string? MapType { get; set; }
 
         /// <summary>
         /// Pick type (e.g., TOURNAMENT_DRAFT, ALL_RANDOM, etc.)
         /// </summary>
         [MaxLength(50)]
-        public string PickType { get; set; }
+        public string? PickType { get; set; }
 
         /// <summary>
         /// Spectator type (e.g., ALL, NONE, LOBBYONLY)
         /// </summary>
         [MaxLength(50)]
-        public string SpectatorType { get; set; }
+        public string? SpectatorType { get; set; }
 
         /// <summary>
         /// Team size (typically 5)
@@ -73,7 +73,7 @@ namespace Balkana.Data.Models
         /// <summary>
         /// Allowed summoner IDs (PUUIDs) - comma separated
         /// </summary>
-        public string AllowedSummonerIds { get; set; }
+        public string? AllowedSummonerIds { get; set; }
 
         /// <summary>
         /// When this code was created
@@ -86,10 +86,10 @@ namespace Balkana.Data.Models
         public bool IsUsed { get; set; }
 
         /// <summary>
-        /// The match ID generated when this code was used
+        /// The match ID generated when this code was used (null until a game is played)
         /// </summary>
         [MaxLength(100)]
-        public string MatchId { get; set; }
+        public string? MatchId { get; set; }
 
         /// <summary>
         /// Link to the imported match (if imported)
