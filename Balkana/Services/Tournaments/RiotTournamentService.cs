@@ -266,9 +266,13 @@ namespace Balkana.Services.Tournaments
             return tournamentCode;
         }
 
+        /// <summary>
+        /// Gets match/game IDs for a tournament code via GET /lol/tournament/v5/games/by-code/{tournamentCode}.
+        /// The games endpoint returns game details; we extract gameId from each.
+        /// </summary>
         public async Task<List<long>> GetMatchIdsByTournamentCodeAsync(string code)
         {
-            var response = await _httpClient.GetAsync($"matches/by-code/{code}/ids");
+            var response = await _httpClient.GetAsync($"games/by-code/{code}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -276,8 +280,33 @@ namespace Balkana.Services.Tournaments
                 throw new Exception($"Failed to get match IDs: {response.StatusCode} - {error}");
             }
 
-            var matchIds = await response.Content.ReadFromJsonAsync<List<long>>();
-            return matchIds ?? new List<long>();
+            var json = await response.Content.ReadAsStringAsync();
+            var matchIds = new List<long>();
+
+            using (var doc = JsonDocument.Parse(json))
+            {
+                var root = doc.RootElement;
+                JsonElement arr = default;
+                if (root.ValueKind == JsonValueKind.Array)
+                    arr = root;
+                else if (root.TryGetProperty("games", out var games) && games.ValueKind == JsonValueKind.Array)
+                    arr = games;
+
+                if (arr.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var item in arr.EnumerateArray())
+                    {
+                        if (item.ValueKind == JsonValueKind.Number && item.TryGetInt64(out var num))
+                            matchIds.Add(num);
+                        else if (item.TryGetProperty("gameId", out var g) && g.TryGetInt64(out var id))
+                            matchIds.Add(id);
+                        else if (item.TryGetProperty("id", out var i) && i.TryGetInt64(out id))
+                            matchIds.Add(id);
+                    }
+                }
+            }
+
+            return matchIds;
         }
 
         public async Task UpdateTournamentCodeWithMatchAsync(string code, string matchId, int? matchDbId = null)
