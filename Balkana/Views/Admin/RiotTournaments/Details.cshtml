@@ -133,15 +133,14 @@
                             <td>
                                 @if (!string.IsNullOrEmpty(code.MatchId))
                                 {
-                                    if (code.MatchDbId.HasValue)
+                                    <a asp-action="RiotMatchDetails" asp-route-matchId="@code.MatchId" class="btn btn-sm btn-info" target="_blank">
+                                        <i class="fas fa-external-link-alt"></i> View Riot Match
+                                    </a>
+                                    @if (code.MatchDbId.HasValue)
                                     {
-                                        <a asp-controller="Match" asp-action="Details" asp-route-id="@code.MatchDbId" class="btn btn-sm btn-info">
-                                            View Match
+                                        <a asp-controller="Match" asp-action="Details" asp-route-id="@code.MatchDbId" class="btn btn-sm btn-outline-secondary">
+                                            Internal
                                         </a>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">@code.MatchId</span>
                                     }
                                 }
                                 else

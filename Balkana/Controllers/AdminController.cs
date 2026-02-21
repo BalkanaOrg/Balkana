@@ -853,6 +853,75 @@ namespace Balkana.Controllers
             }
         }
 
+        /// <summary>
+        /// Display Riot match details (champions, items, stats) - fetches from Match-v5 API
+        /// </summary>
+        [HttpGet]
+        [Route("admin/riot-tournaments/match/{matchId}")]
+        public async Task<IActionResult> RiotMatchDetails(
+            string matchId,
+            [FromServices] Balkana.Services.Riot.IRiotMatchApiService matchApi,
+            [FromServices] Balkana.Services.Riot.IDDragonVersionService ddragonVersion)
+        {
+            if (string.IsNullOrWhiteSpace(matchId))
+                return NotFound();
+
+            var match = await matchApi.GetMatchAsync(matchId);
+            if (match == null)
+                return NotFound("Match not found or inaccessible via Riot API");
+
+            var ddragonVer = await ddragonVersion.GetDDragonVersionAsync(match.info?.gameVersion);
+            var blueTeam = match.info?.participants?.Where(p => p.teamId == 100).ToList() ?? new List<Balkana.Data.DTOs.Riot.RiotParticipantDto>();
+            var redTeam = match.info?.participants?.Where(p => p.teamId == 200).ToList() ?? new List<Balkana.Data.DTOs.Riot.RiotParticipantDto>();
+            var blueWon = match.info?.teams?.FirstOrDefault(t => t.teamId == 100)?.win ?? false;
+
+            var vm = new RiotMatchDetailsViewModel
+            {
+                MatchId = match.metadata?.matchId ?? matchId,
+                GameVersion = match.info?.gameVersion ?? "",
+                DDragonVersion = ddragonVer,
+                GameDurationSeconds = match.info?.gameDuration ?? 0,
+                GameMode = match.info?.gameMode ?? "",
+                GameType = match.info?.gameType ?? "",
+                GameStartTimestamp = match.info?.gameStartTimestamp ?? 0,
+                MapId = match.info?.mapId ?? 0,
+                BlueTeamWon = blueWon,
+                BlueTeam = blueTeam.Select(MapParticipant).ToList(),
+                RedTeam = redTeam.Select(MapParticipant).ToList()
+            };
+
+            return View("RiotTournaments/RiotMatchDetails", vm);
+        }
+
+        private static RiotMatchParticipantViewModel MapParticipant(Balkana.Data.DTOs.Riot.RiotParticipantDto p)
+        {
+            var riotId = "";
+            if (!string.IsNullOrEmpty(p.riotIdGameName) && !string.IsNullOrEmpty(p.riotIdTagline))
+                riotId = $"{p.riotIdGameName}#{p.riotIdTagline}";
+
+            return new RiotMatchParticipantViewModel
+            {
+                Puuid = p.puuid ?? "",
+                RiotId = riotId,
+                ChampionName = p.championName ?? "",
+                ChampionId = p.championId,
+                TeamPosition = p.teamPosition ?? "",
+                ChampLevel = p.champLevel,
+                Kills = p.kills,
+                Deaths = p.deaths,
+                Assists = p.assists,
+                GoldEarned = p.goldEarned,
+                CreepScore = p.totalMinionsKilled + p.neutralMinionsKilled,
+                VisionScore = p.visionScore,
+                TotalDamageToChampions = p.totalDamageDealtToChampions,
+                DamageToObjectives = p.damageDealtToObjectives,
+                Item0 = p.item0, Item1 = p.item1, Item2 = p.item2, Item3 = p.item3,
+                Item4 = p.item4, Item5 = p.item5, Item6 = p.item6,
+                Summoner1Id = p.summoner1Id,
+                Summoner2Id = p.summoner2Id
+            };
+        }
+
         // ============================================
         // STORE MANAGEMENT
         // ============================================

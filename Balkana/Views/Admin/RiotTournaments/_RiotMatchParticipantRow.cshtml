@@ -1,0 +1,68 @@
+@model Balkana.Models.Tournaments.RiotMatchParticipantRowVM
+@{
+    var p = Model.Participant;
+    var champUrl = $"{Model.ChampImgBase}/{p.ChampionName}.png";
+    var posLabel = string.IsNullOrEmpty(p.TeamPosition) ? "-" : p.TeamPosition;
+}
+<div class="riot-participant-row d-flex align-items-center border-bottom py-2 px-1">
+    <div class="d-flex align-items-center flex-grow-1">
+        <img src="@champUrl" alt="@p.ChampionName" class="rounded me-2" style="width:36px;height:36px;object-fit:cover" loading="lazy" onerror="this.alt='?';this.style.background='#333'" />
+        <div class="me-2">
+            <div class="fw-semibold small">@p.ChampionName</div>
+            <div class="text-muted" style="font-size:0.7rem">@posLabel · Lv @p.ChampLevel</div>
+        </div>
+        @if (!string.IsNullOrEmpty(p.RiotId))
+        {
+            <div class="text-muted small me-2">@p.RiotId</div>
+        }
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <div class="me-1" title="Summoner Spells">
+            @{
+                var s1 = Balkana.Models.Tournaments.RiotMatchParticipantViewModel.GetSummonerSpellName(p.Summoner1Id);
+                var s2 = Balkana.Models.Tournaments.RiotMatchParticipantViewModel.GetSummonerSpellName(p.Summoner2Id);
+            }
+            @if (s1 != null)
+            {
+                <img src="@(Model.SpellImgBase)/@(s1).png" alt="D" class="rounded" style="width:18px;height:18px" loading="lazy" />
+            }
+            @if (s2 != null)
+            {
+                <img src="@(Model.SpellImgBase)/@(s2).png" alt="F" class="rounded" style="width:18px;height:18px" loading="lazy" />
+            }
+        </div>
+        <div class="text-center me-1" style="min-width:3rem">
+            <div class="small fw-semibold">@p.Kills / @p.Deaths / @p.Assists</div>
+            <div class="text-muted" style="font-size:0.65rem">@p.Kda KDA</div>
+        </div>
+        <div class="text-end me-1" style="min-width:2.5rem">
+            <div class="small">@p.CreepScore</div>
+            <div class="text-muted" style="font-size:0.65rem">CS</div>
+        </div>
+        <div class="text-end me-1" style="min-width:2.5rem">
+            <div class="small">@p.GoldEarned.ToString("N0")</div>
+            <div class="text-muted" style="font-size:0.65rem">Gold</div>
+        </div>
+        <div class="text-end me-1" style="min-width:2rem">
+            <div class="small">@p.VisionScore</div>
+            <div class="text-muted" style="font-size:0.65rem">Vision</div>
+        </div>
+        <div class="text-end me-1" style="min-width:3rem">
+            <div class="small">@p.TotalDamageToChampions.ToString("N0")</div>
+            <div class="text-muted" style="font-size:0.65rem">Dmg</div>
+        </div>
+        <div class="d-flex gap-1">
+            @foreach (var itemId in p.Items)
+            {
+                @if (itemId > 0)
+                {
+                    <img src="@(Model.ItemImgBase)/@(itemId).png" alt="item" class="rounded" style="width:22px;height:22px" loading="lazy" title="@itemId" onerror="this.style.display='none'" />
+                }
+                else
+                {
+                    <div class="rounded bg-dark bg-opacity-25" style="width:22px;height:22px"></div>
+                }
+            }
+        </div>
+    </div>
+</div>

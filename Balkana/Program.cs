@@ -1,4 +1,4 @@
-﻿using Balkana;
+using Balkana;
 using Balkana.Data;
 using Balkana.Data.Infrastructure;
 using Balkana.Data.Models;
@@ -344,6 +344,11 @@ void ConfigureServices(IServiceCollection services)
     
     // Riot Tournament Service
     builder.Services.AddHttpClient<IRiotTournamentService, RiotTournamentService>();
+
+    // Riot Match API + Data Dragon (patch-aware assets)
+    builder.Services.AddScoped<Balkana.Services.Riot.IRiotMatchApiService, Balkana.Services.Riot.RiotMatchApiService>();
+    builder.Services.AddHttpClient<Balkana.Services.Riot.IDDragonVersionService, Balkana.Services.Riot.DDragonVersionService>(c =>
+        c.BaseAddress = new Uri("https://ddragon.leagueoflegends.com/"));
     
     // Store Services
     builder.Services.AddScoped<Balkana.Services.Store.IStoreService, Balkana.Services.Store.StoreService>();

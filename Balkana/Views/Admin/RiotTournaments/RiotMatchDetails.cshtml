@@ -1,0 +1,106 @@
+@model Balkana.Models.Tournaments.RiotMatchDetailsViewModel
+@using Balkana.Models.Tournaments
+@{
+    ViewData["Title"] = $"Match {Model.MatchId}";
+    var dd = Model.DDragonVersion;
+    var baseCdn = $"https://ddragon.leagueoflegends.com/cdn/{dd}";
+    var champImg = $"{baseCdn}/img/champion";
+    var itemImg = $"{baseCdn}/img/item";
+    var spellImg = $"{baseCdn}/img/spell";
+
+    var duration = TimeSpan.FromSeconds(Model.GameDurationSeconds);
+    var durationStr = $"{(int)duration.TotalMinutes}:{duration.Seconds:D2}";
+    var playedAt = Model.GameStartTimestamp > 0 ? DateTimeOffset.FromUnixTimeMilliseconds(Model.GameStartTimestamp).LocalDateTime : (DateTime?)null;
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="mb-1">Riot Match Details</h2>
+            <p class="text-muted mb-0">
+                <code>@Model.MatchId</code>
+                @if (!string.IsNullOrEmpty(Model.GameVersion)) { <span class="ms-2">Patch @Model.GameVersion</span> }
+            </p>
+        </div>
+        <div>
+            <a asp-action="RiotTournaments" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Tournaments
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-2">
+                    <strong>Duration</strong>
+                    <div>@durationStr</div>
+                </div>
+                <div class="col-md-2">
+                    <strong>Mode</strong>
+                    <div>@(string.IsNullOrEmpty(Model.GameMode) ? "-" : Model.GameMode)</div>
+                </div>
+                <div class="col-md-2">
+                    <strong>Type</strong>
+                    <div>@(string.IsNullOrEmpty(Model.GameType) ? "-" : Model.GameType)</div>
+                </div>
+                <div class="col-md-2">
+                    <strong>Map</strong>
+                    <div>@(Model.MapId > 0 ? Model.MapId.ToString() : "-")</div>
+                </div>
+                @if (playedAt.HasValue)
+                {
+                    <div class="col-md-2">
+                        <strong>Played</strong>
+                        <div>@playedAt.Value.ToString("yyyy-MM-dd HH:mm")</div>
+                    </div>
+                }
+                <div class="col-md-2">
+                    <strong>Data Dragon</strong>
+                    <div><small class="text-muted">@Model.DDragonVersion</small></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-6">
+            <div class="card h-100 @(Model.BlueTeamWon ? "border-success" : "border-danger")">
+                <div class="card-header d-flex justify-content-between align-items-center @(Model.BlueTeamWon ? "bg-success bg-opacity-25 text-success" : "bg-danger bg-opacity-25 text-danger")">
+                    <span><strong>Blue Side</strong></span>
+                    <span class="badge @(Model.BlueTeamWon ? "bg-success" : "bg-secondary")">@(Model.BlueTeamWon ? "Victory" : "Defeat")</span>
+                </div>
+                <div class="card-body p-2">
+                    @foreach (var p in Model.BlueTeam)
+                    {
+                        @await Html.PartialAsync("_RiotMatchParticipantRow", new RiotMatchParticipantRowVM { Participant = p, ChampImgBase = champImg, ItemImgBase = itemImg, SpellImgBase = spellImg })
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-6">
+            <div class="card h-100 @(!Model.BlueTeamWon ? "border-success" : "border-danger")">
+                <div class="card-header d-flex justify-content-between align-items-center @(!Model.BlueTeamWon ? "bg-success bg-opacity-25 text-success" : "bg-danger bg-opacity-25 text-danger")">
+                    <span><strong>Red Side</strong></span>
+                    <span class="badge @(!Model.BlueTeamWon ? "bg-success" : "bg-secondary")">@(!Model.BlueTeamWon ? "Victory" : "Defeat")</span>
+                </div>
+                <div class="card-body p-2">
+                    @foreach (var p in Model.RedTeam)
+                    {
+                        @await Html.PartialAsync("_RiotMatchParticipantRow", new RiotMatchParticipantRowVM { Participant = p, ChampImgBase = champImg, ItemImgBase = itemImg, SpellImgBase = spellImg })
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+<style>
+    .riot-participant-row { flex-wrap: wrap; gap: 0.5rem; }
+    @@media (max-width: 768px) {
+        .riot-participant-row { flex-direction: column; align-items: flex-start; }
+        .riot-participant-row > div:last-child { flex-wrap: wrap; }
+    }
+</style>
+}
