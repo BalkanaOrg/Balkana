@@ -5,6 +5,7 @@
 }
 
 <div class="container mt-4">
+    @Html.AntiForgeryToken()
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2>@Model.Name</h2>
@@ -194,7 +195,8 @@
             btn.addEventListener('click', async function() {
                 const code = this.getAttribute('data-code');
                 const icon = this.querySelector('i');
-                const originalText = this.innerHTML;
+                const tokenEl = document.querySelector('input[name="__RequestVerificationToken"]');
+                const token = tokenEl ? tokenEl.value : '';
                 
                 this.disabled = true;
                 icon.classList.add('fa-spin');
@@ -204,11 +206,15 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'RequestVerificationToken': '@Html.AntiForgeryToken()'
+                            'RequestVerificationToken': token
                         },
                         body: JSON.stringify({ code: code })
                     });
 
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('Server returned an unexpected response');
+                    }
                     const result = await response.json();
                     
                     if (result.success) {

@@ -816,8 +816,12 @@ namespace Balkana.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Route("admin/riot-tournaments/check-code")]
-        public async Task<IActionResult> CheckTournamentCode(string code, [FromServices] IRiotTournamentService tournamentService)
+        public async Task<IActionResult> CheckTournamentCode([FromBody] CheckCodeRequest request, [FromServices] IRiotTournamentService tournamentService)
         {
+            if (string.IsNullOrWhiteSpace(request?.Code))
+                return Json(new { success = false, message = "Code is required" });
+
+            var code = request.Code.Trim();
             try
             {
                 var matchIds = await tournamentService.GetMatchIdsByTournamentCodeAsync(code);
