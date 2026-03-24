@@ -2,6 +2,7 @@ using Balkana.Data;
 using Balkana.Data.Models;
 using Balkana.Services.Tournaments;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
@@ -20,15 +21,18 @@ namespace Balkana.Controllers
         private readonly IConfiguration _config;
         private readonly ApplicationDbContext _db;
         private readonly IRiotTournamentService _riotService;
+        private readonly IWebHostEnvironment _env;
 
         public RiotCallbackController(
             IConfiguration config,
             ApplicationDbContext db,
-            IRiotTournamentService riotService)
+            IRiotTournamentService riotService,
+            IWebHostEnvironment env)
         {
             _config = config;
             _db = db;
             _riotService = riotService;
+            _env = env;
         }
 
         /// <summary>
@@ -53,6 +57,25 @@ namespace Balkana.Controllers
             if (string.IsNullOrWhiteSpace(rawBody))
             {
                 // Accept but log - some callbacks may be empty
+                return Ok();
+            }
+
+            // Temporary: when Riot:CallbackSaveRawOnly=true, just save raw JSON to file and skip parsing
+            if (string.Equals(_config["Riot:CallbackSaveRawOnly"], "true", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var dir = _config["Riot:CallbackRawOutputPath"]?.Trim();
+                    if (string.IsNullOrEmpty(dir))
+                        dir = Path.Combine(_env.ContentRootPath, "riot-callbacks");
+                    else if (!Path.IsPathRooted(dir))
+                        dir = Path.Combine(_env.ContentRootPath, dir);
+
+                    Directory.CreateDirectory(dir);
+                    var file = Path.Combine(dir, $"riot-callback-{DateTime.UtcNow:yyyyMMdd-HHmmss}-{Guid.NewGuid():N}.json");
+                    await System.IO.File.WriteAllTextAsync(file, rawBody, ct);
+                }
+                catch { /* best-effort */ }
                 return Ok();
             }
 
