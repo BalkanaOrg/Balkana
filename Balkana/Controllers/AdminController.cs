@@ -861,7 +861,8 @@ namespace Balkana.Controllers
         public async Task<IActionResult> RiotMatchDetails(
             string matchId,
             [FromServices] Balkana.Services.Riot.IRiotMatchApiService matchApi,
-            [FromServices] Balkana.Services.Riot.IDDragonVersionService ddragonVersion)
+            [FromServices] Balkana.Services.Riot.IDDragonVersionService ddragonVersion,
+            int? pendingId = null)
         {
             if (string.IsNullOrWhiteSpace(matchId))
                 return NotFound();
@@ -874,6 +875,8 @@ namespace Balkana.Controllers
             var blueTeam = match.info?.participants?.Where(p => p.teamId == 100).ToList() ?? new List<Balkana.Data.DTOs.Riot.RiotParticipantDto>();
             var redTeam = match.info?.participants?.Where(p => p.teamId == 200).ToList() ?? new List<Balkana.Data.DTOs.Riot.RiotParticipantDto>();
             var blueWon = match.info?.teams?.FirstOrDefault(t => t.teamId == 100)?.win ?? false;
+
+            ViewBag.PendingId = pendingId;
 
             var vm = new RiotMatchDetailsViewModel
             {
@@ -891,6 +894,132 @@ namespace Balkana.Controllers
             };
 
             return View("RiotTournaments/RiotMatchDetails", vm);
+        }
+
+        /// <summary>
+        /// List pending Riot match callbacks for manual import.
+        /// </summary>
+        [HttpGet]
+        [Route("admin/riot-tournaments/pending-matches")]
+        public async Task<IActionResult> RiotPendingMatches(string? status = null)
+        {
+            var query = _context.RiotPendingMatches
+                .Include(p => p.RiotTournamentCode)
+                .AsQueryable();
+
+            if (string.Equals(status, "pending", StringComparison.OrdinalIgnoreCase))
+                query = query.Where(p => p.Status == RiotPendingMatchStatus.Pending);
+            else if (string.Equals(status, "imported", StringComparison.OrdinalIgnoreCase))
+                query = query.Where(p => p.Status == RiotPendingMatchStatus.Imported);
+
+            var list = await query.OrderByDescending(p => p.CreatedAt).Take(200).ToListAsync();
+
+            var vm = new RiotPendingMatchesViewModel
+            {
+                Items = list.Select(p => new RiotPendingMatchItemViewModel
+                {
+                    Id = p.Id,
+                    MatchId = p.MatchId,
+                    TournamentCode = p.TournamentCode,
+                    LinkedCode = p.RiotTournamentCode?.Code,
+                    LinkedSeriesId = p.RiotTournamentCode?.SeriesId,
+                    Status = p.Status,
+                    CreatedAt = p.CreatedAt,
+                    ErrorMessage = p.ErrorMessage
+                }).ToList()
+            };
+
+            return View("RiotTournaments/PendingMatches", vm);
+        }
+
+        /// <summary>
+        /// Import form for a pending match.
+        /// </summary>
+        [HttpGet]
+        [Route("admin/riot-tournaments/pending-matches/{id}/import")]
+        public async Task<IActionResult> ImportPendingMatch(int id)
+        {
+            var pending = await _context.RiotPendingMatches
+                .Include(p => p.RiotTournamentCode)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (pending == null)
+                return NotFound();
+
+            if (pending.Status != RiotPendingMatchStatus.Pending)
+                return BadRequest($"Match is already {pending.Status}");
+
+            var series = await _context.Series
+                .Include(s => s.Tournament)
+                .Where(s => s.Tournament.Game.ShortName == "LoL")
+                .OrderByDescending(s => s.DatePlayed)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.Id.ToString(),
+                    Text = $"{s.Tournament.FullName} - {s.Name} ({s.DatePlayed:yyyy-MM-dd})"
+                })
+                .ToListAsync();
+
+            var vm = new ImportPendingMatchViewModel
+            {
+                PendingMatchId = id,
+                MatchId = pending.MatchId,
+                TournamentCode = pending.TournamentCode,
+                SuggestedSeriesId = pending.RiotTournamentCode?.SeriesId,
+                Series = series
+            };
+
+            return View("RiotTournaments/ImportPendingMatch", vm);
+        }
+
+        /// <summary>
+        /// Import a pending match into the selected series.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Route("admin/riot-tournaments/pending-matches/{id}/import")]
+        public async Task<IActionResult> ImportPendingMatch(int id, ImportPendingMatchViewModel model,
+            [FromServices] IRiotPendingMatchImportService importService)
+        {
+            if (id != model.PendingMatchId)
+                return BadRequest();
+
+            var (success, error) = await importService.ImportAsync(id, model.SelectedSeriesId);
+
+            if (success)
+            {
+                TempData["SuccessMessage"] = $"Match {model.MatchId} imported successfully.";
+                return RedirectToAction("Details", "Series", new { id = model.SelectedSeriesId });
+            }
+
+            ModelState.AddModelError("", error ?? "Import failed.");
+            var series = await _context.Series
+                .Include(s => s.Tournament)
+                .Where(s => s.Tournament.Game.ShortName == "LoL")
+                .OrderByDescending(s => s.DatePlayed)
+                .Select(s => new SelectListItem { Value = s.Id.ToString(), Text = $"{s.Tournament.FullName} - {s.Name} ({s.DatePlayed:yyyy-MM-dd})" })
+                .ToListAsync();
+            model.Series = series;
+            return View("RiotTournaments/ImportPendingMatch", model);
+        }
+
+        /// <summary>
+        /// Discard a pending match (mark as Discarded).
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Route("admin/riot-tournaments/pending-matches/{id}/discard")]
+        public async Task<IActionResult> DiscardPendingMatch(int id)
+        {
+            var pending = await _context.RiotPendingMatches.FindAsync(id);
+            if (pending == null)
+                return NotFound();
+
+            pending.Status = RiotPendingMatchStatus.Discarded;
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Pending match discarded.";
+            return RedirectToAction("RiotPendingMatches");
         }
 
         private static RiotMatchParticipantViewModel MapParticipant(Balkana.Data.DTOs.Riot.RiotParticipantDto p)

@@ -344,6 +344,7 @@ void ConfigureServices(IServiceCollection services)
     
     // Riot Tournament Service
     builder.Services.AddHttpClient<IRiotTournamentService, RiotTournamentService>();
+    builder.Services.AddScoped<Balkana.Services.Tournaments.IRiotPendingMatchImportService, Balkana.Services.Tournaments.RiotPendingMatchImportService>();
 
     // Riot Match API + Data Dragon (patch-aware assets)
     builder.Services.AddScoped<Balkana.Services.Riot.IRiotMatchApiService, Balkana.Services.Riot.RiotMatchApiService>();

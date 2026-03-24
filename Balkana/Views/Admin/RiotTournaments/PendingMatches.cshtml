@@ -1,0 +1,122 @@
+@model Balkana.Models.Tournaments.RiotPendingMatchesViewModel
+
+@{
+    ViewData["Title"] = "Pending Riot Matches";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h2>Pending Riot Matches</h2>
+        <div class="d-flex gap-2">
+            <a asp-action="RiotTournaments" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Tournaments
+            </a>
+            @{
+                var statusFilter = Context.Request.Query["status"].FirstOrDefault() ?? "";
+            }
+            <div class="btn-group">
+                <a asp-action="RiotPendingMatches" asp-route-status="pending" class="btn @(statusFilter == "pending" ? "btn-primary" : "btn-outline-primary")">Pending</a>
+                <a asp-action="RiotPendingMatches" asp-route-status="imported" class="btn @(statusFilter == "imported" ? "btn-primary" : "btn-outline-primary")">Imported</a>
+                <a asp-action="RiotPendingMatches" class="btn @(string.IsNullOrEmpty(statusFilter) ? "btn-primary" : "btn-outline-primary")">All</a>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (Model.Items.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Match ID</th>
+                        <th>Tournament Code</th>
+                        <th>Linked Code</th>
+                        <th>Status</th>
+                        <th>Received</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>
+                                <code>@item.MatchId</code>
+                            </td>
+                            <td>@(item.TournamentCode ?? "-")</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.LinkedCode))
+                                {
+                                    <span class="badge bg-info">@item.LinkedCode</span>
+                                    @if (item.LinkedSeriesId.HasValue)
+                                    {
+                                        <a asp-controller="Series" asp-action="Details" asp-route-id="@item.LinkedSeriesId" class="btn btn-sm btn-link p-0">Series</a>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                @switch (item.Status)
+                                {
+                                    case Balkana.Data.Models.RiotPendingMatchStatus.Pending:
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                        break;
+                                    case Balkana.Data.Models.RiotPendingMatchStatus.Imported:
+                                        <span class="badge bg-success">Imported</span>
+                                        break;
+                                    case Balkana.Data.Models.RiotPendingMatchStatus.Discarded:
+                                        <span class="badge bg-secondary">Discarded</span>
+                                        break;
+                                    case Balkana.Data.Models.RiotPendingMatchStatus.Failed:
+                                        <span class="badge bg-danger">Failed</span>
+                                        @if (!string.IsNullOrEmpty(item.ErrorMessage))
+                                        {
+                                            <span class="text-muted small" title="@item.ErrorMessage">⚠</span>
+                                        }
+                                        break;
+                                }
+                            </td>
+                            <td>@item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                @if (item.Status == Balkana.Data.Models.RiotPendingMatchStatus.Pending && item.MatchId != "UNKNOWN")
+                                {
+                                    <a asp-action="RiotMatchDetails" asp-route-matchId="@item.MatchId" asp-route-pendingId="@item.Id" class="btn btn-sm btn-info" target="_blank" title="View match details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a asp-action="ImportPendingMatch" asp-route-id="@item.Id" class="btn btn-sm btn-success" title="Import">
+                                        <i class="fas fa-download"></i> Import
+                                    </a>
+                                    <form asp-action="DiscardPendingMatch" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Discard this pending match?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Discard">Discard</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No pending matches found. Matches will appear here when Riot sends callbacks to your configured provider URL.
+        </div>
+    }
+
+    <div class="mt-4 text-muted small">
+        <p><strong>Callback URL:</strong> Ensure your provider is registered with <code>{BaseUrl}/api/riot/callback?key={Riot:CallbackSecret}</code> in appsettings.</p>
+    </div>
+</div>

@@ -1,4 +1,4 @@
-﻿namespace Balkana.Data
+namespace Balkana.Data
 {
     using Balkana.Data.Models;
     using Balkana.Data.Models.Store;
@@ -74,6 +74,7 @@
         //Riot Tournament API
         public DbSet<RiotTournament> RiotTournaments { get; set; }
         public DbSet<RiotTournamentCode> RiotTournamentCodes { get; set; }
+        public DbSet<RiotPendingMatch> RiotPendingMatches { get; set; }
 
         //Store
         public DbSet<ProductCategory> ProductCategories { get; set; }
@@ -446,6 +447,31 @@
             modelBuilder.Entity<RiotTournamentCode>()
                 .HasIndex(tc => tc.Code)
                 .IsUnique();
+
+            // RiotPendingMatch
+            modelBuilder.Entity<RiotPendingMatch>()
+                .HasOne(p => p.RiotTournamentCode)
+                .WithMany()
+                .HasForeignKey(p => p.RiotTournamentCodeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RiotPendingMatch>()
+                .HasOne(p => p.ImportedMatch)
+                .WithMany()
+                .HasForeignKey(p => p.ImportedMatchDbId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RiotPendingMatch>()
+                .HasOne(p => p.Series)
+                .WithMany()
+                .HasForeignKey(p => p.SeriesId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RiotPendingMatch>()
+                .HasIndex(p => new { p.Status, p.CreatedAt });
+
+            modelBuilder.Entity<RiotPendingMatch>()
+                .HasIndex(p => p.MatchId);
 
             // Store relationships
             // ProductCategory self-reference

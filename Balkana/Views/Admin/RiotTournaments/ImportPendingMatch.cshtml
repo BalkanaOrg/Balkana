@@ -1,0 +1,60 @@
+@model Balkana.Models.Tournaments.ImportPendingMatchViewModel
+
+@{
+    ViewData["Title"] = $"Import Match {Model.MatchId}";
+}
+
+<div class="container mt-4">
+    <h2>Import Pending Match</h2>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <p class="mb-0"><strong>Match ID:</strong> <code>@Model.MatchId</code></p>
+            @if (!string.IsNullOrEmpty(Model.TournamentCode))
+            {
+                <p class="mb-0"><strong>Tournament Code:</strong> @Model.TournamentCode</p>
+            }
+        </div>
+    </div>
+
+    <form asp-action="ImportPendingMatch" asp-route-id="@Model.PendingMatchId" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="PendingMatchId" />
+        <input type="hidden" asp-for="MatchId" />
+
+        <div class="mb-3">
+            <label asp-for="SelectedSeriesId" class="form-label">Series</label>
+            <select asp-for="SelectedSeriesId" asp-items="Model.Series" class="form-select" required>
+                <option value="">-- Select Series --</option>
+            </select>
+            @if (Model.SuggestedSeriesId.HasValue)
+            {
+                <small class="form-text text-muted">Suggested from linked tournament code.</small>
+            }
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-download"></i> Import
+            </button>
+            <a asp-action="RiotPendingMatches" class="btn btn-outline-secondary">Cancel</a>
+            <a asp-action="RiotMatchDetails" asp-route-matchId="@Model.MatchId" class="btn btn-outline-info" target="_blank">
+                <i class="fas fa-external-link-alt"></i> View Match
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @if (Model.SuggestedSeriesId.HasValue)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var select = document.querySelector('select[name="SelectedSeriesId"]');
+                if (select && !select.value) {
+                    select.value = '@Model.SuggestedSeriesId.Value';
+                }
+            });
+        </script>
+    }
+}

@@ -22,7 +22,13 @@
                 @if (!string.IsNullOrEmpty(Model.GameVersion)) { <span class="ms-2">Patch @Model.GameVersion</span> }
             </p>
         </div>
-        <div>
+        <div class="d-flex gap-2">
+            @if (ViewBag.PendingId != null)
+            {
+                <a asp-action="ImportPendingMatch" asp-route-id="@ViewBag.PendingId" class="btn btn-success">
+                    <i class="fas fa-download"></i> Import
+                </a>
+            }
             <a asp-action="RiotTournaments" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Back to Tournaments
             </a>

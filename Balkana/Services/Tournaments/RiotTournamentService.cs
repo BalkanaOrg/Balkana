@@ -76,9 +76,19 @@ namespace Balkana.Services.Tournaments
         {
             var regionFormatted = NormalizeProviderRegion(region);
 
-            var callback = string.IsNullOrWhiteSpace(callbackUrl)
-                ? (_configuration["Riot:CallbackUrl"] ?? _configuration["BaseUrl"] ?? "https://balkana.org")
-                : callbackUrl;
+            string callback;
+            if (!string.IsNullOrWhiteSpace(callbackUrl))
+            {
+                callback = callbackUrl.Trim();
+            }
+            else
+            {
+                var baseUrl = (_configuration["Riot:CallbackUrl"] ?? _configuration["BaseUrl"] ?? "https://balkana.org").Trim().TrimEnd('/');
+                var secret = (_configuration["Riot:CallbackSecret"] ?? "").Trim();
+                callback = string.IsNullOrEmpty(secret)
+                    ? baseUrl
+                    : $"{baseUrl}/api/riot/callback?key={Uri.EscapeDataString(secret)}";
+            }
 
             var request = new RiotProviderRegistrationDto
             {
