@@ -1,4 +1,4 @@
-﻿@model Balkana.Models.Tournaments.TournamentFormViewModel
+@model Balkana.Models.Tournaments.TournamentFormViewModel
 
 @{
     ViewData["Title"] = "Add Tournament";
@@ -275,8 +275,10 @@
             }
         });
 
-        // Click to upload
-        uploadArea.addEventListener('click', function() {
+        // Click to upload - ignore clicks from file input to prevent double-trigger
+        // (programmatic fileInput.click() bubbles and would re-trigger, closing the file dialog)
+        uploadArea.addEventListener('click', function(e) {
+            if (e.target === fileInput) return;
             if (uploadPlaceholder.style.display !== 'none') {
                 fileInput.click();
             }

@@ -29,7 +29,7 @@
         </div>
     }
 
-    <div class="row mb-4">
+    <div class="row mb-4 bg-dark">
         <div class="col-md-3">
             <div class="card">
                 <div class="card-body text-center">
@@ -96,8 +96,8 @@
                     {
                         <tr class="@(code.IsUsed ? "table-success" : "")">
                             <td>
-                                <code class="tournament-code" data-code="@code.Code">@code.Code</code>
-                                <button class="btn btn-sm btn-outline-secondary copy-btn" data-code="@code.Code" title="Copy to clipboard">
+                                <code class="tournament-code" data-code="@(code.Code)">@(code.Code)</code>
+                                <button class="btn btn-sm btn-outline-secondary copy-btn" data-code="@(code.Code)" title="Copy to clipboard">
                                     <i class="fas fa-copy"></i>
                                 </button>
                             </td>
@@ -117,7 +117,7 @@
                                 <small>
                                     <span class="badge bg-secondary">@(code.MapType ?? "-")</span>
                                     <span class="badge bg-secondary">@(code.PickType ?? "-")</span>
-                                    <span class="badge bg-secondary">@code.TeamSize v @code.TeamSize</span>
+                                    <span class="badge bg-secondary">@(code.TeamSize) v @(code.TeamSize)</span>
                                 </small>
                             </td>
                             <td>
@@ -133,12 +133,12 @@
                             <td>
                                 @if (!string.IsNullOrEmpty(code.MatchId))
                                 {
-                                    <a asp-action="RiotMatchDetails" asp-route-matchId="@code.MatchId" class="btn btn-sm btn-info" target="_blank">
+                                    <a asp-action="RiotMatchDetails" asp-route-matchId="@(code.MatchId)" class="btn btn-sm btn-info" target="_blank">
                                         <i class="fas fa-external-link-alt"></i> View Riot Match
                                     </a>
                                     @if (code.MatchDbId.HasValue)
                                     {
-                                        <a asp-controller="Match" asp-action="Details" asp-route-id="@code.MatchDbId" class="btn btn-sm btn-outline-secondary">
+                                        <a asp-controller="Match" asp-action="Details" asp-route-id="@(code.MatchDbId)" class="btn btn-sm btn-outline-secondary">
                                             Internal
                                         </a>
                                     }
@@ -148,11 +148,11 @@
                                     <span class="text-muted">-</span>
                                 }
                             </td>
-                            <td>@code.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@(code.CreatedAt.ToString("yyyy-MM-dd HH:mm"))</td>
                             <td>
                                 @if (!code.IsUsed)
                                 {
-                                    <button class="btn btn-sm btn-primary check-code-btn" data-code="@code.Code">
+                                    <button class="btn btn-sm btn-primary check-code-btn" data-code="@(code.Code)">
                                         <i class="fas fa-sync"></i> Check
                                     </button>
                                 }
