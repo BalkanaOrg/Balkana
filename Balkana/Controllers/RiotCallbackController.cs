@@ -35,6 +35,7 @@ namespace Balkana.Controllers
         /// Callback URL for Riot to POST when a match completes.
         /// Validate via ?key=CallbackSecret in the registered URL.
         /// </summary>
+        [IgnoreAntiforgeryToken]
         [HttpPost("callback")]
         public async Task<IActionResult> Callback(CancellationToken ct)
         {
