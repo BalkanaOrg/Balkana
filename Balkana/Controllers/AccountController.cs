@@ -1278,7 +1278,7 @@ namespace Balkana.Controllers
                     Provider = "Riot",
                     CreatedAt = DateTime.UtcNow,
                     ExpiresAt = DateTime.UtcNow.AddMinutes(10),
-                    CodeVerifier = null
+                    CodeVerifier = ""
                 };
 
                 var existingStates = _context.OAuthStates
