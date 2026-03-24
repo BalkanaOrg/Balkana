@@ -1415,12 +1415,23 @@ namespace Balkana.Controllers
                     }
 
                     var accountJson = System.Text.Json.JsonDocument.Parse(accountContent);
-                    if (!accountJson.RootElement.TryGetProperty("puuid", out var puuidElement))
+                    var root = accountJson.RootElement;
+                    if (!root.TryGetProperty("puuid", out var puuidElement))
                     {
                         TempData["ErrorMessage"] = "Invalid Riot account information. Please try again.";
                         return RedirectToAction(nameof(Profile));
                     }
                     var puuid = puuidElement.GetString();
+
+                    string displayName = null;
+                    if (root.TryGetProperty("gameName", out var gameNameElement) && root.TryGetProperty("tagLine", out var tagLineElement))
+                    {
+                        var gameName = gameNameElement.GetString() ?? "";
+                        var tagLine = tagLineElement.GetString() ?? "";
+                        displayName = string.IsNullOrWhiteSpace(gameName) && string.IsNullOrWhiteSpace(tagLine)
+                            ? null
+                            : $"{gameName}#{tagLine}";
+                    }
 
                     var existingLink = await _context.UserLinkedAccounts
                         .FirstOrDefaultAsync(ula => ula.Type == "Riot" && ula.Identifier == puuid);
@@ -1437,6 +1448,7 @@ namespace Balkana.Controllers
                     if (userRiotLink != null)
                     {
                         userRiotLink.Identifier = puuid;
+                        userRiotLink.DisplayName = displayName;
                     }
                     else
                     {
@@ -1444,7 +1456,8 @@ namespace Balkana.Controllers
                         {
                             UserId = currentUser.Id,
                             Type = "Riot",
-                            Identifier = puuid
+                            Identifier = puuid,
+                            DisplayName = displayName
                         };
                         _context.UserLinkedAccounts.Add(userRiotLink);
                     }

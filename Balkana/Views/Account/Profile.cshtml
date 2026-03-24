@@ -338,7 +338,7 @@
                                     </div>
                                     @if (riotLink != null)
                                     {
-                                        <p class="account-detail">PUUID: @riotLink.Identifier</p>
+                                        <p class="account-detail">@(riotLink.DisplayName ?? $"PUUID: {riotLink.Identifier}")</p>
                                         <div class="setting-actions">
                                             <form asp-action="UnlinkAccount" method="post" class="inline-form">
                                                 <input type="hidden" name="type" value="Riot" />

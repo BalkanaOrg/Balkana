@@ -21,6 +21,9 @@ namespace Balkana.Data.Models
         [Required]
         [StringLength(500)]
         public string Identifier { get; set; } // UUID for Discord/FaceIt, username/tag for social media
+
+        [StringLength(200)]
+        public string DisplayName { get; set; } // Optional friendly display, e.g. Riot gameName#tagLine
     }
 }
 
