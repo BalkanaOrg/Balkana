@@ -87,7 +87,7 @@ namespace Balkana.Services.Tournaments
                 var secret = (_configuration["Riot:CallbackSecret"] ?? "").Trim();
                 callback = string.IsNullOrEmpty(secret)
                     ? baseUrl
-                    : $"{baseUrl}/api/riot/callback?key={Uri.EscapeDataString(secret)}";
+                    : $"{baseUrl}/api/riot/callback/{Uri.EscapeDataString(secret)}";
             }
 
             var request = new RiotProviderRegistrationDto

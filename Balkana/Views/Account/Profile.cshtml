@@ -1,4 +1,4 @@
-﻿@model Balkana.Models.Accounts.UserProfileViewModel
+@model Balkana.Models.Accounts.UserProfileViewModel
 @{
     ViewData["Title"] = "Profile";
     Layout = "_Layout";
@@ -315,6 +315,48 @@
                                             <a asp-action="LinkFaceIt" class="setting-btn subtle">
                                                 <i class="fi fi-rr-link"></i>
                                                 Link FaceIt
+                                            </a>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Riot -->
+                            @{
+                                var riotLink = Model.LinkedAccounts?.FirstOrDefault(la => la.Type == "Riot");
+                            }
+                            <div class="setting-card linked-account-card">
+                                <div class="setting-icon">
+                                    <i class="fi fi-rr-gamepad"></i>
+                                </div>
+                                <div class="setting-content">
+                                    <div class="setting-title-row">
+                                        <h4>Riot</h4>
+                                        <span class="account-status @(riotLink != null ? "linked" : "not-linked")">
+                                            @(riotLink != null ? "Linked" : "Not Linked")
+                                        </span>
+                                    </div>
+                                    @if (riotLink != null)
+                                    {
+                                        <p class="account-detail">PUUID: @riotLink.Identifier</p>
+                                        <div class="setting-actions">
+                                            <form asp-action="UnlinkAccount" method="post" class="inline-form">
+                                                <input type="hidden" name="type" value="Riot" />
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="ghost-btn">
+                                                    <i class="fi fi-rr-unlink"></i>
+                                                    Unlink
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p class="account-detail muted">Link your Riot account to verify your game identity.</p>
+                                        <div class="setting-actions">
+                                            <a asp-action="LinkRiot" class="setting-btn subtle">
+                                                <i class="fi fi-rr-link"></i>
+                                                Link Riot
                                             </a>
                                         </div>
                                     }

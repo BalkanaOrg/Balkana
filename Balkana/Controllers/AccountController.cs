@@ -1,4 +1,4 @@
-﻿using Balkana.Data.Models;
+using Balkana.Data.Models;
 using Balkana.Models.Accounts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -1235,6 +1235,230 @@ namespace Balkana.Controllers
                 Console.WriteLine($"ERROR in FaceItCallback: {ex.Message}");
                 Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 TempData["ErrorMessage"] = "An error occurred while linking your FaceIt account. Please try again.";
+                return RedirectToAction(nameof(Profile));
+            }
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> LinkRiot()
+        {
+            try
+            {
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null) return NotFound();
+
+                var clientId = HttpContext.RequestServices.GetRequiredService<IConfiguration>()["Riot:RsoClientId"];
+
+                if (string.IsNullOrEmpty(clientId))
+                {
+                    TempData["ErrorMessage"] = "Riot Sign On is not configured. Please contact an administrator.";
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                // Build redirect URI - same logic as FaceIt (Cloudflare handles port routing)
+                var redirectUri = Url.Action(nameof(RiotCallback), "Account", null, Request.Scheme, Request.Host.Value);
+                if (!redirectUri.StartsWith("https://"))
+                {
+                    var uri = new UriBuilder(redirectUri) { Scheme = "https" };
+                    redirectUri = uri.ToString();
+                }
+                var redirectUriBuilder = new UriBuilder(redirectUri);
+                if (redirectUriBuilder.Port == 4444 || redirectUriBuilder.Port == 443)
+                {
+                    redirectUriBuilder.Port = -1;
+                }
+                redirectUri = redirectUriBuilder.ToString();
+
+                var state = Guid.NewGuid().ToString();
+                var oauthState = new OAuthState
+                {
+                    State = state,
+                    UserId = currentUser.Id,
+                    Provider = "Riot",
+                    CreatedAt = DateTime.UtcNow,
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(10),
+                    CodeVerifier = null
+                };
+
+                var existingStates = _context.OAuthStates
+                    .Where(os => os.UserId == currentUser.Id && os.Provider == "Riot");
+                _context.OAuthStates.RemoveRange(existingStates);
+                _context.OAuthStates.Add(oauthState);
+                await _context.SaveChangesAsync();
+
+                var authUrl = $"https://auth.riotgames.com/authorize?client_id={Uri.EscapeDataString(clientId)}&redirect_uri={Uri.EscapeDataString(redirectUri)}&response_type=code&scope=openid&state={Uri.EscapeDataString(state)}";
+                return Redirect(authUrl);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR in LinkRiot: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                TempData["ErrorMessage"] = "An error occurred while initiating Riot Sign On. Please try again.";
+                return RedirectToAction(nameof(Profile));
+            }
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> RiotCallback(string code, string state, string error = null)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(error))
+                {
+                    Console.WriteLine($"Riot RSO error: {error}");
+                    TempData["ErrorMessage"] = $"Riot authorization failed: {error}";
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                if (string.IsNullOrEmpty(code))
+                {
+                    TempData["ErrorMessage"] = "Riot authorization was cancelled or failed. Please try again.";
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                var oauthState = await _context.OAuthStates
+                    .FirstOrDefaultAsync(os => os.State == state && os.Provider == "Riot");
+
+                if (oauthState == null)
+                {
+                    TempData["ErrorMessage"] = "Invalid OAuth state. Please try again.";
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser == null) return NotFound();
+
+                if (oauthState.ExpiresAt < DateTime.UtcNow)
+                {
+                    _context.OAuthStates.Remove(oauthState);
+                    await _context.SaveChangesAsync();
+                    TempData["ErrorMessage"] = "OAuth state has expired. Please try again.";
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                if (oauthState.UserId != currentUser.Id)
+                {
+                    TempData["ErrorMessage"] = "OAuth state does not match your account. Please try again.";
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                _context.OAuthStates.Remove(oauthState);
+                await _context.SaveChangesAsync();
+
+                var configuration = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+                var clientId = configuration["Riot:RsoClientId"];
+                var clientSecret = configuration["Riot:RsoClientSecret"];
+                var accountRegion = (configuration["Riot:AccountRegion"] ?? "europe").Trim();
+
+                if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret))
+                {
+                    TempData["ErrorMessage"] = "Riot Sign On is not properly configured. Please contact an administrator.";
+                    return RedirectToAction(nameof(Profile));
+                }
+
+                var redirectUri = Url.Action(nameof(RiotCallback), "Account", null, Request.Scheme, Request.Host.Value);
+                if (!redirectUri.StartsWith("https://"))
+                {
+                    var uri = new UriBuilder(redirectUri) { Scheme = "https" };
+                    redirectUri = uri.ToString();
+                }
+                var redirectUriBuilder = new UriBuilder(redirectUri);
+                if (redirectUriBuilder.Port == 4444 || redirectUriBuilder.Port == 443)
+                {
+                    redirectUriBuilder.Port = -1;
+                }
+                redirectUri = redirectUriBuilder.ToString();
+
+                using (var httpClient = new HttpClient())
+                {
+                    var tokenRequest = new FormUrlEncodedContent(new[]
+                    {
+                        new KeyValuePair<string, string>("grant_type", "authorization_code"),
+                        new KeyValuePair<string, string>("code", code),
+                        new KeyValuePair<string, string>("redirect_uri", redirectUri)
+                    });
+
+                    var basicAuthValue = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{clientId}:{clientSecret}"));
+                    httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", basicAuthValue);
+
+                    var tokenResponse = await httpClient.PostAsync("https://auth.riotgames.com/token", tokenRequest);
+                    var tokenResponseContent = await tokenResponse.Content.ReadAsStringAsync();
+
+                    if (!tokenResponse.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine($"Riot token exchange failed. Status: {tokenResponse.StatusCode}, Response: {tokenResponseContent}");
+                        TempData["ErrorMessage"] = "Failed to authenticate with Riot. Please try again.";
+                        return RedirectToAction(nameof(Profile));
+                    }
+
+                    var tokenJson = System.Text.Json.JsonDocument.Parse(tokenResponseContent);
+                    if (!tokenJson.RootElement.TryGetProperty("access_token", out var accessTokenElement))
+                    {
+                        TempData["ErrorMessage"] = "Invalid response from Riot. Please try again.";
+                        return RedirectToAction(nameof(Profile));
+                    }
+                    var accessToken = accessTokenElement.GetString();
+
+                    httpClient.DefaultRequestHeaders.Clear();
+                    httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                    var accountUrl = $"https://{accountRegion}.api.riotgames.com/riot/account/v1/accounts/me";
+                    var accountResponse = await httpClient.GetAsync(accountUrl);
+                    var accountContent = await accountResponse.Content.ReadAsStringAsync();
+
+                    if (!accountResponse.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine($"Riot account API failed. Status: {accountResponse.StatusCode}, Response: {accountContent}");
+                        TempData["ErrorMessage"] = "Failed to retrieve Riot account information. Please try again.";
+                        return RedirectToAction(nameof(Profile));
+                    }
+
+                    var accountJson = System.Text.Json.JsonDocument.Parse(accountContent);
+                    if (!accountJson.RootElement.TryGetProperty("puuid", out var puuidElement))
+                    {
+                        TempData["ErrorMessage"] = "Invalid Riot account information. Please try again.";
+                        return RedirectToAction(nameof(Profile));
+                    }
+                    var puuid = puuidElement.GetString();
+
+                    var existingLink = await _context.UserLinkedAccounts
+                        .FirstOrDefaultAsync(ula => ula.Type == "Riot" && ula.Identifier == puuid);
+
+                    if (existingLink != null && existingLink.UserId != currentUser.Id)
+                    {
+                        TempData["ErrorMessage"] = "This Riot account is already linked to another user.";
+                        return RedirectToAction(nameof(Profile));
+                    }
+
+                    var userRiotLink = await _context.UserLinkedAccounts
+                        .FirstOrDefaultAsync(ula => ula.UserId == currentUser.Id && ula.Type == "Riot");
+
+                    if (userRiotLink != null)
+                    {
+                        userRiotLink.Identifier = puuid;
+                    }
+                    else
+                    {
+                        userRiotLink = new UserLinkedAccount
+                        {
+                            UserId = currentUser.Id,
+                            Type = "Riot",
+                            Identifier = puuid
+                        };
+                        _context.UserLinkedAccounts.Add(userRiotLink);
+                    }
+
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Riot account linked successfully!";
+                    return RedirectToAction(nameof(Profile));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR in RiotCallback: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                TempData["ErrorMessage"] = "An error occurred while linking your Riot account. Please try again.";
                 return RedirectToAction(nameof(Profile));
             }
         }

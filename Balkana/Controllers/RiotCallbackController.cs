@@ -33,18 +33,17 @@ namespace Balkana.Controllers
 
         /// <summary>
         /// Callback URL for Riot to POST when a match completes.
-        /// Validate via ?key=CallbackSecret in the registered URL.
+        /// Secret is in the path: /api/riot/callback/{secret}
         /// </summary>
         [IgnoreAntiforgeryToken]
-        [HttpPost("callback")]
-        public async Task<IActionResult> Callback(CancellationToken ct)
+        [HttpPost("callback/{key}")]
+        public async Task<IActionResult> Callback(string key, CancellationToken ct)
         {
             var secret = (_config["Riot:CallbackSecret"] ?? "").Trim();
             if (string.IsNullOrEmpty(secret))
                 return StatusCode(500, "Callback secret not configured");
 
-            var key = Request.Query["key"].FirstOrDefault() ?? "";
-            if (key != secret)
+            if (string.IsNullOrEmpty(key) || key != secret)
                 return Unauthorized();
 
             string rawBody;
