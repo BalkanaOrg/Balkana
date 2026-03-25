@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Balkana.Data.Models
@@ -29,6 +29,7 @@ namespace Balkana.Data.Models
         // New fields for bracket logic
         public int Round { get; set; }              // 1 = Quarterfinal, 2 = Semifinal, 3 = Final, etc.
         public int Position { get; set; }           // Position in the round (helps ordering)
+        public int? BestOf { get; set; }          // 1, 3, 5 (Bo1/Bo3/Bo5) - used for Riot best-of winner logic (nullable for Faceit)
 
         // Optional: reference the "next" series this feeds into
         [AllowNull]

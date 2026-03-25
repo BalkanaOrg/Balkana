@@ -79,7 +79,7 @@
                 <div class="card-body p-2">
                     @foreach (var p in Model.BlueTeam)
                     {
-                        @await Html.PartialAsync("_RiotMatchParticipantRow", new RiotMatchParticipantRowVM { Participant = p, ChampImgBase = champImg, ItemImgBase = itemImg, SpellImgBase = spellImg })
+                        @await Html.PartialAsync("~/Views/Admin/RiotTournaments/_RiotMatchParticipantRow.cshtml", new RiotMatchParticipantRowVM { Participant = p, ChampImgBase = champImg, ItemImgBase = itemImg, SpellImgBase = spellImg })
                     }
                 </div>
             </div>
@@ -93,7 +93,7 @@
                 <div class="card-body p-2">
                     @foreach (var p in Model.RedTeam)
                     {
-                        @await Html.PartialAsync("_RiotMatchParticipantRow", new RiotMatchParticipantRowVM { Participant = p, ChampImgBase = champImg, ItemImgBase = itemImg, SpellImgBase = spellImg })
+                        @await Html.PartialAsync("~/Views/Admin/RiotTournaments/_RiotMatchParticipantRow.cshtml", new RiotMatchParticipantRowVM { Participant = p, ChampImgBase = champImg, ItemImgBase = itemImg, SpellImgBase = spellImg })
                     }
                 </div>
             </div>

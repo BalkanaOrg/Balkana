@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -7,16 +7,19 @@ using Balkana.Data.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Authorization;
 using Balkana.Models.Series;
+using Balkana.Services.Riot;
 
 namespace Balkana.Controllers
 {
     public class SeriesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IDDragonVersionService _ddragonVersion;
 
-        public SeriesController(ApplicationDbContext context)
+        public SeriesController(ApplicationDbContext context, IDDragonVersionService ddragonVersion)
         {
             _context = context;
+            _ddragonVersion = ddragonVersion;
         }
 
         // GET: Series
@@ -35,6 +38,7 @@ namespace Balkana.Controllers
         {
             if (id == null) return NotFound();
 
+            // Load base series data without CS-only map include (so LoL series won't break).
             var series = await _context.Series
                 .Include(s => s.TeamA)
                 .Include(s => s.TeamB)
@@ -42,12 +46,28 @@ namespace Balkana.Controllers
                 .Include(s => s.Tournament)
                 .Include(s => s.Matches)
                     .ThenInclude(m => m.PlayerStats)
-                .Include(s => s.Matches)
-                    .ThenInclude(m => ((MatchCS)m).Map)
                 .Include(s => s.WinnerTeam)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (series == null) return NotFound();
+
+            ViewData["GameShortName"] = series.Tournament?.Game?.ShortName ?? "";
+
+            // For CS2, re-load with CS-only map include so existing CS UI logic stays intact.
+            if (string.Equals(series.Tournament?.Game?.ShortName, "CS2", StringComparison.OrdinalIgnoreCase))
+            {
+                series = await _context.Series
+                    .Include(s => s.TeamA)
+                    .Include(s => s.TeamB)
+                    .Include(s => s.Tournament.Game)
+                    .Include(s => s.Tournament)
+                    .Include(s => s.Matches)
+                        .ThenInclude(m => m.PlayerStats)
+                    .Include(s => s.Matches)
+                        .ThenInclude(m => ((MatchCS)m).Map)
+                    .Include(s => s.WinnerTeam)
+                    .FirstOrDefaultAsync(m => m.Id == id);
+            }
 
             // Check if series has matches
             bool hasMatches = series.Matches.Any();
@@ -65,11 +85,21 @@ namespace Balkana.Controllers
             else
             {
                 // Get match statistics and player performance
-                var matchStats = await GetSeriesMatchStats(series);
-                var playerStats = await GetSeriesPlayerStats(series);
+                if (string.Equals(series.Tournament?.Game?.ShortName, "LoL", StringComparison.OrdinalIgnoreCase))
+                {
+                    // LoL match cards (map 1..N) - player stats will be implemented in later steps of the plan.
+                    var matchStats = await GetSeriesMatchStatsLoL(series);
+                    ViewData["MatchStats"] = matchStats;
+                    ViewData["PlayerStats"] = await GetSeriesPlayerStatsLoL(series, mapId: null);
+                }
+                else
+                {
+                    var matchStats = await GetSeriesMatchStats(series);
+                    var playerStats = await GetSeriesPlayerStats(series);
 
-                ViewData["MatchStats"] = matchStats;
-                ViewData["PlayerStats"] = playerStats;
+                    ViewData["MatchStats"] = matchStats;
+                    ViewData["PlayerStats"] = playerStats;
+                }
                 ViewData["HasMatches"] = true;
             }
 
@@ -140,6 +170,56 @@ namespace Balkana.Controllers
                         PlayedAt = match.PlayedAt
                     });
                 }
+            }
+
+            return matchStats;
+        }
+
+        private async Task<List<object>> GetSeriesMatchStatsLoL(Series series)
+        {
+            // In LoL, each "match" is a single game; the UI should label them "map 1", "map 2", etc.
+            var orderedMatches = series.Matches
+                .OrderBy(m => m.PlayedAt)
+                .ToList();
+
+            var matchStats = new List<object>();
+
+            for (int i = 0; i < orderedMatches.Count; i++)
+            {
+                var match = orderedMatches[i];
+                if (match is not MatchLoL lolMatch)
+                    continue;
+
+                var mapId = i + 1;
+                var mapName = $"map {mapId}";
+
+                var teamARounds = 0;
+                var teamBRounds = 0;
+                var winner = "Unknown";
+
+                if (match.WinnerTeamId == series.TeamAId)
+                {
+                    teamARounds = 1;
+                    winner = series.TeamA?.FullName ?? "Team A";
+                }
+                else if (match.WinnerTeamId == series.TeamBId)
+                {
+                    teamBRounds = 1;
+                    winner = series.TeamB?.FullName ?? "Team B";
+                }
+
+                matchStats.Add(new
+                {
+                    MatchId = match.Id,
+                    MapId = mapId,
+                    MapName = mapName,
+                    MapImage = "/images/default-map.png",
+                    TeamARounds = teamARounds,
+                    TeamBRounds = teamBRounds,
+                    TotalRounds = 1,
+                    Winner = winner,
+                    PlayedAt = match.PlayedAt
+                });
             }
 
             return matchStats;
@@ -259,23 +339,180 @@ namespace Balkana.Controllers
             return playerStats.Values.ToList();
         }
 
+        private async Task<List<LoLPlayerStatsViewModel>> GetSeriesPlayerStatsLoL(Series series, int? mapId)
+        {
+            // LoL series scoreboard:
+            // - If mapId is null => "All Maps": show numeric totals only, omit icons.
+            // - If mapId is not null => show numeric totals for that single game + champion/item icons.
+            var orderedMatches = series.Matches
+                .OrderBy(m => m.PlayedAt)
+                .ToList();
+
+            var selectedMatches = new List<MatchLoL>();
+            if (mapId.HasValue)
+            {
+                var idx = mapId.Value - 1;
+                if (idx >= 0 && idx < orderedMatches.Count && orderedMatches[idx] is MatchLoL selectedLol)
+                    selectedMatches.Add(selectedLol);
+            }
+            else
+            {
+                selectedMatches = orderedMatches.OfType<MatchLoL>().ToList();
+            }
+
+            if (!selectedMatches.Any())
+                return new List<LoLPlayerStatsViewModel>();
+
+            // Resolve internal player ids for all participant puuids involved in the selection.
+            var uuids = selectedMatches
+                .SelectMany(m => m.PlayerStats)
+                .Where(ps => ps is PlayerStatistic_LoL)
+                .Select(ps => ps.PlayerUUID)
+                .Where(u => !string.IsNullOrWhiteSpace(u))
+                .Distinct()
+                .ToList();
+
+            var uuidToPlayerId = await _context.GameProfiles
+                .Where(gp => gp.Provider == "RIOT" && uuids.Contains(gp.UUID))
+                .Select(gp => new { gp.UUID, gp.PlayerId })
+                .ToListAsync();
+
+            var uuidMap = uuidToPlayerId.ToDictionary(x => x.UUID, x => x.PlayerId);
+
+            var playerStats = new Dictionary<int, LoLPlayerStatsViewModel>();
+
+            // Aggregate stats match-by-match so team assignment can be based on match time.
+            foreach (var match in selectedMatches)
+            {
+                var matchDate = match.PlayedAt;
+                string? ddragonVersion = null;
+                if (mapId.HasValue)
+                    ddragonVersion = await _ddragonVersion.GetDDragonVersionAsync(match.GameVersion);
+
+                var stats = match.PlayerStats.OfType<PlayerStatistic_LoL>().ToList();
+                if (!stats.Any())
+                    continue;
+
+                var matchPlayerIds = stats
+                    .Select(s => uuidMap.TryGetValue(s.PlayerUUID, out var pid) ? pid : (int?)null)
+                    .Where(pid => pid.HasValue)
+                    .Select(pid => pid.Value)
+                    .Distinct()
+                    .ToList();
+
+                // Determine which internal team each player belonged to at the match timestamp.
+                var transfers = await _context.PlayerTeamTransfers
+                    .Where(t =>
+                        matchPlayerIds.Contains(t.PlayerId) &&
+                        t.Status == PlayerTeamStatus.Active &&
+                        t.StartDate <= matchDate &&
+                        (t.EndDate == null || t.EndDate >= matchDate) &&
+                        (t.TeamId == series.TeamAId || t.TeamId == series.TeamBId))
+                    .ToListAsync();
+
+                var playerIdToTeamId = transfers
+                    .GroupBy(t => t.PlayerId)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.OrderByDescending(t => t.StartDate).First().TeamId);
+
+                foreach (var s in stats)
+                {
+                    if (!uuidMap.TryGetValue(s.PlayerUUID, out var playerId))
+                        continue;
+
+                    if (!playerIdToTeamId.TryGetValue(playerId, out var teamId) || teamId == null)
+                        continue;
+
+                    var teamSlot = teamId == series.TeamAId ? "Team1" : "Team2";
+                    var isWinner = series.WinnerTeamId.HasValue && teamId == series.WinnerTeamId.Value;
+
+                    if (!playerStats.TryGetValue(playerId, out var vm))
+                    {
+                        vm = new LoLPlayerStatsViewModel
+                        {
+                            PlayerId = playerId,
+                            PlayerName = "Unknown",
+                            Team = teamSlot,
+                            Kills = 0,
+                            Deaths = 0,
+                            Assists = 0,
+                            CreepScore = 0,
+                            VisionScore = 0,
+                            TotalDamageToChampions = 0,
+                            IsWinner = isWinner,
+                        };
+
+                        // Player name resolution
+                        var playerEntity = await _context.Players.FindAsync(playerId);
+                        if (playerEntity != null)
+                        {
+                            var fullName = ($"{playerEntity.FirstName} {playerEntity.LastName}").Trim();
+                            vm.PlayerName = !string.IsNullOrWhiteSpace(playerEntity.Nickname)
+                                ? playerEntity.Nickname
+                                : (!string.IsNullOrWhiteSpace(fullName) ? fullName : "Unknown");
+                        }
+
+                        // Icons only for map-specific mode
+                        if (mapId.HasValue)
+                        {
+                            vm.ChampionName = s.ChampionName;
+                            vm.ItemIds = new List<int> { s.Item0, s.Item1, s.Item2, s.Item3, s.Item4, s.Item5, s.Item6 };
+                            vm.DDragonVersion = ddragonVersion;
+                        }
+
+                        playerStats[playerId] = vm;
+                    }
+
+                    vm.Kills += s.Kills ?? 0;
+                    vm.Deaths += s.Deaths ?? 0;
+                    vm.Assists += s.Assists ?? 0;
+                    vm.CreepScore += s.CreepScore;
+                    vm.VisionScore += s.VisionScore;
+                    vm.TotalDamageToChampions += s.TotalDamageToChampions ?? 0;
+
+                    // Keep winner/isWinner consistent with the series winner.
+                    vm.IsWinner = isWinner;
+                }
+            }
+
+            return playerStats.Values.OrderBy(v => v.Team).ThenBy(v => v.PlayerName).ToList();
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetPlayerStatsByMap(int seriesId, int? mapId)
         {
+            // Load base series data without CS-only map include (so LoL series won't break).
             var series = await _context.Series
                 .Include(s => s.TeamA)
                 .Include(s => s.TeamB)
+                .Include(s => s.Tournament.Game)
                 .Include(s => s.Matches)
                     .ThenInclude(m => m.PlayerStats)
-                .Include(s => s.Matches)
-                    .ThenInclude(m => ((MatchCS)m).Map)
                 .FirstOrDefaultAsync(s => s.Id == seriesId);
 
             if (series == null) return NotFound();
 
-            var playerStats = await GetSeriesPlayerStats(series, mapId);
-            
-            return PartialView("_PlayerStatsPartial", playerStats);
+            // For CS2, re-load with CS-only map include so existing CS logic stays intact.
+            if (string.Equals(series.Tournament?.Game?.ShortName, "CS2", StringComparison.OrdinalIgnoreCase))
+            {
+                series = await _context.Series
+                    .Include(s => s.TeamA)
+                    .Include(s => s.TeamB)
+                    .Include(s => s.Tournament.Game)
+                    .Include(s => s.Matches)
+                        .ThenInclude(m => m.PlayerStats)
+                    .Include(s => s.Matches)
+                        .ThenInclude(m => ((MatchCS)m).Map)
+                    .FirstOrDefaultAsync(s => s.Id == seriesId);
+
+                var playerStats = await GetSeriesPlayerStats(series, mapId);
+                return PartialView("_PlayerStatsPartial", playerStats);
+            }
+
+            // LoL stats will be implemented in the next steps of the plan.
+            var playerStatsLoL = await GetSeriesPlayerStatsLoL(series, mapId);
+            return PartialView("_LoLPlayerStatsPartial", playerStatsLoL);
         }
 
         private async Task<int?> GetPlayerIdFromUuid(string uuid)

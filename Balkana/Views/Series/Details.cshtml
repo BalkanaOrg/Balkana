@@ -1,8 +1,9 @@
-﻿@model Balkana.Data.Models.Series
+@model Balkana.Data.Models.Series
 
 @{
     ViewData["Title"] = "Series Details";
     bool hasMatches = (bool)ViewData["HasMatches"];
+    var gameShortName = ViewData["GameShortName"] as string ?? "";
 }
 
 @functions {
@@ -249,91 +250,100 @@
                 
                 <div id="player-stats-container">
                     @{
-                        var playerStats = ViewData["PlayerStats"] as List<Balkana.Models.Series.PlayerStatsViewModel>;
+                        var csPlayerStats = ViewData["PlayerStats"] as List<Balkana.Models.Series.PlayerStatsViewModel>;
+                        var lolPlayerStats = ViewData["PlayerStats"] as List<Balkana.Models.Series.LoLPlayerStatsViewModel>;
                     }
-                    @if (playerStats != null && playerStats.Any())
+                    @if (string.Equals(gameShortName, "CS2", StringComparison.OrdinalIgnoreCase))
                     {
-                        <div class="scoreboard-container">
-                            <!-- Team A Scoreboard -->
-                            <div class="team-scoreboard team-a-scoreboard">
-                                <div class="team-header">
-                                    <h3 class="team-name">@(Model.TeamA?.FullName ?? "Team A")</h3>
-                                    <div class="team-tag">@(Model.TeamA?.Tag ?? "A")</div>
-                                </div>
-                                <div class="scoreboard-table">
-                                    <table class="stats-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Player</th>
-                                                <th>K</th>
-                                                <th>D</th>
-                                                <th>A</th>
-                                                <th>K/D</th>
-                                                <th>ADR</th>
-                                                <th>Rating</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var player in playerStats.Where(p => p.Team == "Team1"))
-                                            {
-                                                var kd = player.TotalDeaths > 0 ? (double)player.TotalKills / player.TotalDeaths : player.TotalKills;
-                                                var adr = player.TotalRounds > 0 ? (double)player.TotalDamage / player.TotalRounds : 0;
-                                                
-                                                <tr class="@(player.IsWinner ? "winner-row" : "")">
-                                                    <td class="player-cell">@player.PlayerName</td>
-                                                    <td>@player.TotalKills</td>
-                                                    <td>@player.TotalDeaths</td>
-                                                    <td>@player.TotalAssists</td>
-                                                    <td class="@GetKDColorClass(kd)">@(player.TotalDeaths > 0 ? kd.ToString("F2") : "∞")</td>
-                                                    <td class="@GetADRColorClass(adr)">@adr.ToString("F0")</td>
-                                                    <td class="@GetRatingColorClass(player.HLTVRating)">@player.HLTVRating.ToString("F2")</td>
+                        var playerStats = csPlayerStats;
+                        @if (playerStats != null && playerStats.Any())
+                        {
+                            <div class="scoreboard-container">
+                                <!-- Team A Scoreboard -->
+                                <div class="team-scoreboard team-a-scoreboard">
+                                    <div class="team-header">
+                                        <h3 class="team-name">@(Model.TeamA?.FullName ?? "Team A")</h3>
+                                        <div class="team-tag">@(Model.TeamA?.Tag ?? "A")</div>
+                                    </div>
+                                    <div class="scoreboard-table">
+                                        <table class="stats-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Player</th>
+                                                    <th>K</th>
+                                                    <th>D</th>
+                                                    <th>A</th>
+                                                    <th>K/D</th>
+                                                    <th>ADR</th>
+                                                    <th>Rating</th>
                                                 </tr>
-                                            }
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var player in playerStats.Where(p => p.Team == "Team1"))
+                                                {
+                                                    var kd = player.TotalDeaths > 0 ? (double)player.TotalKills / player.TotalDeaths : player.TotalKills;
+                                                    var adr = player.TotalRounds > 0 ? (double)player.TotalDamage / player.TotalRounds : 0;
+                                                    
+                                                    <tr class="@(player.IsWinner ? "winner-row" : "")">
+                                                        <td class="player-cell">@player.PlayerName</td>
+                                                        <td>@player.TotalKills</td>
+                                                        <td>@player.TotalDeaths</td>
+                                                        <td>@player.TotalAssists</td>
+                                                        <td class="@GetKDColorClass(kd)">@(player.TotalDeaths > 0 ? kd.ToString("F2") : "∞")</td>
+                                                        <td class="@GetADRColorClass(adr)">@adr.ToString("F0")</td>
+                                                        <td class="@GetRatingColorClass(player.HLTVRating)">@player.HLTVRating.ToString("F2")</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- Team B Scoreboard -->
-                            <div class="team-scoreboard team-b-scoreboard">
-                                <div class="team-header">
-                                    <h3 class="team-name">@(Model.TeamB?.FullName ?? "Team B")</h3>
-                                    <div class="team-tag">@(Model.TeamB?.Tag ?? "B")</div>
-                                </div>
-                                <div class="scoreboard-table">
-                                    <table class="stats-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Player</th>
-                                                <th>K</th>
-                                                <th>D</th>
-                                                <th>A</th>
-                                                <th>K/D</th>
-                                                <th>ADR</th>
-                                                <th>Rating</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach (var player in playerStats.Where(p => p.Team == "Team2"))
-                                            {
-                                                var kd = player.TotalDeaths > 0 ? (double)player.TotalKills / player.TotalDeaths : player.TotalKills;
-                                                var adr = player.TotalRounds > 0 ? (double)player.TotalDamage / player.TotalRounds : 0;
-                                                
-                                                <tr class="@(player.IsWinner ? "winner-row" : "")">
-                                                    <td class="player-cell">@player.PlayerName</td>
-                                                    <td>@player.TotalKills</td>
-                                                    <td>@player.TotalDeaths</td>
-                                                    <td>@player.TotalAssists</td>
-                                                    <td class="@GetKDColorClass(kd)">@(player.TotalDeaths > 0 ? kd.ToString("F2") : "∞")</td>
-                                                    <td class="@GetADRColorClass(adr)">@adr.ToString("F0")</td>
-                                                    <td class="@GetRatingColorClass(player.HLTVRating)">@player.HLTVRating.ToString("F2")</td>
+                                <!-- Team B Scoreboard -->
+                                <div class="team-scoreboard team-b-scoreboard">
+                                    <div class="team-header">
+                                        <h3 class="team-name">@(Model.TeamB?.FullName ?? "Team B")</h3>
+                                        <div class="team-tag">@(Model.TeamB?.Tag ?? "B")</div>
+                                    </div>
+                                    <div class="scoreboard-table">
+                                        <table class="stats-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Player</th>
+                                                    <th>K</th>
+                                                    <th>D</th>
+                                                    <th>A</th>
+                                                    <th>K/D</th>
+                                                    <th>ADR</th>
+                                                    <th>Rating</th>
                                                 </tr>
-                                            }
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var player in playerStats.Where(p => p.Team == "Team2"))
+                                                {
+                                                    var kd = player.TotalDeaths > 0 ? (double)player.TotalKills / player.TotalDeaths : player.TotalKills;
+                                                    var adr = player.TotalRounds > 0 ? (double)player.TotalDamage / player.TotalRounds : 0;
+                                                    
+                                                    <tr class="@(player.IsWinner ? "winner-row" : "")">
+                                                        <td class="player-cell">@player.PlayerName</td>
+                                                        <td>@player.TotalKills</td>
+                                                        <td>@player.TotalDeaths</td>
+                                                        <td>@player.TotalAssists</td>
+                                                        <td class="@GetKDColorClass(kd)">@(player.TotalDeaths > 0 ? kd.ToString("F2") : "∞")</td>
+                                                        <td class="@GetADRColorClass(adr)">@adr.ToString("F0")</td>
+                                                        <td class="@GetRatingColorClass(player.HLTVRating)">@player.HLTVRating.ToString("F2")</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        }
+                    }
+                    else
+                    {
+                        @await Html.PartialAsync("_LoLPlayerStatsPartial", lolPlayerStats)
                     }
                 </div>
             </div>

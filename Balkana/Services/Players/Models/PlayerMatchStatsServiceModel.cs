@@ -1,4 +1,4 @@
-﻿using Balkana.Data.Models;
+using Balkana.Data.Models;
 
 namespace Balkana.Services.Players.Models
 {
@@ -17,6 +17,10 @@ namespace Balkana.Services.Players.Models
         // One of the following gets filled depending on game:
         public PlayerStatistic_CS2? CS2Stats { get; set; }
         public PlayerStatistic_LoL? LoLStats { get; set; }
+
+        // DataDragon version derived from the match GameVersion (e.g. "16.6.1").
+        // Used to keep item/champion images patch-consistent.
+        public string? DDragonVersion { get; set; }
 
         // Convenience property to iterate items in Razor
         public List<int> LoLItems => LoLStats != null

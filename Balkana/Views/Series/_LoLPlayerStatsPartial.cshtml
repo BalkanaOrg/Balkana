@@ -1,0 +1,167 @@
+@model List<Balkana.Models.Series.LoLPlayerStatsViewModel>
+
+@functions {
+    string GetKDColorClass(double kd)
+    {
+        if (kd >= 2.00) return "stat-dark-green";
+        if (kd >= 1.50) return "stat-light-green";
+        if (kd >= 1.10) return "stat-yellow";
+        if (kd >= 0.80) return "stat-light-red";
+        return "stat-dark-red";
+    }
+}
+
+@if (Model != null && Model.Any())
+{
+    <div class="scoreboard-container">
+        <!-- Team A Scoreboard -->
+        <div class="team-scoreboard team-a-scoreboard">
+            <div class="team-header">
+                <h3 class="team-name">Team A</h3>
+                <div class="team-tag">A</div>
+            </div>
+            <div class="scoreboard-table">
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>K</th>
+                            <th>D</th>
+                            <th>A</th>
+                            <th>K/D</th>
+                            <th>CS</th>
+                            <th>Vision</th>
+                            <th>Damage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var player in Model.Where(p => p.Team == "Team1"))
+                        {
+                            var kd = player.Deaths > 0 ? (double)player.Kills / player.Deaths : player.Kills;
+                            var hasIcons = !string.IsNullOrWhiteSpace(player.DDragonVersion) && !string.IsNullOrWhiteSpace(player.ChampionName) && player.ItemIds != null && player.ItemIds.Count > 0;
+
+                            <tr class="@(player.IsWinner ? "winner-row" : "")">
+                                <td class="player-cell">
+                                    <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start;">
+                                        @if (hasIcons)
+                                        {
+                                            <div style="display:flex;flex-direction:column;gap:4px;">
+                                                <div style="display:flex;align-items:center;gap:8px;">
+                                                    <img
+                                                        style="width:34px;height:34px;object-fit:contain;"
+                                                        src="https://ddragon.leagueoflegends.com/cdn/@player.DDragonVersion/img/champion/@(player.ChampionName).png"
+                                                        alt="@player.ChampionName"
+                                                    />
+                                                    <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                                                        @foreach (var itemId in player.ItemIds)
+                                                        {
+                                                            if (itemId > 0)
+                                                            {
+                                                                <img
+                                                                    style="width:20px;height:20px;object-fit:contain;opacity:0.95;"
+                                                                    src="https://ddragon.leagueoflegends.com/cdn/@player.DDragonVersion/img/item/@(itemId).png"
+                                                                    alt="Item @itemId"
+                                                                />
+                                                            }
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        <span>@player.PlayerName</span>
+                                    </div>
+                                </td>
+                                <td>@player.Kills</td>
+                                <td>@player.Deaths</td>
+                                <td>@player.Assists</td>
+                                <td class="@GetKDColorClass(kd)">@((player.Deaths > 0 ? kd.ToString("F2") : "∞"))</td>
+                                <td>@player.CreepScore</td>
+                                <td>@player.VisionScore</td>
+                                <td>@player.TotalDamageToChampions</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Team B Scoreboard -->
+        <div class="team-scoreboard team-b-scoreboard">
+            <div class="team-header">
+                <h3 class="team-name">Team B</h3>
+                <div class="team-tag">B</div>
+            </div>
+            <div class="scoreboard-table">
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>K</th>
+                            <th>D</th>
+                            <th>A</th>
+                            <th>K/D</th>
+                            <th>CS</th>
+                            <th>Vision</th>
+                            <th>Damage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var player in Model.Where(p => p.Team == "Team2"))
+                        {
+                            var kd = player.Deaths > 0 ? (double)player.Kills / player.Deaths : player.Kills;
+                            var hasIcons = !string.IsNullOrWhiteSpace(player.DDragonVersion) && !string.IsNullOrWhiteSpace(player.ChampionName) && player.ItemIds != null && player.ItemIds.Count > 0;
+
+                            <tr class="@(player.IsWinner ? "winner-row" : "")">
+                                <td class="player-cell">
+                                    <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start;">
+                                        @if (hasIcons)
+                                        {
+                                            <div style="display:flex;flex-direction:column;gap:4px;">
+                                                <div style="display:flex;align-items:center;gap:8px;">
+                                                    <img
+                                                        style="width:34px;height:34px;object-fit:contain;"
+                                                        src="https://ddragon.leagueoflegends.com/cdn/@player.DDragonVersion/img/champion/@(player.ChampionName).png"
+                                                        alt="@player.ChampionName"
+                                                    />
+                                                    <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                                                        @foreach (var itemId in player.ItemIds)
+                                                        {
+                                                            if (itemId > 0)
+                                                            {
+                                                                <img
+                                                                    style="width:20px;height:20px;object-fit:contain;opacity:0.95;"
+                                                                    src="https://ddragon.leagueoflegends.com/cdn/@player.DDragonVersion/img/item/@(itemId).png"
+                                                                    alt="Item @itemId"
+                                                                />
+                                                            }
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        <span>@player.PlayerName</span>
+                                    </div>
+                                </td>
+                                <td>@player.Kills</td>
+                                <td>@player.Deaths</td>
+                                <td>@player.Assists</td>
+                                <td class="@GetKDColorClass(kd)">@((player.Deaths > 0 ? kd.ToString("F2") : "∞"))</td>
+                                <td>@player.CreepScore</td>
+                                <td>@player.VisionScore</td>
+                                <td>@player.TotalDamageToChampions</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="no-stats-message">
+        <i class="fi fi-rr-chart-line"></i>
+        <span>No player statistics available for this map.</span>
+    </div>
+}
+

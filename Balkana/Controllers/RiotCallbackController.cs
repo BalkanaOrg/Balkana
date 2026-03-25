@@ -22,17 +22,20 @@ namespace Balkana.Controllers
         private readonly ApplicationDbContext _db;
         private readonly IRiotTournamentService _riotService;
         private readonly IWebHostEnvironment _env;
+        private readonly IRiotPendingMatchAutoImportQueue _autoImportQueue;
 
         public RiotCallbackController(
             IConfiguration config,
             ApplicationDbContext db,
             IRiotTournamentService riotService,
-            IWebHostEnvironment env)
+            IWebHostEnvironment env,
+            IRiotPendingMatchAutoImportQueue autoImportQueue)
         {
             _config = config;
             _db = db;
             _riotService = riotService;
             _env = env;
+            _autoImportQueue = autoImportQueue;
         }
 
         /// <summary>
@@ -60,7 +63,7 @@ namespace Balkana.Controllers
                 return Ok();
             }
 
-            // Temporary: when Riot:CallbackSaveRawOnly=true, just save raw JSON to file and skip parsing
+            // When Riot:CallbackSaveRawOnly=true, still save raw JSON but do not skip parsing/import.
             if (string.Equals(_config["Riot:CallbackSaveRawOnly"], "true", StringComparison.OrdinalIgnoreCase))
             {
                 try
@@ -76,7 +79,6 @@ namespace Balkana.Controllers
                     await System.IO.File.WriteAllTextAsync(file, rawBody, ct);
                 }
                 catch { /* best-effort */ }
-                return Ok();
             }
 
             try
@@ -109,7 +111,15 @@ namespace Balkana.Controllers
 
                 foreach (var matchId in matchIds)
                 {
-                    await UpsertPendingMatchAsync(matchId, tournamentCode, rawBody, ct);
+                    var pendingId = await UpsertPendingMatchAsync(matchId, tournamentCode, rawBody, ct);
+                    try
+                    {
+                        await _autoImportQueue.EnqueueAsync(pendingId, ct);
+                    }
+                    catch
+                    {
+                        // Best-effort: if enqueue fails, still upsert so you can import manually.
+                    }
                 }
 
                 return Ok();
@@ -157,8 +167,19 @@ namespace Balkana.Controllers
                 }
             }
 
+            // 3b. short callback payload: top-level gameId + region + shortCode
+            if (matchIds.Count == 0 &&
+                root.TryGetProperty("gameId", out var gameIdEl) &&
+                gameIdEl.TryGetInt64(out var topLevelGameId) &&
+                root.TryGetProperty("region", out var regionEl))
+            {
+                var region = regionEl.GetString();
+                if (!string.IsNullOrWhiteSpace(region))
+                    matchIds.Add($"{region}_{topLevelGameId}");
+            }
+
             // 4. tournamentCode for later fallback
-            tournamentCode = GetString(root, "tournamentCode");
+            tournamentCode = GetString(root, "shortCode") ?? GetString(root, "tournamentCode");
             if (string.IsNullOrEmpty(tournamentCode) && root.TryGetProperty("info", out var infoEl))
                 tournamentCode = infoEl.TryGetProperty("tournamentCode", out var tc) ? tc.GetString() : null;
 
@@ -195,7 +216,7 @@ namespace Balkana.Controllers
             };
         }
 
-        private async Task UpsertPendingMatchAsync(string matchId, string? tournamentCode, string rawPayload, CancellationToken ct)
+        private async Task<int> UpsertPendingMatchAsync(string matchId, string? tournamentCode, string rawPayload, CancellationToken ct)
         {
             var existing = await _db.RiotPendingMatches
                 .FirstOrDefaultAsync(p => p.MatchId == matchId && p.Status == RiotPendingMatchStatus.Pending, ct);
@@ -212,20 +233,24 @@ namespace Balkana.Controllers
                 existing.RawPayload = rawPayload;
                 existing.TournamentCode = tournamentCode;
                 existing.RiotTournamentCodeId = riotCodeId;
+                await _db.SaveChangesAsync(ct);
+                return existing.Id;
             }
             else
             {
-                _db.RiotPendingMatches.Add(new RiotPendingMatch
+                var pending = new RiotPendingMatch
                 {
                     MatchId = matchId,
                     TournamentCode = tournamentCode,
                     RiotTournamentCodeId = riotCodeId,
                     RawPayload = rawPayload.Length > 100000 ? rawPayload[..100000] + "...[truncated]" : rawPayload,
                     Status = RiotPendingMatchStatus.Pending
-                });
-            }
+                };
 
-            await _db.SaveChangesAsync(ct);
+                _db.RiotPendingMatches.Add(pending);
+                await _db.SaveChangesAsync(ct);
+                return pending.Id;
+            }
         }
 
         private async Task SaveFailedAsync(string rawPayload, string error, CancellationToken ct)

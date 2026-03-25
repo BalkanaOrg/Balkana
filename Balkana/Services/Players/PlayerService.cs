@@ -1,4 +1,4 @@
-﻿
+
 
 namespace Balkana.Services.Players
 {
@@ -250,7 +250,8 @@ namespace Balkana.Services.Players
                             //                s.Match.TeamB.FullName : s.Match.TeamA.FullName),
                             IsWinner = s.IsWinner,
                             CS2Stats = s as PlayerStatistic_CS2,
-                            LoLStats = s as PlayerStatistic_LoL
+                            LoLStats = s as PlayerStatistic_LoL,
+                            DDragonVersion = ToDDragonVersion((s.Match as MatchLoL)?.GameVersion)
                         }).ToList()
                     }).ToList()
             };
@@ -751,6 +752,21 @@ namespace Balkana.Services.Players
                 .ToList();
 
             return mapStats;
+        }
+
+        private static string? ToDDragonVersion(string? gameVersion)
+        {
+            if (string.IsNullOrWhiteSpace(gameVersion))
+                return null;
+
+            // gameVersion examples:
+            // - "16.6.756.931" => DataDragon "16.6.1"
+            // - "13.24.567"     => DataDragon "13.24.1"
+            var parts = gameVersion.Trim().Split('.');
+            if (parts.Length < 2)
+                return null;
+
+            return $"{parts[0]}.{parts[1]}.1";
         }
 
         private bool IsPlayerWinner(Match match, string playerUUID)

@@ -57,7 +57,7 @@ namespace Balkana.Services.Tournaments
 
             await _db.SaveChangesAsync();
 
-            await UpdateSeriesWinnerAsync(series, matches);
+            await UpdateSeriesWinnerAsync(series);
 
             await AdvanceWinnerToNextSeriesAsync(series);
 
@@ -86,20 +86,24 @@ namespace Balkana.Services.Tournaments
             return (true, null);
         }
 
-        private async Task UpdateSeriesWinnerAsync(Data.Models.Series series, List<Match> matches)
+        private async Task UpdateSeriesWinnerAsync(Data.Models.Series series)
         {
-            if (!matches.Any()) return;
+            // Importers add matches one-by-one, so winner logic must consider *all* already-imported games.
+            int bestOf = series.BestOf ?? series.Round switch { 1 => 1, 2 => 3, _ => 5 };
+            if (bestOf <= 0)
+                bestOf = 1;
 
-            int teamAWins = 0, teamBWins = 0;
-            int winsNeeded = (matches.Count / 2) + 1;
+            var winsNeeded = (bestOf / 2) + 1;
 
-            foreach (var match in matches)
-            {
-                if (!match.IsCompleted) continue;
-                var winner = DetermineMatchWinner(match);
-                if (winner == series.TeamA) teamAWins++;
-                else if (winner == series.TeamB) teamBWins++;
-            }
+            var allSeriesMatches = await _db.Matches
+                .Include(m => m.WinnerTeam)
+                .Where(m => m.SeriesId == series.Id)
+                .ToListAsync();
+
+            var completedMatches = allSeriesMatches.Where(m => m.IsCompleted).ToList();
+
+            int teamAWins = completedMatches.Count(m => m.WinnerTeamId == series.TeamAId);
+            int teamBWins = completedMatches.Count(m => m.WinnerTeamId == series.TeamBId);
 
             if (teamAWins >= winsNeeded || teamBWins >= winsNeeded)
             {

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Balkana.Data;
 using Balkana.Data.Models;
 using Microsoft.EntityFrameworkCore;
@@ -269,6 +269,12 @@ namespace Balkana.Services.Bracket
                 Round = round,
                 Position = pos,
                 Bracket = bracket,
+                BestOf = round switch
+                {
+                    1 => 1,   // Bo1
+                    2 => 3,   // Bo3
+                    _ => 5    // Bo5
+                },
                 DatePlayed = date
             };
         }

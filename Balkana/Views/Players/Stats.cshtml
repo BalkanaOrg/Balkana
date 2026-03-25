@@ -1,4 +1,4 @@
-﻿@model PlayerStatsServiceModel
+@model PlayerStatsServiceModel
 
 <div class="container mt-4">
     <h2>@Model.Nickname - Stats</h2>
@@ -88,7 +88,7 @@
                                     <td>@match.Opponent</td>
                                     <td>@(match.IsWinner ? "W" : "L")</td>
                                     <td>
-                                        <img src="https://ddragon.leagueoflegends.com/cdn/13.20.1/img/champion/@(match.LoLStats.ChampionName).png"
+                                        <img src="https://ddragon.leagueoflegends.com/cdn/@(match.DDragonVersion ?? "0.0.0")/img/champion/@(match.LoLStats.ChampionName).png"
                                              title="@match.LoLStats.ChampionName"
                                              style="width:32px;height:32px;" />
                                     </td>
@@ -103,7 +103,7 @@
                                         <td>
                                             @if (itemId > 0)
                                             {
-                                            <img src="https://ddragon.leagueoflegends.com/cdn/13.20.1/img/item/@(itemId).png"
+                                            <img src="https://ddragon.leagueoflegends.com/cdn/@(match.DDragonVersion ?? "0.0.0")/img/item/@(itemId).png"
                                                  title="@GetItemName(itemId)"
                                                  style="width:24px;height:24px;margin-right:2px;" />
                                             }

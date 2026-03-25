@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.DataProtection;
 
@@ -345,6 +346,10 @@ void ConfigureServices(IServiceCollection services)
     // Riot Tournament Service
     builder.Services.AddHttpClient<IRiotTournamentService, RiotTournamentService>();
     builder.Services.AddScoped<Balkana.Services.Tournaments.IRiotPendingMatchImportService, Balkana.Services.Tournaments.RiotPendingMatchImportService>();
+
+    // Riot callback auto-import pipeline (background worker + in-memory queue)
+    builder.Services.AddSingleton<IRiotPendingMatchAutoImportQueue, RiotPendingMatchAutoImportQueue>();
+    builder.Services.AddHostedService<RiotPendingMatchAutoImportWorker>();
 
     // Riot Match API + Data Dragon (patch-aware assets)
     builder.Services.AddScoped<Balkana.Services.Riot.IRiotMatchApiService, Balkana.Services.Riot.RiotMatchApiService>();
