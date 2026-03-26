@@ -4,7 +4,7 @@
     var champUrl = $"{Model.ChampImgBase}/{p.ChampionName}.png";
     var posLabel = string.IsNullOrEmpty(p.TeamPosition) ? "-" : p.TeamPosition;
 }
-<div class="riot-participant-row d-flex align-items-center border-bottom py-2 px-1">
+<div class="riot-participant-row d-flex align-items-center border-bottom py-2 px-1 bg-dark">
     <div class="d-flex align-items-center flex-grow-1">
         <img src="@champUrl" alt="@p.ChampionName" class="rounded me-2" style="width:36px;height:36px;object-fit:cover" loading="lazy" onerror="this.alt='?';this.style.background='#333'" />
         <div class="me-2">
