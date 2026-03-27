@@ -1,9 +1,10 @@
-﻿@model Balkana.Models.Admin.PlayersListViewModel
+@using Balkana.Data.Infrastructure
+@model Balkana.Models.Admin.PlayersListViewModel
 @{
     ViewData["Title"] = "Players and Game Profiles";
 }
 
-<h2 class="mb-4">Players &amp; Game Profiles</h2>
+<h2 class="mb-4 text-white">Players &amp; Game Profiles</h2>
 
 <table class="table table-bordered align-middle text-white">
     <thead class="table-dark">
@@ -17,36 +18,34 @@
     <tbody>
         @foreach (var player in Model.Players)
         {
+            var faceitRows = player.ProfileRows.Where(r => GameProfileProviderExtensions.IsFaceitProvider(r.Provider)).ToList();
+            var riotRows = player.ProfileRows.Where(r => GameProfileProviderExtensions.IsRiotProvider(r.Provider)).ToList();
             <tr>
                 <td>@player.Nickname</td>
                 <td>@player.FullName</td>
 
-                @* FACEIT column *@
                 <td>
-                    @if (player.GameProfiles.Contains("FACEIT"))
+                    @if (faceitRows.Any())
                     {
-                        <span class="badge bg-success">Yes</span>
+                        @foreach (var r in faceitRows)
+                        {
+                            var label = !string.IsNullOrEmpty(r.DisplayName) ? r.DisplayName : r.UuidShort;
+                            <div><span class="badge bg-success me-1">@label</span></div>
+                        }
                     }
-                    else
-                    {
-                        <a asp-controller="Admin" asp-action="AddGameProfile" asp-route-playerId="@player.PlayerId" class="btn btn-sm btn-outline-primary">
-                            Add
-                        </a>
-                    }
+                    <a asp-controller="Admin" asp-action="AddGameProfile" asp-route-playerId="@player.PlayerId" class="btn btn-sm btn-outline-primary mt-1">Add</a>
                 </td>
 
-                @* RIOT column *@
                 <td>
-                    @if (player.GameProfiles.Contains("RIOT"))
+                    @if (riotRows.Any())
                     {
-                        <span class="badge bg-success">Yes</span>
+                        @foreach (var r in riotRows)
+                        {
+                            var label = !string.IsNullOrEmpty(r.DisplayName) ? r.DisplayName : r.UuidShort;
+                            <div><span class="badge bg-success me-1">@label</span></div>
+                        }
                     }
-                    else
-                    {
-                        <a asp-action="AddGameProfile" asp-route-playerId="@player.PlayerId" class="btn btn-sm btn-outline-primary">
-                            Add
-                        </a>
-                    }
+                    <a asp-action="AddGameProfile" asp-route-playerId="@player.PlayerId" class="btn btn-sm btn-outline-primary mt-1">Add</a>
                 </td>
             </tr>
         }

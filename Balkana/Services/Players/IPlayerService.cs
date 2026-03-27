@@ -1,4 +1,4 @@
-﻿using Balkana.Models.Players;
+using Balkana.Models.Players;
 using Balkana.Services.Players.Models;
 using Balkana.Services.Teams.Models;
 
@@ -25,7 +25,7 @@ namespace Balkana.Services.Players
             string lastname,
             int nationalityId);
 
-        PlayerDetailsServiceModel Profile(int playerId, string? gameFilter = null);
+        PlayerDetailsServiceModel Profile(int playerId, string? gameFilter = null, int? gameProfileId = null);
 
         PlayerStatsServiceModel Stats(int id, string? gameFilter = null);
 

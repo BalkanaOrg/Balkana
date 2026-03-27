@@ -49,7 +49,9 @@ namespace Balkana.Services.Players
             };
         }
 
-        public PlayerDetailsServiceModel Profile(int id, string? gameFilter = null)
+        private sealed record ProfileStatsSection(string Key, string DisplayTitle, string Provider, int? GameProfileId);
+
+        public PlayerDetailsServiceModel Profile(int id, string? gameFilter = null, int? gameProfileId = null)
         {
             var defaultPic = "/uploads/PlayerProfiles/_defaultPfp.png";
 
@@ -88,9 +90,12 @@ namespace Balkana.Services.Players
                     GameProfiles = p.GameProfiles
                         .Select(gp => new PlayerGameProfileServiceModel
                         {
+                            Id = gp.Id,
                             Provider = gp.Provider,
-                            GameName = gp.Player.Nationality.Name, // This will be updated properly
-                            UUID = gp.UUID
+                            GameName = "",
+                            UUID = gp.UUID,
+                            DisplayName = gp.DisplayName,
+                            DisplayLabel = ""
                         }).ToList(),
 
                     Trophies = p.PlayerTrophies
@@ -127,14 +132,11 @@ namespace Balkana.Services.Players
 
             if (player == null) return null;
 
-            // Update game profiles with proper names
-            player.GameProfiles = player.GameProfiles
-                .Select(gp => new PlayerGameProfileServiceModel
-                {
-                    Provider = gp.Provider,
-                    GameName = GetGameNameFromProvider(gp.Provider),
-                    UUID = gp.UUID
-                }).ToList();
+            HydrateGameProfiles(player.GameProfiles);
+
+            if (gameProfileId.HasValue &&
+                player.GameProfiles.All(g => g.Id != gameProfileId.Value))
+                return null;
 
             // Fetch transfers with optimized query
             var transfers = this.data.PlayerTeamTransfers
@@ -163,19 +165,90 @@ namespace Balkana.Services.Players
                 .GroupBy(t => t.GameName)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
-            // Only calculate stats for games if gameFilter is null or matches
-            var gamesToProcess = string.IsNullOrEmpty(gameFilter) 
-                ? player.GameProfiles 
-                : player.GameProfiles.Where(gp => gp.GameName == gameFilter);
-
-            foreach (var gameProfile in gamesToProcess)
+            var sections = BuildProfileSections(player.GameProfiles, gameFilter, gameProfileId);
+            foreach (var section in sections)
             {
-                player.AverageStatsByGame[gameProfile.GameName] = CalculateAverageStats(id, gameProfile.Provider);
-                player.TournamentParticipationByGame[gameProfile.GameName] = GetTournamentParticipation(id, gameProfile.Provider);
-                player.MatchHistoryByGame[gameProfile.GameName] = GetMatchHistory(id, gameProfile.Provider);
+                player.ProfileSectionTitles[section.Key] = section.DisplayTitle;
+                player.AverageStatsByGame[section.Key] = CalculateAverageStats(
+                    id,
+                    section.Provider,
+                    section.GameProfileId,
+                    section.DisplayTitle);
+                player.TournamentParticipationByGame[section.Key] = GetTournamentParticipation(id, section.Provider);
+                player.MatchHistoryByGame[section.Key] = GetMatchHistory(
+                    id,
+                    section.Provider,
+                    section.GameProfileId,
+                    section.DisplayTitle);
             }
 
             return player;
+        }
+
+        private static void HydrateGameProfiles(List<PlayerGameProfileServiceModel> profiles)
+        {
+            foreach (var gp in profiles)
+            {
+                gp.GameName = GetGameNameFromProviderStatic(gp.Provider);
+                gp.DisplayLabel = BuildProfileDisplayLabel(gp);
+            }
+
+            profiles.Sort((a, b) =>
+            {
+                var c = string.Compare(a.GameName, b.GameName, StringComparison.OrdinalIgnoreCase);
+                return c != 0 ? c : a.Id.CompareTo(b.Id);
+            });
+        }
+
+        private static string GetGameNameFromProviderStatic(string provider)
+            => provider switch
+            {
+                "FACEIT" => "Counter-Strike",
+                "RIOT" => "League of Legends",
+                _ => provider
+            };
+
+        private static string BuildProfileDisplayLabel(PlayerGameProfileServiceModel gp)
+        {
+            var game = gp.GameName;
+            if (!string.IsNullOrWhiteSpace(gp.DisplayName))
+                return $"{game} ({gp.DisplayName})";
+            if (!string.IsNullOrEmpty(gp.UUID) && gp.UUID.Length >= 8)
+                return $"{game} · {gp.UUID[..8]}";
+            return game;
+        }
+
+        private static List<ProfileStatsSection> BuildProfileSections(
+            List<PlayerGameProfileServiceModel> profiles,
+            string? gameFilter,
+            int? gameProfileId)
+        {
+            if (gameProfileId.HasValue)
+            {
+                var gp = profiles.FirstOrDefault(g => g.Id == gameProfileId.Value);
+                if (gp == null)
+                    return new List<ProfileStatsSection>();
+                return new List<ProfileStatsSection>
+                {
+                    new($"gp:{gp.Id}", gp.DisplayLabel, gp.Provider, gp.Id)
+                };
+            }
+
+            if (!string.IsNullOrEmpty(gameFilter))
+            {
+                var matching = profiles.Where(g => g.GameName == gameFilter).ToList();
+                if (!matching.Any())
+                    return new List<ProfileStatsSection>();
+                return new List<ProfileStatsSection>
+                {
+                    new($"game:{gameFilter}", gameFilter, matching.First().Provider, null)
+                };
+            }
+
+            return profiles
+                .GroupBy(g => g.GameName)
+                .Select(g => new ProfileStatsSection($"game:{g.Key}", g.Key, g.First().Provider, null))
+                .ToList();
         }
 
         public PlayerStatsServiceModel Stats(int id, string? gameFilter = null)
@@ -384,32 +457,30 @@ namespace Balkana.Services.Players
             .ProjectTo<PlayerServiceModel>(this.mapper)
             .ToList();
 
-        private string GetGameNameFromProvider(string provider)
-        {
-            return provider switch
-            {
-                "FACEIT" => "Counter-Strike",
-                "RIOT" => "League of Legends",
-                _ => provider
-            };
-        }
+        private string GetGameNameFromProvider(string provider) => GetGameNameFromProviderStatic(provider);
 
-        private PlayerAverageStatsServiceModel CalculateAverageStats(int playerId, string source)
+        private PlayerAverageStatsServiceModel CalculateAverageStats(
+            int playerId,
+            string source,
+            int? gameProfileId = null,
+            string? displayTitle = null)
         {
-            var playerUUIDs = this.data.GameProfiles
-                .Where(gp => gp.PlayerId == playerId && gp.Provider == source)
-                .Select(gp => gp.UUID)
-                .ToList();
+            var profilesQuery = this.data.GameProfiles
+                .Where(gp => gp.PlayerId == playerId && gp.Provider == source);
+            if (gameProfileId.HasValue)
+                profilesQuery = profilesQuery.Where(gp => gp.Id == gameProfileId.Value);
+            var playerUUIDs = profilesQuery.Select(gp => gp.UUID).ToList();
 
-            if (!playerUUIDs.Any()) return new PlayerAverageStatsServiceModel { Source = source };
+            var titleFallback = displayTitle ?? GetGameNameFromProvider(source);
+            if (!playerUUIDs.Any()) return new PlayerAverageStatsServiceModel { Source = source, GameName = titleFallback };
 
             var stats = this.data.Set<PlayerStatistic>()
                 .Where(s => playerUUIDs.Contains(s.PlayerUUID) && s.Source == source)
                 .ToList();
 
-            if (!stats.Any()) return new PlayerAverageStatsServiceModel { Source = source };
+            if (!stats.Any()) return new PlayerAverageStatsServiceModel { Source = source, GameName = titleFallback };
 
-            var gameName = GetGameNameFromProvider(source);
+            var gameName = displayTitle ?? GetGameNameFromProvider(source);
             var totalMatches = stats.Count;
             
             // Get all matches for proper win/loss calculation
@@ -517,13 +588,18 @@ namespace Balkana.Services.Players
             return participations;
         }
 
-        private PlayerMatchHistoryServiceModel GetMatchHistory(int playerId, string source)
+        private PlayerMatchHistoryServiceModel GetMatchHistory(
+            int playerId,
+            string source,
+            int? gameProfileId = null,
+            string? displayTitle = null)
         {
-            var gameName = GetGameNameFromProvider(source);
-            var playerUUIDs = this.data.GameProfiles
-                .Where(gp => gp.PlayerId == playerId && gp.Provider == source)
-                .Select(gp => gp.UUID)
-                .ToList();
+            var gameName = displayTitle ?? GetGameNameFromProvider(source);
+            var profilesQuery = this.data.GameProfiles
+                .Where(gp => gp.PlayerId == playerId && gp.Provider == source);
+            if (gameProfileId.HasValue)
+                profilesQuery = profilesQuery.Where(gp => gp.Id == gameProfileId.Value);
+            var playerUUIDs = profilesQuery.Select(gp => gp.UUID).ToList();
 
             if (!playerUUIDs.Any())
             {

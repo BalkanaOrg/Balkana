@@ -67,6 +67,13 @@ namespace Balkana.Models.Match
         [Display(Name = "Team A Player 5")]
         public int TeamAPlayer5Id { get; set; }
 
+        /// <summary>Required when the player has more than one FACEIT-linked game profile.</summary>
+        public int? TeamAPlayer1FaceitGameProfileId { get; set; }
+        public int? TeamAPlayer2FaceitGameProfileId { get; set; }
+        public int? TeamAPlayer3FaceitGameProfileId { get; set; }
+        public int? TeamAPlayer4FaceitGameProfileId { get; set; }
+        public int? TeamAPlayer5FaceitGameProfileId { get; set; }
+
         // Team B Players (5 players)
         [Required]
         [Display(Name = "Team B Player 1")]
@@ -87,6 +94,12 @@ namespace Balkana.Models.Match
         [Required]
         [Display(Name = "Team B Player 5")]
         public int TeamBPlayer5Id { get; set; }
+
+        public int? TeamBPlayer1FaceitGameProfileId { get; set; }
+        public int? TeamBPlayer2FaceitGameProfileId { get; set; }
+        public int? TeamBPlayer3FaceitGameProfileId { get; set; }
+        public int? TeamBPlayer4FaceitGameProfileId { get; set; }
+        public int? TeamBPlayer5FaceitGameProfileId { get; set; }
 
         // Winner
         [Required]
@@ -112,6 +125,9 @@ namespace Balkana.Models.Match
         public List<SelectListItem> Maps { get; set; } = new();
         public List<SelectListItem> Players { get; set; } = new();
         public List<SelectListItem> Teams { get; set; } = new();
+
+        /// <summary>JSON object: playerId string -> [ { id, text } ] for multi-FACEIT players. Filled on GET.</summary>
+        public string FaceitProfileChoicesJson { get; set; } = "{}";
     }
 
     public class PlayerStatsViewModel

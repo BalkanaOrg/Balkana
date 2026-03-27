@@ -1,4 +1,4 @@
-﻿using Balkana.Data;
+using Balkana.Data;
 using Balkana.Data.Models;
 using Balkana.Models.Players;
 using Balkana.Data.Infrastructure;
@@ -55,14 +55,17 @@ namespace Balkana.Controllers
 
         [Authorize(Roles = "Administrator,Moderator")]
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Add(PlayerFormModel player)
         {
+            player.Id = 0;
+
             if (!this.data.Nationalities.Any(c=>c.Id == player.NationalityId))
             {
                 this.ModelState.AddModelError(nameof(player.NationalityId), "This nationality isn't registered in the Database.");
             }
 
-            if(ModelState.ErrorCount > 1)
+            if (!ModelState.IsValid)
             {
                 player.Nationalities = this.players.GetNationalities();
                 return View(player);
@@ -75,18 +78,65 @@ namespace Balkana.Controllers
                 player.NationalityId);
 
             return RedirectToAction("Index", "Home");
-
-
-            var pplayer = this.players.Profile(playerData);
-            string playerInformation = pplayer.GetInformation();
-            //TempData[GlobalMessageKey] = "This team has been added to the database.";
-
-            return RedirectToAction(nameof(Profile), new { id = playerData, information = playerInformation });
         }
 
-        public IActionResult Profile(int id, string information, string? game = null)
+        [Authorize(Roles = "Administrator")]
+        public IActionResult Edit(int id)
         {
-            var player = this.players.Profile(id, game);
+            var entity = this.data.Players.Find(id);
+            if (entity == null)
+                return NotFound();
+
+            return View(new PlayerFormModel
+            {
+                Id = entity.Id,
+                Nickname = entity.Nickname,
+                FirstName = entity.FirstName,
+                LastName = entity.LastName,
+                NationalityId = entity.NationalityId,
+                Nationalities = this.players.GetNationalities()
+            });
+        }
+
+        [Authorize(Roles = "Administrator")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit(int id, PlayerFormModel model)
+        {
+            if (id != model.Id)
+                return BadRequest();
+
+            var entity = this.data.Players.Find(id);
+            if (entity == null)
+                return NotFound();
+
+            if (!this.data.Nationalities.Any(c => c.Id == model.NationalityId))
+            {
+                ModelState.AddModelError(nameof(model.NationalityId), "This nationality isn't registered in the Database.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                model.Nationalities = this.players.GetNationalities();
+                return View(model);
+            }
+
+            var ok = this.players.Edit(
+                model.Id,
+                model.Nickname,
+                model.FirstName,
+                model.LastName,
+                model.NationalityId);
+            if (!ok)
+                return NotFound();
+
+            var information = model.Nickname;
+            return RedirectToAction(nameof(Profile), new { id = model.Id, information });
+        }
+
+        public IActionResult Profile(int id, string information, string? game = null, int? gameProfileId = null)
+        {
+            var player = this.players.Profile(id, game, gameProfileId);
 
             if (player == null) return NotFound();
 
@@ -96,6 +146,7 @@ namespace Balkana.Controllers
             }
 
             ViewBag.SelectedGame = game;
+            ViewBag.SelectedGameProfileId = gameProfileId;
             return View(player); // Bio page
         }
 

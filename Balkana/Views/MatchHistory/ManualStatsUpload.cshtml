@@ -130,37 +130,42 @@
                         <div class="players-grid">
                             <div class="player-selection">
                                 <label class="player-label">Player 1</label>
-                                <select asp-for="TeamAPlayer1Id" class="form-select player-select" data-team="A" data-player="1">
+                                <select asp-for="TeamAPlayer1Id" class="form-select player-select" data-team="A" data-player="1" data-faceit-target="faceit-profile-A-1">
                                     <option value="">Select Player...</option>
                                 </select>
+                                <select asp-for="TeamAPlayer1FaceitGameProfileId" id="faceit-profile-A-1" class="form-select faceit-profile-select mt-2 d-none"></select>
                                 <span asp-validation-for="TeamAPlayer1Id" class="text-danger"></span>
                             </div>
                             <div class="player-selection">
                                 <label class="player-label">Player 2</label>
-                                <select asp-for="TeamAPlayer2Id" class="form-select player-select" data-team="A" data-player="2">
+                                <select asp-for="TeamAPlayer2Id" class="form-select player-select" data-team="A" data-player="2" data-faceit-target="faceit-profile-A-2">
                                     <option value="">Select Player...</option>
                                 </select>
+                                <select asp-for="TeamAPlayer2FaceitGameProfileId" id="faceit-profile-A-2" class="form-select faceit-profile-select mt-2 d-none"></select>
                                 <span asp-validation-for="TeamAPlayer2Id" class="text-danger"></span>
                             </div>
                             <div class="player-selection">
                                 <label class="player-label">Player 3</label>
-                                <select asp-for="TeamAPlayer3Id" class="form-select player-select" data-team="A" data-player="3">
+                                <select asp-for="TeamAPlayer3Id" class="form-select player-select" data-team="A" data-player="3" data-faceit-target="faceit-profile-A-3">
                                     <option value="">Select Player...</option>
                                 </select>
+                                <select asp-for="TeamAPlayer3FaceitGameProfileId" id="faceit-profile-A-3" class="form-select faceit-profile-select mt-2 d-none"></select>
                                 <span asp-validation-for="TeamAPlayer3Id" class="text-danger"></span>
                             </div>
                             <div class="player-selection">
                                 <label class="player-label">Player 4</label>
-                                <select asp-for="TeamAPlayer4Id" class="form-select player-select" data-team="A" data-player="4">
+                                <select asp-for="TeamAPlayer4Id" class="form-select player-select" data-team="A" data-player="4" data-faceit-target="faceit-profile-A-4">
                                     <option value="">Select Player...</option>
                                 </select>
+                                <select asp-for="TeamAPlayer4FaceitGameProfileId" id="faceit-profile-A-4" class="form-select faceit-profile-select mt-2 d-none"></select>
                                 <span asp-validation-for="TeamAPlayer4Id" class="text-danger"></span>
                             </div>
                             <div class="player-selection">
                                 <label class="player-label">Player 5</label>
-                                <select asp-for="TeamAPlayer5Id" class="form-select player-select" data-team="A" data-player="5">
+                                <select asp-for="TeamAPlayer5Id" class="form-select player-select" data-team="A" data-player="5" data-faceit-target="faceit-profile-A-5">
                                     <option value="">Select Player...</option>
                                 </select>
+                                <select asp-for="TeamAPlayer5FaceitGameProfileId" id="faceit-profile-A-5" class="form-select faceit-profile-select mt-2 d-none"></select>
                                 <span asp-validation-for="TeamAPlayer5Id" class="text-danger"></span>
                             </div>
                         </div>
@@ -175,37 +180,42 @@
                         <div class="players-grid">
                             <div class="player-selection">
                                 <label class="player-label">Player 1</label>
-                                <select asp-for="TeamBPlayer1Id" class="form-select player-select" data-team="B" data-player="1">
+                                <select asp-for="TeamBPlayer1Id" class="form-select player-select" data-team="B" data-player="1" data-faceit-target="faceit-profile-B-1">
                                     <option value="">Select Player...</option>
                                 </select>
+                                <select asp-for="TeamBPlayer1FaceitGameProfileId" id="faceit-profile-B-1" class="form-select faceit-profile-select mt-2 d-none"></select>
                                 <span asp-validation-for="TeamBPlayer1Id" class="text-danger"></span>
                             </div>
                             <div class="player-selection">
                                 <label class="player-label">Player 2</label>
-                                <select asp-for="TeamBPlayer2Id" class="form-select player-select" data-team="B" data-player="2">
+                                <select asp-for="TeamBPlayer2Id" class="form-select player-select" data-team="B" data-player="2" data-faceit-target="faceit-profile-B-2">
                                     <option value="">Select Player...</option>
                                 </select>
+                                <select asp-for="TeamBPlayer2FaceitGameProfileId" id="faceit-profile-B-2" class="form-select faceit-profile-select mt-2 d-none"></select>
                                 <span asp-validation-for="TeamBPlayer2Id" class="text-danger"></span>
                             </div>
                             <div class="player-selection">
                                 <label class="player-label">Player 3</label>
-                                <select asp-for="TeamBPlayer3Id" class="form-select player-select" data-team="B" data-player="3">
+                                <select asp-for="TeamBPlayer3Id" class="form-select player-select" data-team="B" data-player="3" data-faceit-target="faceit-profile-B-3">
                                     <option value="">Select Player...</option>
                                 </select>
+                                <select asp-for="TeamBPlayer3FaceitGameProfileId" id="faceit-profile-B-3" class="form-select faceit-profile-select mt-2 d-none"></select>
                                 <span asp-validation-for="TeamBPlayer3Id" class="text-danger"></span>
                             </div>
                             <div class="player-selection">
                                 <label class="player-label">Player 4</label>
-                                <select asp-for="TeamBPlayer4Id" class="form-select player-select" data-team="B" data-player="4">
+                                <select asp-for="TeamBPlayer4Id" class="form-select player-select" data-team="B" data-player="4" data-faceit-target="faceit-profile-B-4">
                                     <option value="">Select Player...</option>
                                 </select>
+                                <select asp-for="TeamBPlayer4FaceitGameProfileId" id="faceit-profile-B-4" class="form-select faceit-profile-select mt-2 d-none"></select>
                                 <span asp-validation-for="TeamBPlayer4Id" class="text-danger"></span>
                             </div>
                             <div class="player-selection">
                                 <label class="player-label">Player 5</label>
-                                <select asp-for="TeamBPlayer5Id" class="form-select player-select" data-team="B" data-player="5">
+                                <select asp-for="TeamBPlayer5Id" class="form-select player-select" data-team="B" data-player="5" data-faceit-target="faceit-profile-B-5">
                                     <option value="">Select Player...</option>
                                 </select>
+                                <select asp-for="TeamBPlayer5FaceitGameProfileId" id="faceit-profile-B-5" class="form-select faceit-profile-select mt-2 d-none"></select>
                                 <span asp-validation-for="TeamBPlayer5Id" class="text-danger"></span>
                             </div>
                         </div>
@@ -1948,6 +1958,30 @@
 </style>
 
 <script>
+    window.balkanaFaceitProfiles = @Html.Raw(string.IsNullOrEmpty(Model.FaceitProfileChoicesJson) ? "{}" : Model.FaceitProfileChoicesJson);
+
+    function updateFaceitProfileSelect(playerSelect) {
+        var targetId = playerSelect.getAttribute('data-faceit-target');
+        if (!targetId) return;
+        var faceitSel = document.getElementById(targetId);
+        if (!faceitSel) return;
+        var pid = String(playerSelect.value || '');
+        var choices = window.balkanaFaceitProfiles && window.balkanaFaceitProfiles[pid];
+        faceitSel.innerHTML = '<option value="">— FACEIT account (auto if only one) —</option>';
+        if (choices && choices.length > 1) {
+            choices.forEach(function (c) {
+                var opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.text;
+                faceitSel.appendChild(opt);
+            });
+            faceitSel.classList.remove('d-none');
+        } else {
+            faceitSel.classList.add('d-none');
+            faceitSel.value = '';
+        }
+    }
+
     // Tournament selection change handler
     document.getElementById('tournamentSelect').addEventListener('change', function() {
         const tournamentId = this.value;
@@ -2008,6 +2042,8 @@
         // Initialize player selects with search functionality
         document.querySelectorAll('.player-select').forEach(select => {
             initializeSearchableSelect(select, '/MatchHistory/SearchPlayers', 'Search players...');
+            select.addEventListener('change', function () { updateFaceitProfileSelect(this); });
+            updateFaceitProfileSelect(select);
         });
 
         // Initialize team selects with search functionality

@@ -1,4 +1,5 @@
-﻿using Balkana.Data;
+using Balkana.Data;
+using Balkana.Data.Infrastructure;
 using Balkana.Data.Models;
 using Balkana.Models.Match;
 using Balkana.Services.Matches;
@@ -882,43 +883,8 @@ namespace Balkana.Controllers
         [Authorize(Roles = "Administrator,Moderator")]
         public async Task<IActionResult> ManualStatsUpload()
         {
-            var vm = new ManualStatsUploadViewModel
-            {
-                Tournaments = await _db.Tournaments
-                    .Include(t => t.Game)
-                    .Where(t => t.Game.ShortName == "CS2")
-                    .Select(t => new SelectListItem
-                    {
-                        Value = t.Id.ToString(),
-                        Text = t.FullName
-                    })
-                    .ToListAsync(),
-                Maps = await _db.GameMaps
-                    .Where(m => m.Game.ShortName == "CS2")
-                    .Select(m => new SelectListItem
-                    {
-                        Value = m.Id.ToString(),
-                        Text = m.Name
-                    })
-                    .ToListAsync(),
-                Players = await _db.Players
-                    .Include(p => p.GameProfiles)
-                    .Where(p => p.GameProfiles.Any(gp => gp.Provider == "Faceit"))
-                    .Select(p => new SelectListItem
-                    {
-                        Value = p.Id.ToString(),
-                        Text = $"{p.Nickname} ({p.FirstName} {p.LastName})"
-                    })
-                    .ToListAsync(),
-                Teams = await _db.Teams
-                    .Select(t => new SelectListItem
-                    {
-                        Value = t.Id.ToString(),
-                        Text = t.FullName
-                    })
-                    .ToListAsync()
-            };
-
+            var vm = new ManualStatsUploadViewModel();
+            await PopulateManualStatsUploadListsAsync(vm);
             return View(vm);
         }
 
@@ -929,40 +895,7 @@ namespace Balkana.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // Reload dropdowns
-                model.Tournaments = await _db.Tournaments
-                    .Include(t => t.Game)
-                    .Where(t => t.Game.ShortName == "CS2")
-                    .Select(t => new SelectListItem
-                    {
-                        Value = t.Id.ToString(),
-                        Text = t.FullName
-                    })
-                    .ToListAsync();
-                model.Maps = await _db.GameMaps
-                    .Where(m => m.Game.ShortName == "CS2")
-                    .Select(m => new SelectListItem
-                    {
-                        Value = m.Id.ToString(),
-                        Text = m.Name
-                    })
-                    .ToListAsync();
-                model.Players = await _db.Players
-                    .Include(p => p.GameProfiles)
-                    .Where(p => p.GameProfiles.Any(gp => gp.Provider == "Faceit"))
-                    .Select(p => new SelectListItem
-                    {
-                        Value = p.Id.ToString(),
-                        Text = $"{p.Nickname} ({p.FirstName} {p.LastName})"
-                    })
-                    .ToListAsync();
-                model.Teams = await _db.Teams
-                    .Select(t => new SelectListItem
-                    {
-                        Value = t.Id.ToString(),
-                        Text = t.FullName
-                    })
-                    .ToListAsync();
+                await PopulateManualStatsUploadListsAsync(model);
                 return View(model);
             }
 
@@ -1029,7 +962,7 @@ namespace Balkana.Controllers
                 match.WinnerTeamId = teamB.Id;
             }
 
-            // Get all player IDs and their Faceit UUIDs
+            // Get all player IDs and their FACEIT UUIDs (or other fallback UUID)
             var playerIds = new List<int>
             {
                 model.TeamAPlayer1Id, model.TeamAPlayer2Id, model.TeamAPlayer3Id, model.TeamAPlayer4Id, model.TeamAPlayer5Id,
@@ -1041,27 +974,47 @@ namespace Balkana.Controllers
                 .Where(p => playerIds.Contains(p.Id))
                 .ToListAsync();
 
-            string GetPlayerUuid(int playerId)
+            var teamAFaceit = new (int pid, int? faceitGpid, string label)[]
             {
-                var player = players.FirstOrDefault(p => p.Id == playerId);
-                if (player == null)
-                {
-                    Console.WriteLine("Player not found"); 
-                    return string.Empty;
-                }
+                (model.TeamAPlayer1Id, model.TeamAPlayer1FaceitGameProfileId, "Team A player 1"),
+                (model.TeamAPlayer2Id, model.TeamAPlayer2FaceitGameProfileId, "Team A player 2"),
+                (model.TeamAPlayer3Id, model.TeamAPlayer3FaceitGameProfileId, "Team A player 3"),
+                (model.TeamAPlayer4Id, model.TeamAPlayer4FaceitGameProfileId, "Team A player 4"),
+                (model.TeamAPlayer5Id, model.TeamAPlayer5FaceitGameProfileId, "Team A player 5"),
+            };
+            var teamBFaceit = new (int pid, int? faceitGpid, string label)[]
+            {
+                (model.TeamBPlayer1Id, model.TeamBPlayer1FaceitGameProfileId, "Team B player 1"),
+                (model.TeamBPlayer2Id, model.TeamBPlayer2FaceitGameProfileId, "Team B player 2"),
+                (model.TeamBPlayer3Id, model.TeamBPlayer3FaceitGameProfileId, "Team B player 3"),
+                (model.TeamBPlayer4Id, model.TeamBPlayer4FaceitGameProfileId, "Team B player 4"),
+                (model.TeamBPlayer5Id, model.TeamBPlayer5FaceitGameProfileId, "Team B player 5"),
+            };
 
-                // Prefer FACEIT provider (case-insensitive)
-                var faceitProfile = player.GameProfiles
-                    .FirstOrDefault(gp => gp.Provider != null &&
-                                          gp.Provider.Equals("FACEIT", StringComparison.OrdinalIgnoreCase));
-                Console.WriteLine("Found UUID: " + faceitProfile?.UUID);
-                if (faceitProfile != null && !string.IsNullOrWhiteSpace(faceitProfile.UUID))
-                {
-                    return faceitProfile.UUID;
-                }
+            var teamAPlayerUuids = new string[5];
+            for (var i = 0; i < 5; i++)
+            {
+                var pl = players.FirstOrDefault(p => p.Id == teamAFaceit[i].pid);
+                var (uuid, err) = ResolveFaceitUuidForManualSlot(pl, teamAFaceit[i].faceitGpid, teamAFaceit[i].label);
+                if (err != null)
+                    ModelState.AddModelError("", err);
+                teamAPlayerUuids[i] = uuid ?? "";
+            }
 
-                // Fallback to any available profile UUID
-                return player.GameProfiles.FirstOrDefault().UUID;
+            var teamBPlayerUuids = new string[5];
+            for (var i = 0; i < 5; i++)
+            {
+                var pl = players.FirstOrDefault(p => p.Id == teamBFaceit[i].pid);
+                var (uuid, err) = ResolveFaceitUuidForManualSlot(pl, teamBFaceit[i].faceitGpid, teamBFaceit[i].label);
+                if (err != null)
+                    ModelState.AddModelError("", err);
+                teamBPlayerUuids[i] = uuid ?? "";
+            }
+
+            if (!ModelState.IsValid)
+            {
+                await PopulateManualStatsUploadListsAsync(model);
+                return View(model);
             }
 
             // Create player statistics for Team A
@@ -1069,16 +1022,11 @@ namespace Balkana.Controllers
             {
                 model.TeamAPlayer1Stats, model.TeamAPlayer2Stats, model.TeamAPlayer3Stats, model.TeamAPlayer4Stats, model.TeamAPlayer5Stats
             };
-            var teamAPlayerIds = new[]
-            {
-                model.TeamAPlayer1Id, model.TeamAPlayer2Id, model.TeamAPlayer3Id, model.TeamAPlayer4Id, model.TeamAPlayer5Id
-            };
 
             for (int i = 0; i < teamAPlayerStats.Length; i++)
             {
                 var stats = teamAPlayerStats[i];
-                var playerId = teamAPlayerIds[i];
-                var uuid = GetPlayerUuid(playerId);
+                var uuid = teamAPlayerUuids[i];
 
                 var playerStat = new PlayerStatistic_CS2
                 {
@@ -1123,16 +1071,11 @@ namespace Balkana.Controllers
             {
                 model.TeamBPlayer1Stats, model.TeamBPlayer2Stats, model.TeamBPlayer3Stats, model.TeamBPlayer4Stats, model.TeamBPlayer5Stats
             };
-            var teamBPlayerIds = new[]
-            {
-                model.TeamBPlayer1Id, model.TeamBPlayer2Id, model.TeamBPlayer3Id, model.TeamBPlayer4Id, model.TeamBPlayer5Id
-            };
 
             for (int i = 0; i < teamBPlayerStats.Length; i++)
             {
                 var stats = teamBPlayerStats[i];
-                var playerId = teamBPlayerIds[i];
-                var uuid = GetPlayerUuid(playerId);
+                var uuid = teamBPlayerUuids[i];
 
                 var playerStat = new PlayerStatistic_CS2
                 {
@@ -1217,7 +1160,7 @@ namespace Balkana.Controllers
         {
             var query = _db.Players
                 .Include(p => p.GameProfiles)
-                .Where(p => p.GameProfiles.Any(gp => gp.Provider == "FACEIT"));
+                .Where(p => p.GameProfiles.Any(gp => gp.Provider != null && gp.Provider.ToUpper() == "FACEIT"));
 
             // If term is provided and has at least 2 characters, filter by it
             if (!string.IsNullOrEmpty(term) && term.Length >= 2)
@@ -1311,6 +1254,101 @@ namespace Balkana.Controllers
         public class ParsePopflashRequest
         {
             public string PastedText { get; set; } = string.Empty;
+        }
+
+        private static (string? Uuid, string? Error) ResolveFaceitUuidForManualSlot(
+            Player? player,
+            int? selectedGameProfileId,
+            string slotDescription)
+        {
+            if (player == null)
+                return (null, $"Player not found for {slotDescription}.");
+
+            var faceits = player.GameProfiles
+                .Where(gp => gp.Provider != null && GameProfileProviderExtensions.IsFaceitProvider(gp.Provider))
+                .Where(gp => !string.IsNullOrWhiteSpace(gp.UUID))
+                .ToList();
+
+            if (selectedGameProfileId.HasValue)
+            {
+                var match = faceits.FirstOrDefault(g => g.Id == selectedGameProfileId.Value);
+                if (match == null)
+                    return (null, $"{slotDescription}: selected FACEIT profile is invalid for {player.Nickname}.");
+                return (match.UUID, null);
+            }
+
+            if (faceits.Count == 1)
+                return (faceits[0].UUID, null);
+
+            if (faceits.Count > 1)
+                return (null, $"{slotDescription}: {player.Nickname} has multiple FACEIT profiles — choose which one to use.");
+
+            var fallback = player.GameProfiles.FirstOrDefault(g => !string.IsNullOrWhiteSpace(g.UUID));
+            return fallback != null
+                ? (fallback.UUID, null)
+                : (null, $"{slotDescription}: {player.Nickname} has no linked profile UUID.");
+        }
+
+        private async Task PopulateManualStatsUploadListsAsync(ManualStatsUploadViewModel vm)
+        {
+            vm.Tournaments = await _db.Tournaments
+                .Include(t => t.Game)
+                .Where(t => t.Game.ShortName == "CS2")
+                .Select(t => new SelectListItem
+                {
+                    Value = t.Id.ToString(),
+                    Text = t.FullName
+                })
+                .ToListAsync();
+            vm.Maps = await _db.GameMaps
+                .Where(m => m.Game.ShortName == "CS2")
+                .Select(m => new SelectListItem
+                {
+                    Value = m.Id.ToString(),
+                    Text = m.Name
+                })
+                .ToListAsync();
+            vm.Players = await _db.Players
+                .Include(p => p.GameProfiles)
+                .Where(p => p.GameProfiles.Any(gp => gp.Provider != null && gp.Provider.ToUpper() == "FACEIT"))
+                .Select(p => new SelectListItem
+                {
+                    Value = p.Id.ToString(),
+                    Text = $"{p.Nickname} ({p.FirstName} {p.LastName})"
+                })
+                .ToListAsync();
+            vm.Teams = await _db.Teams
+                .Select(t => new SelectListItem
+                {
+                    Value = t.Id.ToString(),
+                    Text = t.FullName
+                })
+                .ToListAsync();
+
+            var all = await _db.Players
+                .AsNoTracking()
+                .Include(p => p.GameProfiles)
+                .ToListAsync();
+
+            var multi = new Dictionary<string, object>();
+            foreach (var p in all)
+            {
+                var faceits = p.GameProfiles
+                    .Where(g => g.Provider != null && g.Provider.ToUpper() == "FACEIT")
+                    .ToList();
+                if (faceits.Count <= 1)
+                    continue;
+
+                multi[p.Id.ToString()] = faceits.Select(g =>
+                {
+                    var text = string.IsNullOrWhiteSpace(g.DisplayName)
+                        ? (g.UUID.Length >= 8 ? g.UUID[..8] : g.UUID)
+                        : g.DisplayName!;
+                    return new { id = g.Id, text };
+                }).ToList();
+            }
+
+            vm.FaceitProfileChoicesJson = JsonSerializer.Serialize(multi);
         }
 
         /// <summary>

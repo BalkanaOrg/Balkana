@@ -218,13 +218,28 @@ namespace Balkana.Controllers
             var player = await _context.Players.FindAsync(model.SelectedPlayerId.Value);
             if (player == null) return NotFound();
 
-            // Prevent duplicate (PlayerId + Provider)
-            var already = await _context.Set<GameProfile>()
-                .AnyAsync(g => g.PlayerId == player.Id && g.Provider == model.Provider);
+            var normalizedUuid = model.UUID.Trim();
+            var samePlayerDuplicate = await _context.Set<GameProfile>()
+                .AnyAsync(g => g.PlayerId == player.Id && g.Provider == model.Provider && g.UUID == normalizedUuid);
 
-            if (already)
+            if (samePlayerDuplicate)
             {
-                ModelState.AddModelError(string.Empty, "This player already has a profile for that provider.");
+                ModelState.AddModelError(string.Empty, "This player already has this UUID for that provider.");
+                model.SelectedPlayerText = player.Nickname;
+                model.Providers ??= new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
+                {
+                    new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Value = "FACEIT", Text = "FACEIT" },
+                    new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Value = "RIOT", Text = "RIOT" }
+                };
+                return View(model);
+            }
+
+            var uuidOwnedElsewhere = await _context.Set<GameProfile>()
+                .AnyAsync(g => g.PlayerId != player.Id && g.Provider == model.Provider && g.UUID == normalizedUuid);
+
+            if (uuidOwnedElsewhere)
+            {
+                ModelState.AddModelError(string.Empty, "Another player is already linked to this UUID for that provider.");
                 model.SelectedPlayerText = player.Nickname;
                 model.Providers ??= new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>
                 {
@@ -238,7 +253,8 @@ namespace Balkana.Controllers
             {
                 PlayerId = player.Id,
                 Provider = model.Provider,
-                UUID = model.UUID
+                UUID = normalizedUuid,
+                DisplayName = string.IsNullOrWhiteSpace(model.DisplayName) ? null : model.DisplayName.Trim()
             };
 
             _context.GameProfiles.Add(profile);
@@ -254,16 +270,22 @@ namespace Balkana.Controllers
             var players = await _context.Players
                 .Include(p => p.GameProfiles)
                 .OrderBy(p => p.Nickname)
-                .Select(p => new PlayerWithProfilesViewModel
-                {
-                    PlayerId = p.Id,
-                    Nickname = p.Nickname,
-                    FullName = p.FirstName + " " + p.LastName,
-                    GameProfiles = p.GameProfiles.Select(g => g.Provider).ToList()
-                })
                 .ToListAsync();
 
-            var vm = new PlayersListViewModel { Players = players };
+            var rows = players.Select(p => new PlayerWithProfilesViewModel
+            {
+                PlayerId = p.Id,
+                Nickname = p.Nickname,
+                FullName = $"{p.FirstName} {p.LastName}",
+                ProfileRows = p.GameProfiles.Select(g => new GameProfileAdminRow
+                {
+                    Provider = g.Provider,
+                    DisplayName = g.DisplayName,
+                    UuidShort = g.UUID.Length >= 8 ? g.UUID[..8] : g.UUID
+                }).ToList()
+            }).ToList();
+
+            var vm = new PlayersListViewModel { Players = rows };
 
             return View("Players/Index", vm);
         }

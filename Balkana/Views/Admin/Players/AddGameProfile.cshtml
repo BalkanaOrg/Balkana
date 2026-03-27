@@ -1,4 +1,4 @@
-﻿@model Balkana.Models.Admin.AddGameProfileViewModel
+@model Balkana.Models.Admin.AddGameProfileViewModel
 @{
     ViewData["Title"] = "Add Game Profile";
 }
@@ -26,6 +26,12 @@
         <label for="UUID">UUID</label>
         <input asp-for="UUID" class="form-control" />
         <span asp-validation-for="UUID" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="DisplayName"></label>
+        <input asp-for="DisplayName" class="form-control" placeholder="e.g. Main account, Alt" />
+        <span asp-validation-for="DisplayName" class="text-danger"></span>
     </div>
 
     <div class="card p-3 mt-3">

@@ -1,4 +1,4 @@
-﻿@model PlayerDetailsServiceModel
+@model PlayerDetailsServiceModel
 @{
     // Format title: FirstName "Nickname" LastName - Balkana
     // Or just: Nickname - Balkana if FirstName/LastName are empty
@@ -23,7 +23,27 @@
     ViewData["Image"] = playerImage;
     
     var selectedGame = ViewBag.SelectedGame as string;
-    var availableGames = Model.GameProfiles.Select(gp => gp.GameName).ToList();
+    int? selectedGameProfileId = ViewBag.SelectedGameProfileId as int?;
+
+    bool ShowProfileSection(string sectionKey)
+    {
+        if (string.IsNullOrEmpty(selectedGame) && !selectedGameProfileId.HasValue)
+            return true;
+        if (selectedGameProfileId.HasValue)
+            return sectionKey == $"gp:{selectedGameProfileId.Value}";
+        if (!string.IsNullOrEmpty(selectedGame))
+            return sectionKey == $"game:{selectedGame}";
+        return true;
+    }
+
+    string? TransferGameFilter()
+    {
+        if (selectedGameProfileId.HasValue)
+            return Model.GameProfiles.FirstOrDefault(g => g.Id == selectedGameProfileId.Value)?.GameName;
+        return selectedGame;
+    }
+    var transferGameFilter = TransferGameFilter();
+    var allGamesTabActive = string.IsNullOrEmpty(selectedGame) && !selectedGameProfileId.HasValue;
 }
 
 @section Styles {
@@ -44,7 +64,13 @@
                     </div>
                 </div>
                 <div class="col-lg-8 text-white">
-                    <h1 class="display-4 fw-bold mb-3">@Model.Nickname</h1>
+                    <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+                        <h1 class="display-4 fw-bold mb-0">@Model.Nickname</h1>
+                        @if (User.IsInRole("Administrator"))
+                        {
+                            <a asp-controller="Players" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-light btn-sm align-self-center">Edit player</a>
+                        }
+                    </div>
                     <h3 class="h5 mb-3 text-light">@Model.FirstName @Model.LastName</h3>
                     
                     <div class="d-flex align-items-center mb-4">
@@ -54,19 +80,19 @@
                     </div>
 
                     <!-- Game Filter Tabs -->
-                    @if (availableGames.Any())
+                    @if (Model.GameProfiles.Any())
                     {
                         <div class="game-filter-tabs mb-4">
-                            <div class="btn-group" role="group">
+                            <div class="btn-group flex-wrap" role="group">
                                 <a asp-action="Profile" asp-route-id="@Model.Id" asp-route-information="@Model.GetInformation()"
-                                   class="btn @(string.IsNullOrEmpty(selectedGame) ? "btn-light" : "btn-outline-light")">
+                                   class="btn @(allGamesTabActive ? "btn-light" : "btn-outline-light")">
                                     All Games
                                 </a>
-                                @foreach (var game in availableGames)
+                                @foreach (var gp in Model.GameProfiles)
                                 {
-                                    <a asp-action="Profile" asp-route-id="@Model.Id" asp-route-information="@Model.GetInformation()" asp-route-game="@game"
-                                       class="btn @(selectedGame == game ? "btn-light" : "btn-outline-light")">
-                                        @game
+                                    <a asp-action="Profile" asp-route-id="@Model.Id" asp-route-information="@Model.GetInformation()" asp-route-gameProfileId="@gp.Id"
+                                       class="btn @(selectedGameProfileId == gp.Id ? "btn-light" : "btn-outline-light")">
+                                        @gp.DisplayLabel
                                     </a>
                                 }
                             </div>
@@ -109,11 +135,11 @@
             <div class="tab-pane fade show active" id="stats" role="tabpanel">
                 @if (Model.AverageStatsByGame.Any())
                 {
-                    @foreach (var gameStats in Model.AverageStatsByGame.Where(kvp => string.IsNullOrEmpty(selectedGame) || kvp.Key == selectedGame))
+                    @foreach (var gameStats in Model.AverageStatsByGame.Where(kvp => ShowProfileSection(kvp.Key)))
                     {
                         <div class="card mb-4 shadow-sm">
                             <div class="card-header bg-gradient text-white">
-                                <h5 class="mb-0"><i class="fa fa-bar-chart me-2"></i>@gameStats.Key Statistics</h5>
+                                <h5 class="mb-0"><i class="fa fa-bar-chart me-2"></i>@(Model.ProfileSectionTitles.GetValueOrDefault(gameStats.Key) ?? gameStats.Value.GameName) Statistics</h5>
                             </div>
                             <div class="card-body">
                                 <div class="row">
@@ -359,11 +385,11 @@
 
                 @if (Model.TournamentParticipationByGame.Any())
                 {
-                    @foreach (var gameParticipation in Model.TournamentParticipationByGame.Where(kvp => string.IsNullOrEmpty(selectedGame) || kvp.Key == selectedGame))
+                    @foreach (var gameParticipation in Model.TournamentParticipationByGame.Where(kvp => ShowProfileSection(kvp.Key)))
                     {
                         <div class="card mb-4 shadow-sm">
                             <div class="card-header bg-gradient text-white">
-                                <h5 class="mb-0"><i class="fa fa-trophy me-2"></i>@gameParticipation.Key Tournaments</h5>
+                                <h5 class="mb-0"><i class="fa fa-trophy me-2"></i>@(Model.ProfileSectionTitles.GetValueOrDefault(gameParticipation.Key) ?? gameParticipation.Value.FirstOrDefault()?.GameName ?? gameParticipation.Key) Tournaments</h5>
                             </div>
                             <div class="card-body">
                                 @if (gameParticipation.Value.Any())
@@ -447,11 +473,11 @@
             <div class="tab-pane fade" id="matches" role="tabpanel">
                 @if (Model.MatchHistoryByGame.Any())
                 {
-                    @foreach (var gameHistory in Model.MatchHistoryByGame.Where(kvp => string.IsNullOrEmpty(selectedGame) || kvp.Key == selectedGame))
+                    @foreach (var gameHistory in Model.MatchHistoryByGame.Where(kvp => ShowProfileSection(kvp.Key)))
                     {
                         <div class="card mb-4 shadow-sm">
                             <div class="card-header bg-gradient text-white">
-                                <h5 class="mb-0"><i class="fa fa-gamepad me-2"></i>@gameHistory.Key Match History</h5>
+                                <h5 class="mb-0"><i class="fa fa-gamepad me-2"></i>@(Model.ProfileSectionTitles.GetValueOrDefault(gameHistory.Key) ?? gameHistory.Value.GameName) Match History</h5>
                             </div>
                             <div class="card-body">
                                 @if (gameHistory.Value.TournamentGroups.Any())
@@ -597,7 +623,7 @@
             <div class="tab-pane fade" id="transfers" role="tabpanel">
     @if (Model.TransfersByGame.Any())
     {
-                    @foreach (var gameTransfers in Model.TransfersByGame.Where(kvp => string.IsNullOrEmpty(selectedGame) || kvp.Key == selectedGame))
+                    @foreach (var gameTransfers in Model.TransfersByGame.Where(kvp => string.IsNullOrEmpty(transferGameFilter) || kvp.Key == transferGameFilter))
                     {
                         <div class="card mb-4 shadow-sm">
                             <div class="card-header bg-gradient text-white">

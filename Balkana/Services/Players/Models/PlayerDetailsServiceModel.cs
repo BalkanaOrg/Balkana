@@ -1,4 +1,4 @@
-﻿using Balkana.Services.Transfers.Models;
+using Balkana.Services.Transfers.Models;
 
 namespace Balkana.Services.Players.Models
 {
@@ -30,12 +30,18 @@ namespace Balkana.Services.Players.Models
         // ✅ Match history by game
         public Dictionary<string, PlayerMatchHistoryServiceModel> MatchHistoryByGame { get; set; }
         = new Dictionary<string, PlayerMatchHistoryServiceModel>();
+
+        /// <summary>Maps section keys (e.g. <c>game:Counter-Strike</c>, <c>gp:12</c>) to card/tab titles.</summary>
+        public Dictionary<string, string> ProfileSectionTitles { get; set; } = new();
     }
     
     public class PlayerGameProfileServiceModel
     {
+        public int Id { get; set; }
         public string Provider { get; set; } // "FACEIT", "RIOT", etc.
         public string GameName { get; set; } // "Counter-Strike", "League of Legends", etc.
         public string UUID { get; set; }
+        public string? DisplayName { get; set; }
+        public string DisplayLabel { get; set; } = "";
     }
 }

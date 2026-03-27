@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
@@ -17,7 +17,10 @@ namespace Balkana.Models.Admin
         public string Provider { get; set; }
 
         [Required]
-        public string UUID { get; set; }
+        public string UUID { get; set; } = "";
+
+        [Display(Name = "Display label (optional)")]
+        public string? DisplayName { get; set; }
 
         public List<SelectListItem> Providers { get; set; } = new()
         {
