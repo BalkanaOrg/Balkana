@@ -520,6 +520,153 @@ namespace Balkana.Controllers
             return View("Discord/Diagnostic");
         }
 
+        public async Task<IActionResult> DiscordResultChannels()
+        {
+            var rows = await _context.DiscordGameResultChannels
+                .AsNoTracking()
+                .Include(x => x.Game)
+                .OrderBy(x => x.Game.FullName)
+                .ToListAsync();
+            return View("Discord/ResultChannels", rows);
+        }
+
+        public async Task<IActionResult> DiscordResultChannelCreate()
+        {
+            await LoadGamesSelectListAsync();
+            return View("Discord/ResultChannelForm", new DiscordGameResultChannel { IsActive = true });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DiscordResultChannelCreate(DiscordGameResultChannel model)
+        {
+            if (string.IsNullOrWhiteSpace(model.DiscordChannelId) || !IsDiscordSnowflake(model.DiscordChannelId.Trim()))
+                ModelState.AddModelError(nameof(model.DiscordChannelId), "Enter a numeric Discord channel snowflake.");
+
+            if (await _context.DiscordGameResultChannels.AnyAsync(x => x.GameId == model.GameId))
+                ModelState.AddModelError(nameof(model.GameId), "This game already has a channel mapping. Edit or delete it first.");
+
+            if (!ModelState.IsValid)
+            {
+                await LoadGamesSelectListAsync();
+                return View("Discord/ResultChannelForm", model);
+            }
+
+            model.DiscordChannelId = model.DiscordChannelId.Trim();
+            _context.DiscordGameResultChannels.Add(model);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Discord result channel saved.";
+            return RedirectToAction(nameof(DiscordResultChannels));
+        }
+
+        public async Task<IActionResult> DiscordResultChannelEdit(int id)
+        {
+            var row = await _context.DiscordGameResultChannels.FindAsync(id);
+            if (row == null)
+                return NotFound();
+            await LoadGamesSelectListAsync();
+            return View("Discord/ResultChannelForm", row);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DiscordResultChannelEdit(int id, DiscordGameResultChannel model)
+        {
+            if (id != model.Id)
+                return BadRequest();
+
+            if (string.IsNullOrWhiteSpace(model.DiscordChannelId) || !IsDiscordSnowflake(model.DiscordChannelId.Trim()))
+                ModelState.AddModelError(nameof(model.DiscordChannelId), "Enter a numeric Discord channel snowflake.");
+
+            if (await _context.DiscordGameResultChannels.AnyAsync(x => x.GameId == model.GameId && x.Id != id))
+                ModelState.AddModelError(nameof(model.GameId), "Another row already uses this game.");
+
+            if (!ModelState.IsValid)
+            {
+                await LoadGamesSelectListAsync();
+                return View("Discord/ResultChannelForm", model);
+            }
+
+            var row = await _context.DiscordGameResultChannels.FindAsync(id);
+            if (row == null)
+                return NotFound();
+
+            row.GameId = model.GameId;
+            row.DiscordChannelId = model.DiscordChannelId.Trim();
+            row.DisplayLabel = model.DisplayLabel;
+            row.IsActive = model.IsActive;
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Mapping updated.";
+            return RedirectToAction(nameof(DiscordResultChannels));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DiscordResultChannelDelete(int id)
+        {
+            var row = await _context.DiscordGameResultChannels.FindAsync(id);
+            if (row != null)
+            {
+                _context.DiscordGameResultChannels.Remove(row);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Mapping deleted.";
+            }
+            return RedirectToAction(nameof(DiscordResultChannels));
+        }
+
+        public async Task<IActionResult> DiscordTournamentResults()
+        {
+            var tournaments = await _context.Tournaments
+                .AsNoTracking()
+                .OrderByDescending(t => t.EndDate)
+                .Take(300)
+                .Select(t => new { t.Id, t.FullName })
+                .ToListAsync();
+            ViewBag.TournamentSelect = new SelectList(tournaments, "Id", "FullName");
+            return View("Discord/TournamentResultsPost");
+        }
+
+        public async Task<IActionResult> DiscordTournamentResultsPreview(int id, [FromServices] IDiscordTournamentResultsService resultsService)
+        {
+            var preview = await resultsService.BuildPlainTextPreviewAsync(id);
+            if (preview == null)
+                return NotFound();
+            ViewData["Title"] = "Tournament results preview";
+            return View("Discord/TournamentResultsPreview", preview);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DiscordTournamentResults(
+            int tournamentId,
+            string? channelIdOverride,
+            [FromServices] IDiscordTournamentResultsService resultsService)
+        {
+            var trimmed = string.IsNullOrWhiteSpace(channelIdOverride) ? null : channelIdOverride.Trim();
+            if (!string.IsNullOrEmpty(trimmed) && !IsDiscordSnowflake(trimmed))
+            {
+                TempData["Error"] = "Channel override must be a numeric Discord snowflake.";
+                return RedirectToAction(nameof(DiscordTournamentResults));
+            }
+
+            var (ok, err) = await resultsService.PostTournamentResultsAsync(tournamentId, trimmed);
+            if (ok)
+                TempData["Success"] = "Results posted to Discord.";
+            else
+                TempData["Error"] = err ?? "Failed to post to Discord.";
+
+            return RedirectToAction(nameof(DiscordTournamentResults));
+        }
+
+        private async Task LoadGamesSelectListAsync()
+        {
+            var games = await _context.Games.AsNoTracking().OrderBy(g => g.FullName).ToListAsync();
+            ViewBag.GamesSelect = new SelectList(games, "Id", "FullName");
+        }
+
+        private static bool IsDiscordSnowflake(string s) =>
+            s.Length is >= 17 and <= 22 && s.All(char.IsDigit);
+
         // ============================================
         // RIOT TOURNAMENT API MANAGEMENT
         // ============================================

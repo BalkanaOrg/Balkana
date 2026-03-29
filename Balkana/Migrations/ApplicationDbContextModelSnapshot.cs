@@ -2016,6 +2016,37 @@ namespace Balkana.Migrations
                     b.ToTable("PlayerPoints");
                 });
 
+            modelBuilder.Entity("Balkana.Data.Models.DiscordGameResultChannel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("DiscordChannelId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("DisplayLabel")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("GameId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameId")
+                        .IsUnique();
+
+                    b.ToTable("DiscordGameResultChannels");
+                });
+
             modelBuilder.Entity("Balkana.Data.Models.TournamentSocials", b =>
                 {
                     b.Property<int>("Id")
@@ -2735,6 +2766,17 @@ namespace Balkana.Migrations
                     b.Navigation("Player");
 
                     b.Navigation("Tournament");
+                });
+
+            modelBuilder.Entity("Balkana.Data.Models.DiscordGameResultChannel", b =>
+                {
+                    b.HasOne("Balkana.Data.Models.Game", "Game")
+                        .WithMany()
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Game");
                 });
 
             modelBuilder.Entity("Balkana.Data.Models.GamblingLeaderboard", b =>

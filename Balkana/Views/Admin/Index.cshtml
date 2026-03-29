@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Admin Panel";
     // Disable caching for this page
     Context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
@@ -118,6 +118,20 @@
                 </div>
                 <h3 class="admin-card-title">Discord Diagnostic</h3>
                 <p class="admin-card-description">Diagnostic information for Discord bot</p>
+            </a>
+            <a asp-controller="Admin" asp-action="DiscordResultChannels" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-hashtag"></i>
+                </div>
+                <h3 class="admin-card-title">Discord result channels</h3>
+                <p class="admin-card-description">Map each game to a Discord channel for tournament results</p>
+            </a>
+            <a asp-controller="Admin" asp-action="DiscordTournamentResults" class="admin-card">
+                <div class="admin-card-icon">
+                    <i class="fi fi-rr-trophy"></i>
+                </div>
+                <h3 class="admin-card-title">Post tournament results</h3>
+                <p class="admin-card-description">Send placement embeds to Discord (preview or post)</p>
             </a>
         </div>
     </div>

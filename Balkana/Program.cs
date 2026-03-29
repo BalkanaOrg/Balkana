@@ -379,6 +379,12 @@ void ConfigureServices(IServiceCollection services)
     builder.Services.Configure<Balkana.Models.Discord.DiscordConfig>(
         builder.Configuration.GetSection("Discord"));
     builder.Services.AddHttpClient<IDiscordBotService, DiscordBotService>();
+    builder.Services.AddHttpClient<IDiscordTournamentResultsService, DiscordTournamentResultsService>((sp, client) =>
+    {
+        var cfg = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Balkana.Models.Discord.DiscordConfig>>().Value;
+        if (!string.IsNullOrEmpty(cfg.BotToken))
+            client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bot {cfg.BotToken}");
+    });
 }
 
 // Configure the HTTP request pipeline.

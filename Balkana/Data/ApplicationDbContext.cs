@@ -58,6 +58,7 @@ namespace Balkana.Data
         public DbSet<CorePlayer> CorePlayers { get; set; }
         public DbSet<CoreTournamentPoints> CoreTournamentPoints { get; set; }
         public DbSet<PlayerPoints> PlayerPoints { get; set; }
+        public DbSet<DiscordGameResultChannel> DiscordGameResultChannels { get; set; }
 
         //Community
         public DbSet<CommunityTeam> CommunityTeams { get; set; }
@@ -359,6 +360,16 @@ namespace Balkana.Data
 
             modelBuilder.Entity<PlayerPoints>()
                 .HasIndex(pp => new { pp.PlayerId, pp.TournamentId })
+                .IsUnique();
+
+            modelBuilder.Entity<DiscordGameResultChannel>()
+                .HasOne(d => d.Game)
+                .WithMany()
+                .HasForeignKey(d => d.GameId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DiscordGameResultChannel>()
+                .HasIndex(d => d.GameId)
                 .IsUnique();
 
             //Community

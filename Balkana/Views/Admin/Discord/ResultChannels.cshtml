@@ -1,0 +1,86 @@
+@model List<Balkana.Data.Models.DiscordGameResultChannel>
+@{
+    ViewData["Title"] = "Discord result channels";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-dark text-white">
+                <div class="card-header bg-gradient d-flex justify-content-between align-items-center flex-wrap gap-2"
+                     style="background: linear-gradient(135deg, #1e40af, #dc2626);">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-hashtag me-2"></i>
+                        Game → Discord result channels
+                    </h3>
+                    <a asp-action="DiscordResultChannelCreate" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus me-1"></i> Add mapping
+                    </a>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success">@TempData["Success"]</div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger">@TempData["Error"]</div>
+                    }
+
+                    @if (Model.Count == 0)
+                    {
+                        <p class="text-muted mb-0">No mappings yet. Add one to post tournament results per game.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-dark table-striped table-bordered align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Game</th>
+                                        <th>Channel ID</th>
+                                        <th>Label</th>
+                                        <th>Active</th>
+                                        <th class="text-end" style="width: 200px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var row in Model)
+                                    {
+                                        <tr>
+                                            <td>@(row.Game?.FullName ?? $"Game #{row.GameId}")</td>
+                                            <td><code class="text-info">@row.DiscordChannelId</code></td>
+                                            <td>@(row.DisplayLabel ?? "—")</td>
+                                            <td>
+                                                @if (row.IsActive)
+                                                {
+                                                    <span class="badge bg-success">Yes</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">No</span>
+                                                }
+                                            </td>
+                                            <td class="text-end">
+                                                <a asp-action="DiscordResultChannelEdit" asp-route-id="@row.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                                                <form asp-action="DiscordResultChannelDelete" asp-route-id="@row.Id" method="post" class="d-inline"
+                                                      onsubmit="return confirm('Delete this mapping?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+
+                    <p class="text-muted small mt-3 mb-0">
+                        Bot needs <strong>View Channel</strong>, <strong>Send Messages</strong>, and <strong>Embed Links</strong> in the target channel.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
