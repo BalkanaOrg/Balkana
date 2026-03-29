@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Balkana.Data;
 using Balkana.Data.DTOs.Bracket;
@@ -1177,11 +1177,12 @@ namespace Balkana.Controllers
         [Authorize(Roles = "Administrator,Moderator")]
         public async Task<IActionResult> Conclude(TournamentConclusionViewModel model)
         {
+            var mvpEVPService = new MVPEVPService(_context);
+
             if (!ModelState.IsValid)
             {
-                var mvpevpService = new MVPEVPService(_context);
-                model.MVPCandidates = await mvpevpService.GetMVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
-                model.EVPCandidates = await mvpevpService.GetEVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
+                model.MVPCandidates = await mvpEVPService.CalculateRankedMVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
+                model.EVPCandidates = await mvpEVPService.CalculateRankedEVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
                 return View(model);
             }
 
@@ -1193,8 +1194,33 @@ namespace Balkana.Controllers
 
             if (tournament == null) return NotFound();
 
+            if (model.MVPSourceType == MVPSourceType.Formula && model.SelectedMVPId.HasValue)
+            {
+                var mvpPool = await mvpEVPService.CalculateRankedMVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
+                if (!mvpPool.Any(c => c.PlayerId == model.SelectedMVPId.Value))
+                {
+                    ModelState.AddModelError(nameof(model.SelectedMVPId), "Selected MVP is not in the formula candidate pool for this tournament.");
+                }
+            }
+
+            if (model.EVPSourceType == EVPSourceType.Formula && model.SelectedEVPIds is { Count: > 0 })
+            {
+                var evpPool = await mvpEVPService.CalculateRankedEVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
+                var allowed = evpPool.Select(c => c.PlayerId).ToHashSet();
+                if (model.SelectedEVPIds.Any(id => !allowed.Contains(id)))
+                {
+                    ModelState.AddModelError(nameof(model.SelectedEVPIds), "One or more selected EVPs are not in the formula candidate pool for this tournament.");
+                }
+            }
+
+            if (!ModelState.IsValid)
+            {
+                model.MVPCandidates = await mvpEVPService.CalculateRankedMVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
+                model.EVPCandidates = await mvpEVPService.CalculateRankedEVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
+                return View(model);
+            }
+
             var trophyService = new TrophyService(_context);
-            var mvpEVPService = new MVPEVPService(_context);
 
             // Handle trophy image upload (only for Champion Trophy)
             string? trophyImagePath = null;

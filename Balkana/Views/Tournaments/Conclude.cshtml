@@ -9,6 +9,18 @@
         background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #e94560 100%);
         min-height: 100vh;
         color: #ffffff;
+        color-scheme: dark;
+    }
+    
+    .tournament-conclude-page .form-select,
+    .tournament-conclude-page .form-control[type="file"] {
+        color-scheme: dark;
+    }
+    
+    .tournament-conclude-page .form-select option,
+    .tournament-conclude-page .form-select optgroup {
+        background-color: #1a1a2e;
+        color: #ffffff;
     }
     
     .tournament-conclude-card {
@@ -216,7 +228,7 @@
                                 <div class="mt-3">
                                     <label asp-for="TrophyImageFile" class="form-label">Trophy Image</label>
                                     <input asp-for="TrophyImageFile" type="file" accept="image/*" class="form-control" />
-                                    <small class="form-text">Upload trophy image (will be used for Champion, MVP, and EVP trophies)</small>
+                                    <small class="form-text">Upload an image for the champion trophy only (MVP and EVP use fixed artwork).</small>
                                     <span asp-validation-for="TrophyImageFile" class="text-danger"></span>
                                 </div>
                             </div>

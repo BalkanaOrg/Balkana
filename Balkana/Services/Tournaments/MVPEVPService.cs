@@ -16,9 +16,7 @@ namespace Balkana.Services.Tournaments
 
         public async Task<List<PlayerMVPCandidate>> GetMVPCandidatesAsync(int tournamentId, MVFormulaConfiguration formulaConfig)
         {
-            var tournament = await _context.Tournaments
-                .Include(t => t.Series)
-                .FirstOrDefaultAsync(t => t.Id == tournamentId);
+            var tournament = await LoadTournamentForMvpEvpAsync(tournamentId);
 
             if (tournament == null) return new List<PlayerMVPCandidate>();
 
@@ -69,9 +67,7 @@ namespace Balkana.Services.Tournaments
 
         public async Task<List<PlayerEVPCandidate>> GetEVPCandidatesAsync(int tournamentId, MVFormulaConfiguration formulaConfig)
         {
-            var tournament = await _context.Tournaments
-                .Include(t => t.Series)
-                .FirstOrDefaultAsync(t => t.Id == tournamentId);
+            var tournament = await LoadTournamentForMvpEvpAsync(tournamentId);
 
             if (tournament == null) return new List<PlayerEVPCandidate>();
 
@@ -120,31 +116,36 @@ namespace Balkana.Services.Tournaments
             return candidates.OrderByDescending(c => c.FormulaScore.TotalScore).ToList();
         }
 
+        private async Task<Tournament?> LoadTournamentForMvpEvpAsync(int tournamentId)
+        {
+            return await _context.Tournaments
+                .AsSplitQuery()
+                .Include(t => t.Series)
+                .Include(t => t.TournamentTeams)
+                .FirstOrDefaultAsync(t => t.Id == tournamentId);
+        }
+
+        /// <summary>
+        /// Formula MVP pool: finals only if &lt; 16 teams; semifinals + finals if 16+ teams.
+        /// </summary>
         private List<Balkana.Data.Models.Series> GetEligibleSeriesForMVP(Tournament tournament)
         {
             var allSeries = tournament.Series.ToList();
             var teamCount = tournament.TournamentTeams.Count;
 
-            return teamCount switch
-            {
-                >= 4 and <= 8 => GetFinalAndSemiFinalSeries(allSeries), // 4-8 teams: Final and Semi-finals only
-                >= 9 and <= 16 => GetQuarterFinalAndBeyond(allSeries), // 9-16 teams: Quarter-finals and beyond
-                _ => GetFinalAndSemiFinalSeries(allSeries) // Default to final and semi-finals
-            };
+            if (teamCount >= 16)
+                return GetFinalAndSemiFinalSeries(allSeries);
+
+            return GetFinalSeries(allSeries);
         }
 
+        /// <summary>
+        /// Formula EVP pool: semifinals + finals for all tournament sizes (including 16+).
+        /// </summary>
         private List<Balkana.Data.Models.Series> GetEligibleSeriesForEVP(Tournament tournament)
         {
             var allSeries = tournament.Series.ToList();
-            var teamCount = tournament.TournamentTeams.Count;
-
-            return teamCount switch
-            {
-                4 => GetFinalSeries(allSeries), // 4 teams: Final only
-                >= 5 and <= 8 => GetFinalAndSemiFinalSeries(allSeries), // 5-8 teams: Final and Semi-finals
-                >= 9 and <= 16 => GetQuarterFinalAndBeyond(allSeries), // 9-16 teams: Quarter-finals and beyond
-                _ => GetFinalAndSemiFinalSeries(allSeries) // Default to final and semi-finals
-            };
+            return GetFinalAndSemiFinalSeries(allSeries);
         }
 
         private List<Balkana.Data.Models.Series> GetFinalSeries(List<Balkana.Data.Models.Series> allSeries)
@@ -193,43 +194,6 @@ namespace Balkana.Services.Tournaments
             return result.Distinct().ToList();
         }
 
-        private List<Balkana.Data.Models.Series> GetQuarterFinalAndBeyond(List<Balkana.Data.Models.Series> allSeries)
-        {
-            var finalAndSemiSeries = GetFinalAndSemiFinalSeries(allSeries);
-            var result = new List<Balkana.Data.Models.Series>(finalAndSemiSeries);
-
-            // For double elimination
-            if (allSeries.Any(s => s.Bracket == BracketType.GrandFinal))
-            {
-                // Add Upper Bracket Semi-finals and Lower Bracket Semi-finals
-                var upperBracketSemi = allSeries
-                    .Where(s => s.Bracket == BracketType.Upper)
-                    .OrderByDescending(s => s.Round)
-                    .Skip(1)
-                    .Take(1)
-                    .ToList();
-                result.AddRange(upperBracketSemi);
-
-                var lowerBracketSemi = allSeries
-                    .Where(s => s.Bracket == BracketType.Lower)
-                    .OrderByDescending(s => s.Round)
-                    .Skip(1)
-                    .Take(1)
-                    .ToList();
-                result.AddRange(lowerBracketSemi);
-            }
-            else
-            {
-                // For single elimination, add quarter-finals
-                var finalRound = finalAndSemiSeries.Max(s => s.Round);
-                var quarterFinalRound = finalRound - 2;
-                var quarterFinalSeries = allSeries.Where(s => s.Round == quarterFinalRound).ToList();
-                result.AddRange(quarterFinalSeries);
-            }
-            
-            return result.Distinct().ToList();
-        }
-
         private MVFormulaScore CalculateFormulaScore(List<PlayerStatistic_CS2> stats, MVFormulaConfiguration config)
         {
             if (!stats.Any()) return new MVFormulaScore();
@@ -271,9 +235,7 @@ namespace Balkana.Services.Tournaments
 
         public async Task<List<PlayerMVPCandidate>> CalculateRankedMVPCandidatesAsync(int tournamentId, MVFormulaConfiguration formulaConfig)
         {
-            var tournament = await _context.Tournaments
-                .Include(t => t.Series)
-                .FirstOrDefaultAsync(t => t.Id == tournamentId);
+            var tournament = await LoadTournamentForMvpEvpAsync(tournamentId);
 
             if (tournament == null) return new List<PlayerMVPCandidate>();
 
@@ -327,9 +289,7 @@ namespace Balkana.Services.Tournaments
 
         public async Task<List<PlayerEVPCandidate>> CalculateRankedEVPCandidatesAsync(int tournamentId, MVFormulaConfiguration formulaConfig)
         {
-            var tournament = await _context.Tournaments
-                .Include(t => t.Series)
-                .FirstOrDefaultAsync(t => t.Id == tournamentId);
+            var tournament = await LoadTournamentForMvpEvpAsync(tournamentId);
 
             if (tournament == null) return new List<PlayerEVPCandidate>();
 

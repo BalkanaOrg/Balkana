@@ -80,10 +80,12 @@ namespace Balkana.Services.Tournaments
             var tournament = await _context.Tournaments
                 .FirstOrDefaultAsync(t => t.Id == tournamentId);
 
+            var tournamentName = tournament?.FullName ?? "";
+
             // Create tournament trophy
             var tournamentTrophy = new TrophyTournament
             {
-                Name = $"Champion of {tournament.FullName}",
+                Name = GetDisplayNameForPlayerAward(awardType, tournamentName),
                 TournamentId = tournamentId,
                 Description = description,
                 IconURL = trophyImagePath ?? GetTrophyIconForAwardType(awardType),
@@ -114,10 +116,12 @@ namespace Balkana.Services.Tournaments
             var tournament = await _context.Tournaments
                 .FirstOrDefaultAsync(t => t.Id == tournamentId);
 
+            var tournamentName = tournament?.FullName ?? "";
+
             // Create a single trophy that will be awarded to multiple players
             var tournamentTrophy = new TrophyTournament
             {
-                Name = $"Champion of {tournament.FullName}",
+                Name = GetDisplayNameForPlayerAward(awardType, tournamentName),
                 TournamentId = tournamentId,
                 Description = description,
                 IconURL = trophyImagePath ?? GetTrophyIconForAwardType(awardType),
@@ -142,6 +146,16 @@ namespace Balkana.Services.Tournaments
             }
 
             await _context.SaveChangesAsync();
+        }
+
+        private static string GetDisplayNameForPlayerAward(string awardType, string tournamentFullName)
+        {
+            return awardType.ToLowerInvariant() switch
+            {
+                "mvp" => $"MVP of {tournamentFullName}",
+                "evp" => $"EVP of {tournamentFullName}",
+                _ => $"Champion of {tournamentFullName}"
+            };
         }
 
         private string GetTrophyIconForAwardType(string awardType)
