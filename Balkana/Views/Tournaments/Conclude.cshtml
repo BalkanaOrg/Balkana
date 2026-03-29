@@ -208,6 +208,56 @@
                         <input asp-for="TotalTeams" type="hidden" />
                         <input asp-for="EliminationType" type="hidden" />
 
+                        @if (Model.TeamPointsPreview.Count > 0)
+                        {
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-chart-bar"></i> Placement points preview</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="form-text">
+                                        Each emergency substitute stint overlapping the tournament reduces the player points pool by 20% (capped at 100%).
+                                        The organisation receives 20% of the post-penalty player pool. Values use the current bracket state.
+                                    </p>
+                                    @if (Model.TeamPointsPreview.Any(t => t.BracketPreviewIncomplete))
+                                    {
+                                        <div class="alert alert-info">
+                                            Bracket preview is incomplete (missing series results or team count mismatch). Placement columns may be empty.
+                                        </div>
+                                    }
+                                    <div class="table-responsive">
+                                        <table class="table table-sm text-white align-middle">
+                                            <thead>
+                                            <tr>
+                                                <th>Team</th>
+                                                <th>ES count</th>
+                                                <th>Penalty</th>
+                                                <th>Pl.</th>
+                                                <th>Base P</th>
+                                                <th>Player pool</th>
+                                                <th>Org 20%</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            @foreach (var row in Model.TeamPointsPreview)
+                                            {
+                                                <tr class="@(row.EmergencySubstituteCount > 0 ? "table-secondary" : "")">
+                                                    <td>@row.TeamName</td>
+                                                    <td>@row.EmergencySubstituteCount</td>
+                                                    <td>@row.PenaltyPercent%</td>
+                                                    <td>@(row.Placement?.ToString() ?? "—")</td>
+                                                    <td>@(row.BasePointsFromPlacement?.ToString() ?? "—")</td>
+                                                    <td>@(row.EffectivePlayerPool?.ToString() ?? "—")</td>
+                                                    <td>@(row.OrganisationPoints?.ToString() ?? "—")</td>
+                                                </tr>
+                                            }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
                         <!-- Champion Trophy Section -->
                         <div class="card mb-4">
                             <div class="card-header">

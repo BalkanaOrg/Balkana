@@ -1169,6 +1169,9 @@ namespace Balkana.Controllers
             vm.MVPCandidates = await mvpEVPService.CalculateRankedMVPCandidatesAsync(id, formulaConfig);
             vm.EVPCandidates = await mvpEVPService.CalculateRankedEVPCandidatesAsync(id, formulaConfig);
 
+            var placementPointsService = new TournamentPlacementPointsService(_context);
+            vm.TeamPointsPreview = await placementPointsService.BuildPointsPreviewAsync(id);
+
             return View(vm);
         }
 
@@ -1183,6 +1186,7 @@ namespace Balkana.Controllers
             {
                 model.MVPCandidates = await mvpEVPService.CalculateRankedMVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
                 model.EVPCandidates = await mvpEVPService.CalculateRankedEVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
+                await PopulateConcludePointsPreviewAsync(model);
                 return View(model);
             }
 
@@ -1217,12 +1221,12 @@ namespace Balkana.Controllers
             {
                 model.MVPCandidates = await mvpEVPService.CalculateRankedMVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
                 model.EVPCandidates = await mvpEVPService.CalculateRankedEVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
+                await PopulateConcludePointsPreviewAsync(model);
                 return View(model);
             }
 
             var trophyService = new TrophyService(_context);
 
-            // Handle trophy image upload (only for Champion Trophy)
             string? trophyImagePath = null;
             if (model.TrophyImageFile != null && model.TrophyImageFile.Length > 0)
             {
@@ -1241,37 +1245,20 @@ namespace Balkana.Controllers
                     ModelState.AddModelError("", $"Error saving trophy image: {ex.Message}");
                     model.MVPCandidates = await mvpEVPService.CalculateRankedMVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
                     model.EVPCandidates = await mvpEVPService.CalculateRankedEVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
+                    await PopulateConcludePointsPreviewAsync(model);
                     return View(model);
                 }
             }
 
-            // Award MVP trophy (uses default MVP image, not trophy image)
-            if (model.SelectedMVPId.HasValue)
-            {
-                var mvpPlayer = await _context.Players.FindAsync(model.SelectedMVPId.Value);
-                if (mvpPlayer != null)
-                {
-                    await trophyService.AwardPlayerTrophyAsync(
-                        model.SelectedMVPId.Value,
-                        "MVP",
-                        $"MVP of {tournament.FullName}",
-                        tournament.Id,
-                        null); // MVP uses default image, not trophy image
-                }
-            }
-
-            // Award EVP trophies
             if (model.SelectedEVPIds.Any())
             {
-                // Validate EVP selection - check team limits
                 var evpPlayers = await _context.Players
                     .Where(p => model.SelectedEVPIds.Contains(p.Id))
-                    .Include(p => p.Transfers.Where(t => t.Status == PlayerTeamStatus.Active && 
-                        t.StartDate <= tournament.EndDate && 
+                    .Include(p => p.Transfers.Where(t => t.Status == PlayerTeamStatus.Active &&
+                        t.StartDate <= tournament.EndDate &&
                         (t.EndDate == null || t.EndDate >= tournament.StartDate)))
                     .ToListAsync();
 
-                // Get MVP player's team if MVP is selected
                 int? mvpTeamId = null;
                 if (model.SelectedMVPId.HasValue)
                 {
@@ -1279,8 +1266,8 @@ namespace Balkana.Controllers
                     if (mvpPlayer == null)
                     {
                         mvpPlayer = await _context.Players
-                            .Include(p => p.Transfers.Where(t => t.Status == PlayerTeamStatus.Active && 
-                                t.StartDate <= tournament.EndDate && 
+                            .Include(p => p.Transfers.Where(t => t.Status == PlayerTeamStatus.Active &&
+                                t.StartDate <= tournament.EndDate &&
                                 (t.EndDate == null || t.EndDate >= tournament.StartDate)))
                             .FirstOrDefaultAsync(p => p.Id == model.SelectedMVPId.Value);
                     }
@@ -1288,13 +1275,10 @@ namespace Balkana.Controllers
                     {
                         var transfer = mvpPlayer.Transfers.First();
                         if (transfer.TeamId.HasValue)
-                        {
                             mvpTeamId = transfer.TeamId.Value;
-                        }
                     }
                 }
 
-                // Count awards per team (only for players with teams)
                 var teamCounts = new Dictionary<int, int>();
                 foreach (var player in evpPlayers)
                 {
@@ -1311,7 +1295,6 @@ namespace Balkana.Controllers
                     }
                 }
 
-                // Add MVP to count if same team
                 if (mvpTeamId.HasValue)
                 {
                     int mvpTeam = mvpTeamId.Value;
@@ -1320,520 +1303,78 @@ namespace Balkana.Controllers
                     teamCounts[mvpTeam] += 1;
                 }
 
-                // Check if any team has more than 3 awards (only validate teams that exist)
                 if (teamCounts.Values.Any(count => count > 3))
                 {
                     ModelState.AddModelError("", "One team cannot win more than 3 MVP+EVP awards.");
                     model.MVPCandidates = await mvpEVPService.CalculateRankedMVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
                     model.EVPCandidates = await mvpEVPService.CalculateRankedEVPCandidatesAsync(model.TournamentId, model.MVFormulaConfig);
+                    await PopulateConcludePointsPreviewAsync(model);
                     return View(model);
                 }
+            }
 
+            var bracketPlacementService = new TournamentBracketPlacementService(_context);
+            await bracketPlacementService.PersistPlacementsAsync(tournament.Id);
+
+            var placementPointsService = new TournamentPlacementPointsService(_context);
+            await placementPointsService.DistributeTournamentPlacementPointsAsync(tournament.Id);
+
+            if (model.SelectedMVPId.HasValue)
+            {
+                var mvpPlayer = await _context.Players.FindAsync(model.SelectedMVPId.Value);
+                if (mvpPlayer != null)
+                {
+                    await trophyService.AwardPlayerTrophyAsync(
+                        model.SelectedMVPId.Value,
+                        "MVP",
+                        $"MVP of {tournament.FullName}",
+                        tournament.Id,
+                        null);
+                }
+            }
+
+            if (model.SelectedEVPIds.Any())
+            {
                 await trophyService.AwardMultiplePlayerTrophiesAsync(
                     model.SelectedEVPIds,
                     "EVP",
                     $"EVP of {tournament.FullName}",
                     tournament.Id,
-                    null); // EVP uses default image, not trophy image
+                    null);
             }
 
-            // Award points for placements
-            var pointsMap = new Dictionary<int, int>
-            {
-                { 1, 500 }, // 1st place = 500 pts
-                { 2, 325 },
-                { 3, 200 },
-                { 4, 125 }
-                // expand as needed
-            };
-
-            foreach (var placement in tournament.Placements)
-            {
-                if (!pointsMap.TryGetValue(placement.Placement, out var points))
-                    continue;
-
-                placement.PointsAwarded = points;
-
-                // Get roster at tournament start
-                var roster = placement.Team.Transfers
-                .Where(tr =>
-                    tr.StartDate <= tournament.StartDate &&
-                    (tr.EndDate == null || tr.EndDate >= tournament.StartDate) &&
-                    tr.Status == PlayerTeamStatus.Active)
-                .GroupBy(tr => tr.PlayerId)
-                .Select(g => g.OrderByDescending(tr => tr.StartDate).First().Player)
-                .ToList();
-
-                // Decide the "core" (for simplicity: top 3 players by presence)
-                var corePlayers = roster.Take(3).ToList();
-
-                // Find or create Core
-                var core = await _context.Cores
-                    .Include(c => c.Players)
-                    .FirstOrDefaultAsync(c =>
-                        corePlayers.All(cp => c.Players.Select(p => p.PlayerId).Contains(cp.Id))
-                        && c.Players.Count == corePlayers.Count);
-
-                if (core == null)
-                {
-                    core = new Core { Name = string.Join("/", corePlayers.Select(p => p.Nickname)) };
-                    _context.Cores.Add(core);
-                    await _context.SaveChangesAsync();
-
-                    foreach (var p in corePlayers)
-                    {
-                        _context.CorePlayers.Add(new CorePlayer { CoreId = core.Id, PlayerId = p.Id });
-                    }
-                }
-
-                // Award points
-                _context.CoreTournamentPoints.Add(new CoreTournamentPoints
-                {
-                    CoreId = core.Id,
-                    TournamentId = tournament.Id,
-                    Points = points
-                });
-            }
-
-            await _context.SaveChangesAsync();
-
-            // Generate placements from bracket results
-            await GeneratePlacementsFromBracket(tournament);
-
-            // Award champion trophy AFTER placements are generated
             if (model.AwardChampionTrophy)
             {
-                // Reload tournament with fresh placements
-                tournament = await _context.Tournaments
+                var tournamentForChampion = await _context.Tournaments
                     .Include(t => t.Placements)
                     .FirstOrDefaultAsync(t => t.Id == model.TournamentId);
 
-                var champion = tournament.Placements
-                    .Where(p => p.Placement == 1)
-                    .FirstOrDefault();
+                if (tournamentForChampion != null)
+                {
+                    var champion = tournamentForChampion.Placements
+                        .Where(p => p.Placement == 1)
+                        .FirstOrDefault();
 
-                if (champion != null)
-                {
-                    // Use trophy image if provided, otherwise null (will use default)
-                    string? championTrophyImagePath = null;
-                    if (model.TrophyImageFile != null && model.TrophyImageFile.Length > 0)
+                    if (champion != null)
                     {
-                        try
-                        {
-                            championTrophyImagePath = await ImageOptimizer.SaveWebpAsync(
-                                model.TrophyImageFile,
-                                env.WebRootPath,
-                                Path.Combine("uploads", "Tournaments", "Trophies"),
-                                maxWidth: 1920,
-                                maxHeight: 1080,
-                                quality: 85);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"⚠️ Error saving champion trophy image: {ex.Message}");
-                        }
+                        await trophyService.AwardChampionTrophyAsync(
+                            tournamentForChampion.Id,
+                            champion.TeamId,
+                            model.ChampionTrophyDescription,
+                            trophyImagePath);
+                        Console.WriteLine($"🏆 Awarded champion trophy to team {champion.TeamId} for tournament {tournamentForChampion.Id}");
                     }
-                    
-                    await trophyService.AwardChampionTrophyAsync(
-                        tournament.Id, 
-                        champion.TeamId, 
-                        model.ChampionTrophyDescription,
-                        championTrophyImagePath);
-                    Console.WriteLine($"🏆 Awarded champion trophy to team {champion.TeamId} for tournament {tournament.Id}");
-                }
-                else
-                {
-                    Console.WriteLine($"⚠️ No champion found in placements for tournament {tournament.Id}");
+                    else
+                    {
+                        Console.WriteLine($"⚠️ No champion found in placements for tournament {tournamentForChampion.Id}");
+                    }
                 }
             }
 
-            TempData["Success"] = $"Tournament '{tournament.FullName}' concluded with trophies and points awarded!";
+            TempData["Success"] = $"Tournament '{model.TournamentName}' concluded with trophies and points awarded!";
             return RedirectToAction("Details", new { id = model.TournamentId });
         }
 
-        private async Task GeneratePlacementsFromBracket(Tournament tournament)
-        {
-            // Clear existing placements
-            _context.TournamentPlacements.RemoveRange(tournament.Placements);
-
-            // Get all participating teams
-            var participatingTeams = await _context.TournamentTeams
-                .Include(tt => tt.Team)
-                .Where(tt => tt.TournamentId == tournament.Id)
-                .OrderBy(tt => tt.Seed)
-                .Select(tt => tt.Team)
-                .ToListAsync();
-
-            // Get all series with match results
-            var allSeries = await _context.Series
-                .Include(s => s.TeamA)
-                .Include(s => s.TeamB)
-                .Include(s => s.WinnerTeam)
-                .Include(s => s.Matches)
-                .Where(s => s.TournamentId == tournament.Id)
-                .ToListAsync();
-
-            var placements = new List<TournamentPlacement>();
-
-            if (tournament.Elimination == EliminationType.Single)
-            {
-                await GenerateSingleEliminationPlacements(allSeries, participatingTeams, placements, tournament);
-            }
-            else
-            {
-                await GenerateDoubleEliminationPlacements(allSeries, participatingTeams, placements, tournament);
-            }
-
-            // Add placements to database
-            foreach (var placement in placements)
-            {
-                _context.TournamentPlacements.Add(placement);
-            }
-
-            await _context.SaveChangesAsync();
-        }
-
-        private async Task GenerateSingleEliminationPlacements(List<Series> allSeries, List<Team> participatingTeams, List<TournamentPlacement> placements, Tournament tournament)
-        {
-            Console.WriteLine($"🎯 Starting single elimination placement generation for {participatingTeams.Count} teams");
-            Console.WriteLine($"🎯 Participating teams: {string.Join(", ", participatingTeams.Select(t => $"{t.FullName} (ID: {t.Id})"))}");
-
-            // Get all series ordered by round (highest first)
-            var seriesByRound = allSeries
-                .Where(s => s.Bracket == BracketType.Upper)
-                .GroupBy(s => s.Round)
-                .OrderByDescending(g => g.Key)
-                .ToList();
-
-            if (!seriesByRound.Any())
-            {
-                Console.WriteLine("❌ No series found for placement generation");
-                return;
-            }
-
-            Console.WriteLine($"🎯 Series by round: {string.Join(", ", seriesByRound.Select(g => $"Round {g.Key}: {g.Count()} series"))}");
-
-            // Track teams by elimination round
-            var eliminatedTeams = new Dictionary<int, List<Team>>();
-            var remainingTeams = new HashSet<Team>(participatingTeams);
-
-            // Process rounds from highest to lowest to track eliminations
-            foreach (var roundGroup in seriesByRound)
-            {
-                var roundEliminated = new List<Team>();
-                
-                Console.WriteLine($"🎯 Processing Round {roundGroup.Key} with {roundGroup.Count()} series");
-                
-                foreach (var series in roundGroup)
-                {
-                    Console.WriteLine($"🎯 Series {series.Id}: {series.TeamA?.FullName} vs {series.TeamB?.FullName}, Finished: {series.isFinished}, Winner: {series.WinnerTeam?.FullName}");
-                    
-                    if (series.isFinished && series.TeamA != null && series.TeamB != null && series.WinnerTeam != null)
-                    {
-                        var winner = series.WinnerTeam;
-                        var loser = series.TeamA == winner ? series.TeamB : series.TeamA;
-                        
-                        if (loser != null && remainingTeams.Contains(loser))
-                        {
-                            roundEliminated.Add(loser);
-                            remainingTeams.Remove(loser);
-                            Console.WriteLine($"🎯 Team {loser.FullName} (ID: {loser.Id}) eliminated in Round {roundGroup.Key} by {winner.FullName}");
-                        }
-                    }
-                }
-
-                if (roundEliminated.Any())
-                {
-                    eliminatedTeams[roundGroup.Key] = roundEliminated;
-                    Console.WriteLine($"🎯 Round {roundGroup.Key} eliminated: {string.Join(", ", roundEliminated.Select(t => $"{t.FullName} (ID: {t.Id})"))}");
-                }
-            }
-
-            Console.WriteLine($"🎯 Remaining teams after elimination: {string.Join(", ", remainingTeams.Select(t => $"{t.FullName} (ID: {t.Id})"))}");
-
-            // Create placements with proper shared positions
-            int currentPlacement = 1;
-
-            // 1st place - winner of final (remaining team)
-            if (remainingTeams.Count == 1)
-            {
-                var winner = remainingTeams.First();
-                placements.Add(CreatePlacement(tournament, winner, currentPlacement));
-                Console.WriteLine($"🏆 1st place: {winner.FullName} (ID: {winner.Id})");
-                currentPlacement++;
-            }
-
-            // Process eliminations from final round to first round
-            foreach (var roundGroup in seriesByRound)
-            {
-                if (eliminatedTeams.ContainsKey(roundGroup.Key))
-                {
-                    var roundEliminated = eliminatedTeams[roundGroup.Key];
-                    
-                    // Calculate how many teams to advance from this round
-                    int teamsAdvancing = roundGroup.Count();
-                    int teamsEliminated = roundEliminated.Count;
-                    
-                    Console.WriteLine($"🎯 Round {roundGroup.Key}: {teamsEliminated} teams eliminated, {teamsAdvancing} teams advancing");
-                    
-                    // All teams eliminated in this round share the same placement
-                    foreach (var team in roundEliminated)
-                    {
-                        placements.Add(CreatePlacement(tournament, team, currentPlacement));
-                        Console.WriteLine($"Place {currentPlacement}: {team.FullName} (ID: {team.Id})");
-                    }
-                    currentPlacement += teamsEliminated;
-                }
-            }
-
-            // Ensure ALL teams are placed (fallback for any missing teams)
-            var placedTeamIds = placements.Select(p => p.TeamId).ToHashSet();
-            var unplacedTeams = participatingTeams.Where(t => !placedTeamIds.Contains(t.Id)).ToList();
-            
-            if (unplacedTeams.Any())
-            {
-                Console.WriteLine($"⚠️ Found {unplacedTeams.Count} unplaced teams: {string.Join(", ", unplacedTeams.Select(t => $"{t.FullName} (ID: {t.Id})"))}");
-                foreach (var team in unplacedTeams)
-                {
-                    placements.Add(CreatePlacement(tournament, team, currentPlacement));
-                    Console.WriteLine($"Unplaced team {currentPlacement}: {team.FullName} (ID: {team.Id})");
-                }
-            }
-
-            // Debug logging to verify all teams are placed
-            Console.WriteLine($"🎯 Single Elimination Placement Generation Summary:");
-            Console.WriteLine($"   Total participating teams: {participatingTeams.Count}");
-            Console.WriteLine($"   Total placements created: {placements.Count}");
-            Console.WriteLine($"   Placed team IDs: [{string.Join(", ", placements.Select(p => p.TeamId).OrderBy(id => id))}]");
-            Console.WriteLine($"   Participating team IDs: [{string.Join(", ", participatingTeams.Select(t => t.Id).OrderBy(id => id))}]");
-            
-            // Group placements by placement number for debugging
-            var placementGroups = placements.GroupBy(p => p.Placement).OrderBy(g => g.Key);
-            foreach (var group in placementGroups)
-            {
-                Console.WriteLine($"   Placement {group.Key}: {group.Count()} teams - {string.Join(", ", group.Select(p => $"Team {p.TeamId}"))}");
-            }
-            
-            if (placements.Count != participatingTeams.Count)
-            {
-                Console.WriteLine($"❌ WARNING: Single elimination placement count mismatch! Expected {participatingTeams.Count}, got {placements.Count}");
-            }
-        }
-
-        private async Task GenerateDoubleEliminationPlacements(List<Series> allSeries, List<Team> participatingTeams, List<TournamentPlacement> placements, Tournament tournament)
-        {
-            Console.WriteLine($"🎯 Starting double elimination placement generation for {participatingTeams.Count} teams");
-
-            // Track placed team IDs to prevent duplicates
-            var placedTeamIds = new HashSet<int>();
-
-            // Find grand final
-            var grandFinal = allSeries
-                .Where(s => s.Bracket == BracketType.GrandFinal)
-                .FirstOrDefault();
-
-            if (grandFinal?.isFinished == true && grandFinal.WinnerTeam != null)
-            {
-                // 1st place - winner of grand final
-                if (!placedTeamIds.Contains(grandFinal.WinnerTeam.Id))
-                {
-                    placements.Add(CreatePlacement(tournament, grandFinal.WinnerTeam, 1));
-                    placedTeamIds.Add(grandFinal.WinnerTeam.Id);
-                    Console.WriteLine($"🏆 1st place: {grandFinal.WinnerTeam.FullName}");
-                }
-
-                // 2nd place - loser of grand final
-                var runnerUp = grandFinal.TeamA == grandFinal.WinnerTeam ? grandFinal.TeamB : grandFinal.TeamA;
-                if (runnerUp != null && !placedTeamIds.Contains(runnerUp.Id))
-                {
-                    placements.Add(CreatePlacement(tournament, runnerUp, 2));
-                    placedTeamIds.Add(runnerUp.Id);
-                    Console.WriteLine($"🥈 2nd place: {runnerUp.FullName}");
-                }
-
-                // 3rd place - loser of upper bracket final (the team that lost to grand final winner in upper bracket)
-                var upperBracketFinal = allSeries
-                    .Where(s => s.Bracket == BracketType.Upper)
-                    .OrderByDescending(s => s.Round)
-                    .FirstOrDefault();
-
-                if (upperBracketFinal?.isFinished == true)
-                {
-                    var upperBracketLoser = upperBracketFinal.TeamA == grandFinal.WinnerTeam ? upperBracketFinal.TeamB : upperBracketFinal.TeamA;
-                    if (upperBracketLoser != null && upperBracketLoser.Id != runnerUp?.Id && !placedTeamIds.Contains(upperBracketLoser.Id))
-                    {
-                        placements.Add(CreatePlacement(tournament, upperBracketLoser, 3));
-                        placedTeamIds.Add(upperBracketLoser.Id);
-                        Console.WriteLine($"🥉 3rd place: {upperBracketLoser.FullName}");
-                    }
-                }
-
-                // Track eliminated teams by elimination round
-                var eliminatedTeams = new Dictionary<int, List<Team>>();
-
-                // Process upper bracket eliminations
-                var upperBracketSeries = allSeries
-                    .Where(s => s.Bracket == BracketType.Upper && s.isFinished)
-                    .OrderByDescending(s => s.Round)
-                    .ThenByDescending(s => s.Position)
-                    .ToList();
-
-                foreach (var series in upperBracketSeries)
-                {
-                    if (series.WinnerTeam != null)
-                    {
-                        var loser = series.TeamA == series.WinnerTeam ? series.TeamB : series.TeamA;
-                        if (loser != null && !placedTeamIds.Contains(loser.Id))
-                        {
-                            // Teams eliminated in upper bracket final get 4th place
-                            if (series.Round == upperBracketFinal.Round)
-                            {
-                                placements.Add(CreatePlacement(tournament, loser, 4));
-                                placedTeamIds.Add(loser.Id);
-                                Console.WriteLine($"4th place: {loser.FullName}");
-                            }
-                            else
-                            {
-                                // Other upper bracket eliminations
-                                if (!eliminatedTeams.ContainsKey(series.Round))
-                                    eliminatedTeams[series.Round] = new List<Team>();
-                                if (!eliminatedTeams[series.Round].Any(t => t.Id == loser.Id))
-                                    eliminatedTeams[series.Round].Add(loser);
-                            }
-                        }
-                    }
-                }
-
-                // Process lower bracket eliminations
-                var lowerBracketSeries = allSeries
-                    .Where(s => s.Bracket == BracketType.Lower && s.isFinished)
-                    .OrderByDescending(s => s.Round)
-                    .ThenByDescending(s => s.Position)
-                    .ToList();
-
-                foreach (var series in lowerBracketSeries)
-                {
-                    if (series.WinnerTeam != null)
-                    {
-                        var loser = series.TeamA == series.WinnerTeam ? series.TeamB : series.TeamA;
-                        if (loser != null && !placedTeamIds.Contains(loser.Id))
-                        {
-                            if (!eliminatedTeams.ContainsKey(series.Round + 100)) // Offset to separate from upper bracket
-                                eliminatedTeams[series.Round + 100] = new List<Team>();
-                            if (!eliminatedTeams[series.Round + 100].Any(t => t.Id == loser.Id))
-                                eliminatedTeams[series.Round + 100].Add(loser);
-                        }
-                    }
-                }
-
-                // Assign placements based on elimination order
-                int currentPlacement = 5;
-                var sortedEliminations = eliminatedTeams.OrderByDescending(kvp => kvp.Key);
-                
-                foreach (var elimination in sortedEliminations)
-                {
-                    var teamsInThisElimination = elimination.Value.Where(t => !placedTeamIds.Contains(t.Id)).ToList();
-                    foreach (var team in teamsInThisElimination)
-                    {
-                        placements.Add(CreatePlacement(tournament, team, currentPlacement));
-                        placedTeamIds.Add(team.Id);
-                        Console.WriteLine($"Place {currentPlacement}: {team.FullName}");
-                    }
-                    currentPlacement += teamsInThisElimination.Count;
-                }
-            }
-
-            // Ensure ALL teams are placed (fallback for any missing teams)
-            var unplacedTeams = participatingTeams.Where(t => !placedTeamIds.Contains(t.Id)).ToList();
-            
-            if (unplacedTeams.Any())
-            {
-                Console.WriteLine($"⚠️ Found {unplacedTeams.Count} unplaced teams: {string.Join(", ", unplacedTeams.Select(t => t.FullName))}");
-                int lastPlacement = placements.Any() ? placements.Max(p => p.Placement) + 1 : 1;
-                foreach (var team in unplacedTeams)
-                {
-                    if (!placedTeamIds.Contains(team.Id))
-                    {
-                        placements.Add(CreatePlacement(tournament, team, lastPlacement));
-                        placedTeamIds.Add(team.Id);
-                        Console.WriteLine($"Unplaced team {lastPlacement}: {team.FullName}");
-                    }
-                }
-            }
-
-            // Debug logging to verify all teams are placed
-            Console.WriteLine($"🎯 Double Elimination Placement Generation Summary:");
-            Console.WriteLine($"   Total participating teams: {participatingTeams.Count}");
-            Console.WriteLine($"   Total placements created: {placements.Count}");
-            Console.WriteLine($"   Placed team IDs: [{string.Join(", ", placements.Select(p => p.TeamId).OrderBy(id => id))}]");
-            Console.WriteLine($"   Participating team IDs: [{string.Join(", ", participatingTeams.Select(t => t.Id).OrderBy(id => id))}]");
-            
-            // Check for duplicates
-            var duplicateTeamIds = placements.GroupBy(p => p.TeamId).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
-            if (duplicateTeamIds.Any())
-            {
-                Console.WriteLine($"❌ ERROR: Found duplicate team placements! Team IDs: [{string.Join(", ", duplicateTeamIds)}]");
-            }
-            
-            if (placements.Count != participatingTeams.Count)
-            {
-                Console.WriteLine($"❌ WARNING: Double elimination placement count mismatch! Expected {participatingTeams.Count}, got {placements.Count}");
-            }
-        }
-
-        private TournamentPlacement CreatePlacement(Tournament tournament, Team team, int placement)
-        {
-            return new TournamentPlacement
-            {
-                TournamentId = tournament.Id,
-                TeamId = team.Id,
-                Placement = placement,
-                PointsAwarded = GetPointsForPlacement(tournament, placement),
-                // Prize amount would be calculated here if needed
-            };
-        }
-
-        private int GetPointsForPlacement(Tournament tournament, int placement)
-        {
-            // Try to parse the points configuration JSON
-            if (!string.IsNullOrEmpty(tournament.PointsConfiguration))
-            {
-                try
-                {
-                    var pointsConfig = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int>>(tournament.PointsConfiguration);
-                    if (pointsConfig != null && pointsConfig.ContainsKey(placement.ToString()))
-                    {
-                        return pointsConfig[placement.ToString()];
-                    }
-                }
-                catch
-                {
-                    // Fall back to default if JSON parsing fails
-                }
-            }
-
-            // Default point distribution if no configuration (scalable for any placement)
-            return placement switch
-            {
-                1 => 500,
-                2 => 325,
-                3 => 200,
-                4 => 125,
-                5 => 100,
-                6 => 75,
-                7 => 50,
-                8 => 25,
-                9 => 20,
-                10 => 15,
-                11 => 12,
-                12 => 10,
-                13 => 8,
-                14 => 6,
-                15 => 4,
-                16 => 2,
-                _ => Math.Max(1, 20 - placement) // Dynamic calculation for higher placements
-            };
-        }
 
         private decimal GetPrizeForPlacement(Tournament tournament, int placement)
         {
@@ -1954,6 +1495,12 @@ namespace Balkana.Controllers
                 .ToListAsync();
 
             return Ok(players);
+        }
+
+        private async Task PopulateConcludePointsPreviewAsync(TournamentConclusionViewModel model)
+        {
+            var svc = new TournamentPlacementPointsService(_context);
+            model.TeamPointsPreview = await svc.BuildPointsPreviewAsync(model.TournamentId);
         }
     }
 }

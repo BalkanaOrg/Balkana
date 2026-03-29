@@ -1,4 +1,4 @@
-﻿namespace Balkana.Data.Models
+namespace Balkana.Data.Models
 {
     public class TournamentPlacement
     {
@@ -11,6 +11,10 @@
         public Team Team { get; set; }
 
         public int Placement { get; set; } // e.g. 1 = winner, 2 = runner-up
-        public int PointsAwarded { get; set; } // total pool points (before distributing to core)
+        /// <summary>Player pool after emergency-substitute penalty (split across players).</summary>
+        public int PointsAwarded { get; set; }
+        /// <summary>20% of <see cref="PointsAwarded"/> awarded to the team organisation.</summary>
+        public int OrganisationPointsAwarded { get; set; }
     }
 }
+

@@ -57,6 +57,7 @@ namespace Balkana.Data
         public DbSet<Core> Cores { get; set; }
         public DbSet<CorePlayer> CorePlayers { get; set; }
         public DbSet<CoreTournamentPoints> CoreTournamentPoints { get; set; }
+        public DbSet<PlayerPoints> PlayerPoints { get; set; }
 
         //Community
         public DbSet<CommunityTeam> CommunityTeams { get; set; }
@@ -344,6 +345,21 @@ namespace Balkana.Data
                 .WithMany()
                 .HasForeignKey(cp => cp.PlayerId);
 
+            modelBuilder.Entity<PlayerPoints>()
+                .HasOne(pp => pp.Player)
+                .WithMany()
+                .HasForeignKey(pp => pp.PlayerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PlayerPoints>()
+                .HasOne(pp => pp.Tournament)
+                .WithMany()
+                .HasForeignKey(pp => pp.TournamentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PlayerPoints>()
+                .HasIndex(pp => new { pp.PlayerId, pp.TournamentId })
+                .IsUnique();
 
             //Community
             //modelBuilder.Entity<CommunityTeam>()

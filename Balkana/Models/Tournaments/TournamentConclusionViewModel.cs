@@ -25,6 +25,21 @@ namespace Balkana.Models.Tournaments
         public bool AwardChampionTrophy { get; set; } = true;
         public string ChampionTrophyDescription { get; set; }
         public IFormFile? TrophyImageFile { get; set; }
+
+        public List<TeamPointsPreviewRow> TeamPointsPreview { get; set; } = new();
+    }
+
+    public class TeamPointsPreviewRow
+    {
+        public int TeamId { get; set; }
+        public string TeamName { get; set; } = "";
+        public int EmergencySubstituteCount { get; set; }
+        public int PenaltyPercent { get; set; }
+        public bool BracketPreviewIncomplete { get; set; }
+        public int? Placement { get; set; }
+        public int? BasePointsFromPlacement { get; set; }
+        public int? EffectivePlayerPool { get; set; }
+        public int? OrganisationPoints { get; set; }
     }
 
     public enum MVPSourceType

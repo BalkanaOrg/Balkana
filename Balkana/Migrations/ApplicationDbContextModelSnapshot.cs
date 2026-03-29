@@ -1968,6 +1968,9 @@ namespace Balkana.Migrations
                     b.Property<int>("Placement")
                         .HasColumnType("int");
 
+                    b.Property<int>("OrganisationPointsAwarded")
+                        .HasColumnType("int");
+
                     b.Property<int>("PointsAwarded")
                         .HasColumnType("int");
 
@@ -1984,6 +1987,33 @@ namespace Balkana.Migrations
                     b.HasIndex("TournamentId");
 
                     b.ToTable("TournamentPlacements");
+                });
+
+            modelBuilder.Entity("Balkana.Data.Models.PlayerPoints", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PointsAwarded")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TournamentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TournamentId");
+
+                    b.HasIndex("PlayerId", "TournamentId")
+                        .IsUnique();
+
+                    b.ToTable("PlayerPoints");
                 });
 
             modelBuilder.Entity("Balkana.Data.Models.TournamentSocials", b =>
@@ -2684,6 +2714,25 @@ namespace Balkana.Migrations
                         .IsRequired();
 
                     b.Navigation("Core");
+
+                    b.Navigation("Tournament");
+                });
+
+            modelBuilder.Entity("Balkana.Data.Models.PlayerPoints", b =>
+                {
+                    b.HasOne("Balkana.Data.Models.Player", "Player")
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Balkana.Data.Models.Tournament", "Tournament")
+                        .WithMany()
+                        .HasForeignKey("TournamentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Player");
 
                     b.Navigation("Tournament");
                 });
