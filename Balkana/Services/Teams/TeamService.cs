@@ -50,10 +50,36 @@ namespace Balkana.Services.Teams
             {
                 teamsQuery = teamsQuery.Where(t => t.TournamentTeams.Any(tt => tt.Tournament.StartDate.Year == year.Value));
             }
-            
+
             var totalTeams = teamsQuery.Count();
 
-            var teams = GetTeams(teamsQuery.Skip((currentPage - 1) * teamsPerPage).Take(teamsPerPage));
+            IEnumerable<TeamServiceModel> teams;
+            var now = DateTime.UtcNow;
+
+            if (!year.HasValue || year.Value < 2026)
+            {
+                var pagedIds = teamsQuery
+                    .OrderBy(t => t.Id)
+                    .Skip((currentPage - 1) * teamsPerPage)
+                    .Take(teamsPerPage);
+
+                teams = BuildTeamListCards(pagedIds);
+            }
+            else
+            {
+                var circuitYear = year.Value;
+                var allTeams = teamsQuery
+                    .Include(t => t.Transfers)
+                    .AsNoTracking()
+                    .ToList()
+                    .OrderByDescending(t => GetCircuitYearPointsTotalForTeam(t, circuitYear, now))
+                    .ThenBy(t => t.Id)
+                    .Skip((currentPage - 1) * teamsPerPage)
+                    .Take(teamsPerPage)
+                    .ToList();
+
+                teams = allTeams.Select(BuildTeamListCard).ToList();
+            }
 
             return new TeamQueryServiceModel
             {
@@ -236,72 +262,59 @@ namespace Balkana.Services.Teams
         }
 
 
-        private IEnumerable<TeamServiceModel> GetTeams(IQueryable<Team> teamQuery)
+        private IEnumerable<TeamServiceModel> BuildTeamListCards(IQueryable<Team> teamQuery)
+        {
+            var teams = teamQuery.AsNoTracking().ToList();
+            return teams.Select(BuildTeamListCard).ToList();
+        }
+
+        private TeamServiceModel BuildTeamListCard(Team team)
         {
             var defaultPic = "https://media.istockphoto.com/id/1618846975/photo/smile-black-woman-and-hand-pointing-in-studio-for-news-deal-or-coming-soon-announcement-on.jpg?s=612x612&w=0&k=20&c=LUvvJu4sGaIry5WLXmfQV7RStbGG5hEQNo8hEFxZSGY=";
 
-            // Load teams in memory first
-            var teams = teamQuery
-                .AsNoTracking()
+            var seriesPlayed = this.data.Series
+                .Where(s => s.isFinished &&
+                            (s.TeamAId == team.Id || s.TeamBId == team.Id) &&
+                            s.WinnerTeamId.HasValue)
                 .ToList();
 
-            // Map teams to service models
-            var teamModels = teams.Select(team =>
+            int wins = 0;
+            int losses = 0;
+
+            foreach (var series in seriesPlayed)
             {
-                // Calculate wins/losses from Series table
-                var seriesPlayed = this.data.Series
-                    .Where(s => s.isFinished && 
-                                (s.TeamAId == team.Id || s.TeamBId == team.Id) &&
-                                s.WinnerTeamId.HasValue)
-                    .ToList();
+                if (series.WinnerTeamId == team.Id)
+                    wins++;
+                else if ((series.TeamAId == team.Id || series.TeamBId == team.Id) && series.WinnerTeamId.HasValue)
+                    losses++;
+            }
 
-                int wins = 0;
-                int losses = 0;
+            int totalSeries = wins + losses;
+            double winRate = totalSeries > 0 ? (double)wins / totalSeries * 100 : 0;
 
-                foreach (var series in seriesPlayed)
-                {
-                    if (series.WinnerTeamId == team.Id)
+            return new TeamServiceModel
+            {
+                Id = team.Id,
+                FullName = team.FullName,
+                Tag = team.Tag,
+                LogoURL = team.LogoURL,
+                yearFounded = team.yearFounded,
+                GameId = team.GameId,
+                Wins = wins,
+                Losses = losses,
+                WinRate = Math.Round(winRate, 1),
+                Players = this.AllPlayers(team.Id)
+                    .Take(5)
+                    .Select(p => new PlayerServiceModel
                     {
-                        wins++;
-                    }
-                    else if ((series.TeamAId == team.Id || series.TeamBId == team.Id) && 
-                             series.WinnerTeamId.HasValue)
-                    {
-                        losses++;
-                    }
-                }
-
-                int totalSeries = wins + losses;
-                double winRate = totalSeries > 0 ? (double)wins / totalSeries * 100 : 0;
-
-                var model = new TeamServiceModel
-                {
-                    Id = team.Id,
-                    FullName = team.FullName,
-                    Tag = team.Tag,
-                    LogoURL = team.LogoURL,
-                    yearFounded = team.yearFounded,
-                    GameId = team.GameId,
-                    Wins = wins,
-                    Losses = losses,
-                    WinRate = Math.Round(winRate, 1),
-                    Players = this.AllPlayers(team.Id)
-                        .Take(5) // max 5 players for HLTV-style grid
-                        .Select(p => new PlayerServiceModel
-                        {
-                            Id = p.Id,
-                            Nickname = p.Nickname,
-                            FirstName = p.FirstName,
-                            LastName = p.LastName,
-                            PictureUrl = p.PictureUrl ?? defaultPic
-                        })
-                        .ToList()
-                };
-
-                return model;
-            }).ToList();
-
-            return teamModels;
+                        Id = p.Id,
+                        Nickname = p.Nickname,
+                        FirstName = p.FirstName,
+                        LastName = p.LastName,
+                        PictureUrl = p.PictureUrl ?? defaultPic
+                    })
+                    .ToList()
+            };
         }
 
         public int AbsoluteNumberOfTeams()
@@ -337,6 +350,12 @@ namespace Balkana.Services.Teams
                 .Sum(pp => (int?)pp.PointsAwarded) ?? 0;
 
             return (playerPoints, orgPoints);
+        }
+
+        private int GetCircuitYearPointsTotalForTeam(Team team, int circuitYear, DateTime now)
+        {
+            var (roster, org) = GetCircuitYearPoints(team, circuitYear, now);
+            return roster + org;
         }
 
         private IEnumerable<TeamRosterServiceModel> GetCurrentRoster(Team team, DateTime now, string defaultPic)

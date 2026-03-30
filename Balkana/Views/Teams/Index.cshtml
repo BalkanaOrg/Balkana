@@ -1,4 +1,4 @@
-﻿@model AllTeamsQueryModel
+@model AllTeamsQueryModel
 @{
     ViewData["Title"] = "Balkana Teams";
 }
@@ -23,6 +23,7 @@
     <!-- Search and Filter Section -->
     <div class="search-filter-section">
         <form method="get" class="rankings-form" id="filterForm">
+            <input type="hidden" asp-for="Game" />
             <div class="search-container">
                 <input asp-for="SearchTerm"
                        class="search-input-ranking"
@@ -112,9 +113,8 @@
     let renderedTeamsCount = @Model.Teams.Count();
     let isLoading = false;
     let hasMoreData = true;
-    const game = '@Model.SelectedGame';
-    const year = '@Model.Year';
-    const searchTerm = '@Model.SearchTerm';
+    const year = '@(Model.Year?.ToString() ?? "")';
+    const searchTerm = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SearchTerm ?? ""));
     const teamsPerPage = @AllTeamsQueryModel.TeamsPerPage;
 
     // Lazy loading on scroll
@@ -202,13 +202,17 @@
             });
     }
 
+    function currentGameFromForm() {
+        const el = document.querySelector('#filterForm input[name="Game"]');
+        return el && el.value ? el.value : '';
+    }
+
     function buildUrl(page) {
         let url = `/Teams/Index?currentPage=${page}`;
-        
-        if (game) url += `&game=${encodeURIComponent(game)}`;
+        const gameVal = currentGameFromForm();
+        if (gameVal) url += `&game=${encodeURIComponent(gameVal)}`;
         if (year) url += `&year=${encodeURIComponent(year)}`;
         if (searchTerm) url += `&searchTerm=${encodeURIComponent(searchTerm)}`;
-        
         return url;
     }
 
