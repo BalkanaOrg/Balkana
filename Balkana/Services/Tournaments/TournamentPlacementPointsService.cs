@@ -59,6 +59,7 @@ namespace Balkana.Services.Tournaments
                     row.BasePointsFromPlacement = p;
                     row.EffectivePlayerPool = pEff;
                     row.OrganisationPoints = (int)Math.Round(0.2 * pEff);
+                    row.PrizePoolAwarded = pl.PrizePoolAwarded;
                 }
 
                 rows.Add(row);

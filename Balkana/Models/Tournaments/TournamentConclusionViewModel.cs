@@ -40,6 +40,7 @@ namespace Balkana.Models.Tournaments
         public int? BasePointsFromPlacement { get; set; }
         public int? EffectivePlayerPool { get; set; }
         public int? OrganisationPoints { get; set; }
+        public decimal? PrizePoolAwarded { get; set; }
     }
 
     public enum MVPSourceType

@@ -1971,6 +1971,9 @@ namespace Balkana.Migrations
                     b.Property<int>("OrganisationPointsAwarded")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("PrizePoolAwarded")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("PointsAwarded")
                         .HasColumnType("int");
 

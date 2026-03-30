@@ -529,6 +529,14 @@ else
         position: relative;
     }
 
+    .tournament-bracket > .container-fluid {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 100%;
+    }
+
     .tournament-bracket::before {
         content: '';
         position: absolute;
@@ -548,6 +556,16 @@ else
         border: 2px solid #1a1a1a;
         position: relative;
         z-index: 1;
+        width: 100%;
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .bracket-header {
+        width: 100%;
+        max-width: 100%;
     }
 
     .bracket-header h4 {
@@ -612,6 +630,16 @@ else
 
     /* Ultra Black Bracket Viewer Styling */
     #bracket-container.brackets-viewer {
+        --match-width: 210px;
+        --primary-background: #0a0a0a;
+        --secondary-background: #1a1a1a;
+        --match-background: #0a0a0a;
+        --font-color: #f3f4f6;
+        --label-color: #9ca3af;
+        --hint-color: #9ca3af;
+        --connector-color: #374151;
+        --border-color: #2a2a2a;
+        --border-hover-color: #3b82f6;
         background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%) !important;
         color: #f9fafb;
         padding: 25px;
@@ -619,18 +647,64 @@ else
         border-radius: 15px;
         border: 2px solid #1a1a1a;
         box-shadow: 0 8px 32px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
+        align-items: center !important;
+        width: 100%;
+        max-width: 100%;
     }
 
-    /* Center the bracket content when it doesn't overflow */
+    /* Center scrollable bracket; do not clip match labels (plugin uses absolutely positioned spans) */
     #bracket-container {
         display: flex;
         justify-content: center;
         align-items: flex-start;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        width: 100%;
+        max-width: 100%;
     }
 
-    /* Keep plugin internals flexible and centered */
     #bracket-container > * {
         flex: 0 0 auto;
+    }
+
+    /* Round title: full column width, readable on dark theme (overrides viewer h3 width: var(--match-width)) */
+    #bracket-container.brackets-viewer .bracket .rounds .round > h3,
+    #bracket-container.brackets-viewer h3 {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%) !important;
+        color: #e5e7eb !important;
+        border: 1px solid #2a2a2a !important;
+        border-bottom: none !important;
+        border-radius: 10px 10px 0 0 !important;
+        padding: 10px 8px !important;
+        white-space: normal !important;
+        text-overflow: unset !important;
+        overflow: visible !important;
+        margin-bottom: 0.35em !important;
+        font-weight: 600 !important;
+    }
+
+    /* Match code (M 1.1) above opponent rows: reserve space + keep label visible */
+    #bracket-container.brackets-viewer .match {
+        overflow: visible !important;
+        padding-top: 6px !important;
+        margin-top: 6px !important;
+    }
+
+    #bracket-container.brackets-viewer .opponents {
+        padding-top: 16px !important;
+        margin-top: 2px !important;
+    }
+
+    #bracket-container.brackets-viewer .opponents > span {
+        top: 2px !important;
+        background: rgba(10, 10, 10, 0.95) !important;
+        color: #d1d5db !important;
+        border: 1px solid #2a2a2a !important;
+        z-index: 6 !important;
     }
 
     /* Individual brackets (scoped to plugin container) */
@@ -645,33 +719,20 @@ else
     /* Ultra Black Matches */
     #bracket-container .match {
         min-width: 210px;
-        background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%) !important;
+        background: transparent !important;
         color: #f9fafb;
-        border: 2px solid #1a1a1a;
-        border-radius: 12px;
-        padding: 12px;
+        border: none;
+        border-radius: 0;
+        padding: 0;
         font-size: 0.9rem;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+        box-shadow: none;
         transition: all 0.3s ease;
         position: relative;
-        overflow: hidden;
-    }
-
-    #bracket-container .match::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: linear-gradient(90deg, #1e40af, #dc2626);
+        overflow: visible;
     }
 
     /* Keep match hover subtle; team hover is the primary interaction */
     #bracket-container .match:hover {
-        border-color: #2a2a2a;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.6);
-        background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%) !important;
         transform: none;
     }
 
@@ -707,13 +768,6 @@ else
         stroke: #1a1a1a;
         stroke-width: 3;
         filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
-    }
-
-    /* Make brackets scrollable horizontally */
-    #bracket-container {
-        overflow-x: auto;
-        overflow-y: hidden;
-        white-space: nowrap;
     }
 
     /* Ultra Black Team Cards */

@@ -1379,45 +1379,6 @@ namespace Balkana.Controllers
         }
 
 
-        private decimal GetPrizeForPlacement(Tournament tournament, int placement)
-        {
-            // Try to parse the prize configuration JSON
-            if (!string.IsNullOrEmpty(tournament.PrizeConfiguration))
-            {
-                try
-                {
-                    var prizeConfig = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, decimal>>(tournament.PrizeConfiguration);
-                    if (prizeConfig != null && prizeConfig.ContainsKey(placement.ToString()))
-                    {
-                        return tournament.PrizePool * prizeConfig[placement.ToString()];
-                    }
-                }
-                catch
-                {
-                    // Fall back to default if JSON parsing fails
-                }
-            }
-
-            // Default prize distribution if no configuration (scalable for any placement)
-            if (tournament.PrizePool > 0)
-            {
-                return placement switch
-                {
-                    1 => tournament.PrizePool * 0.50m, // 50%
-                    2 => tournament.PrizePool * 0.30m, // 30%
-                    3 => tournament.PrizePool * 0.20m, // 20%
-                    4 => tournament.PrizePool * 0.10m, // 10%
-                    5 => tournament.PrizePool * 0.05m, // 5%
-                    6 => tournament.PrizePool * 0.03m, // 3%
-                    7 => tournament.PrizePool * 0.02m, // 2%
-                    8 => tournament.PrizePool * 0.01m, // 1%
-                    _ => 0 // No prize for placements beyond 8th
-                };
-            }
-
-            return 0;
-        }
-
         private IEnumerable<TournamentOrganizersServiceModel> AllOrganizers()
         {
             return _context.Organizers

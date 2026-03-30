@@ -72,7 +72,8 @@ namespace Balkana.Services.Tournaments
                 TeamId = team.Id,
                 Placement = placement,
                 PointsAwarded = TournamentPlacementScoring.GetPointsForPlacement(tournament, placement),
-                OrganisationPointsAwarded = 0
+                OrganisationPointsAwarded = 0,
+                PrizePoolAwarded = TournamentPrizeDistribution.GetPrizeForPlacement(tournament, placement)
             };
         }
 

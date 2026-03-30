@@ -11,7 +11,7 @@
     <div class="placements-section">
         <div class="placements-header">
             <h4 class="placements-title">
-                <i class="fas fa-trophy"></i> Final Placements
+                Final Placements
             </h4>
         </div>
         
@@ -102,11 +102,11 @@
                             <span class="points-label">Points</span>
                             <span class="points-value">@placement.PointsAwarded</span>
                         </div>
-                        @if (placement.Placement <= 3)
+                        @if (placement.PrizePoolAwarded > 0)
                         {
                             <div class="prize-info">
                                 <span class="prize-label">Prize</span>
-                                <span class="prize-value">@GetPrizeAmount(placement.Placement, Model.PrizePool)</span>
+                                <span class="prize-value">$@placement.PrizePoolAwarded.ToString("N2")</span>
                             </div>
                         }
                     </div>
@@ -138,22 +138,6 @@
             3 => "<i class='fas fa-award'></i>",
             _ => "<i class='fas fa-trophy'></i>"
         };
-    }
-    
-    string GetPrizeAmount(int placement, decimal prizePool)
-    {
-        if (prizePool <= 0) return "N/A";
-        
-        var percentage = placement switch
-        {
-            1 => 0.50m, // 50% for 1st place
-            2 => 0.30m, // 30% for 2nd place
-            3 => 0.20m, // 20% for 3rd place
-            _ => 0m
-        };
-        
-        var amount = prizePool * percentage;
-        return $"${amount:N0}";
     }
     
     string GetSharedPlacementText(int placement, int teamCount)

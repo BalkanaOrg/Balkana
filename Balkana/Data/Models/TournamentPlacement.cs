@@ -15,6 +15,9 @@ namespace Balkana.Data.Models
         public int PointsAwarded { get; set; }
         /// <summary>20% of <see cref="PointsAwarded"/> awarded to the team organisation.</summary>
         public int OrganisationPointsAwarded { get; set; }
+
+        /// <summary>Cash prize from <see cref="Tournament.PrizePool"/> using <see cref="Tournament.PrizeConfiguration"/> (or defaults) at conclusion.</summary>
+        public decimal PrizePoolAwarded { get; set; }
     }
 }
 

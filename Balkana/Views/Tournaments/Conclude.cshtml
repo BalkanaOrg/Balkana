@@ -233,6 +233,7 @@
                                                 <th>ES count</th>
                                                 <th>Penalty</th>
                                                 <th>Pl.</th>
+                                                <th>Prize</th>
                                                 <th>Base P</th>
                                                 <th>Player pool</th>
                                                 <th>Org 20%</th>
@@ -246,6 +247,7 @@
                                                     <td>@row.EmergencySubstituteCount</td>
                                                     <td>@row.PenaltyPercent%</td>
                                                     <td>@(row.Placement?.ToString() ?? "—")</td>
+                                                    <td>@(row.PrizePoolAwarded is > 0 ? $"${row.PrizePoolAwarded:N2}" : "—")</td>
                                                     <td>@(row.BasePointsFromPlacement?.ToString() ?? "—")</td>
                                                     <td>@(row.EffectivePlayerPool?.ToString() ?? "—")</td>
                                                     <td>@(row.OrganisationPoints?.ToString() ?? "—")</td>
