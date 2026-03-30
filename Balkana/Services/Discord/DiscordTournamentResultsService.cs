@@ -21,8 +21,6 @@ namespace Balkana.Services.Discord
 
     public class DiscordTournamentResultsService : IDiscordTournamentResultsService
     {
-        private const int MaxFieldValueLength = 1024;
-        private const int MaxFieldsPerEmbed = 25;
         private const int MaxEmbedsPerMessage = 10;
         private const int MaxEmbedDescriptionLength = 4096;
 
@@ -224,49 +222,17 @@ namespace Balkana.Services.Discord
             var tournamentUrl = $"{baseUrl}/Tournaments/Details/{dto.TournamentId}";
             var attachmentRef = $"attachment://{TournamentResultsCompositeRenderer.AttachmentFilename}";
 
-            var placementFields = new List<DiscordApiEmbedField>();
-            foreach (var band in dto.Bands)
+            var embeds = new List<DiscordApiEmbed>
             {
-                var value = string.Join(
-                    "\n\n",
-                    band.Teams.Select(FormatTeamBlockEmbed));
-                value = TruncateFieldValue(value);
-                placementFields.Add(new DiscordApiEmbedField
+                new DiscordApiEmbed
                 {
-                    Name = TruncateFieldName($"{band.TierEmoji} {band.Label}"),
-                    Value = value,
-                    Inline = false
-                });
-            }
-
-            placementFields.Add(new DiscordApiEmbedField
-            {
-                Name = "Tournament",
-                Value = $"[{dto.TournamentName}]({tournamentUrl})",
-                Inline = false
-            });
-
-            var embeds = new List<DiscordApiEmbed>();
-            var chunks = placementFields.Chunk(MaxFieldsPerEmbed).ToList();
-            for (var i = 0; i < chunks.Count; i++)
-            {
-                var embed = new DiscordApiEmbed
-                {
-                    Title = i == 0
-                        ? $"{dto.TournamentName} Results"
-                        : $"{dto.TournamentName} Results (cont.)",
-                    Url = i == 0 ? tournamentUrl : null,
-                    Description = i == 0
-                        ? "Placements and rosters (logos in image)."
-                        : null,
+                    Title = $"{dto.TournamentName} Results",
+                    Url = tournamentUrl,
                     Color = 0xE94560,
-                    Fields = chunks[i].ToList(),
-                    Image = i == 0
-                        ? new DiscordApiEmbedImage { Url = attachmentRef }
-                        : null
-                };
-                embeds.Add(embed);
-            }
+                    Image = new DiscordApiEmbedImage { Url = attachmentRef },
+                    Fields = null
+                }
+            };
 
             if (dto.Mvp != null)
             {
@@ -303,20 +269,6 @@ namespace Balkana.Services.Discord
             return embeds;
         }
 
-        private static string FormatTeamBlockEmbed(DiscordPlacementTeamDto t)
-        {
-            var orgPart = t.OrganisationPointsAwarded > 0
-                ? $" · Org **{t.OrganisationPointsAwarded}**"
-                : "";
-            var es = t.EmergencySubstituteNicknames.Count > 0
-                ? string.Join(", ", t.EmergencySubstituteNicknames)
-                : "—";
-            return
-                $"[**{EscapeMd(t.FullName)}**]({t.TeamDetailsUrl})\n" +
-                $"Points: **{t.PointsAwarded}**{orgPart}\n" +
-                $"Emergency substitutes: {EscapeMd(es)}";
-        }
-
         private static string FormatAwardMarkdown(DiscordAwardPlayerDto p)
         {
             if (p.TeamDetailsUrl != null && p.TeamName != null)
@@ -326,21 +278,6 @@ namespace Balkana.Services.Discord
 
         private static string EscapeMd(string s) =>
             s.Replace("\\", "\\\\").Replace("]", "\\]").Replace("[", "\\[");
-
-        private static string TruncateFieldValue(string value)
-        {
-            if (value.Length <= MaxFieldValueLength)
-                return value;
-            return value[..(MaxFieldValueLength - 3)] + "...";
-        }
-
-        private static string TruncateFieldName(string name)
-        {
-            const int max = 256;
-            if (name.Length <= max)
-                return name;
-            return name[..(max - 3)] + "...";
-        }
 
         private static string TruncateDescription(string value)
         {

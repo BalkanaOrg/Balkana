@@ -244,7 +244,7 @@ namespace Balkana.Services.Discord
         private static string TierEmoji(int placementStart, int teamCount)
         {
             if (placementStart == 1)
-                return "🥇";
+                return "🏆";
             if (placementStart == 2)
                 return "🥈";
             if (placementStart == 3 && teamCount == 1)
