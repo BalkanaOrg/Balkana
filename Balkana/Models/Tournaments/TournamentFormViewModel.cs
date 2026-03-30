@@ -1,4 +1,4 @@
-﻿using Balkana.Data.Models;
+using Balkana.Data.Models;
 using Balkana.Services.Tournaments.Models;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -38,6 +38,9 @@ namespace Balkana.Models.Tournaments
         public EliminationType EliminationType { get; set; }  // single or double
 
         public int GameId { get; set; }
+
+        [Display(Name = "Public listing")]
+        public bool IsPublic { get; set; } = true;
 
         public IEnumerable<TournamentGamesServiceModel>? Games { get; set; }
         public IEnumerable<TournamentOrganizersServiceModel>? Organizers { get; set; }

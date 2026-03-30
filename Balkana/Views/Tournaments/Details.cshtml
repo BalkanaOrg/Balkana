@@ -136,20 +136,20 @@
 
 <!-- Tournament Header -->
 <div class="tournament-header">
-    <div class="container-fluid">
-        <div class="row align-items-center">
-            <div class="col-md-2">
-                <div class="tournament-logo">
+    <div class="container-fluid position-relative" style="z-index: 1;">
+        <div class="row g-4 align-items-center">
+            <div class="col-12 col-lg-2 text-center text-lg-start">
+                <div class="tournament-logo d-inline-block">
                     <img src="@Model.BannerUrl" alt="@Model.FullName - @Model.Game?.FullName Tournament Banner" class="img-fluid rounded" loading="lazy" />
                 </div>
             </div>
-            <div class="col-md-8">
-                <div class="tournament-info">
-                    <h1 class="tournament-title">@Model.FullName</h1>
-                    <h2 class="tournament-subtitle">@Model.ShortName</h2>
-                    <div class="tournament-meta">
-                        <span class="badge bg-primary me-2">@Model.Game?.FullName</span>
-                        <span class="badge bg-secondary me-2">@Model.Elimination</span>
+            <div class="col-12 col-lg">
+                <div class="tournament-info text-center text-lg-start">
+                    <h1 class="tournament-title mb-1">@Model.FullName</h1>
+                    <h2 class="tournament-subtitle mb-3">@Model.ShortName</h2>
+                    <div class="tournament-meta d-flex flex-wrap justify-content-center justify-content-lg-start gap-2">
+                        <span class="badge bg-primary">@Model.Game?.FullName</span>
+                        <span class="badge bg-secondary">@Model.Elimination</span>
                         @if (Model.PrizePool > 0)
                         {
                             <span class="badge bg-success">$@Model.PrizePool.ToString("N0") Prize Pool</span>
@@ -157,34 +157,34 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-2">
-            @if (User.IsInRole("Administrator"))
+            <div class="col-12 col-lg-3">
+            @if (User.IsInRole("Administrator") || User.IsInRole("Moderator"))
             {
-                <div class="tournament-actions">
-                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-info btn-lg w-100 mb-2">
+                <div class="tournament-actions d-grid gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-info btn-lg w-100">
                         <i class="fas fa-trophy"></i> Edit Tournament
                     </a>
                     @if (!Model.Series.Any())
                     {
-                        <form asp-action="GenerateBracket" method="post" class="d-inline">
+                        <form asp-action="GenerateBracket" method="post" class="d-grid">
                             <input type="hidden" name="tournamentId" value="@Model.Id" />
-                            <button type="submit" class="btn btn-success btn-lg w-100 mb-2">
+                            <button type="submit" class="btn btn-success btn-lg w-100">
                                 <i class="fas fa-trophy"></i> Generate Bracket
                             </button>
                         </form>
                     }
                     else
                     {
-                        <form asp-action="DeleteBracket" method="post" class="d-inline">
+                        <form asp-action="DeleteBracket" method="post" class="d-grid">
                             <input type="hidden" name="tournamentId" value="@Model.Id" />
-                            <button type="submit" class="btn btn-danger btn-lg w-100 mb-2" onclick="return confirm('Are you sure you want to delete the entire bracket? This action cannot be undone.')">
+                            <button type="submit" class="btn btn-danger btn-lg w-100" onclick="return confirm('Are you sure you want to delete the entire bracket? This action cannot be undone.')">
                                 <i class="fas fa-trash"></i> Delete Bracket
                             </button>
                         </form>
-                        
+
                         @if (!Model.Placements.Any())
                         {
-                            <a asp-action="Conclude" asp-route-id="@Model.Id" class="btn btn-warning btn-lg w-100 mb-2">
+                            <a asp-action="Conclude" asp-route-id="@Model.Id" class="btn btn-warning btn-lg w-100">
                                 <i class="fas fa-flag-checkered"></i> Conclude Tournament
                             </a>
                         }
@@ -643,7 +643,11 @@ else
         background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%) !important;
         color: #f9fafb;
         padding: 25px;
+        padding-inline: max(1rem, 18px);
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        scroll-padding-inline: 16px;
         border-radius: 15px;
         border: 2px solid #1a1a1a;
         box-shadow: 0 8px 32px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
@@ -659,6 +663,9 @@ else
         align-items: flex-start;
         overflow-x: auto;
         overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        scroll-padding-inline: 16px;
         white-space: nowrap;
         width: 100%;
         max-width: 100%;
@@ -731,9 +738,17 @@ else
         overflow: visible;
     }
 
-    /* Keep match hover subtle; team hover is the primary interaction */
-    #bracket-container .match:hover {
-        transform: none;
+    /* No match-shell hover feedback (large hit target); participant hover unchanged */
+    #bracket-container .match:hover,
+    #bracket-container .match.hover {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+
+    #bracket-container.brackets-viewer .opponents:hover {
+        border-color: var(--border-color) !important;
     }
 
     /* Ultra Black Team/participant names */
@@ -911,13 +926,6 @@ else
         box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
         transform: none !important;
         transition: all 0.2s ease !important;
-    }
-
-    #bracket-container .match.hover,
-    #bracket-container .match:hover {
-        background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%) !important;
-        border-color: #2a2a2a !important;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.6) !important;
     }
 
     #bracket-container .match .participant {
@@ -1147,9 +1155,23 @@ else
             width: 80px;
             height: 80px;
         }
+
+        .tournament-header .tournament-actions .btn-lg {
+            font-size: 1rem;
+            padding: 0.65rem 1rem;
+        }
         
         .bracket-section {
             padding: 1rem;
+        }
+
+        .tournament-bracket {
+            padding-bottom: 2.75rem;
+        }
+
+        #bracket-container.brackets-viewer {
+            min-height: 360px;
+            padding-bottom: 1.5rem;
         }
 
         .stats-row {

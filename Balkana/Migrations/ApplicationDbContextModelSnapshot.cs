@@ -1926,6 +1926,9 @@ namespace Balkana.Migrations
                     b.Property<int>("GameId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("bit");
+
                     b.Property<int>("OrganizerId")
                         .HasColumnType("int");
 

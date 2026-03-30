@@ -15,6 +15,9 @@ using Microsoft.EntityFrameworkCore;
 using PuppeteerSharp;
 using Balkana.Services.Images;
 using System.IO;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Balkana.Controllers
 {
@@ -37,15 +40,25 @@ namespace Balkana.Controllers
             this.env = env;
         }
 
+        private bool CanManageTournaments() =>
+            User.Identity?.IsAuthenticated == true
+            && (User.IsInRole("Administrator") || User.IsInRole("Moderator"));
+
         // GET: Tournament/Index
         public async Task<IActionResult> Index()
         {
-            var tournaments = await _context.Tournaments
+            var query = _context.Tournaments
                 .Include(t => t.Organizer)
                 .Include(t => t.Game)
                 .Include(t => t.TournamentTeams)
                     .ThenInclude(tt => tt.Team)
-                .OrderByDescending(c=>c.StartDate)
+                .AsQueryable();
+
+            if (!CanManageTournaments())
+                query = query.Where(t => t.IsPublic);
+
+            var tournaments = await query
+                .OrderByDescending(c => c.StartDate)
                 .ToListAsync();
 
             return View(tournaments);
@@ -67,6 +80,11 @@ namespace Balkana.Controllers
 
 
             if (tournament == null) return NotFound();   // move this up
+
+            if (!tournament.IsPublic && !CanManageTournaments())
+                return RedirectToAction(nameof(Index));
+
+            ViewData["CanManageSeriesForfeit"] = CanManageTournaments();
 
             ViewData["OrderedSeries"] = tournament.Series
                 .OrderBy(s => s.Bracket)
@@ -134,13 +152,10 @@ namespace Balkana.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var vm = new TournamentFormViewModel
-                {
-                    Games = AllGames(),
-                    Organizers = AllOrganizers(),
-                    EliminationTypes = AllEliminationTypes()
-                };
-                return View(vm);
+                model.Games = AllGames();
+                model.Organizers = AllOrganizers();
+                model.EliminationTypes = AllEliminationTypes();
+                return View(model);
             }
 
             string? logoPath = null;
@@ -161,25 +176,19 @@ namespace Balkana.Controllers
                 {
                     Console.WriteLine("❌ IO Exception while saving file: " + ioEx);
                     ModelState.AddModelError("", "File write error: " + ioEx.Message);
-                    var vm = new TournamentFormViewModel
-                    {
-                        Games = AllGames(),
-                        Organizers = AllOrganizers(),
-                        EliminationTypes = AllEliminationTypes()
-                    };
-                    return View(vm);
+                    model.Games = AllGames();
+                    model.Organizers = AllOrganizers();
+                    model.EliminationTypes = AllEliminationTypes();
+                    return View(model);
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine("❌ General Exception while saving file: " + ex);
                     ModelState.AddModelError("", "Unexpected error while saving file.");
-                    var vm = new TournamentFormViewModel
-                    {
-                        Games = AllGames(),
-                        Organizers = AllOrganizers(),
-                        EliminationTypes = AllEliminationTypes()
-                    };
-                    return View(vm);
+                    model.Games = AllGames();
+                    model.Organizers = AllOrganizers();
+                    model.EliminationTypes = AllEliminationTypes();
+                    return View(model);
                 }
             }
 
@@ -196,7 +205,8 @@ namespace Balkana.Controllers
                 GameId = model.GameId,
                 PrizePool = model.PrizePool,
                 PointsConfiguration = model.PointsConfiguration,
-                PrizeConfiguration = model.PrizeConfiguration
+                PrizeConfiguration = model.PrizeConfiguration,
+                IsPublic = model.IsPublic
             };
 
             _context.Tournaments.Add(tournament);
@@ -235,7 +245,8 @@ namespace Balkana.Controllers
                 AvailableTeams = await _context.Teams
                     .Select(t => new TeamSelectItem { Id = t.Id, FullName = t.FullName })
                     .ToListAsync(),
-                SelectedTeamIds = tournament.TournamentTeams.Select(tt => tt.TeamId).ToList()
+                SelectedTeamIds = tournament.TournamentTeams.Select(tt => tt.TeamId).ToList(),
+                IsPublic = tournament.IsPublic
             };
 
             return View(vm);
@@ -275,6 +286,7 @@ namespace Balkana.Controllers
             tournament.GameId = model.GameId;
             tournament.PointsConfiguration = model.PointsConfiguration;
             tournament.PrizeConfiguration = model.PrizeConfiguration;
+            tournament.IsPublic = model.IsPublic;
 
             if (model.LogoFile != null && model.LogoFile.Length > 0)
             {
@@ -440,19 +452,17 @@ namespace Balkana.Controllers
 
             try
             {
-                // Always try to capture the actual bracket from the tournament page first
-                var imageBytes = await CaptureBracketFromTournamentPage(id);
-                
-                // Return image with proper headers for Discord
+                var imageBytes = await CaptureBracketFromTournamentPage(tournament);
+
                 Response.Headers["Content-Type"] = "image/png";
                 Response.Headers["Cache-Control"] = "public, max-age=3600";
                 Response.Headers["Content-Disposition"] = "inline";
-                
+
                 return File(imageBytes, "image/png", $"{tournament.FullName.Replace(" ", "_")}_bracket.png");
             }
             catch (Exception ex)
             {
-                // If image capture fails, return HTML with proper meta tags for Discord embeds
+                Console.WriteLine($"GetBracketImage capture failed for tournament {id}: {ex}");
                 var bracketData = await GetBracketDataForImage(tournament);
                 var htmlContent = GenerateBracketHtmlWithMetaTags(tournament, bracketData, Request);
                 return Content(htmlContent, "text/html");
@@ -709,48 +719,130 @@ namespace Balkana.Controllers
             return html;
         }
 
-        private async Task<byte[]> CaptureBracketFromTournamentPage(int tournamentId)
+        private string BuildBracketStandaloneCapturePage(object bracketData)
         {
-            // Launch headless browser
+            var json = JsonSerializer.Serialize(
+                bracketData,
+                new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                });
+
+            return $@"<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=""utf-8"">
+    <link rel=""stylesheet"" href=""https://unpkg.com/brackets-viewer/dist/brackets-viewer.min.css"" />
+    <style>html,body{{margin:0;background:#0a0a0a;}}</style>
+</head>
+<body>
+    <div id=""bracket-container"" class=""brackets-viewer"" style=""width:100%;min-height:500px;""></div>
+    <script src=""https://unpkg.com/brackets-viewer/dist/brackets-viewer.min.js""></script>
+    <script>
+        (async function () {{
+            const bracketData = {json};
+            await bracketsViewer.render(
+                {{
+                    stages: bracketData.stages,
+                    matches: bracketData.matches,
+                    matchGames: bracketData.matchGames || [],
+                    participants: bracketData.participants
+                }},
+                {{
+                    selector: '#bracket-container',
+                    orientation: 'horizontal',
+                    participantOriginPlacement: 'before',
+                    separatedByChildCountLabel: true,
+                    highlightParticipantOnHover: true,
+                    showSlotsOrigin: true,
+                    showLowerBracketSlotsOrigin: true,
+                    showPopoverOnMatchLabelClick: false,
+                    showPopoverOnMatchClick: false,
+                    highlightMatchOnHover: false
+                }}
+            );
+        }})();
+    </script>
+</body>
+</html>";
+        }
+
+        private async Task<byte[]> CaptureBracketFromTournamentPage(Tournament tournament)
+        {
+            const int minPngBytes = 5000;
             await new BrowserFetcher().DownloadAsync();
-            
+
             using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
             {
                 Headless = true,
                 Args = new[] { "--no-sandbox", "--disable-setuid-sandbox" }
             });
-            
-            using var page = await browser.NewPageAsync();
-            
-            // Set viewport to capture the bracket properly
-            await page.SetViewportAsync(new ViewPortOptions
+
+            var viewPort = new ViewPortOptions
             {
                 Width = 1920,
                 Height = 1080,
-                DeviceScaleFactor = 2 // Higher DPI for better quality
-            });
-            
-            // Navigate to the tournament details page
-            var tournamentUrl = $"{Request.Scheme}://{Request.Host}/Tournaments/Details/{tournamentId}";
-            await page.GoToAsync(tournamentUrl, WaitUntilNavigation.Networkidle2);
-            
-            // Wait for the bracket to load
-            await page.WaitForSelectorAsync("#bracket-viewer", new WaitForSelectorOptions { Timeout = 10000 });
-            
-            // Wait a bit more for any animations or dynamic content to settle
-            await Task.Delay(2000);
-            
-            // Find the bracket container element
-            var bracketElement = await page.QuerySelectorAsync("#bracket-viewer");
-            if (bracketElement == null)
+                DeviceScaleFactor = 2
+            };
+
+            static bool ScreenshotOk(byte[]? bytes, int min) =>
+                bytes != null && bytes.Length >= min;
+
+            byte[]? fromDetails = null;
+            try
             {
-                throw new Exception("Bracket element not found on page");
+                using var page = await browser.NewPageAsync();
+                await page.SetViewportAsync(viewPort);
+                var tournamentUrl = $"{Request.Scheme}://{Request.Host}/Tournaments/Details/{tournament.Id}";
+                await page.GoToAsync(tournamentUrl, WaitUntilNavigation.Networkidle2);
+
+                try
+                {
+                    await page.WaitForSelectorAsync("#bracket-container .match", new WaitForSelectorOptions { Timeout = 20000 });
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"CaptureBracketFromTournamentPage: waiting for matches on details: {ex.Message}");
+                }
+
+                await Task.Delay(4000);
+
+                var bracketElement = await page.QuerySelectorAsync("#bracket-container");
+                if (bracketElement != null)
+                    fromDetails = await bracketElement.ScreenshotDataAsync();
             }
-            
-            // Capture screenshot of just the bracket area
-            var screenshot = await bracketElement.ScreenshotDataAsync();
-            
-            return screenshot;
+            catch (Exception ex)
+            {
+                Console.WriteLine($"CaptureBracketFromTournamentPage (details page): {ex}");
+            }
+
+            if (ScreenshotOk(fromDetails, minPngBytes))
+                return fromDetails!;
+
+            var bracketData = await GetBracketDataForImage(tournament);
+            var html = BuildBracketStandaloneCapturePage(bracketData);
+
+            using var standalonePage = await browser.NewPageAsync();
+            await standalonePage.SetViewportAsync(viewPort);
+            await standalonePage.SetContentAsync(html, new NavigationOptions
+            {
+                WaitUntil = new[] { WaitUntilNavigation.Networkidle0 }
+            });
+            await standalonePage.WaitForSelectorAsync("#bracket-container .match", new WaitForSelectorOptions { Timeout = 25000 });
+            await Task.Delay(2000);
+
+            var standaloneEl = await standalonePage.QuerySelectorAsync("#bracket-container");
+            if (standaloneEl == null)
+                throw new InvalidOperationException("Standalone bracket container not found.");
+
+            var fromStandalone = await standaloneEl.ScreenshotDataAsync();
+            if (!ScreenshotOk(fromStandalone, minPngBytes))
+                throw new InvalidOperationException(
+                    $"Bracket PNG too small (details: {fromDetails?.Length ?? 0}, standalone: {fromStandalone?.Length ?? 0} bytes).");
+
+            return fromStandalone;
         }
 
 
@@ -1059,6 +1151,7 @@ namespace Balkana.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Moderator")]
         public async Task<IActionResult> GenerateBracket(int tournamentId)
         {
             var tournament = await _context.Tournaments

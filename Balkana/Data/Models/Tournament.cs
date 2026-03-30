@@ -1,4 +1,4 @@
-﻿namespace Balkana.Data.Models
+namespace Balkana.Data.Models
 {
     using System.ComponentModel.DataAnnotations;
     using static DataConstants;
@@ -34,6 +34,8 @@
 
         public int GameId { get; set; }
         public Game Game { get; set; }
+
+        public bool IsPublic { get; set; } = true;
 
         public ICollection<Series> Series { get; set; } = new List<Series>();
         public ICollection<TrophyTournament> Trophies { get; set; } = new List<TrophyTournament>();
