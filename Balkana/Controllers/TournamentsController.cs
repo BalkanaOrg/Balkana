@@ -95,6 +95,9 @@ namespace Balkana.Controllers
                 .ToListAsync();
 
             ViewData["ParticipatingTeams"] = participatingTeams;
+            ViewData["TeamRostersById"] = participatingTeams
+                .GroupBy(r => r.Team.Id)
+                .ToDictionary(g => g.Key, g => g.SelectMany(r => r.Players).Distinct().ToList());
 
             // Set SEO metadata
             ViewData["Title"] = tournament.FullName;

@@ -1,21 +1,26 @@
-﻿@using Balkana.Data.DTOs.Bracket
+@using Balkana.Data.DTOs.Bracket
 @using Balkana.Data.Models
 
 
 <h4>Participating Teams</h4>
-<div class="d-flex flex-wrap">
+<div class="teams-grid">
     @foreach (var roster in (List<TournamentTeamRosterViewModel>)ViewData["ParticipatingTeams"])
     {
         var players = roster.Players.Take(5).ToList();
-        <a asp-controller="Teams"
-           asp-action="Details"
-           asp-route-id="@roster.Team.Id"
-           asp-route-information="@roster.Team.GetInformation()">
-            <div class="team-card m-2 position-relative text-center">
+        <div class="team-card position-relative text-center">
 
                 <img src="@roster.Team.LogoURL" class="team-logo card-img-top" alt="@roster.Team.FullName" />
 
                 <div class="team-players position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center">
+                    <div class="team-hover-title">
+                        <a asp-controller="Teams"
+                           asp-action="Details"
+                           asp-route-id="@roster.Team.Id"
+                           asp-route-information="@roster.Team.GetInformation()"
+                           class="team-hover-link">
+                            @roster.Team.FullName
+                        </a>
+                    </div>
                     @if (players.Any())
                     {
                         @foreach (var p in players)
@@ -32,9 +37,90 @@
                 </div>
 
                 <div class="card-body p-1">
-                    <small>@roster.Team.FullName</small>
+                    <a asp-controller="Teams"
+                       asp-action="Details"
+                       asp-route-id="@roster.Team.Id"
+                       asp-route-information="@roster.Team.GetInformation()"
+                       class="team-name-link">
+                        <small>@roster.Team.FullName</small>
+                    </a>
                 </div>
-            </div>
-        </a>
+        </div>
     }
 </div>
+
+<style>
+    .teams-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+        align-items: start;
+    }
+
+    /* Override the fixed sizing from Details.css inline styles */
+    .teams-grid .team-card {
+        width: 100%;
+        height: 180px;
+        margin: 0 !important;
+    }
+
+    .teams-grid .team-logo {
+        height: 120px;
+        object-fit: contain;
+        padding: 0.5rem;
+    }
+
+    .team-name-link {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .team-name-link:hover {
+        text-decoration: underline;
+    }
+
+    .team-hover-title {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        text-align: center;
+        font-weight: 700;
+        z-index: 3;
+    }
+
+    .team-hover-link {
+        color: #ffffff;
+        text-decoration: none;
+        display: inline-block;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0.15rem 0.5rem;
+        border-radius: 10px;
+        background: rgba(0,0,0,0.25);
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .team-hover-link:hover {
+        text-decoration: underline;
+    }
+
+    /* Push players below the title */
+    .teams-grid .team-card .team-players {
+        padding-top: 2.2rem;
+    }
+
+    @@media (max-width: 992px) {
+        .teams-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 420px) {
+        .teams-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>

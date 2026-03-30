@@ -18,6 +18,31 @@
     
     var eventStatus = DateTime.UtcNow < Model.StartDate ? "EventScheduled" : 
                      (DateTime.UtcNow >= Model.StartDate && DateTime.UtcNow <= Model.EndDate ? "EventScheduled" : "EventPostponed");
+
+    string FormatTournamentDateRange(DateTime start, DateTime end)
+    {
+        var startDate = start.Date;
+        var endDate = end.Date;
+
+        if (startDate == endDate)
+        {
+            return startDate.ToString("MMMM d, yyyy");
+        }
+
+        if (startDate.Year != endDate.Year)
+        {
+            return $"{startDate:MMMM d, yyyy} - {endDate:MMMM d, yyyy}";
+        }
+
+        if (startDate.Month != endDate.Month)
+        {
+            // Example: March 31 - April 2, 2026 (spaces around hyphen)
+            return $"{startDate:MMMM d} - {endDate:MMMM d, yyyy}";
+        }
+
+        // Example: March 29-31, 2026 (no spaces around hyphen)
+        return $"{startDate:MMMM d}-{endDate:d, yyyy}";
+    }
 }
 
 <!-- Event Structured Data (JSON-LD) -->
@@ -175,47 +200,7 @@
 <div class="tournament-details">
     <div class="container-fluid">
         <div class="row">
-            <div class="col-md-8">
-                <div class="card tournament-card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-info-circle"></i> Tournament Information
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <label>Organizer</label>
-                                    <span>@Model.Organizer?.FullName</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>Game</label>
-                                    <span>@Model.Game?.FullName</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <label>Start Date</label>
-                                    <span>@Model.StartDate.ToString("MMMM dd, yyyy")</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>End Date</label>
-                                    <span>@Model.EndDate.ToString("MMMM dd, yyyy")</span>
-                                </div>
-                            </div>
-                        </div>
-                        @if (!string.IsNullOrEmpty(Model.Description))
-                        {
-                            <div class="info-item mt-3">
-                                <label>Description</label>
-                                <p class="description-text">@Model.Description</p>
-                            </div>
-                        }
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
+            <div class="col-12">
                 <div class="card tournament-stats">
                     <div class="card-header">
                         <h5 class="card-title mb-0">
@@ -223,21 +208,27 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        <div class="stat-item">
-                            <div class="stat-value">@Model.TournamentTeams.Count</div>
-                            <div class="stat-label">Teams</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">@Model.Series.Count</div>
-                            <div class="stat-label">Matches</div>
-                        </div>
-                        @if (Model.PrizePool > 0)
-                        {
-                            <div class="stat-item">
-                                <div class="stat-value">$@Model.PrizePool.ToString("N0")</div>
-                                <div class="stat-label">Prize Pool</div>
+                        <div class="stats-row">
+                            <div class="stat-item stat-item--date">
+                                <div class="stat-value stat-value--date">@FormatTournamentDateRange(Model.StartDate, Model.EndDate)</div>
+                                <div class="stat-label">Date</div>
                             </div>
-                        }
+                            <div class="stat-item">
+                                <div class="stat-value">@Model.TournamentTeams.Count</div>
+                                <div class="stat-label">Teams</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">@Model.Series.Count</div>
+                                <div class="stat-label">Matches</div>
+                            </div>
+                            @if (Model.PrizePool > 0)
+                            {
+                                <div class="stat-item">
+                                    <div class="stat-value">$@Model.PrizePool.ToString("N0")</div>
+                                    <div class="stat-label">Prize Pool</div>
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
@@ -256,18 +247,22 @@
 }
 
 <!-- Placements Section -->
-<div class="tournament-placements">
-    <div class="container-fluid">
-        <partial name="_PlacementsPartial" model="Model" />
+@if (Model.Placements.Any())
+{
+    <div class="tournament-placements">
+        <div class="container-fluid">
+            <partial name="_PlacementsPartial" model="Model" />
+        </div>
     </div>
-</div>
-
-<!-- Participants Section -->
-<div class="tournament-participants">
-    <div class="container-fluid">
-        <partial name="_ParticipantsPartial" model="Model" />
+}
+else
+{
+    <div class="tournament-participants">
+        <div class="container-fluid">
+            <partial name="_ParticipantsPartial" model="Model" />
+        </div>
     </div>
-</div>
+}
 
 <!-- Series Details Modal -->
 <div id="seriesModal" class="series-modal">
@@ -468,12 +463,18 @@
     }
 
     /* Ultra Black Stats */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+        align-items: stretch;
+    }
+
     .stat-item {
         text-align: center;
         padding: 1.5rem;
         border-radius: 15px;
         background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%);
-        margin-bottom: 1.2rem;
         border: 2px solid #1a1a1a;
         box-shadow: 0 4px 16px rgba(0,0,0,0.6);
         position: relative;
@@ -508,6 +509,14 @@
         font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+    }
+
+    .stat-item--date .stat-value--date {
+        font-size: 1.4rem;
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     /* Ultra Black Bracket Section */
@@ -612,15 +621,17 @@
         box-shadow: 0 8px 32px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
     }
 
-    /* Individual brackets */
-    .bracket-ub, .bracket-lb, .bracket-gf {
+    /* Individual brackets (scoped to plugin container) */
+    #bracket-container .bracket-ub,
+    #bracket-container .bracket-lb,
+    #bracket-container .bracket-gf {
         display: flex;
         flex-direction: column;
         gap: 18px;
     }
 
     /* Ultra Black Matches */
-    .match {
+    #bracket-container .match {
         min-width: 150px;
         background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%) !important;
         color: #f9fafb;
@@ -634,7 +645,7 @@
         overflow: hidden;
     }
 
-    .match::before {
+    #bracket-container .match::before {
         content: '';
         position: absolute;
         top: 0;
@@ -644,7 +655,7 @@
         background: linear-gradient(90deg, #1e40af, #dc2626);
     }
 
-    .match:hover {
+    #bracket-container .match:hover {
         border-color: #1e40af;
         box-shadow: 0 6px 24px rgba(30, 64, 175, 0.4);
         background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%) !important;
@@ -652,7 +663,7 @@
     }
 
     /* Ultra Black Team/participant names */
-    .participant {
+    #bracket-container .participant {
         color: #f9fafb;
         font-weight: 500;
         background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%) !important;
@@ -662,7 +673,7 @@
         border: 1px solid #1a1a1a;
     }
 
-    .participant:hover {
+    #bracket-container .participant:hover {
         background: linear-gradient(45deg, #1e40af, #dc2626) !important;
         color: white;
         transform: scale(1.05);
@@ -670,14 +681,14 @@
     }
 
     /* Ultra Dark Scores */
-    .score {
+    #bracket-container .score {
         color: #10b981;
         font-weight: bold;
         text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
     }
 
     /* Ultra Black Connector lines */
-    .connector {
+    #bracket-container .connector {
         stroke: #1a1a1a;
         stroke-width: 3;
         filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
@@ -819,13 +830,13 @@
     }
 
     /* High Priority Bracket Plugin CSS Overrides */
-    #bracket-container .brackets-viewer .participant.hover,
-    #bracket-container .brackets-viewer .participant:hover,
-    #bracket-container .brackets-viewer .match .participant.hover,
-    #bracket-container .brackets-viewer .match .participant:hover,
-    #bracket-container .brackets-viewer .match:hover .participant,
-    #bracket-container .brackets-viewer .match .participant[data-hover="true"],
-    #bracket-container .brackets-viewer .match .participant.highlighted {
+    #bracket-container .participant.hover,
+    #bracket-container .participant:hover,
+    #bracket-container .match .participant.hover,
+    #bracket-container .match .participant:hover,
+    #bracket-container .match:hover .participant,
+    #bracket-container .match .participant[data-hover="true"],
+    #bracket-container .match .participant.highlighted {
         background: linear-gradient(45deg, #1e40af, #dc2626) !important;
         color: #ffffff !important;
         border: 1px solid rgba(255,255,255,0.2) !important;
@@ -834,14 +845,14 @@
         transition: all 0.2s ease !important;
     }
 
-    #bracket-container .brackets-viewer .match.hover,
-    #bracket-container .brackets-viewer .match:hover {
+    #bracket-container .match.hover,
+    #bracket-container .match:hover {
         background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%) !important;
         border-color: #1e40af !important;
         box-shadow: 0 4px 16px rgba(30, 64, 175, 0.3) !important;
     }
 
-    #bracket-container .brackets-viewer .match .participant {
+    #bracket-container .match .participant {
         background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%) !important;
         color: #f9fafb !important;
         border: 1px solid #1a1a1a !important;
@@ -1038,6 +1049,10 @@
             padding: 1rem;
         }
 
+        .stats-row {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
         .series-modal-content {
             width: 95%;
             margin: 10% auto;
@@ -1046,6 +1061,12 @@
         .series-info-grid {
             grid-template-columns: 1fr;
             gap: 1rem;
+        }
+    }
+
+    @@media (max-width: 420px) {
+        .stats-row {
+            grid-template-columns: 1fr;
         }
     }
 </style>

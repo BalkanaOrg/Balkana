@@ -3,6 +3,7 @@
 
 @{
     var placements = Model.Placements?.OrderBy(p => p.Placement).ToList() ?? new List<TournamentPlacement>();
+    var rostersById = ViewData["TeamRostersById"] as Dictionary<int, List<Player>> ?? new Dictionary<int, List<Player>>();
 }
 
 @if (placements.Any())
@@ -26,6 +27,9 @@
                 
                 @foreach (var placement in teamsInPlacement)
                 {
+                    var players = rostersById.TryGetValue(placement.Team.Id, out var rosterPlayers)
+                        ? rosterPlayers.Take(5).ToList()
+                        : new List<Player>();
                     <div class="placement-card @GetPlacementClass(placement.Placement)">
                         <div class="placement-rank">
                             <span class="rank-number">
@@ -44,11 +48,49 @@
                         </div>
                     
                     <div class="placement-team">
-                        <div class="team-logo">
+                        <div class="placement-team-card">
                             <img src="@placement.Team.LogoURL" alt="@placement.Team.FullName" class="logo-img" />
+                            <div class="placement-team-hover">
+                                <div class="team-hover-title">
+                                    <a asp-controller="Teams"
+                                       asp-action="Details"
+                                       asp-route-id="@placement.Team.Id"
+                                       asp-route-information="@placement.Team.GetInformation()"
+                                       class="team-hover-link">
+                                        @placement.Team.FullName
+                                    </a>
+                                </div>
+                                <div class="placement-team-hover-players">
+                                    @if (players.Any())
+                                    {
+                                        @foreach (var p in players)
+                                        {
+                                            <a asp-controller="Players"
+                                               asp-action="Profile"
+                                               asp-route-id="@p.Id"
+                                               asp-route-information="@p.GetInformation()"
+                                               style="text-decoration:none;">
+                                                <small class="player-name">@p.Nickname</small>
+                                            </a>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted">No players</small>
+                                    }
+                                </div>
+                            </div>
                         </div>
                         <div class="team-info">
-                            <div class="team-name">@placement.Team.FullName</div>
+                            <div class="team-name">
+                                <a asp-controller="Teams"
+                                   asp-action="Details"
+                                   asp-route-id="@placement.Team.Id"
+                                   asp-route-information="@placement.Team.GetInformation()"
+                                   class="team-name-link">
+                                    @placement.Team.FullName
+                                </a>
+                            </div>
                             <div class="team-tag">@placement.Team.Tag</div>
                         </div>
                     </div>
@@ -69,26 +111,6 @@
                 </div>
                 }
             }
-        </div>
-    </div>
-}
-else
-{
-    <div class="placements-section">
-        <div class="placements-header">
-            <h4 class="placements-title">
-                <i class="fas fa-trophy"></i> Final Placements
-            </h4>
-        </div>
-        
-        <div class="no-placements">
-            <div class="no-placements-icon">
-                <i class="fas fa-trophy"></i>
-            </div>
-            <div class="no-placements-text">
-                <h5>Tournament Not Concluded</h5>
-                <p>Final placements will be displayed here once the tournament is completed.</p>
-            </div>
         </div>
     </div>
 }
@@ -195,7 +217,7 @@ else
 
     .placements-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 1.5rem;
     }
 
@@ -302,6 +324,17 @@ else
         margin-bottom: 1rem;
     }
 
+    .placement-team-card {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 2px solid #1a1a1a;
+        background: #0a0a0a;
+        position: relative;
+        flex: 0 0 auto;
+    }
+
     .team-logo {
         width: 50px;
         height: 50px;
@@ -315,6 +348,70 @@ else
         width: 100%;
         height: 100%;
         object-fit: contain;
+    }
+
+    .placement-team-hover {
+        display: none;
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        background: linear-gradient(45deg, rgba(30, 64, 175, 0.9), rgba(220, 38, 38, 0.9));
+        color: #ffffff;
+        padding: 0.4rem;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 0.15rem;
+        backdrop-filter: blur(8px);
+    }
+
+    .placement-team-card:hover .placement-team-hover {
+        display: flex;
+    }
+
+    .placement-team-card:hover .logo-img {
+        opacity: 0;
+    }
+
+    .placement-team-hover-players {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.1rem;
+    }
+
+    .team-hover-title {
+        text-align: center;
+        font-weight: 800;
+        width: 100%;
+    }
+
+    .team-hover-link {
+        color: #ffffff;
+        text-decoration: none;
+        display: inline-block;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0.1rem 0.35rem;
+        border-radius: 10px;
+        background: rgba(0,0,0,0.25);
+        border: 1px solid rgba(255,255,255,0.2);
+        font-size: 0.8rem;
+    }
+
+    .team-hover-link:hover {
+        text-decoration: underline;
+    }
+
+    .team-name-link {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .team-name-link:hover {
+        text-decoration: underline;
     }
 
     .team-info {
@@ -371,35 +468,10 @@ else
         text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
     }
 
-    /* No Placements State */
-    .no-placements {
-        text-align: center;
-        padding: 3rem 2rem;
-        color: #9ca3af;
-    }
-
-    .no-placements-icon {
-        font-size: 4rem;
-        color: #1a1a1a;
-        margin-bottom: 1rem;
-    }
-
-    .no-placements-text h5 {
-        color: #f9fafb;
-        font-size: 1.3rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .no-placements-text p {
-        color: #9ca3af;
-        font-size: 1rem;
-        margin: 0;
-    }
-
     /* Responsive Design */
     @@media (max-width: 768px) {
         .placements-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
         
         .placement-card {
@@ -421,6 +493,12 @@ else
         
         .rank-icon {
             font-size: 1.2rem;
+        }
+    }
+
+    @@media (max-width: 420px) {
+        .placements-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
