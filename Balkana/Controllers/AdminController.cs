@@ -27,15 +27,18 @@ namespace Balkana.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<AdminController> _logger;
 
         public AdminController(
-            UserManager<ApplicationUser> userManager, 
+            UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            ILogger<AdminController> logger)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _context = context;
+            _logger = logger;
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -538,12 +541,19 @@ namespace Balkana.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DiscordResultChannelCreate(DiscordGameResultChannel model)
+        public async Task<IActionResult> DiscordResultChannelCreate(
+            [Bind(nameof(DiscordGameResultChannel.GameId), nameof(DiscordGameResultChannel.DiscordChannelId), nameof(DiscordGameResultChannel.DisplayLabel), nameof(DiscordGameResultChannel.IsActive))]
+            DiscordGameResultChannel model)
         {
-            if (string.IsNullOrWhiteSpace(model.DiscordChannelId) || !IsDiscordSnowflake(model.DiscordChannelId.Trim()))
-                ModelState.AddModelError(nameof(model.DiscordChannelId), "Enter a numeric Discord channel snowflake.");
+            if (model.GameId <= 0)
+                ModelState.AddModelError(nameof(model.GameId), "Select a game.");
+            else if (!await _context.Games.AnyAsync(g => g.Id == model.GameId))
+                ModelState.AddModelError(nameof(model.GameId), "The selected game no longer exists. Refresh the page and try again.");
 
-            if (await _context.DiscordGameResultChannels.AnyAsync(x => x.GameId == model.GameId))
+            if (string.IsNullOrWhiteSpace(model.DiscordChannelId) || !IsDiscordSnowflake(model.DiscordChannelId.Trim()))
+                ModelState.AddModelError(nameof(model.DiscordChannelId), "Enter a valid numeric Discord channel snowflake (copy from Discord).");
+
+            if (model.GameId > 0 && await _context.DiscordGameResultChannels.AnyAsync(x => x.GameId == model.GameId))
                 ModelState.AddModelError(nameof(model.GameId), "This game already has a channel mapping. Edit or delete it first.");
 
             if (!ModelState.IsValid)
@@ -553,8 +563,20 @@ namespace Balkana.Controllers
             }
 
             model.DiscordChannelId = model.DiscordChannelId.Trim();
+            model.Game = null;
             _context.DiscordGameResultChannels.Add(model);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogWarning(ex, "DiscordGameResultChannel create failed");
+                ModelState.AddModelError(string.Empty, "Could not save (duplicate game, invalid game id, or database error). Check that the game exists and is not already mapped.");
+                await LoadGamesSelectListAsync();
+                return View("Discord/ResultChannelForm", model);
+            }
+
             TempData["Success"] = "Discord result channel saved.";
             return RedirectToAction(nameof(DiscordResultChannels));
         }
@@ -570,15 +592,23 @@ namespace Balkana.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DiscordResultChannelEdit(int id, DiscordGameResultChannel model)
+        public async Task<IActionResult> DiscordResultChannelEdit(
+            int id,
+            [Bind(nameof(DiscordGameResultChannel.Id), nameof(DiscordGameResultChannel.GameId), nameof(DiscordGameResultChannel.DiscordChannelId), nameof(DiscordGameResultChannel.DisplayLabel), nameof(DiscordGameResultChannel.IsActive))]
+            DiscordGameResultChannel model)
         {
             if (id != model.Id)
                 return BadRequest();
 
-            if (string.IsNullOrWhiteSpace(model.DiscordChannelId) || !IsDiscordSnowflake(model.DiscordChannelId.Trim()))
-                ModelState.AddModelError(nameof(model.DiscordChannelId), "Enter a numeric Discord channel snowflake.");
+            if (model.GameId <= 0)
+                ModelState.AddModelError(nameof(model.GameId), "Select a game.");
+            else if (!await _context.Games.AnyAsync(g => g.Id == model.GameId))
+                ModelState.AddModelError(nameof(model.GameId), "The selected game no longer exists. Refresh the page and try again.");
 
-            if (await _context.DiscordGameResultChannels.AnyAsync(x => x.GameId == model.GameId && x.Id != id))
+            if (string.IsNullOrWhiteSpace(model.DiscordChannelId) || !IsDiscordSnowflake(model.DiscordChannelId.Trim()))
+                ModelState.AddModelError(nameof(model.DiscordChannelId), "Enter a valid numeric Discord channel snowflake (copy from Discord).");
+
+            if (model.GameId > 0 && await _context.DiscordGameResultChannels.AnyAsync(x => x.GameId == model.GameId && x.Id != id))
                 ModelState.AddModelError(nameof(model.GameId), "Another row already uses this game.");
 
             if (!ModelState.IsValid)
@@ -595,7 +625,18 @@ namespace Balkana.Controllers
             row.DiscordChannelId = model.DiscordChannelId.Trim();
             row.DisplayLabel = model.DisplayLabel;
             row.IsActive = model.IsActive;
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogWarning(ex, "DiscordGameResultChannel edit failed for id {Id}", id);
+                ModelState.AddModelError(string.Empty, "Could not save (duplicate game, invalid game id, or database error).");
+                await LoadGamesSelectListAsync();
+                return View("Discord/ResultChannelForm", model);
+            }
+
             TempData["Success"] = "Mapping updated.";
             return RedirectToAction(nameof(DiscordResultChannels));
         }
@@ -664,8 +705,9 @@ namespace Balkana.Controllers
             ViewBag.GamesSelect = new SelectList(games, "Id", "FullName");
         }
 
+        /// <summary>Discord snowflakes are 64-bit unsigned integers (typically 17–20 decimal digits).</summary>
         private static bool IsDiscordSnowflake(string s) =>
-            s.Length is >= 17 and <= 22 && s.All(char.IsDigit);
+            ulong.TryParse(s, System.Globalization.NumberStyles.None, null, out var v) && v > 0UL;
 
         // ============================================
         // RIOT TOURNAMENT API MANAGEMENT

@@ -1,4 +1,6 @@
-using System.Net.Http.Json;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Balkana.Data;
 using Balkana.Models.Discord;
@@ -21,25 +23,38 @@ namespace Balkana.Services.Discord
     {
         private const int MaxFieldValueLength = 1024;
         private const int MaxFieldsPerEmbed = 25;
+        private const int MaxEmbedsPerMessage = 10;
+        private const int MaxEmbedDescriptionLength = 4096;
+
+        private const string MvpTrophyPath = "/uploads/Tournaments/Trophies/Balkana-MVP-icon.png";
+        private const string EvpTrophyPath = "/uploads/Tournaments/Trophies/Balkana-EVP-icon.png";
+
+        private static readonly JsonSerializerOptions PayloadJsonOptions = new()
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
 
         private readonly ApplicationDbContext _context;
         private readonly DiscordConfig _discordConfig;
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
         private readonly ILogger<DiscordTournamentResultsService> _logger;
+        private readonly TournamentResultsCompositeRenderer _compositeRenderer;
 
         public DiscordTournamentResultsService(
             ApplicationDbContext context,
             IOptions<DiscordConfig> discordConfig,
             IConfiguration configuration,
             HttpClient httpClient,
-            ILogger<DiscordTournamentResultsService> logger)
+            ILogger<DiscordTournamentResultsService> logger,
+            TournamentResultsCompositeRenderer compositeRenderer)
         {
             _context = context;
             _discordConfig = discordConfig.Value;
             _configuration = configuration;
             _httpClient = httpClient;
             _logger = logger;
+            _compositeRenderer = compositeRenderer;
 
             if (!_httpClient.DefaultRequestHeaders.Contains("Authorization")
                 && !string.IsNullOrEmpty(_discordConfig.BotToken))
@@ -91,15 +106,50 @@ namespace Balkana.Services.Discord
             if (!ulong.TryParse(channelId, out _))
                 return (false, "Discord channel id must be a numeric snowflake.");
 
-            var embeds = BuildEmbeds(dto, baseUrl);
-            var payload = new DiscordCreateMessageRequest { Embeds = embeds };
+            var pngBytes = await _compositeRenderer.RenderAsync(dto, cancellationToken).ConfigureAwait(false);
+            if (pngBytes == null || pngBytes.Length == 0)
+                return (false, "Failed to render tournament results image (check server logs and Resources/NotoSans-Regular.ttf).");
+
+            var mvpIconUrl = $"{baseUrl}{MvpTrophyPath}";
+            var evpIconUrl = $"{baseUrl}{EvpTrophyPath}";
+            var embeds = BuildEmbeds(dto, baseUrl, mvpIconUrl, evpIconUrl);
+            if (embeds.Count > MaxEmbedsPerMessage)
+            {
+                _logger.LogWarning(
+                    "Tournament {TournamentId} would send {Count} embeds; truncating to {Max}.",
+                    tournamentId,
+                    embeds.Count,
+                    MaxEmbedsPerMessage);
+                embeds = embeds.Take(MaxEmbedsPerMessage).ToList();
+            }
+
+            var payload = new DiscordCreateMultipartPayload
+            {
+                Embeds = embeds,
+                Attachments =
+                [
+                    new DiscordApiAttachmentStub
+                    {
+                        Id = 0,
+                        Filename = TournamentResultsCompositeRenderer.AttachmentFilename
+                    }
+                ]
+            };
 
             var url = $"https://discord.com/api/v10/channels/{channelId}/messages";
-            var response = await _httpClient.PostAsJsonAsync(url, payload, cancellationToken);
+            var payloadJson = JsonSerializer.Serialize(payload, PayloadJsonOptions);
+
+            using var multipart = new MultipartFormDataContent();
+            multipart.Add(new StringContent(payloadJson, Encoding.UTF8, "application/json"), "payload_json");
+            var fileContent = new ByteArrayContent(pngBytes);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+            multipart.Add(fileContent, "files[0]", TournamentResultsCompositeRenderer.AttachmentFilename);
+
+            var response = await _httpClient.PostAsync(url, multipart, cancellationToken).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
             {
-                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                 _logger.LogWarning("Discord API error {Status}: {Body}", response.StatusCode, body);
                 return (false, $"Discord API {(int)response.StatusCode}: {body}");
             }
@@ -113,11 +163,16 @@ namespace Balkana.Services.Discord
             return url.TrimEnd('/');
         }
 
+        private static string TrophyUrlsFooter(string baseUrl) =>
+            $"MVP trophy image: {baseUrl}{MvpTrophyPath}\nEVP trophy image: {baseUrl}{EvpTrophyPath}";
+
         private static string FormatPlainText(TournamentDiscordResultsDto dto, string baseUrl)
         {
             var sb = new System.Text.StringBuilder();
             sb.AppendLine($"# {dto.TournamentName} Results");
             sb.AppendLine($"{baseUrl}/Tournaments/Details/{dto.TournamentId}");
+            sb.AppendLine();
+            sb.AppendLine("(On Discord, a composite PNG with team logos is attached to the message.)");
             sb.AppendLine();
 
             foreach (var band in dto.Bands)
@@ -136,17 +191,20 @@ namespace Balkana.Services.Discord
 
             if (dto.Mvp != null)
             {
-                sb.AppendLine("## ⭐ MVP");
+                sb.AppendLine($"## MVP ({baseUrl}{MvpTrophyPath})");
                 sb.AppendLine(FormatAwardLine(dto.Mvp));
                 sb.AppendLine();
             }
 
             if (dto.Evps.Count > 0)
             {
-                sb.AppendLine("## ✨ EVP");
+                sb.AppendLine($"## EVP ({baseUrl}{EvpTrophyPath})");
                 foreach (var e in dto.Evps)
                     sb.AppendLine("- " + FormatAwardLine(e));
             }
+
+            sb.AppendLine();
+            sb.AppendLine(TrophyUrlsFooter(baseUrl));
 
             return sb.ToString();
         }
@@ -162,18 +220,23 @@ namespace Balkana.Services.Discord
             return $"[{p.Nickname}]({p.PlayerProfileUrl}){team}{logo}";
         }
 
-        private List<DiscordApiEmbed> BuildEmbeds(TournamentDiscordResultsDto dto, string baseUrl)
+        private List<DiscordApiEmbed> BuildEmbeds(
+            TournamentDiscordResultsDto dto,
+            string baseUrl,
+            string mvpIconUrl,
+            string evpIconUrl)
         {
             var tournamentUrl = $"{baseUrl}/Tournaments/Details/{dto.TournamentId}";
-            var fields = new List<DiscordApiEmbedField>();
+            var attachmentRef = $"attachment://{TournamentResultsCompositeRenderer.AttachmentFilename}";
 
+            var placementFields = new List<DiscordApiEmbedField>();
             foreach (var band in dto.Bands)
             {
                 var value = string.Join(
                     "\n\n",
-                    band.Teams.Select(t => FormatTeamBlock(t)));
+                    band.Teams.Select(FormatTeamBlockEmbed));
                 value = TruncateFieldValue(value);
-                fields.Add(new DiscordApiEmbedField
+                placementFields.Add(new DiscordApiEmbedField
                 {
                     Name = TruncateFieldName($"{band.TierEmoji} {band.Label}"),
                     Value = value,
@@ -181,28 +244,7 @@ namespace Balkana.Services.Discord
                 });
             }
 
-            if (dto.Mvp != null)
-            {
-                fields.Add(new DiscordApiEmbedField
-                {
-                    Name = "⭐ MVP",
-                    Value = TruncateFieldValue(FormatAwardMarkdown(dto.Mvp)),
-                    Inline = false
-                });
-            }
-
-            if (dto.Evps.Count > 0)
-            {
-                var evpBody = string.Join("\n", dto.Evps.Select(FormatAwardMarkdown));
-                fields.Add(new DiscordApiEmbedField
-                {
-                    Name = "✨ EVP",
-                    Value = TruncateFieldValue(evpBody),
-                    Inline = false
-                });
-            }
-
-            fields.Add(new DiscordApiEmbedField
+            placementFields.Add(new DiscordApiEmbedField
             {
                 Name = "Tournament",
                 Value = $"[{dto.TournamentName}]({tournamentUrl})",
@@ -210,25 +252,63 @@ namespace Balkana.Services.Discord
             });
 
             var embeds = new List<DiscordApiEmbed>();
-            var chunks = fields.Chunk(MaxFieldsPerEmbed).ToList();
+            var chunks = placementFields.Chunk(MaxFieldsPerEmbed).ToList();
             for (var i = 0; i < chunks.Count; i++)
             {
                 var embed = new DiscordApiEmbed
                 {
-                    Title = i == 0 ? $"{dto.TournamentName} Results" : $"{dto.TournamentName} Results (cont.)",
+                    Title = i == 0
+                        ? $"{dto.TournamentName} Results"
+                        : $"{dto.TournamentName} Results (cont.)",
                     Url = i == 0 ? tournamentUrl : null,
+                    Description = i == 0
+                        ? "Placements and rosters (logos in image)."
+                        : null,
                     Color = 0xE94560,
-                    Fields = chunks[i].ToList()
+                    Fields = chunks[i].ToList(),
+                    Image = i == 0
+                        ? new DiscordApiEmbedImage { Url = attachmentRef }
+                        : null
                 };
-                if (i == chunks.Count - 1)
-                    embed.Footer = new DiscordApiEmbedFooter { Text = "Balkana" };
                 embeds.Add(embed);
             }
+
+            if (dto.Mvp != null)
+            {
+                embeds.Add(new DiscordApiEmbed
+                {
+                    Author = new DiscordApiEmbedAuthor
+                    {
+                        Name = "MVP",
+                        IconUrl = mvpIconUrl
+                    },
+                    Description = TruncateDescription(FormatAwardMarkdown(dto.Mvp)),
+                    Color = 0xE94560
+                });
+            }
+
+            if (dto.Evps.Count > 0)
+            {
+                var evpBody = string.Join("\n", dto.Evps.Select(FormatAwardMarkdown));
+                embeds.Add(new DiscordApiEmbed
+                {
+                    Author = new DiscordApiEmbedAuthor
+                    {
+                        Name = "EVP",
+                        IconUrl = evpIconUrl
+                    },
+                    Description = TruncateDescription(evpBody),
+                    Color = 0xE94560
+                });
+            }
+
+            if (embeds.Count > 0)
+                embeds[^1].Footer = new DiscordApiEmbedFooter { Text = "Balkana" };
 
             return embeds;
         }
 
-        private static string FormatTeamBlock(DiscordPlacementTeamDto t)
+        private static string FormatTeamBlockEmbed(DiscordPlacementTeamDto t)
         {
             var orgPart = t.OrganisationPointsAwarded > 0
                 ? $" · Org **{t.OrganisationPointsAwarded}**"
@@ -240,7 +320,7 @@ namespace Balkana.Services.Discord
                 ? string.Join(", ", t.EmergencySubstituteNicknames)
                 : "—";
             return
-                $"[**{EscapeMd(t.FullName)}** ({EscapeMd(t.Tag)})]({t.TeamDetailsUrl}) · [logo]({t.LogoAbsoluteUrl})\n" +
+                $"[**{EscapeMd(t.FullName)}** ({EscapeMd(t.Tag)})]({t.TeamDetailsUrl})\n" +
                 $"Points: **{t.PointsAwarded}**{orgPart}\n" +
                 $"Participants: {EscapeMd(participants)}\n" +
                 $"Emergency substitutes: {EscapeMd(es)}";
@@ -274,12 +354,31 @@ namespace Balkana.Services.Discord
                 return name;
             return name[..(max - 3)] + "...";
         }
+
+        private static string TruncateDescription(string value)
+        {
+            if (value.Length <= MaxEmbedDescriptionLength)
+                return value;
+            return value[..(MaxEmbedDescriptionLength - 20)] + "\n… (truncated)";
+        }
     }
 
-    internal sealed class DiscordCreateMessageRequest
+    internal sealed class DiscordCreateMultipartPayload
     {
         [JsonPropertyName("embeds")]
         public List<DiscordApiEmbed> Embeds { get; set; } = new();
+
+        [JsonPropertyName("attachments")]
+        public List<DiscordApiAttachmentStub> Attachments { get; set; } = new();
+    }
+
+    internal sealed class DiscordApiAttachmentStub
+    {
+        [JsonPropertyName("id")]
+        public int Id { get; set; }
+
+        [JsonPropertyName("filename")]
+        public string Filename { get; set; } = "";
     }
 
     internal sealed class DiscordApiEmbed
@@ -287,17 +386,41 @@ namespace Balkana.Services.Discord
         [JsonPropertyName("title")]
         public string? Title { get; set; }
 
+        [JsonPropertyName("description")]
+        public string? Description { get; set; }
+
         [JsonPropertyName("url")]
         public string? Url { get; set; }
 
         [JsonPropertyName("color")]
         public int Color { get; set; }
 
+        [JsonPropertyName("author")]
+        public DiscordApiEmbedAuthor? Author { get; set; }
+
+        [JsonPropertyName("image")]
+        public DiscordApiEmbedImage? Image { get; set; }
+
         [JsonPropertyName("fields")]
-        public List<DiscordApiEmbedField> Fields { get; set; } = new();
+        public List<DiscordApiEmbedField>? Fields { get; set; }
 
         [JsonPropertyName("footer")]
         public DiscordApiEmbedFooter? Footer { get; set; }
+    }
+
+    internal sealed class DiscordApiEmbedAuthor
+    {
+        [JsonPropertyName("name")]
+        public string Name { get; set; } = "";
+
+        [JsonPropertyName("icon_url")]
+        public string? IconUrl { get; set; }
+    }
+
+    internal sealed class DiscordApiEmbedImage
+    {
+        [JsonPropertyName("url")]
+        public string Url { get; set; } = "";
     }
 
     internal sealed class DiscordApiEmbedField

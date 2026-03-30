@@ -1662,6 +1662,19 @@
           }
         }
       },
+      "SixLabors.Fonts/2.0.5": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/SixLabors.Fonts.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/SixLabors.Fonts.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "SixLabors.ImageSharp/3.1.7": {
         "type": "package",
         "compile": {
@@ -1676,6 +1689,23 @@
         },
         "build": {
           "build/SixLabors.ImageSharp.props": {}
+        }
+      },
+      "SixLabors.ImageSharp.Drawing/2.1.4": {
+        "type": "package",
+        "dependencies": {
+          "SixLabors.Fonts": "2.0.4",
+          "SixLabors.ImageSharp": "3.1.5"
+        },
+        "compile": {
+          "lib/net6.0/SixLabors.ImageSharp.Drawing.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/SixLabors.ImageSharp.Drawing.dll": {
+            "related": ".xml"
+          }
         }
       },
       "System.ClientModel/1.0.0": {
@@ -4975,6 +5005,21 @@
         "puppeteersharp.nuspec"
       ]
     },
+    "SixLabors.Fonts/2.0.5": {
+      "sha512": "OyVi3ZQAuchqQE3iL+/1qzxx5dYutJdDhxwMe/59PXFajRpv5s3NswCO509XpiPBttZ1nmFpyaBF6Fw+WgCZKg==",
+      "type": "package",
+      "path": "sixlabors.fonts/2.0.5",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "lib/net6.0/SixLabors.Fonts.dll",
+        "lib/net6.0/SixLabors.Fonts.xml",
+        "sixlabors.fonts.128.png",
+        "sixlabors.fonts.2.0.5.nupkg.sha512",
+        "sixlabors.fonts.nuspec"
+      ]
+    },
     "SixLabors.ImageSharp/3.1.7": {
       "sha512": "9fIOOAsyLFid6qKypM2Iy0Z3Q9yoanV8VoYAHtI2sYGMNKzhvRTjgFDHonIiVe+ANtxIxM6SuqUzj0r91nItpA==",
       "type": "package",
@@ -4989,6 +5034,21 @@
         "sixlabors.imagesharp.128.png",
         "sixlabors.imagesharp.3.1.7.nupkg.sha512",
         "sixlabors.imagesharp.nuspec"
+      ]
+    },
+    "SixLabors.ImageSharp.Drawing/2.1.4": {
+      "sha512": "p4VwtAABggDUhUS5zXldCZHVGfjJl76+SrBHY4biNQ8+890igFK6RL87qIv9GqvEjMcYOar1sPkf2iMQ6uq9/g==",
+      "type": "package",
+      "path": "sixlabors.imagesharp.drawing/2.1.4",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "lib/net6.0/SixLabors.ImageSharp.Drawing.dll",
+        "lib/net6.0/SixLabors.ImageSharp.Drawing.xml",
+        "sixlabors.imagesharp.drawing.128.png",
+        "sixlabors.imagesharp.drawing.2.1.4.nupkg.sha512",
+        "sixlabors.imagesharp.drawing.nuspec"
       ]
     },
     "System.ClientModel/1.0.0": {
@@ -6318,7 +6378,9 @@
       "Microsoft.EntityFrameworkCore.Tools >= 9.0.0",
       "NSec.Cryptography >= 25.4.0",
       "PuppeteerSharp >= 20.2.4",
+      "SixLabors.Fonts >= 2.0.5",
       "SixLabors.ImageSharp >= 3.1.7",
+      "SixLabors.ImageSharp.Drawing >= 2.1.4",
       "System.Drawing.Common >= 9.0.9",
       "bootstrap >= 5.3.3"
     ]
@@ -6420,9 +6482,17 @@
             "target": "Package",
             "version": "[20.2.4, )"
           },
+          "SixLabors.Fonts": {
+            "target": "Package",
+            "version": "[2.0.5, )"
+          },
           "SixLabors.ImageSharp": {
             "target": "Package",
             "version": "[3.1.7, )"
+          },
+          "SixLabors.ImageSharp.Drawing": {
+            "target": "Package",
+            "version": "[2.1.4, )"
           },
           "System.Drawing.Common": {
             "target": "Package",

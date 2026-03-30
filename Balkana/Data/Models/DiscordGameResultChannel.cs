@@ -10,7 +10,9 @@ namespace Balkana.Data.Models
         public int Id { get; set; }
 
         public int GameId { get; set; }
-        public Game Game { get; set; }
+
+        /// <summary>Optional navigation; not set on form posts.</summary>
+        public Game? Game { get; set; }
 
         [Required]
         [MaxLength(64)]

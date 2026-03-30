@@ -385,6 +385,7 @@ void ConfigureServices(IServiceCollection services)
         if (!string.IsNullOrEmpty(cfg.BotToken))
             client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bot {cfg.BotToken}");
     });
+    builder.Services.AddScoped<TournamentResultsCompositeRenderer>();
 }
 
 // Configure the HTTP request pipeline.

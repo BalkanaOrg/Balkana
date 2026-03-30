@@ -15,8 +15,9 @@
                     </h3>
                 </div>
                 <div class="card-body">
-                    <form asp-action="@(isEdit ? "DiscordResultChannelEdit" : "DiscordResultChannelCreate")" method="post">
+                    <form asp-controller="Admin" asp-action="@(isEdit ? "DiscordResultChannelEdit" : "DiscordResultChannelCreate")" asp-route-id="@(isEdit ? Model.Id : null)" method="post">
                         @Html.AntiForgeryToken()
+                        <div asp-validation-summary="All" class="text-danger mb-3" role="alert"></div>
                         @if (isEdit)
                         {
                             <input type="hidden" asp-for="Id" />
