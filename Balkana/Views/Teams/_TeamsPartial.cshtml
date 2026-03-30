@@ -1,4 +1,4 @@
-﻿@model IEnumerable<TeamServiceModel>
+@model IEnumerable<TeamServiceModel>
 @{
     int accordionCount = 0;
 }
@@ -95,7 +95,7 @@
                 </div>
 
                 <div class="team-points">
-                    <div class="points-value">@((2500 - (rank * 50)) + new Random().Next(-50, 50))</div>
+                    <div class="points-value">@team.CircuitYearPointsTotal</div>
                     <div class="points-label">Points</div>
                 </div>
             </div>

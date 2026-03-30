@@ -1,4 +1,4 @@
-﻿using Balkana.Data.Models;
+using Balkana.Data.Models;
 using Balkana.Services.Players.Models;
 
 namespace Balkana.Services.Teams.Models
@@ -14,6 +14,9 @@ namespace Balkana.Services.Teams.Models
         public string GameName { get; init; }
 
         public IEnumerable<PlayerServiceModel> Players { get; set; } = new List<PlayerServiceModel>();
+
+        /// <summary>Points for the selected circuit year (UTC). When Year filter is empty, this is 0.</summary>
+        public int CircuitYearPointsTotal { get; set; }
         
         // Trophy collections
         public List<TeamTrophyServiceModel> Trophies { get; set; } = new();

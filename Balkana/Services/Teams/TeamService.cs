@@ -55,19 +55,21 @@ namespace Balkana.Services.Teams
 
             IEnumerable<TeamServiceModel> teams;
             var now = DateTime.UtcNow;
+            var circuitYear = year.HasValue ? year.Value : 0;
 
             if (!year.HasValue || year.Value < 2026)
             {
-                var pagedIds = teamsQuery
+                var pageTeamsQuery = teamsQuery
+                    .Include(t => t.Transfers)
+                    .AsNoTracking()
                     .OrderBy(t => t.Id)
                     .Skip((currentPage - 1) * teamsPerPage)
                     .Take(teamsPerPage);
 
-                teams = BuildTeamListCards(pagedIds);
+                teams = BuildTeamListCards(pageTeamsQuery, circuitYear, now);
             }
             else
             {
-                var circuitYear = year.Value;
                 var allTeams = teamsQuery
                     .Include(t => t.Transfers)
                     .AsNoTracking()
@@ -78,7 +80,7 @@ namespace Balkana.Services.Teams
                     .Take(teamsPerPage)
                     .ToList();
 
-                teams = allTeams.Select(BuildTeamListCard).ToList();
+                teams = allTeams.Select(t => BuildTeamListCard(t, circuitYear, now)).ToList();
             }
 
             return new TeamQueryServiceModel
@@ -262,13 +264,13 @@ namespace Balkana.Services.Teams
         }
 
 
-        private IEnumerable<TeamServiceModel> BuildTeamListCards(IQueryable<Team> teamQuery)
+        private IEnumerable<TeamServiceModel> BuildTeamListCards(IQueryable<Team> teamQuery, int circuitYear, DateTime now)
         {
             var teams = teamQuery.AsNoTracking().ToList();
-            return teams.Select(BuildTeamListCard).ToList();
+            return teams.Select(t => BuildTeamListCard(t, circuitYear, now)).ToList();
         }
 
-        private TeamServiceModel BuildTeamListCard(Team team)
+        private TeamServiceModel BuildTeamListCard(Team team, int circuitYear, DateTime now)
         {
             var defaultPic = "https://media.istockphoto.com/id/1618846975/photo/smile-black-woman-and-hand-pointing-in-studio-for-news-deal-or-coming-soon-announcement-on.jpg?s=612x612&w=0&k=20&c=LUvvJu4sGaIry5WLXmfQV7RStbGG5hEQNo8hEFxZSGY=";
 
@@ -292,6 +294,10 @@ namespace Balkana.Services.Teams
             int totalSeries = wins + losses;
             double winRate = totalSeries > 0 ? (double)wins / totalSeries * 100 : 0;
 
+            var pointsTotal = circuitYear <= 0
+                ? 0
+                : GetCircuitYearPointsTotalForTeam(team, circuitYear, now);
+
             return new TeamServiceModel
             {
                 Id = team.Id,
@@ -303,6 +309,7 @@ namespace Balkana.Services.Teams
                 Wins = wins,
                 Losses = losses,
                 WinRate = Math.Round(winRate, 1),
+                CircuitYearPointsTotal = pointsTotal,
                 Players = this.AllPlayers(team.Id)
                     .Take(5)
                     .Select(p => new PlayerServiceModel
