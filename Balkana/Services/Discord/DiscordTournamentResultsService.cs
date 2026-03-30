@@ -180,9 +180,8 @@ namespace Balkana.Services.Discord
                 sb.AppendLine($"## {band.TierEmoji} {band.Label}");
                 foreach (var t in band.Teams)
                 {
-                    sb.AppendLine($"- **{t.FullName}** ({t.Tag}) — {t.PointsAwarded} pts (org: {t.OrganisationPointsAwarded})");
+                    sb.AppendLine($"- **{t.FullName}** — {t.PointsAwarded} pts (org: {t.OrganisationPointsAwarded})");
                     sb.AppendLine($"  Logo: {t.LogoAbsoluteUrl}");
-                    sb.AppendLine($"  Participants: {(t.ParticipantNicknames.Count > 0 ? string.Join(", ", t.ParticipantNicknames) : "—")}");
                     sb.AppendLine($"  Emergency substitutes: {(t.EmergencySubstituteNicknames.Count > 0 ? string.Join(", ", t.EmergencySubstituteNicknames) : "—")}");
                 }
 
@@ -211,13 +210,9 @@ namespace Balkana.Services.Discord
 
         private static string FormatAwardLine(DiscordAwardPlayerDto p)
         {
-            var team = p.TeamName != null
-                ? $" · [{p.TeamName}]({p.TeamDetailsUrl})"
-                : "";
-            var logo = !string.IsNullOrEmpty(p.TeamLogoAbsoluteUrl)
-                ? $" [logo]({p.TeamLogoAbsoluteUrl})"
-                : "";
-            return $"[{p.Nickname}]({p.PlayerProfileUrl}){team}{logo}";
+            if (p.TeamName != null && p.TeamDetailsUrl != null)
+                return $"[{p.TeamName}]({p.TeamDetailsUrl}) · [{p.Nickname}]({p.PlayerProfileUrl})";
+            return $"[{p.Nickname}]({p.PlayerProfileUrl})";
         }
 
         private List<DiscordApiEmbed> BuildEmbeds(
@@ -313,28 +308,20 @@ namespace Balkana.Services.Discord
             var orgPart = t.OrganisationPointsAwarded > 0
                 ? $" · Org **{t.OrganisationPointsAwarded}**"
                 : "";
-            var participants = t.ParticipantNicknames.Count > 0
-                ? string.Join(", ", t.ParticipantNicknames)
-                : "—";
             var es = t.EmergencySubstituteNicknames.Count > 0
                 ? string.Join(", ", t.EmergencySubstituteNicknames)
                 : "—";
             return
-                $"[**{EscapeMd(t.FullName)}** ({EscapeMd(t.Tag)})]({t.TeamDetailsUrl})\n" +
+                $"[**{EscapeMd(t.FullName)}**]({t.TeamDetailsUrl})\n" +
                 $"Points: **{t.PointsAwarded}**{orgPart}\n" +
-                $"Participants: {EscapeMd(participants)}\n" +
                 $"Emergency substitutes: {EscapeMd(es)}";
         }
 
         private static string FormatAwardMarkdown(DiscordAwardPlayerDto p)
         {
-            var line =
-                $"[**{EscapeMd(p.Nickname)}**]({p.PlayerProfileUrl})";
             if (p.TeamDetailsUrl != null && p.TeamName != null)
-                line += $" · [**{EscapeMd(p.TeamName)}**]({p.TeamDetailsUrl})";
-            if (!string.IsNullOrEmpty(p.TeamLogoAbsoluteUrl))
-                line += $" · [logo]({p.TeamLogoAbsoluteUrl})";
-            return line;
+                return $"[**{EscapeMd(p.TeamName)}**]({p.TeamDetailsUrl}) · [**{EscapeMd(p.Nickname)}**]({p.PlayerProfileUrl})";
+            return $"[**{EscapeMd(p.Nickname)}**]({p.PlayerProfileUrl})";
         }
 
         private static string EscapeMd(string s) =>

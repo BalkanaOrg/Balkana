@@ -101,7 +101,7 @@ namespace Balkana.Services.Discord
                 foreach (var band in dto.Bands)
                 {
                     canvas.Mutate(c =>
-                        c.DrawText($"{band.TierEmoji} {band.Label}", fontBand, Accent, new PointF(Padding, y)));
+                        c.DrawText(band.Label, fontBand, Accent, new PointF(Padding, y)));
                     y += 30;
 
                     foreach (var team in band.Teams)
@@ -127,7 +127,7 @@ namespace Balkana.Services.Discord
                         var orgPart = team.OrganisationPointsAwarded > 0
                             ? $" · Org {team.OrganisationPointsAwarded}"
                             : "";
-                        var line1 = $"{team.FullName} ({team.Tag})";
+                        var line1 = team.FullName;
                         canvas.Mutate(c =>
                             c.DrawText(line1, fontTeam, TextPrimary, new PointF(tx, y + 2)));
                         var line2 = $"Points: {team.PointsAwarded}{orgPart}";

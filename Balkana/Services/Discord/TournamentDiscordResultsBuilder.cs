@@ -1,4 +1,5 @@
 using Balkana.Data;
+using Balkana.Data.Infrastructure.Extensions;
 using Balkana.Data.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -94,7 +95,7 @@ namespace Balkana.Services.Discord
                         Tag = team.Tag,
                         FullName = team.FullName,
                         LogoAbsoluteUrl = ToAbsoluteUrl(baseUrl, team.LogoURL),
-                        TeamDetailsUrl = $"{baseUrl}/Teams/Details/{team.Id}",
+                        TeamDetailsUrl = TeamDetailsUrlWithInformation(baseUrl, team),
                         PointsAwarded = pl.PointsAwarded,
                         OrganisationPointsAwarded = pl.OrganisationPointsAwarded,
                         ParticipantNicknames = participants,
@@ -170,7 +171,7 @@ namespace Balkana.Services.Discord
             {
                 PlayerId = player.Id,
                 Nickname = player.Nickname,
-                PlayerProfileUrl = $"{baseUrl}/Players/Profile/{player.Id}"
+                PlayerProfileUrl = PlayerProfileUrlWithInformation(baseUrl, player)
             };
 
             if (tr?.Team != null)
@@ -179,10 +180,22 @@ namespace Balkana.Services.Discord
                 dto.TeamName = tr.Team.FullName;
                 dto.TeamTag = tr.Team.Tag;
                 dto.TeamLogoAbsoluteUrl = ToAbsoluteUrl(baseUrl, tr.Team.LogoURL);
-                dto.TeamDetailsUrl = $"{baseUrl}/Teams/Details/{tr.Team.Id}";
+                dto.TeamDetailsUrl = TeamDetailsUrlWithInformation(baseUrl, tr.Team);
             }
 
             return dto;
+        }
+
+        private static string TeamDetailsUrlWithInformation(string baseUrl, Team team)
+        {
+            baseUrl = baseUrl.TrimEnd('/');
+            return $"{baseUrl}/Teams/Details/{team.Id}?information={Uri.EscapeDataString(team.GetInformation())}";
+        }
+
+        private static string PlayerProfileUrlWithInformation(string baseUrl, Player player)
+        {
+            baseUrl = baseUrl.TrimEnd('/');
+            return $"{baseUrl}/Players/Profile/{player.Id}?information={Uri.EscapeDataString(player.GetInformation())}";
         }
 
         public static string ToAbsoluteUrl(string baseUrl, string? pathOrUrl)
