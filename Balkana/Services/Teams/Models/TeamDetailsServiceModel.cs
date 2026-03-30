@@ -1,4 +1,4 @@
-﻿namespace Balkana.Services.Teams.Models
+namespace Balkana.Services.Teams.Models
 {
     public class TeamDetailsServiceModel : TeamServiceModel
     {
@@ -23,6 +23,17 @@
         // Statistics
         public TeamStatisticsServiceModel CurrentRosterStats { get; set; } = new TeamStatisticsServiceModel();
         public TeamStatisticsServiceModel AllTimeStats { get; set; } = new TeamStatisticsServiceModel();
+
+        /// <summary>Calendar year (UTC) for circuit points in the header.</summary>
+        public int CircuitYear { get; set; }
+
+        /// <summary>Sum of <see cref="PlayerPoints"/> for the current active roster in <see cref="CircuitYear"/>.</summary>
+        public int CircuitYearRosterPlayerPoints { get; set; }
+
+        /// <summary>Sum of organisation placement points for this team in <see cref="CircuitYear"/>.</summary>
+        public int CircuitYearOrganisationPoints { get; set; }
+
+        public int CircuitYearPointsTotal => CircuitYearRosterPlayerPoints + CircuitYearOrganisationPoints;
         
         // Legacy property for backward compatibility
         public IEnumerable<TeamStaffServiceModel> Players { get; set; } = new List<TeamStaffServiceModel>();

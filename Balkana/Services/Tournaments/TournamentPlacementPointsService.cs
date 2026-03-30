@@ -22,6 +22,9 @@ namespace Balkana.Services.Tournaments
             if (tournament == null)
                 return new List<TeamPointsPreviewRow>();
 
+            var tournamentEndExclusiveUtc = ToEndExclusiveUtc(tournament.EndDate);
+            var tournamentStartUtc = tournament.StartDate;
+
             var teams = await _context.TournamentTeams
                 .Include(tt => tt.Team)
                 .Where(tt => tt.TournamentId == tournamentId)
@@ -38,7 +41,7 @@ namespace Balkana.Services.Tournaments
             foreach (var tt in teams.OrderBy(tt => tt.Team?.FullName))
             {
                 var teamId = tt.TeamId;
-                var esCount = await CountEmergencySubstitutesAsync(teamId, tournament);
+                var esCount = await CountEmergencySubstitutesAsync(teamId, tournamentEndExclusiveUtc, tournamentStartUtc);
                 var penaltyPct = Math.Min(100, 20 * esCount);
 
                 var row = new TeamPointsPreviewRow
@@ -76,6 +79,9 @@ namespace Balkana.Services.Tournaments
             if (tournament == null)
                 return;
 
+            var tournamentEndExclusiveUtc = ToEndExclusiveUtc(tournament.EndDate);
+            var tournamentStartUtc = tournament.StartDate;
+
             var existing = await _context.PlayerPoints
                 .Where(pp => pp.TournamentId == tournamentId)
                 .ToListAsync();
@@ -84,7 +90,7 @@ namespace Balkana.Services.Tournaments
             foreach (var placement in tournament.Placements)
             {
                 var p = TournamentPlacementScoring.GetPointsForPlacement(tournament, placement.Placement);
-                var esCount = await CountEmergencySubstitutesAsync(placement.TeamId, tournament);
+                var esCount = await CountEmergencySubstitutesAsync(placement.TeamId, tournamentEndExclusiveUtc, tournamentStartUtc);
                 var factor = 1 - Math.Min(1.0, 0.2 * esCount);
                 var pEff = (int)Math.Round(p * factor);
                 var org = (int)Math.Round(0.2 * pEff);
@@ -95,8 +101,8 @@ namespace Balkana.Services.Tournaments
                 var counts = await GetPlayerMapCountsForTeamAsync(
                     placement.TeamId,
                     tournamentId,
-                    tournament.StartDate,
-                    tournament.EndDate);
+                    tournamentStartUtc,
+                    tournamentEndExclusiveUtc);
 
                 var eligible = counts
                     .Where(kv => kv.Value > 0)
@@ -123,13 +129,19 @@ namespace Balkana.Services.Tournaments
             await _context.SaveChangesAsync();
         }
 
-        private Task<int> CountEmergencySubstitutesAsync(int teamId, Tournament tournament)
+        private static DateTime ToEndExclusiveUtc(DateTime endDate)
+            => endDate.Date.AddDays(1);
+
+        private Task<int> CountEmergencySubstitutesAsync(
+            int teamId,
+            DateTime tournamentEndExclusiveUtc,
+            DateTime tournamentStartUtc)
         {
             return _context.PlayerTeamTransfers
                 .Where(t => t.TeamId == teamId
                             && t.Status == PlayerTeamStatus.EmergencySubstitute
-                            && t.StartDate <= tournament.EndDate
-                            && (t.EndDate == null || t.EndDate >= tournament.StartDate))
+                            && t.StartDate < tournamentEndExclusiveUtc
+                            && (t.EndDate == null || t.EndDate >= tournamentStartUtc))
                 .CountAsync();
         }
 
@@ -137,14 +149,14 @@ namespace Balkana.Services.Tournaments
             int teamId,
             int tournamentId,
             DateTime tournamentStart,
-            DateTime tournamentEnd)
+            DateTime tournamentEndExclusiveUtc)
         {
             var matchIds = await _context.Series
                 .Where(s => s.TournamentId == tournamentId)
                 .SelectMany(s => s.Matches)
                 .Where(m => m.IsCompleted
                             && m.PlayedAt >= tournamentStart
-                            && m.PlayedAt <= tournamentEnd)
+                            && m.PlayedAt < tournamentEndExclusiveUtc)
                 .Select(m => m.Id)
                 .Distinct()
                 .ToListAsync();
@@ -168,7 +180,7 @@ namespace Balkana.Services.Tournaments
 
             var playerIds = uuidToPlayerId.Values.Distinct().ToList();
             var transfers = await _context.PlayerTeamTransfers
-                .Where(t => playerIds.Contains(t.PlayerId) && t.StartDate <= tournamentEnd)
+                .Where(t => playerIds.Contains(t.PlayerId) && t.StartDate < tournamentEndExclusiveUtc)
                 .ToListAsync();
 
             var pairs = new HashSet<(int PlayerId, int MatchId)>();

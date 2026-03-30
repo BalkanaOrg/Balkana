@@ -88,6 +88,8 @@ namespace Balkana.Services.Teams
 
             var now = DateTime.UtcNow;
             var defaultPic = "/uploads/PlayerProfiles/_defaultPfp.png";
+            var circuitYear = now.Year;
+            var (rosterPts, orgPts) = GetCircuitYearPoints(team, circuitYear, now);
 
             // Build comprehensive team details
             var teamDetails = new TeamDetailsServiceModel
@@ -107,7 +109,10 @@ namespace Balkana.Services.Teams
                 RecentMatches = GetRecentMatches(team),
                 CurrentRosterStats = GetCurrentRosterStats(team, now),
                 AllTimeStats = GetAllTimeStats(team.Id),
-                Players = GetLegacyPlayers(team, now, defaultPic)
+                Players = GetLegacyPlayers(team, now, defaultPic),
+                CircuitYear = circuitYear,
+                CircuitYearRosterPlayerPoints = rosterPts,
+                CircuitYearOrganisationPoints = orgPts
             };
 
             return teamDetails;
@@ -303,6 +308,35 @@ namespace Balkana.Services.Teams
         {
             var count = this.data.Teams.Count();
             return count;
+        }
+
+        private static IEnumerable<int> GetCurrentRosterPlayerIds(Team team, DateTime now)
+        {
+            return team.Transfers
+                .Where(tr => tr.StartDate <= now &&
+                           (tr.EndDate == null || tr.EndDate >= now) &&
+                           tr.Status == PlayerTeamStatus.Active)
+                .GroupBy(tr => tr.PlayerId)
+                .Select(g => g.OrderByDescending(tr => tr.StartDate).First().PlayerId);
+        }
+
+        private (int RosterPlayerPoints, int OrganisationPoints) GetCircuitYearPoints(Team team, int circuitYear, DateTime now)
+        {
+            var orgPoints = this.data.TournamentPlacements
+                .AsNoTracking()
+                .Where(p => p.TeamId == team.Id && p.Tournament.StartDate.Year == circuitYear)
+                .Sum(p => (int?)p.OrganisationPointsAwarded) ?? 0;
+
+            var rosterIds = GetCurrentRosterPlayerIds(team, now).ToList();
+            if (rosterIds.Count == 0)
+                return (0, orgPoints);
+
+            var playerPoints = this.data.PlayerPoints
+                .AsNoTracking()
+                .Where(pp => rosterIds.Contains(pp.PlayerId) && pp.Tournament.StartDate.Year == circuitYear)
+                .Sum(pp => (int?)pp.PointsAwarded) ?? 0;
+
+            return (playerPoints, orgPoints);
         }
 
         private IEnumerable<TeamRosterServiceModel> GetCurrentRoster(Team team, DateTime now, string defaultPic)

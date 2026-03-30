@@ -52,8 +52,9 @@
                         <div class="stat-label">Tournament Wins</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-number">@Model.AllTimeStats.TotalPoints</div>
-                        <div class="stat-label">Total Points</div>
+                        <div class="stat-number">@Model.CircuitYearPointsTotal</div>
+                        <div class="stat-label">@Model.CircuitYear Circuit Points</div>
+                        <div class="stat-sub">@Model.CircuitYearRosterPlayerPoints + @Model.CircuitYearOrganisationPoints (@Model.CircuitYearOrganisationPoints from organization)</div>
                     </div>
                 </div>
             </div>
@@ -186,7 +187,7 @@
                     @foreach (var trophy in Model.Trophies)
                     {
                         var iconSrc = NormalizeMediaUrl(trophy.IconURL);
-                        <div class="trophy-card tooltip">
+                        <div class="trophy-card trophy-hover">
                             <div class="trophy-card-image-wrap">
                                 <img src="@iconSrc" alt="@trophy.Description" class="trophy-card-icon"
                                      onerror="this.src='/uploads/Tournaments/Trophies/default_trophy.png'" />
@@ -196,7 +197,7 @@
                                 <span class="trophy-card-desc" title="@trophy.Description">@trophy.Description</span>
                                 <span class="trophy-card-date">@trophy.AwardDate.ToString("MMM dd, yyyy")</span>
                             </div>
-                            <span class="tooltiptext trophy-card-tooltip">
+                            <span class="trophy-hover-text">
                                 @trophy.Description<br />
                                 @trophy.AwardType · @trophy.AwardDate.ToString("MMM dd, yyyy")
                             </span>

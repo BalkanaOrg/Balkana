@@ -129,6 +129,16 @@
     letter-spacing: 1px;
 }
 
+.stat-sub {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 8px;
+    line-height: 1.35;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: none;
+}
+
 /* Navigation Tabs */
 .team-tabs {
     display: flex;
@@ -385,11 +395,6 @@
     margin-top: auto;
 }
 
-.trophy-card.tooltip .trophy-card-tooltip {
-    width: 240px;
-    margin-left: -120px;
-}
-
 .trophies-row {
     display: flex;
     flex-wrap: nowrap;
@@ -417,23 +422,24 @@
     filter: drop-shadow(0 4px 8px rgba(0, 102, 204, 0.3));
 }
 
-.tooltip {
+/* Custom hover hint for trophy cards (do not use Bootstrap's .tooltip — opacity: 0) */
+.trophy-hover {
     position: relative;
 }
 
-.tooltiptext {
+.trophy-hover-text {
     visibility: hidden;
-    width: 200px;
+    width: 240px;
+    margin-left: -120px;
     background-color: rgba(0, 0, 0, 0.9);
     color: #fff;
     text-align: center;
     border-radius: 6px;
     padding: 8px 12px;
     position: absolute;
-    z-index: 1;
+    z-index: 5;
     bottom: 125%;
     left: 50%;
-    margin-left: -100px;
     opacity: 0;
     transition: opacity 0.3s;
     font-size: 0.85rem;
@@ -441,7 +447,7 @@
     border: 1px solid rgba(0, 102, 204, 0.3);
 }
 
-.tooltiptext::after {
+.trophy-hover-text::after {
     content: "";
     position: absolute;
     top: 100%;
@@ -452,7 +458,7 @@
     border-color: rgba(0, 0, 0, 0.9) transparent transparent transparent;
 }
 
-.tooltip:hover .tooltiptext {
+.trophy-hover:hover .trophy-hover-text {
     visibility: visible;
     opacity: 1;
 }
