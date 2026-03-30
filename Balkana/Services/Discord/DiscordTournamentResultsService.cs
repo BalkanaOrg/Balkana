@@ -155,11 +155,7 @@ namespace Balkana.Services.Discord
             return (true, null);
         }
 
-        private string GetBaseUrl()
-        {
-            var url = _configuration["BaseUrl"]?.Trim() ?? "https://balkana.org";
-            return url.TrimEnd('/');
-        }
+        private string GetBaseUrl() => DiscordUrlHelper.GetBaseUrl(_configuration);
 
         private static string TrophyUrlsFooter(string baseUrl) =>
             $"MVP trophy image: {baseUrl}{MvpTrophyPath}\nEVP trophy image: {baseUrl}{EvpTrophyPath}";

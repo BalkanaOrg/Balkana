@@ -117,8 +117,8 @@ namespace Balkana.Controllers
                                             var tournamentId = parts[1];
                                             var tournamentName = string.Join(":", parts.Skip(2)); // In case tournament name contains colons
                                             
-                                            // Use a direct image URL that Discord can embed
-                                            var imageUrl = $"{Request.Scheme}://{Request.Host}/api/tournaments/{tournamentId}/bracket/image";
+                                            var baseUrl = DiscordUrlHelper.GetBaseUrl(_configuration);
+                                            var imageUrl = $"{baseUrl}/api/tournaments/{tournamentId}/bracket/image";
                                             
                                             return Ok(new
                                             {
