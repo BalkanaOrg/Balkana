@@ -621,6 +621,18 @@ else
         box-shadow: 0 8px 32px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
     }
 
+    /* Center the bracket content when it doesn't overflow */
+    #bracket-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    /* Keep plugin internals flexible and centered */
+    #bracket-container > * {
+        flex: 0 0 auto;
+    }
+
     /* Individual brackets (scoped to plugin container) */
     #bracket-container .bracket-ub,
     #bracket-container .bracket-lb,
@@ -632,7 +644,7 @@ else
 
     /* Ultra Black Matches */
     #bracket-container .match {
-        min-width: 150px;
+        min-width: 210px;
         background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%) !important;
         color: #f9fafb;
         border: 2px solid #1a1a1a;
@@ -655,11 +667,12 @@ else
         background: linear-gradient(90deg, #1e40af, #dc2626);
     }
 
+    /* Keep match hover subtle; team hover is the primary interaction */
     #bracket-container .match:hover {
-        border-color: #1e40af;
-        box-shadow: 0 6px 24px rgba(30, 64, 175, 0.4);
-        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%) !important;
-        transform: translateY(-2px);
+        border-color: #2a2a2a;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%) !important;
+        transform: none;
     }
 
     /* Ultra Black Team/participant names */
@@ -669,14 +682,16 @@ else
         background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%) !important;
         padding: 6px 12px;
         border-radius: 8px;
-        transition: all 0.3s ease;
+        transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
         border: 1px solid #1a1a1a;
+        position: relative;
+        z-index: 1;
     }
 
     #bracket-container .participant:hover {
         background: linear-gradient(45deg, #1e40af, #dc2626) !important;
         color: white;
-        transform: scale(1.05);
+        transform: none;
         box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
 
@@ -834,22 +849,21 @@ else
     #bracket-container .participant:hover,
     #bracket-container .match .participant.hover,
     #bracket-container .match .participant:hover,
-    #bracket-container .match:hover .participant,
     #bracket-container .match .participant[data-hover="true"],
     #bracket-container .match .participant.highlighted {
         background: linear-gradient(45deg, #1e40af, #dc2626) !important;
         color: #ffffff !important;
         border: 1px solid rgba(255,255,255,0.2) !important;
         box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
-        transform: scale(1.02) !important;
+        transform: none !important;
         transition: all 0.2s ease !important;
     }
 
     #bracket-container .match.hover,
     #bracket-container .match:hover {
-        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%) !important;
-        border-color: #1e40af !important;
-        box-shadow: 0 4px 16px rgba(30, 64, 175, 0.3) !important;
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%) !important;
+        border-color: #2a2a2a !important;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.6) !important;
     }
 
     #bracket-container .match .participant {
@@ -857,6 +871,41 @@ else
         color: #f9fafb !important;
         border: 1px solid #1a1a1a !important;
         transition: all 0.2s ease !important;
+    }
+
+    /* Keep match/round labels above any hover visuals */
+    #bracket-container .match-label,
+    #bracket-container .label,
+    #bracket-container .match__label,
+    #bracket-container .match__infos,
+    #bracket-container .round-title,
+    #bracket-container .round-name,
+    #bracket-container .round-header {
+        position: relative;
+        z-index: 5;
+    }
+
+    /* Round labels theme (covers common viewer classnames) */
+    #bracket-container .round-title,
+    #bracket-container .round-name,
+    #bracket-container .round-header {
+        color: #d1d5db !important;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-size: 0.85rem;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid #1a1a1a;
+        border-radius: 10px;
+        padding: 0.35rem 0.75rem;
+        backdrop-filter: blur(6px);
+        display: inline-block;
+    }
+
+    #bracket-container .round-title,
+    #bracket-container .round-name {
+        background: linear-gradient(45deg, rgba(30, 64, 175, 0.18), rgba(220, 38, 38, 0.18));
+        border-color: rgba(255,255,255,0.12);
     }
 
     /* Series Modal Styles */

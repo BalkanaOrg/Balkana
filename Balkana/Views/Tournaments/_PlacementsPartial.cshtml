@@ -31,6 +31,38 @@
                         ? rosterPlayers.Take(5).ToList()
                         : new List<Player>();
                     <div class="placement-card @GetPlacementClass(placement.Placement)">
+                        <div class="placement-overlay">
+                            <div class="placement-overlay-inner">
+                                <div class="placement-overlay-title">
+                                    <a asp-controller="Teams"
+                                       asp-action="Details"
+                                       asp-route-id="@placement.Team.Id"
+                                       asp-route-information="@placement.Team.GetInformation()"
+                                       class="placement-overlay-team-link">
+                                        @placement.Team.FullName
+                                    </a>
+                                </div>
+                                <div class="placement-overlay-players">
+                                    @if (players.Any())
+                                    {
+                                        @foreach (var p in players)
+                                        {
+                                            <a asp-controller="Players"
+                                               asp-action="Profile"
+                                               asp-route-id="@p.Id"
+                                               asp-route-information="@p.GetInformation()"
+                                               class="placement-overlay-player-link">
+                                                <small class="player-name">@p.Nickname</small>
+                                            </a>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted">No players</small>
+                                    }
+                                </div>
+                            </div>
+                        </div>
                         <div class="placement-rank">
                             <span class="rank-number">
                                 @if (isShared)
@@ -50,36 +82,6 @@
                     <div class="placement-team">
                         <div class="placement-team-card">
                             <img src="@placement.Team.LogoURL" alt="@placement.Team.FullName" class="logo-img" />
-                            <div class="placement-team-hover">
-                                <div class="team-hover-title">
-                                    <a asp-controller="Teams"
-                                       asp-action="Details"
-                                       asp-route-id="@placement.Team.Id"
-                                       asp-route-information="@placement.Team.GetInformation()"
-                                       class="team-hover-link">
-                                        @placement.Team.FullName
-                                    </a>
-                                </div>
-                                <div class="placement-team-hover-players">
-                                    @if (players.Any())
-                                    {
-                                        @foreach (var p in players)
-                                        {
-                                            <a asp-controller="Players"
-                                               asp-action="Profile"
-                                               asp-route-id="@p.Id"
-                                               asp-route-information="@p.GetInformation()"
-                                               style="text-decoration:none;">
-                                                <small class="player-name">@p.Nickname</small>
-                                            </a>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <small class="text-muted">No players</small>
-                                    }
-                                </div>
-                            </div>
                         </div>
                         <div class="team-info">
                             <div class="team-name">
@@ -232,6 +234,90 @@
         overflow: hidden;
     }
 
+    /* Normalize link styles inside placements (no default blue) */
+    .placements-section a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .placements-section a:hover {
+        text-decoration: underline;
+    }
+
+    .placements-section a:focus-visible {
+        outline: 2px solid rgba(30, 64, 175, 0.8);
+        outline-offset: 2px;
+        border-radius: 8px;
+    }
+
+    /* Full-card hover overlay */
+    .placement-overlay {
+        display: none;
+        position: absolute;
+        inset: 0;
+        z-index: 4;
+        background: linear-gradient(45deg, rgba(30, 64, 175, 0.88), rgba(220, 38, 38, 0.88));
+        color: #ffffff;
+        backdrop-filter: blur(10px);
+        padding: 1rem;
+    }
+
+    .placement-card:hover .placement-overlay {
+        display: flex;
+    }
+
+    .placement-overlay-inner {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 0.6rem;
+        text-align: center;
+    }
+
+    .placement-overlay-title {
+        font-weight: 800;
+        max-width: 100%;
+    }
+
+    .placement-overlay-team-link {
+        color: #ffffff;
+        text-decoration: none;
+        display: inline-block;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+        background: rgba(0,0,0,0.25);
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .placement-overlay-team-link:hover {
+        text-decoration: underline;
+    }
+
+    .placement-overlay-players {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.15rem;
+    }
+
+    .placement-overlay-player-link {
+        color: rgba(255,255,255,0.95);
+        text-decoration: none;
+        padding: 0.1rem 0.35rem;
+        border-radius: 8px;
+    }
+
+    .placement-overlay-player-link:hover {
+        text-decoration: underline;
+        background: rgba(0,0,0,0.15);
+    }
+
     .placement-card::before {
         content: '';
         position: absolute;
@@ -348,61 +434,6 @@
         width: 100%;
         height: 100%;
         object-fit: contain;
-    }
-
-    .placement-team-hover {
-        display: none;
-        position: absolute;
-        inset: 0;
-        z-index: 2;
-        background: linear-gradient(45deg, rgba(30, 64, 175, 0.9), rgba(220, 38, 38, 0.9));
-        color: #ffffff;
-        padding: 0.4rem;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 0.15rem;
-        backdrop-filter: blur(8px);
-    }
-
-    .placement-team-card:hover .placement-team-hover {
-        display: flex;
-    }
-
-    .placement-team-card:hover .logo-img {
-        opacity: 0;
-    }
-
-    .placement-team-hover-players {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.1rem;
-    }
-
-    .team-hover-title {
-        text-align: center;
-        font-weight: 800;
-        width: 100%;
-    }
-
-    .team-hover-link {
-        color: #ffffff;
-        text-decoration: none;
-        display: inline-block;
-        max-width: 100%;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        padding: 0.1rem 0.35rem;
-        border-radius: 10px;
-        background: rgba(0,0,0,0.25);
-        border: 1px solid rgba(255,255,255,0.2);
-        font-size: 0.8rem;
-    }
-
-    .team-hover-link:hover {
-        text-decoration: underline;
     }
 
     .team-name-link {
