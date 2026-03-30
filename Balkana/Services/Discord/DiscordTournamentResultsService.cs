@@ -222,6 +222,8 @@ namespace Balkana.Services.Discord
             var tournamentUrl = $"{baseUrl}/Tournaments/Details/{dto.TournamentId}";
             var attachmentRef = $"attachment://{TournamentResultsCompositeRenderer.AttachmentFilename}";
 
+            var statsUrl = $"{baseUrl}/stats/tournament?tournamentid={dto.TournamentId}";
+
             var embeds = new List<DiscordApiEmbed>
             {
                 new DiscordApiEmbed
@@ -231,6 +233,12 @@ namespace Balkana.Services.Discord
                     Color = 0xE94560,
                     Image = new DiscordApiEmbedImage { Url = attachmentRef },
                     Fields = null
+                },
+                new DiscordApiEmbed
+                {
+                    Title = "Full statistics can be viewed here",
+                    Url = statsUrl,
+                    Color = 0xE94560
                 }
             };
 

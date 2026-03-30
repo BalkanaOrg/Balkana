@@ -17,7 +17,8 @@ namespace Balkana.Services.Discord
         private const int CanvasWidth = 920;
         private const int LogoSize = 54;
         private const int Padding = 22;
-        private const int RowHeight = 68;
+        private const int RowHeightNoEs = 68;
+        private const int RowHeightWithEs = 84;
         private const int MaxCanvasHeight = 10000;
 
         private static readonly Color Bg = Color.ParseHex("#1a1a2e");
@@ -142,7 +143,15 @@ namespace Balkana.Services.Discord
                         canvas.Mutate(c =>
                             c.DrawText(line3, fontDetail, TextMuted, new PointF(tx, y + 40)));
 
-                        y += RowHeight;
+                        if (team.EmergencySubstituteNicknames.Count > 0)
+                        {
+                            var esLine = "Emergency substitutes: " + string.Join(", ", team.EmergencySubstituteNicknames);
+                            esLine = TruncateForWidth(esLine, 95);
+                            canvas.Mutate(c =>
+                                c.DrawText(esLine, fontDetail, TextMuted, new PointF(tx, y + 56)));
+                        }
+
+                        y += TeamBlockHeight(team);
                     }
 
                     y += 10;
@@ -159,13 +168,16 @@ namespace Balkana.Services.Discord
             }
         }
 
+        private static int TeamBlockHeight(DiscordPlacementTeamDto team) =>
+            team.EmergencySubstituteNicknames.Count > 0 ? RowHeightWithEs : RowHeightNoEs;
+
         private static int MeasureHeight(TournamentDiscordResultsDto dto)
         {
             var h = Padding;
             h += 38 + 18;
             foreach (var band in dto.Bands)
             {
-                h += 30 + band.Teams.Count * RowHeight + 10;
+                h += 30 + band.Teams.Sum(TeamBlockHeight) + 10;
             }
 
             h += Padding;
