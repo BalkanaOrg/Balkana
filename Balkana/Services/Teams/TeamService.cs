@@ -1,4 +1,4 @@
-﻿namespace Balkana.Services.Teams
+namespace Balkana.Services.Teams
 {
     using AutoMapper;
     using Balkana.Data;
@@ -66,10 +66,13 @@
         public TeamDetailsServiceModel Details(int id)
         {
             var team = this.data.Teams
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Where(t => t.Id == id)
                 .Include(t => t.Game)
                 .Include(t => t.Transfers)
                     .ThenInclude(tr => tr.Player)
+                        .ThenInclude(p => p.PlayerPictures)
                 .Include(t => t.Transfers)
                     .ThenInclude(tr => tr.TeamPosition)
                 .Include(t => t.Placements)
@@ -79,8 +82,6 @@
                         .ThenInclude(tournament => tournament.Organizer)
                 .Include(t => t.TeamTrophies)
                     .ThenInclude(tt => tt.Trophy)
-                .Include(t => t.SeriesAsTeam1)
-                .Include(t => t.SeriesAsTeam2)
                 .FirstOrDefault();
 
             if (team == null) return null;
@@ -105,7 +106,7 @@
                 Trophies = GetTeamTrophies(team),
                 RecentMatches = GetRecentMatches(team),
                 CurrentRosterStats = GetCurrentRosterStats(team, now),
-                AllTimeStats = GetAllTimeStats(team),
+                AllTimeStats = GetAllTimeStats(team.Id),
                 Players = GetLegacyPlayers(team, now, defaultPic)
             };
 
@@ -219,15 +220,14 @@
                 FirstName = ptt.Player.FirstName,
                 LastName = ptt.Player.LastName,
                 PositionId = ptt.PositionId ?? 0,
-                PictureUrl = ptt.Player.PlayerPictures
+                PictureUrl = data.Pictures
+                    .Where(pic => pic.PlayerId == ptt.PlayerId)
                     .OrderByDescending(pic => pic.dateChanged)
                     .Select(pic => pic.PictureURL)
                     .FirstOrDefault() ?? defaultPic
             };
 
-            var list = latestTransfers.ToList();
-
-            return latestTransfers;
+            return latestTransfers.ToList();
         }
 
 
@@ -366,28 +366,30 @@
 
         private IEnumerable<TeamTournamentServiceModel> GetTournamentParticipation(Team team)
         {
+            var placementByTournament = team.Placements
+                .GroupBy(p => p.TournamentId)
+                .ToDictionary(g => g.Key, g => g.First());
+
             var tournaments = team.TournamentTeams
                 .OrderByDescending(tt => tt.Tournament.StartDate)
-                .Select(tt => new TeamTournamentServiceModel
+                .Select(tt =>
                 {
-                    TournamentId = tt.Tournament.Id,
-                    TournamentName = tt.Tournament.FullName,
-                    TournamentShortName = tt.Tournament.ShortName,
-                    StartDate = tt.Tournament.StartDate,
-                    EndDate = tt.Tournament.EndDate,
-                    PrizePool = tt.Tournament.PrizePool,
-                    Seed = tt.Seed,
-                    Placement = team.Placements
-                        .Where(p => p.TournamentId == tt.TournamentId)
-                        .Select(p => p.Placement)
-                        .FirstOrDefault(),
-                    PointsAwarded = team.Placements
-                        .Where(p => p.TournamentId == tt.TournamentId)
-                        .Select(p => p.PointsAwarded)
-                        .FirstOrDefault(),
-                    OrganizerName = tt.Tournament.Organizer?.FullName ?? "",
-                    BannerUrl = tt.Tournament.BannerUrl,
-                    IsCompleted = tt.Tournament.EndDate <= DateTime.UtcNow
+                    placementByTournament.TryGetValue(tt.TournamentId, out var pl);
+                    return new TeamTournamentServiceModel
+                    {
+                        TournamentId = tt.Tournament.Id,
+                        TournamentName = tt.Tournament.FullName,
+                        TournamentShortName = tt.Tournament.ShortName,
+                        StartDate = tt.Tournament.StartDate,
+                        EndDate = tt.Tournament.EndDate,
+                        PrizePool = tt.Tournament.PrizePool,
+                        Seed = tt.Seed,
+                        Placement = pl?.Placement,
+                        PointsAwarded = pl?.PointsAwarded,
+                        OrganizerName = tt.Tournament.Organizer?.FullName ?? "",
+                        BannerUrl = tt.Tournament.BannerUrl,
+                        IsCompleted = tt.Tournament.EndDate <= DateTime.UtcNow
+                    };
                 })
                 .ToList();
 
@@ -411,23 +413,9 @@
 
         private IEnumerable<TeamMatchServiceModel> GetRecentMatches(Team team)
         {
-            // Get all matches where this team participated (either as TeamA or TeamB)
             var allMatches = this.data.Matches
+                .AsNoTracking()
                 .Where(m => (m.TeamAId == team.Id || m.TeamBId == team.Id) && m.IsCompleted)
-                .Include(m => m.Series)
-                    .ThenInclude(s => s.Tournament)
-                .Include(m => m.TeamA)
-                .Include(m => m.TeamB)
-                .Include(m => m.WinnerTeam)
-                .OrderByDescending(m => m.PlayedAt)
-                .Take(20) // Last 20 matches
-                .ToList();
-
-            // For CS matches, we need to include the Map relationship
-            var csMatches = this.data.Matches
-                .OfType<MatchCS>()
-                .Where(m => (m.TeamAId == team.Id || m.TeamBId == team.Id) && m.IsCompleted)
-                .Include(m => m.Map)
                 .Include(m => m.Series)
                     .ThenInclude(s => s.Tournament)
                 .Include(m => m.TeamA)
@@ -437,16 +425,24 @@
                 .Take(20)
                 .ToList();
 
-            // Combine all matches with proper map names
-            var allMatchesWithMaps = allMatches.Select(match => 
+            var csMatchIds = allMatches.OfType<MatchCS>().Select(m => m.Id).ToList();
+            Dictionary<int, MatchCS> csWithMapById = new();
+            if (csMatchIds.Count > 0)
+            {
+                csWithMapById = this.data.Matches
+                    .OfType<MatchCS>()
+                    .AsNoTracking()
+                    .Where(m => csMatchIds.Contains(m.Id))
+                    .Include(m => m.Map)
+                    .ToDictionary(m => m.Id);
+            }
+
+            return allMatches.Select(match =>
             {
                 string mapName = "N/A";
-                if (match is MatchCS)
-                {
-                    var csMatch = csMatches.FirstOrDefault(cm => cm.Id == match.Id);
-                    mapName = csMatch?.Map?.Name ?? "Unknown";
-                }
-                
+                if (match is MatchCS && csWithMapById.TryGetValue(match.Id, out var csRow))
+                    mapName = csRow.Map?.Name ?? "Unknown";
+
                 return new TeamMatchServiceModel
                 {
                     MatchId = match.Id,
@@ -463,30 +459,35 @@
                     ExternalMatchId = match.ExternalMatchId
                 };
             }).ToList();
-
-            return allMatchesWithMaps;
         }
 
         private TeamStatisticsServiceModel GetCurrentRosterStats(Team team, DateTime now)
         {
-            // Get current roster player IDs
             var currentPlayerIds = team.Transfers
-                .Where(tr => tr.StartDate <= now && 
-                           (tr.EndDate == null || tr.EndDate >= now) && 
+                .Where(tr => tr.StartDate <= now &&
+                           (tr.EndDate == null || tr.EndDate >= now) &&
                            tr.Status == PlayerTeamStatus.Active)
                 .GroupBy(tr => tr.PlayerId)
                 .Select(g => g.Key)
                 .ToList();
 
-            // Get matches where current roster players participated
-            // First get the GameProfiles for current roster players
+            if (currentPlayerIds.Count == 0)
+                return new TeamStatisticsServiceModel();
+
             var currentPlayerUUIDs = this.data.GameProfiles
+                .AsNoTracking()
                 .Where(gp => currentPlayerIds.Contains(gp.PlayerId))
                 .Select(gp => gp.UUID)
                 .ToList();
 
+            if (currentPlayerUUIDs.Count == 0)
+                return new TeamStatisticsServiceModel();
+
             var currentRosterMatches = this.data.Matches
-                .Where(m => m.PlayerStats.Any(ps => currentPlayerUUIDs.Contains(ps.PlayerUUID)))
+                .AsNoTracking()
+                .Where(m => m.IsCompleted &&
+                            (m.TeamAId == team.Id || m.TeamBId == team.Id) &&
+                            m.PlayerStats.Any(ps => currentPlayerUUIDs.Contains(ps.PlayerUUID)))
                 .Include(m => m.Series)
                 .ThenInclude(s => s.Tournament)
                 .ToList();
@@ -494,14 +495,16 @@
             return CalculateStatistics(currentRosterMatches, team.Id);
         }
 
-        private TeamStatisticsServiceModel GetAllTimeStats(Team team)
+        private TeamStatisticsServiceModel GetAllTimeStats(int teamId)
         {
-            // Get all matches where this team played (as TeamA or TeamB)
-            var allMatches = team.SeriesAsTeam1.Concat(team.SeriesAsTeam2)
-                .SelectMany(s => s.Matches)
+            var allMatches = this.data.Matches
+                .AsNoTracking()
+                .Where(m => m.TeamAId == teamId || m.TeamBId == teamId)
+                .Include(m => m.Series)
+                .ThenInclude(s => s.Tournament)
                 .ToList();
 
-            return CalculateStatistics(allMatches, team.Id);
+            return CalculateStatistics(allMatches, teamId);
         }
 
         private TeamStatisticsServiceModel CalculateStatistics(IEnumerable<Match> matches, int teamId)

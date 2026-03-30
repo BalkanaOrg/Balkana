@@ -1,4 +1,4 @@
-﻿@using Balkana.Data.Models
+@using Balkana.Data.Models
 @model TeamDetailsServiceModel
 @{
     // Format title: TeamFullName - Balkana [Game FullName]
@@ -182,20 +182,26 @@
             
             @if (Model.Trophies.Any())
             {
-                <div class="trophy-display">
-                    <div class="trophies-row">
-                        @foreach (var trophy in Model.Trophies)
-                        {
-                            <div class="trophy-item tooltip">
-                                <img src="@trophy.IconURL" alt="@trophy.Description" class="trophy-icon" />
-                                <span class="tooltiptext">
-                                    @trophy.Description<br/>
-                                    @trophy.AwardType<br/>
-                                    @trophy.AwardDate.ToString("MMM dd, yyyy")
-                                </span>
+                <div class="trophy-display trophy-grid">
+                    @foreach (var trophy in Model.Trophies)
+                    {
+                        var iconSrc = NormalizeMediaUrl(trophy.IconURL);
+                        <div class="trophy-card tooltip">
+                            <div class="trophy-card-image-wrap">
+                                <img src="@iconSrc" alt="@trophy.Description" class="trophy-card-icon"
+                                     onerror="this.src='/uploads/Tournaments/Trophies/default_trophy.png'" />
                             </div>
-                        }
-                    </div>
+                            <div class="trophy-card-body">
+                                <span class="trophy-card-type">@trophy.AwardType</span>
+                                <span class="trophy-card-desc" title="@trophy.Description">@trophy.Description</span>
+                                <span class="trophy-card-date">@trophy.AwardDate.ToString("MMM dd, yyyy")</span>
+                            </div>
+                            <span class="tooltiptext trophy-card-tooltip">
+                                @trophy.Description<br />
+                                @trophy.AwardType · @trophy.AwardDate.ToString("MMM dd, yyyy")
+                            </span>
+                        </div>
+                    }
                 </div>
             }
             else
@@ -509,34 +515,80 @@
         <div id="history-tab" class="tab-panel">
             <div class="section-header">
                 <h2>Roster History</h2>
-                <span class="history-count">@Model.HistoricalRosters.Count() former players</span>
+                <span class="history-count">@Model.HistoricalRosters.Count() past roster @((Model.HistoricalRosters.Count() == 1) ? "stint" : "stints")</span>
             </div>
             
             @if (Model.HistoricalRosters.Any())
             {
-                <div class="roster-history">
-                    @foreach (var player in Model.HistoricalRosters.Take(20))
-                    {
-                        <div class="history-player-card">
-                            <div class="player-image">
-                                <img src="@player.PictureUrl" 
-                                     alt="@player.Nickname" 
-                                     class="player-avatar"
-                                     onerror="this.src='https://ui-avatars.com/api/?name=@player.Nickname&background=random&color=fff&size=60'" />
-                            </div>
-                            <div class="player-info">
-                                <h4 class="player-nickname">@player.Nickname</h4>
-                                <p class="player-name">@player.FirstName @player.LastName</p>
-                                <div class="tenure-info">
-                                    <span class="tenure-period">
-                                        @player.StartDate.ToString("MMM yyyy") - 
-                                        @(player.EndDate?.ToString("MMM yyyy") ?? "Present")
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    }
+                var historyOrdered = Model.HistoricalRosters
+                    .OrderBy(h => h.PlayerId)
+                    .ThenByDescending(h => h.EndDate)
+                    .ToList();
+                var historyPageSize = 40;
+                <p class="roster-history-hint">Former players are grouped by person; multiple rows are separate stints with this team.</p>
+                <div class="table-responsive roster-history-table-wrap">
+                    <table class="table table-sm table-dark matches-table roster-history-table">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>Role</th>
+                                <th>Start</th>
+                                <th>End</th>
+                                <th>Duration</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int? prevPlayerId = null;
+                                var rowIndex = 0;
+                            }
+                            @foreach (var player in historyOrdered)
+                            {
+                                var isFollowUpStint = prevPlayerId == player.PlayerId;
+                                prevPlayerId = player.PlayerId;
+                                var end = player.EndDate ?? DateTime.UtcNow;
+                                var durationDays = (int)(end - player.StartDate).TotalDays;
+                                var durationLabel = durationDays >= 365
+                                    ? $"{durationDays / 365} yr"
+                                    : durationDays >= 60
+                                        ? $"{durationDays / 30} mo"
+                                        : $"{durationDays} d";
+                                var rowClass = $"roster-history-row {(rowIndex % 2 == 0 ? "match-row-even" : "match-row-odd")} {(isFollowUpStint ? "roster-history-followup" : "")}";
+                                var hiddenClass = rowIndex >= historyPageSize ? " roster-history-row-collapsed" : "";
+                                rowIndex++;
+                                <tr class="@(rowClass + hiddenClass)" data-history-index="@(rowIndex - 1)">
+                                    <td>
+                                        @if (isFollowUpStint)
+                                        {
+                                            <span class="roster-stint-pill">Earlier stint</span>
+                                        }
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img src="@player.PictureUrl" alt=""
+                                                 class="roster-history-avatar"
+                                                 onerror="this.src='https://ui-avatars.com/api/?name=@player.Nickname&background=random&color=fff&size=48'" />
+                                            <div>
+                                                <a asp-controller="Players" asp-action="Profile" asp-route-id="@player.PlayerId" asp-route-information="@player.GetInformation()" class="roster-history-player-link">@player.Nickname</a>
+                                                <div class="roster-history-realname text-muted small">@player.FirstName @player.LastName</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>@(string.IsNullOrEmpty(player.PositionName) ? "—" : player.PositionName)</td>
+                                    <td>@player.StartDate.ToString("MMM d, yyyy")</td>
+                                    <td>@(player.EndDate?.ToString("MMM d, yyyy") ?? "—")</td>
+                                    <td>@durationLabel</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
+                @if (historyOrdered.Count > historyPageSize)
+                {
+                    <div class="roster-history-toggle-wrap">
+                        <button type="button" class="tab-button roster-history-toggle" id="roster-history-toggle" data-total="@historyOrdered.Count" onclick="toggleRosterHistoryRows()">
+                            Show all @historyOrdered.Count stints
+                        </button>
+                    </div>
+                }
             }
             else
             {
@@ -549,6 +601,27 @@
 </div>
 
 <script>
+    function toggleRosterHistoryRows() {
+        var rows = document.querySelectorAll('.roster-history-row-collapsed');
+        var btn = document.getElementById('roster-history-toggle');
+        if (!btn) return;
+        var expanded = btn.getAttribute('data-expanded') === '1';
+        rows.forEach(function (r) { r.style.display = expanded ? 'none' : 'table-row'; });
+        btn.setAttribute('data-expanded', expanded ? '0' : '1');
+        var total = btn.getAttribute('data-total') || '0';
+        btn.textContent = expanded ? ('Show all ' + total + ' stints') : 'Show fewer';
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.roster-history-row-collapsed').forEach(function (r) { r.style.display = 'none'; });
+        var btn = document.getElementById('roster-history-toggle');
+        if (btn) {
+            btn.setAttribute('data-expanded', '0');
+            var total = btn.getAttribute('data-total') || '0';
+            btn.textContent = 'Show all ' + total + ' stints';
+        }
+    });
+
     function showTab(tabName) {
         // Hide all tab panels
         const panels = document.querySelectorAll('.tab-panel');
@@ -592,5 +665,16 @@
             3 => "3rd Place",
             _ => $"{placement}th Place"
         };
+    }
+
+    string NormalizeMediaUrl(string? url)
+    {
+        const string fallback = "/uploads/Tournaments/Trophies/default_trophy.png";
+        if (string.IsNullOrWhiteSpace(url))
+            return fallback;
+        url = url.Trim();
+        if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            return url;
+        return url.StartsWith('/') ? url : "/" + url;
     }
 }

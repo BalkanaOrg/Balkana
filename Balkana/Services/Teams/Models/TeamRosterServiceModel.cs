@@ -1,8 +1,9 @@
 using Balkana.Data.Models;
+using Balkana.Services.Players.Models;
 
 namespace Balkana.Services.Teams.Models
 {
-    public class TeamRosterServiceModel
+    public class TeamRosterServiceModel : IPlayerModel
     {
         public int PlayerId { get; set; }
         public string Nickname { get; set; }

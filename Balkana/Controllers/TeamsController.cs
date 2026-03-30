@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Balkana.Data;
 using Balkana.Data.Models;
 using Balkana.Data.Infrastructure.Extensions;
@@ -140,12 +140,13 @@ namespace Balkana.Controllers
         {
             var team = this.teams.Details(id);
 
-            if(information != team.GetInformation())
+            if (team == null)
+                return NotFound();
+
+            if (information != team.GetInformation())
             {
                 return BadRequest();
             }
-
-            team.Players = this.teams.AllPlayers(id);
 
             return View(team);
         }
