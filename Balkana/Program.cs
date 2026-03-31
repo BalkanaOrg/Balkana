@@ -217,6 +217,7 @@ void ConfigureServices(IServiceCollection services)
     services.AddTransient<IMatchService, MatchService>();
     services.AddTransient<IStatsService, StatsService>();
     services.AddTransient<IBrandingService, BrandingService>();
+    services.AddScoped<Balkana.Services.Community.CommunityApprovalService>();
 
     //USER IDENTITY
     builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>

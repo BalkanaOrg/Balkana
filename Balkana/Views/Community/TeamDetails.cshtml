@@ -1,28 +1,155 @@
-﻿@model Balkana.Models.Community.CommunityTeamDetailsModel
+@model Balkana.Models.Community.CommunityTeamDetailsModel
 
-<h2>@Model.FullName (@Model.Tag)</h2>
-<img src="@Model.LogoUrl" alt="Logo" width="100" />
+<div class="community-page">
+    <div class="community-header">
+        <div class="community-actions" style="gap: 14px;">
+            @if (!string.IsNullOrWhiteSpace(Model.LogoUrl))
+            {
+                <img src="@Model.LogoUrl" alt="Logo" style="width: 70px; height: 70px; border-radius: 18px; object-fit: cover; border: 1px solid rgba(255,255,255,0.12);" />
+            }
+            else
+            {
+                <div style="width: 70px; height: 70px; border-radius: 18px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);"></div>
+            }
+            <div>
+                <h1 style="margin: 0; font-size: 2.4rem; font-weight: 900;">
+                    @Model.FullName <span style="opacity: .7;">(@Model.Tag)</span>
+                </h1>
+                <div class="community-actions" style="margin-top: 10px;">
+                    <span class="community-badge">
+                        <i class="fi fi-rr-user"></i>
+                        <span>Captain: @Model.CaptainName</span>
+                    </span>
+                    @if (Model.IsApproved)
+                    {
+                        <span class="community-badge community-badge-success">Team approved</span>
+                    }
+                    else
+                    {
+                        <span class="community-badge community-badge-warning">Team pending approval</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.RequiredAccountType))
+                    {
+                        <span class="community-badge">
+                            <i class="fi fi-rr-badge-check"></i>
+                            <span>Required: @Model.RequiredAccountType</span>
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
 
-<p><strong>Captain:</strong> @Model.CaptainName</p>
-<p><strong>Approved:</strong> @(Model.IsApproved ? "Yes" : "Pending")</p>
+        <div class="community-actions">
+            <a asp-action="Index" class="btn-modern btn-modern-secondary">
+                <i class="fi fi-rr-arrow-left"></i>
+                <span>Back</span>
+            </a>
+            @if (Model.CanManageTeam)
+            {
+                <a asp-action="TeamRequests" asp-route-teamId="@Model.Id" class="btn-modern btn-modern-secondary">
+                    <i class="fi fi-rr-envelope"></i>
+                    <span>Join requests</span>
+                </a>
+            }
+            @if (Model.CanModerate)
+            {
+                <a asp-action="InspectTeam" asp-route-teamId="@Model.Id" class="btn-modern btn-modern-secondary">
+                    <i class="fi fi-rr-shield-check"></i>
+                    <span>Inspect (moderation)</span>
+                </a>
+            }
+        </div>
+    </div>
 
-<h3>Members</h3>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Username</th>
-            <th>Role</th>
-            <th>Approved</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var m in Model.Members)
-        {
-            <tr>
-                <td>@m.Username</td>
-                <td>@m.Role</td>
-                <td>@(m.IsApproved ? "✅" : "❌")</td>
-            </tr>
-        }
-    </tbody>
-</table>
+    @if (Model.CanManageTeam)
+    {
+        <div class="community-card" style="margin-bottom: 20px;">
+            <div class="community-card-body">
+                <h3 style="margin: 0 0 12px 0;">Invite a player</h3>
+                <form asp-action="Invite" method="post" class="community-actions">
+                    <input type="hidden" name="teamId" value="@Model.Id" />
+                    <input type="text" name="inviteeUserId" class="form-input-modern" style="flex: 1; min-width: 260px;" placeholder="User ID to invite" />
+                    <button type="submit" class="btn-modern btn-modern-primary">
+                        <i class="fi fi-rr-paper-plane"></i>
+                        <span>Send invite</span>
+                    </button>
+                </form>
+                <p style="margin: 12px 0 0 0; color: rgba(255,255,255,0.6);">
+                    Tip: you can find a user’s ID in moderation tools or by extending the user search to show IDs.
+                </p>
+            </div>
+        </div>
+    }
+
+    <div class="community-card">
+        <div class="community-card-body">
+            <div class="community-actions" style="justify-content: space-between;">
+                <h3 style="margin: 0;">Roster</h3>
+                <span class="community-badge">@Model.Members.Count() members</span>
+            </div>
+
+            <div style="overflow-x: auto; margin-top: 14px;">
+                <table class="community-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th style="width: 140px;">Role</th>
+                            <th style="width: 140px;">Approved</th>
+                            <th style="width: 160px;">Player link</th>
+                            <th style="width: 260px;">@((Model.RequiredAccountType ?? "Account") + " link")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var m in Model.Members)
+                        {
+                            <tr>
+                                <td style="font-weight: 800;">@m.Username</td>
+                                <td style="opacity: .9;">@m.Role</td>
+                                <td>
+                                    @if (m.IsApproved)
+                                    {
+                                        <span class="community-badge community-badge-success">Approved</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="community-badge community-badge-warning">Pending</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (m.HasPlayerLinked)
+                                    {
+                                        <span class="community-badge community-badge-success">Linked</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="community-badge community-badge-warning">Missing</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (string.IsNullOrWhiteSpace(m.RequiredAccountType))
+                                    {
+                                        <span style="opacity: .7;">Not required for this game</span>
+                                    }
+                                    else if (m.HasRequiredLinkedAccount)
+                                    {
+                                        <span class="community-badge community-badge-success">
+                                            <i class="fi fi-rr-badge-check"></i>
+                                            <span>@m.RequiredAccountDisplayName</span>
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="community-badge community-badge-danger">
+                                            <i class="fi fi-rr-warning"></i>
+                                            <span>Missing @m.RequiredAccountType</span>
+                                        </span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

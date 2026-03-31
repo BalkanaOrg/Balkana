@@ -1,0 +1,154 @@
+@model Balkana.Models.Community.CommunityTeamInspectionViewModel
+
+<div class="community-page">
+    <div class="community-header">
+        <div class="community-actions" style="gap: 14px;">
+            @if (!string.IsNullOrWhiteSpace(Model.LogoUrl))
+            {
+                <img src="@Model.LogoUrl" alt="Logo" style="width: 70px; height: 70px; border-radius: 18px; object-fit: cover; border: 1px solid rgba(255,255,255,0.12);" />
+            }
+            else
+            {
+                <div style="width: 70px; height: 70px; border-radius: 18px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);"></div>
+            }
+            <div>
+                <h1 style="margin: 0; font-size: 2.4rem; font-weight: 900;">
+                    Inspect team: @Model.FullName <span style="opacity: .7;">(@Model.Tag)</span>
+                </h1>
+                <div class="community-actions" style="margin-top: 10px;">
+                    <span class="community-badge">@Model.GameName</span>
+                    @if (Model.TeamApproved)
+                    {
+                        <span class="community-badge community-badge-success">Team approved</span>
+                    }
+                    else
+                    {
+                        <span class="community-badge community-badge-warning">Team pending</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.RequiredAccountType))
+                    {
+                        <span class="community-badge">
+                            <i class="fi fi-rr-badge-check"></i>
+                            <span>Required: @Model.RequiredAccountType</span>
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="community-actions">
+            <a asp-action="Moderation" class="btn-modern btn-modern-secondary">
+                <i class="fi fi-rr-arrow-left"></i>
+                <span>Back to queue</span>
+            </a>
+            <a asp-action="TeamDetails" asp-route-id="@Model.TeamId" class="btn-modern btn-modern-secondary">
+                <i class="fi fi-rr-users-alt"></i>
+                <span>Public view</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="community-card" style="margin-bottom: 20px;">
+        <div class="community-card-body">
+            <div class="community-actions" style="justify-content: space-between;">
+                <h3 style="margin: 0;">Team approval</h3>
+                <form asp-action="ApproveTeam" method="post">
+                    <input type="hidden" name="teamId" value="@Model.TeamId" />
+                    <button type="submit" class="btn-modern btn-modern-primary" @(Model.TeamApproved ? "disabled" : "")>
+                        <i class="fi fi-rr-shield-check"></i>
+                        <span>Approve team</span>
+                    </button>
+                </form>
+            </div>
+            <p style="margin: 12px 0 0 0; color: rgba(255,255,255,0.6);">
+                Team approval marks the team as eligible for further steps. Member approval is still done per-player.
+            </p>
+        </div>
+    </div>
+
+    <div class="community-card">
+        <div class="community-card-body">
+            <div class="community-actions" style="justify-content: space-between;">
+                <h3 style="margin: 0;">Members</h3>
+                <span class="community-badge">@Model.Members.Count members</span>
+            </div>
+
+            <div style="overflow-x: auto; margin-top: 14px;">
+                <table class="community-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th style="width: 140px;">Role</th>
+                            <th style="width: 160px;">Required</th>
+                            <th style="width: 160px;">Player</th>
+                            <th style="width: 160px;">Approval</th>
+                            <th style="width: 220px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var m in Model.Members)
+                        {
+                            <tr>
+                                <td style="font-weight: 800;">@m.Username</td>
+                                <td style="opacity: .9;">@m.Role</td>
+                                <td>
+                                    @if (string.IsNullOrWhiteSpace(Model.RequiredAccountType))
+                                    {
+                                        <span style="opacity: .7;">N/A</span>
+                                    }
+                                    else if (m.HasRequiredLinkedAccount)
+                                    {
+                                        <span class="community-badge community-badge-success">OK</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="community-badge community-badge-danger">Missing</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (m.HasPlayerLinked)
+                                    {
+                                        <span class="community-badge community-badge-success">Linked</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="community-badge community-badge-warning">Missing</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (m.MemberApproved)
+                                    {
+                                        <span class="community-badge community-badge-success">Approved</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="community-badge community-badge-warning">Pending</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="community-actions">
+                                        <form asp-action="ApproveMember" method="post">
+                                            <input type="hidden" name="teamId" value="@Model.TeamId" />
+                                            <input type="hidden" name="userId" value="@m.UserId" />
+                                            <button type="submit" class="btn-action btn-action-publish" @(!m.MemberApproved && m.HasRequiredLinkedAccount ? "" : "disabled")>
+                                                <i class="fi fi-rr-check"></i>
+                                                <span>Approve</span>
+                                            </button>
+                                        </form>
+                                        <span style="opacity: .6; font-size: .85rem;">
+                                            @if (!m.HasRequiredLinkedAccount && !string.IsNullOrWhiteSpace(Model.RequiredAccountType))
+                                            {
+                                                <span>Needs @Model.RequiredAccountType</span>
+                                            }
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+

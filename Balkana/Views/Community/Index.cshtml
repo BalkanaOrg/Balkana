@@ -1,103 +1,180 @@
-﻿@using Balkana.Data
-@using Balkana.Data.Models
-@using Microsoft.AspNetCore.Identity
-@inject UserManager<ApplicationUser> UserManager
-@inject ApplicationDbContext Db
-
 @model Balkana.Models.Community.CommunityIndexViewModel
 
-<h2>Community Search</h2>
+<div class="community-page">
+    <div class="community-header">
+        <div>
+            <h1 class="community-title">Community</h1>
+            <p class="community-subtitle">
+                Create teams, invite players, and get approved for Balkana tournaments. Moderators verify each roster has the required accounts (FACEIT / Riot).
+            </p>
+        </div>
+        <div class="community-actions">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a asp-action="CreateTeam" class="btn-modern btn-modern-primary">
+                    <i class="fi fi-rr-plus"></i>
+                    <span>Create team</span>
+                </a>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login" class="btn-modern btn-modern-primary">
+                    <i class="fi fi-rr-user"></i>
+                    <span>Login to create a team</span>
+                </a>
+            }
 
-<form method="get" asp-action="Index">
-    <input type="text" name="searchTerm" value="@Model.SearchTerm" placeholder="Search users or teams..." />
-    <button type="submit" class="btn btn-primary">Search</button>
-</form>
+            @if (Model.CanModerate)
+            {
+                <a asp-action="Moderation" class="btn-modern btn-modern-secondary">
+                    <i class="fi fi-rr-shield-check"></i>
+                    <span>Moderation</span>
+                </a>
+            }
+        </div>
+    </div>
 
-<hr />
+    <div class="community-card">
+        <div class="community-card-body">
+            <form method="get" asp-action="Index" class="community-actions">
+                <div class="search-wrapper" style="flex: 1; min-width: 260px;">
+                    <i class="fi fi-rr-search search-icon"></i>
+                    <input class="search-input-layout" type="text" name="searchTerm" value="@Model.SearchTerm" placeholder="Search users or teams..." />
+                </div>
+                <button type="submit" class="btn-modern btn-modern-secondary">
+                    <i class="fi fi-rr-search"></i>
+                    <span>Search</span>
+                </button>
+            </form>
+        </div>
+    </div>
 
-<h3>Users</h3>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Username</th>
-            <th>Full Name</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var u in Model.Users)
-        {
-            <tr>
-                <td>@u.Username</td>
-                <td>@u.FullName</td>
-                <td>
-                    @if (User.Identity.IsAuthenticated)
-                    {
-                        var currentUserId = UserManager.GetUserId(User);
-                        var isCaptain = Db.CommunityTeamMembers
-                        .Any(m => m.UserId == currentUserId && m.Role == CommunityMemberRole.Captain);
+    <div style="height: 22px;"></div>
 
-                        if (isCaptain)
-                        {
-                            <form asp-action="Invite" method="post" class="d-inline">
-                                <input type="hidden" name="inviteeUserId" value="@u.UserId" />
-                                <input type="hidden" name="teamId" value="<!-- put teamId here -->" />
-                                <button type="submit" class="btn btn-sm btn-success">Invite to team</button>
-                            </form>
-                        }
-                    }
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+    <div class="community-grid">
+        <div class="community-card">
+            <div class="community-card-body">
+                <div class="community-actions" style="justify-content: space-between;">
+                    <h3 style="margin: 0;">Teams</h3>
+                    <span class="community-badge">@Model.Teams.Count results</span>
+                </div>
 
-<h3>Teams</h3>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Logo</th>
-            <th>Tag</th>
-            <th>Full Name</th>
-            <th>Players</th>
-            <th>Substitutes</th>
-            <th>Coaches</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var t in Model.Teams)
-        {
-            var teamPlayers = Db.CommunityTeamMembers.Where(c => c.CommunityTeamId == t.Id && c.Role != CommunityMemberRole.Substitute && c.Role!= CommunityMemberRole.Coach).Count();
-            var coachCount = Db.CommunityTeamMembers.Where(c => c.CommunityTeamId == t.Id && c.Role == CommunityMemberRole.Coach).Count();
-            var substituteCount = Db.CommunityTeamMembers.Where(c => c.CommunityTeamId == t.Id && c.Role == CommunityMemberRole.Substitute).Count();
-            <tr onclick="window.location.href='@Url.Action("TeamDetails", "Community", new { id = t.Id })'">
-                <td><img src="@t.LogoUrl" width="40" /></td>
-                <td>@t.Tag</td>
-                <td>@t.FullName</td>
-                <td>@teamPlayers / 5</td>
-                <td>@substituteCount</td>
-                <td>@coachCount</td>
-                <td>
-                    @if (User.Identity.IsAuthenticated)
-                    {
-                        var currentUserId = UserManager.GetUserId(User);
-                        var isMember = Db.CommunityTeamMembers
-                        .Any(m => m.CommunityTeamId == t.Id && m.UserId == currentUserId);
+                @if (Model.Teams.Count == 0)
+                {
+                    <div class="empty-state" style="margin-top: 16px;">
+                        <i class="fi fi-rr-users-alt"></i>
+                        <h3>No teams found</h3>
+                        <p>Try a different search, or create the first team for your game.</p>
+                    </div>
+                }
+                else
+                {
+                    <div style="overflow-x: auto; margin-top: 14px;">
+                        <table class="community-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 52px;"></th>
+                                    <th>Team</th>
+                                    <th style="width: 130px;">Status</th>
+                                    <th style="width: 120px;">Players</th>
+                                    <th style="width: 120px;">Subs</th>
+                                    <th style="width: 120px;">Coaches</th>
+                                    <th style="width: 220px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var t in Model.Teams)
+                                {
+                                    <tr>
+                                        <td>
+                                            @if (!string.IsNullOrWhiteSpace(t.LogoUrl))
+                                            {
+                                                <img src="@t.LogoUrl" alt="Logo" style="width: 36px; height: 36px; border-radius: 10px; object-fit: cover;" />
+                                            }
+                                            else
+                                            {
+                                                <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);"></div>
+                                            }
+                                        </td>
+                                        <td>
+                                            <a asp-action="TeamDetails" asp-route-id="@t.Id" style="color: white; text-decoration: none; font-weight: 700;">
+                                                @t.FullName <span style="opacity: .7;">(@t.Tag)</span>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            @if (t.IsApproved)
+                                            {
+                                                <span class="community-badge community-badge-success">Approved</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="community-badge community-badge-warning">Pending</span>
+                                            }
+                                        </td>
+                                        <td>@t.PlayersCount / 5</td>
+                                        <td>@t.SubstitutesCount</td>
+                                        <td>@t.CoachesCount</td>
+                                        <td>
+                                            <div class="community-actions">
+                                                <a asp-action="TeamDetails" asp-route-id="@t.Id" class="btn-action btn-action-view">
+                                                    <i class="fi fi-rr-eye"></i>
+                                                    <span>View</span>
+                                                </a>
+                                                @if (User.Identity?.IsAuthenticated == true && !t.IsMember)
+                                                {
+                                                    <form asp-action="RequestJoin" method="post" class="d-inline">
+                                                        <input type="hidden" name="teamId" value="@t.Id" />
+                                                        <button type="submit" class="btn-action btn-action-publish">
+                                                            <i class="fi fi-rr-paper-plane"></i>
+                                                            <span>Request</span>
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
 
-                        var isCaptain = Db.CommunityTeamMembers
-                        .Any(m => m.CommunityTeamId == t.Id && m.UserId == currentUserId && m.Role == CommunityMemberRole.Captain);
+        <div class="community-card">
+            <div class="community-card-body">
+                <div class="community-actions" style="justify-content: space-between;">
+                    <h3 style="margin: 0;">Users</h3>
+                    <span class="community-badge">@Model.Users.Count results</span>
+                </div>
 
-                        if (!isMember && !isCaptain)
-                        {
-                            <form asp-action="RequestJoin" method="post" class="d-inline">
-                                <input type="hidden" name="teamId" value="@t.Id" />
-                                <button type="submit" class="btn btn-sm btn-primary">Request to join</button>
-                            </form>
-                        }
-                    }
-                </td>
-            </tr>
-        }
-
-    </tbody>
-</table>
+                @if (Model.Users.Count == 0)
+                {
+                    <p style="margin-top: 14px; color: rgba(255,255,255,0.6);">Search to find users.</p>
+                }
+                else
+                {
+                    <div style="overflow-x: auto; margin-top: 14px;">
+                        <table class="community-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Full name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var u in Model.Users)
+                                {
+                                    <tr>
+                                        <td style="font-weight: 700;">@u.Username</td>
+                                        <td style="opacity: .85;">@u.FullName</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

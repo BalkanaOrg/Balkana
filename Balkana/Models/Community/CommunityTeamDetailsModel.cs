@@ -1,4 +1,4 @@
-﻿namespace Balkana.Models.Community
+namespace Balkana.Models.Community
 {
     public class CommunityTeamDetailsModel
     {
@@ -11,5 +11,9 @@
         public bool IsApproved { get; set; }
 
         public IEnumerable<CommunityTeamMemberModel> Members { get; set; } = new List<CommunityTeamMemberModel>();
+
+        public string? RequiredAccountType { get; set; } // FaceIt / Riot
+        public bool CanManageTeam { get; set; } // captain
+        public bool CanModerate { get; set; } // moderator/admin
     }
 }

@@ -1,0 +1,119 @@
+@model Balkana.Models.Community.CommunityModerationViewModel
+
+<div class="community-page">
+    <div class="community-header">
+        <div>
+            <h1 class="community-title">Community moderation</h1>
+            <p class="community-subtitle">
+                Review pending teams and rosters. Approve members only when they have the required linked accounts and a Player record is linked.
+            </p>
+        </div>
+        <div class="community-actions">
+            <a asp-action="Index" class="btn-modern btn-modern-secondary">
+                <i class="fi fi-rr-arrow-left"></i>
+                <span>Back to Community</span>
+            </a>
+        </div>
+    </div>
+
+    @if (Model.Teams.Count == 0)
+    {
+        <div class="empty-state">
+            <i class="fi fi-rr-shield-check"></i>
+            <h3>Nothing to review</h3>
+            <p>No teams are waiting for approval or missing required links.</p>
+        </div>
+    }
+    else
+    {
+        <div class="community-card">
+            <div class="community-card-body">
+                <div style="overflow-x: auto;">
+                    <table class="community-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 52px;"></th>
+                                <th>Team</th>
+                                <th style="width: 160px;">Game</th>
+                                <th style="width: 140px;">Team</th>
+                                <th style="width: 150px;">Members</th>
+                                <th style="width: 170px;">Required links</th>
+                                <th style="width: 160px;">Player links</th>
+                                <th style="width: 160px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in Model.Teams)
+                            {
+                                <tr>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(t.LogoUrl))
+                                        {
+                                            <img src="@t.LogoUrl" alt="Logo" style="width: 36px; height: 36px; border-radius: 10px; object-fit: cover;" />
+                                        }
+                                        else
+                                        {
+                                            <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);"></div>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 800;">@t.FullName <span style="opacity: .7;">(@t.Tag)</span></div>
+                                    </td>
+                                    <td style="opacity: .85;">@t.GameName</td>
+                                    <td>
+                                        @if (t.TeamApproved)
+                                        {
+                                            <span class="community-badge community-badge-success">Approved</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="community-badge community-badge-warning">Pending</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="community-badge">
+                                            <span>@t.ApprovedMembers approved</span>
+                                            <span style="opacity: .6;">/</span>
+                                            <span>@t.TotalMembers total</span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (string.IsNullOrWhiteSpace(t.RequiredAccountType))
+                                        {
+                                            <span style="opacity: .7;">N/A</span>
+                                        }
+                                        else if (t.MissingRequiredAccounts == 0)
+                                        {
+                                            <span class="community-badge community-badge-success">OK</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="community-badge community-badge-danger">@t.MissingRequiredAccounts missing</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (t.MissingPlayerLinks == 0)
+                                        {
+                                            <span class="community-badge community-badge-success">OK</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="community-badge community-badge-warning">@t.MissingPlayerLinks missing</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a asp-action="InspectTeam" asp-route-teamId="@t.TeamId" class="btn-action btn-action-view">
+                                            <i class="fi fi-rr-eye"></i>
+                                            <span>Inspect</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+

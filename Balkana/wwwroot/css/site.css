@@ -2649,3 +2649,130 @@ a:visited {
         max-height: 400px;
     }
 }
+
+/* ============================================
+   Community Pages Styling
+   ============================================ */
+
+.community-page {
+    padding: 100px 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: 100vh;
+}
+
+.community-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 35px;
+}
+
+.community-title {
+    font-size: 2.75rem;
+    font-weight: 900;
+    margin: 0 0 10px 0;
+    background: linear-gradient(45deg, #fff, #2d1b69, #8b0000);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.community-subtitle {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.05rem;
+    margin: 0;
+    max-width: 850px;
+}
+
+.community-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.community-card-body {
+    padding: 24px;
+}
+
+.community-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.community-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.community-badge-success {
+    border-color: rgba(40, 167, 69, 0.35);
+    background: rgba(40, 167, 69, 0.15);
+    color: #8ff0a4;
+}
+
+.community-badge-warning {
+    border-color: rgba(255, 193, 7, 0.35);
+    background: rgba(255, 193, 7, 0.12);
+    color: #ffd27a;
+}
+
+.community-badge-danger {
+    border-color: rgba(220, 53, 69, 0.35);
+    background: rgba(220, 53, 69, 0.12);
+    color: #ff9aa4;
+}
+
+.community-table {
+    width: 100%;
+    border-collapse: collapse;
+    overflow: hidden;
+    border-radius: 16px;
+}
+
+.community-table th,
+.community-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    vertical-align: middle;
+}
+
+.community-table th {
+    background: rgba(45, 27, 105, 0.25);
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 700;
+}
+
+.community-table tr:hover td {
+    background: rgba(45, 27, 105, 0.08);
+}
+
+.community-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .community-page {
+        padding: 80px 20px;
+    }
+
+    .community-title {
+        font-size: 2rem;
+    }
+}
