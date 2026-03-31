@@ -11,6 +11,7 @@ namespace Balkana.Services.Players
     using Balkana.Services.Teams;
     using Balkana.Services.Transfers.Models;
     using Microsoft.EntityFrameworkCore;
+    using System;
 
     public class PlayerService : IPlayerService
     {
@@ -137,6 +138,37 @@ namespace Balkana.Services.Players
             if (gameProfileId.HasValue &&
                 player.GameProfiles.All(g => g.Id != gameProfileId.Value))
                 return null;
+
+            var now = DateTime.UtcNow;
+            player.CurrentYear = now.Year;
+
+            // Current-year player points are stored per-tournament; circuits are determined by Tournament.Game.ShortName.
+            var hasCounterStrike = player.GameProfiles.Any(g => g.GameName == "Counter-Strike");
+            var hasLoL = player.GameProfiles.Any(g => g.GameName == "League of Legends");
+
+            if (hasCounterStrike)
+            {
+                player.CounterStrikeCircuitPointsCurrentYear = this.data.PlayerPoints
+                    .AsNoTracking()
+                    .Include(pp => pp.Tournament)
+                        .ThenInclude(t => t.Game)
+                    .Where(pp => pp.PlayerId == id &&
+                                 pp.Tournament.StartDate.Year == player.CurrentYear &&
+                                 pp.Tournament.Game.ShortName == "CS2")
+                    .Sum(pp => (int?)pp.PointsAwarded) ?? 0;
+            }
+
+            if (hasLoL)
+            {
+                player.LeagueOfLegendsCircuitPointsCurrentYear = this.data.PlayerPoints
+                    .AsNoTracking()
+                    .Include(pp => pp.Tournament)
+                        .ThenInclude(t => t.Game)
+                    .Where(pp => pp.PlayerId == id &&
+                                 pp.Tournament.StartDate.Year == player.CurrentYear &&
+                                 pp.Tournament.Game.ShortName == "LoL")
+                    .Sum(pp => (int?)pp.PointsAwarded) ?? 0;
+            }
 
             // Fetch transfers with optimized query
             var transfers = this.data.PlayerTeamTransfers

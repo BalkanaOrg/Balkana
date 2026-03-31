@@ -11,6 +11,7 @@
                 <h2 class="text-center text-white mb-4">@formHeading</h2>
                 <form asp-controller="Players" asp-action="@formAction"
                       asp-route-id="@(Model.Id > 0 ? (int?)Model.Id : null)"
+                      enctype="multipart/form-data"
                       method="post">
                     @if (Model.Id > 0)
                     {
@@ -44,6 +45,13 @@
                             }
                         </select>
                         <span asp-validation-for="NationalityId" class="small text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="PictureFile" class="form-label text-white-50"></label>
+                        <input asp-for="PictureFile" type="file" class="form-control bg-dark text-white border-secondary" accept="image/*" />
+                        <span asp-validation-for="PictureFile" class="small text-danger"></span>
+                        <div class="form-text text-white-50">Optional. Uploading a new image will become the player’s latest profile picture.</div>
                     </div>
 
                     <button class="btn btn-primary float-end" type="submit">Save</button>

@@ -10,6 +10,9 @@ using Balkana.Services.Players;
 using AutoMapper;
 using Balkana.Services.Teams;
 using Balkana.Models.Teams;
+using Balkana.Services.Images;
+using Microsoft.AspNetCore.Hosting;
+using System.IO;
 
 namespace Balkana.Controllers
 {
@@ -18,12 +21,14 @@ namespace Balkana.Controllers
         private readonly ApplicationDbContext data;
         private readonly IPlayerService players;
         private readonly IMapper mapper;
+        private readonly IWebHostEnvironment env;
 
-        public PlayersController(ApplicationDbContext data, IPlayerService players, IMapper mapper)
+        public PlayersController(ApplicationDbContext data, IPlayerService players, IMapper mapper, IWebHostEnvironment env)
         {
             this.data = data;
             this.mapper = mapper;
             this.players = players;
+            this.env = env;
         }
 
 
@@ -56,7 +61,7 @@ namespace Balkana.Controllers
         [Authorize(Roles = "Administrator,Moderator")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Add(PlayerFormModel player)
+        public async Task<IActionResult> Add(PlayerFormModel player)
         {
             player.Id = 0;
 
@@ -76,6 +81,42 @@ namespace Balkana.Controllers
                 player.FirstName,
                 player.LastName,
                 player.NationalityId);
+
+            if (player.PictureFile != null && player.PictureFile.Length > 0)
+            {
+                try
+                {
+                    var url = await ImageOptimizer.SaveWebpAsync(
+                        player.PictureFile,
+                        env.WebRootPath,
+                        Path.Combine("uploads", "PlayerProfiles"),
+                        maxWidth: 512,
+                        maxHeight: 512,
+                        quality: 85);
+
+                    this.data.Pictures.Add(new PlayerPicture
+                    {
+                        PlayerId = playerData,
+                        PictureURL = url,
+                        dateChanged = DateTime.UtcNow
+                    });
+                    await this.data.SaveChangesAsync();
+                }
+                catch (IOException ioEx)
+                {
+                    Console.WriteLine("❌ IO Exception while saving file: " + ioEx);
+                    ModelState.AddModelError("", "File write error: " + ioEx.Message);
+                    player.Nationalities = this.players.GetNationalities();
+                    return View(player);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("❌ General Exception while saving file: " + ex);
+                    ModelState.AddModelError("", "Unexpected error while saving uploaded file.");
+                    player.Nationalities = this.players.GetNationalities();
+                    return View(player);
+                }
+            }
 
             return RedirectToAction("Index", "Home");
         }
@@ -101,7 +142,7 @@ namespace Balkana.Controllers
         [Authorize(Roles = "Administrator")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, PlayerFormModel model)
+        public async Task<IActionResult> Edit(int id, PlayerFormModel model)
         {
             if (id != model.Id)
                 return BadRequest();
@@ -129,6 +170,42 @@ namespace Balkana.Controllers
                 model.NationalityId);
             if (!ok)
                 return NotFound();
+
+            if (model.PictureFile != null && model.PictureFile.Length > 0)
+            {
+                try
+                {
+                    var url = await ImageOptimizer.SaveWebpAsync(
+                        model.PictureFile,
+                        env.WebRootPath,
+                        Path.Combine("uploads", "PlayerProfiles"),
+                        maxWidth: 512,
+                        maxHeight: 512,
+                        quality: 85);
+
+                    this.data.Pictures.Add(new PlayerPicture
+                    {
+                        PlayerId = model.Id,
+                        PictureURL = url,
+                        dateChanged = DateTime.UtcNow
+                    });
+                    await this.data.SaveChangesAsync();
+                }
+                catch (IOException ioEx)
+                {
+                    Console.WriteLine("❌ IO Exception while saving file: " + ioEx);
+                    ModelState.AddModelError("", "File write error: " + ioEx.Message);
+                    model.Nationalities = this.players.GetNationalities();
+                    return View(model);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("❌ General Exception while saving file: " + ex);
+                    ModelState.AddModelError("", "Unexpected error while saving uploaded file.");
+                    model.Nationalities = this.players.GetNationalities();
+                    return View(model);
+                }
+            }
 
             var information = model.Nickname;
             return RedirectToAction(nameof(Profile), new { id = model.Id, information });

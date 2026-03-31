@@ -33,6 +33,11 @@ namespace Balkana.Services.Players.Models
 
         /// <summary>Maps section keys (e.g. <c>game:Counter-Strike</c>, <c>gp:12</c>) to card/tab titles.</summary>
         public Dictionary<string, string> ProfileSectionTitles { get; set; } = new();
+
+        // ✅ Circuit points (separate circuits) for the current calendar year (UTC)
+        public int CurrentYear { get; set; }
+        public int CounterStrikeCircuitPointsCurrentYear { get; set; }
+        public int LeagueOfLegendsCircuitPointsCurrentYear { get; set; }
     }
     
     public class PlayerGameProfileServiceModel

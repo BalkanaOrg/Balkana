@@ -23,27 +23,21 @@
     ViewData["Image"] = playerImage;
     
     var selectedGame = ViewBag.SelectedGame as string;
-    int? selectedGameProfileId = ViewBag.SelectedGameProfileId as int?;
 
     bool ShowProfileSection(string sectionKey)
     {
-        if (string.IsNullOrEmpty(selectedGame) && !selectedGameProfileId.HasValue)
+        if (string.IsNullOrEmpty(selectedGame))
             return true;
-        if (selectedGameProfileId.HasValue)
-            return sectionKey == $"gp:{selectedGameProfileId.Value}";
-        if (!string.IsNullOrEmpty(selectedGame))
-            return sectionKey == $"game:{selectedGame}";
-        return true;
+        return sectionKey == $"game:{selectedGame}";
     }
 
-    string? TransferGameFilter()
-    {
-        if (selectedGameProfileId.HasValue)
-            return Model.GameProfiles.FirstOrDefault(g => g.Id == selectedGameProfileId.Value)?.GameName;
-        return selectedGame;
-    }
-    var transferGameFilter = TransferGameFilter();
-    var allGamesTabActive = string.IsNullOrEmpty(selectedGame) && !selectedGameProfileId.HasValue;
+    var transferGameFilter = selectedGame;
+    var allGamesTabActive = string.IsNullOrEmpty(selectedGame);
+
+    var availableGames = Model.GameProfiles
+        .Select(gp => gp.GameName)
+        .Distinct()
+        .ToList();
 }
 
 @section Styles {
@@ -80,7 +74,7 @@
                     </div>
 
                     <!-- Game Filter Tabs -->
-                    @if (Model.GameProfiles.Any())
+                    @if (availableGames.Any())
                     {
                         <div class="game-filter-tabs mb-4">
                             <div class="btn-group flex-wrap" role="group">
@@ -88,11 +82,11 @@
                                    class="btn @(allGamesTabActive ? "btn-light" : "btn-outline-light")">
                                     All Games
                                 </a>
-                                @foreach (var gp in Model.GameProfiles)
+                                @foreach (var game in availableGames)
                                 {
-                                    <a asp-action="Profile" asp-route-id="@Model.Id" asp-route-information="@Model.GetInformation()" asp-route-gameProfileId="@gp.Id"
-                                       class="btn @(selectedGameProfileId == gp.Id ? "btn-light" : "btn-outline-light")">
-                                        @gp.DisplayLabel
+                                    <a asp-action="Profile" asp-route-id="@Model.Id" asp-route-information="@Model.GetInformation()" asp-route-game="@game"
+                                       class="btn @(selectedGame == game ? "btn-light" : "btn-outline-light")">
+                                        @game
                                     </a>
                                 }
                             </div>
@@ -142,6 +136,21 @@
                                 <h5 class="mb-0"><i class="fa fa-bar-chart me-2"></i>@(Model.ProfileSectionTitles.GetValueOrDefault(gameStats.Key) ?? gameStats.Value.GameName) Statistics</h5>
                             </div>
                             <div class="card-body">
+                                @if (gameStats.Value.Source == "FACEIT" || gameStats.Value.Source == "RIOT")
+                                {
+                                    <div class="row mb-3">
+                                        <div class="col-md-6 mb-2">
+                                            <div class="stat-card text-center p-3 bg-light rounded">
+                                                <div class="stat-value text-primary fw-bold">
+                                                    @(gameStats.Value.Source == "FACEIT"
+                                                        ? Model.CounterStrikeCircuitPointsCurrentYear
+                                                        : Model.LeagueOfLegendsCircuitPointsCurrentYear)
+                                                </div>
+                                                <div class="stat-label text-muted">@Model.CurrentYear Circuit Points</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
                                 <div class="row">
                                     <!-- Overall Stats -->
                                     <div class="col-md-3 mb-3">
