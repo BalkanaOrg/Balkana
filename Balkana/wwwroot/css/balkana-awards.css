@@ -1,0 +1,93 @@
+/* Balkana Awards: enforce dark theme controls (white text) */
+
+.ba-dark,
+.ba-dark .card,
+.ba-dark .accordion-item {
+    color: #ffffff;
+}
+
+.ba-dark .text-muted,
+.ba-dark .form-text {
+    color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.ba-dark .form-label,
+.ba-dark .form-check-label {
+    color: #ffffff !important;
+}
+
+.ba-dark .form-control,
+.ba-dark .form-select,
+.ba-dark input[type="date"].form-control {
+    background-color: #101218 !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.ba-dark .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.55) !important;
+}
+
+.ba-dark .form-control:focus,
+.ba-dark .form-select:focus {
+    border-color: rgba(59, 130, 246, 0.6) !important;
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.15) !important;
+}
+
+.ba-dark .form-check-input {
+    background-color: #101218 !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+.ba-dark .form-check-input:checked {
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+}
+
+.ba-dark input[type="file"].form-control::file-selector-button {
+    background: rgba(31, 41, 55, 0.85);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ba-dark input[type="file"].form-control:hover::file-selector-button {
+    background: rgba(31, 41, 55, 1);
+}
+
+/* Select2 (fallback, in case admin.css not loaded) */
+.ba-dark .select2-container--default .select2-selection--single {
+    background: #101218 !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 6px !important;
+    height: 38px !important;
+}
+
+.ba-dark .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #ffffff !important;
+    line-height: 36px !important;
+}
+
+.ba-dark .select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: rgba(255, 255, 255, 0.55) !important;
+}
+
+.ba-dark .select2-dropdown {
+    background: rgba(16, 18, 24, 0.98) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.ba-dark .select2-container--default .select2-results__option {
+    color: #ffffff !important;
+}
+
+/* Accordion button readability */
+.ba-dark .accordion-button {
+    background: rgba(0, 0, 0, 0.35) !important;
+    color: #ffffff !important;
+}
+
+.ba-dark .accordion-button:not(.collapsed) {
+    background: rgba(0, 0, 0, 0.55) !important;
+    color: #ffffff !important;
+}
+

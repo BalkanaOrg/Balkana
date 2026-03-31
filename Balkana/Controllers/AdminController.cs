@@ -927,6 +927,99 @@ namespace Balkana.Controllers
             NeedId(model.GivePlayByPlayCaster, model.PlayByPlayCasterUserId, nameof(model.PlayByPlayCasterUserId));
             NeedId(model.GiveColorCaster, model.ColorCasterUserId, nameof(model.ColorCasterUserId));
 
+            // Manual POTY (CS + LoL), ranks 1..10
+            bool GetGive(bool isCs, int rank) => (isCs, rank) switch
+            {
+                (true, 1) => model.GiveCsPoty1,
+                (true, 2) => model.GiveCsPoty2,
+                (true, 3) => model.GiveCsPoty3,
+                (true, 4) => model.GiveCsPoty4,
+                (true, 5) => model.GiveCsPoty5,
+                (true, 6) => model.GiveCsPoty6,
+                (true, 7) => model.GiveCsPoty7,
+                (true, 8) => model.GiveCsPoty8,
+                (true, 9) => model.GiveCsPoty9,
+                (true, 10) => model.GiveCsPoty10,
+                (false, 1) => model.GiveLolPoty1,
+                (false, 2) => model.GiveLolPoty2,
+                (false, 3) => model.GiveLolPoty3,
+                (false, 4) => model.GiveLolPoty4,
+                (false, 5) => model.GiveLolPoty5,
+                (false, 6) => model.GiveLolPoty6,
+                (false, 7) => model.GiveLolPoty7,
+                (false, 8) => model.GiveLolPoty8,
+                (false, 9) => model.GiveLolPoty9,
+                (false, 10) => model.GiveLolPoty10,
+                _ => false
+            };
+
+            int? GetPlayerId(bool isCs, int rank) => (isCs, rank) switch
+            {
+                (true, 1) => model.CsPotyPlayerId1,
+                (true, 2) => model.CsPotyPlayerId2,
+                (true, 3) => model.CsPotyPlayerId3,
+                (true, 4) => model.CsPotyPlayerId4,
+                (true, 5) => model.CsPotyPlayerId5,
+                (true, 6) => model.CsPotyPlayerId6,
+                (true, 7) => model.CsPotyPlayerId7,
+                (true, 8) => model.CsPotyPlayerId8,
+                (true, 9) => model.CsPotyPlayerId9,
+                (true, 10) => model.CsPotyPlayerId10,
+                (false, 1) => model.LolPotyPlayerId1,
+                (false, 2) => model.LolPotyPlayerId2,
+                (false, 3) => model.LolPotyPlayerId3,
+                (false, 4) => model.LolPotyPlayerId4,
+                (false, 5) => model.LolPotyPlayerId5,
+                (false, 6) => model.LolPotyPlayerId6,
+                (false, 7) => model.LolPotyPlayerId7,
+                (false, 8) => model.LolPotyPlayerId8,
+                (false, 9) => model.LolPotyPlayerId9,
+                (false, 10) => model.LolPotyPlayerId10,
+                _ => null
+            };
+
+            IFormFile? GetIcon(bool isCs, int rank) => (isCs, rank) switch
+            {
+                (true, 1) => model.CsPotyIcon1,
+                (true, 2) => model.CsPotyIcon2,
+                (true, 3) => model.CsPotyIcon3,
+                (true, 4) => model.CsPotyIcon4,
+                (true, 5) => model.CsPotyIcon5,
+                (true, 6) => model.CsPotyIcon6,
+                (true, 7) => model.CsPotyIcon7,
+                (true, 8) => model.CsPotyIcon8,
+                (true, 9) => model.CsPotyIcon9,
+                (true, 10) => model.CsPotyIcon10,
+                (false, 1) => model.LolPotyIcon1,
+                (false, 2) => model.LolPotyIcon2,
+                (false, 3) => model.LolPotyIcon3,
+                (false, 4) => model.LolPotyIcon4,
+                (false, 5) => model.LolPotyIcon5,
+                (false, 6) => model.LolPotyIcon6,
+                (false, 7) => model.LolPotyIcon7,
+                (false, 8) => model.LolPotyIcon8,
+                (false, 9) => model.LolPotyIcon9,
+                (false, 10) => model.LolPotyIcon10,
+                _ => null
+            };
+
+            for (int rank = 1; rank <= 10; rank++)
+            {
+                if (GetGive(isCs: true, rank))
+                {
+                    var pid = GetPlayerId(isCs: true, rank);
+                    if (!pid.HasValue || pid.Value <= 0)
+                        ModelState.AddModelError($"CsPotyPlayerId{rank}", "Required when this rank is enabled.");
+                }
+
+                if (GetGive(isCs: false, rank))
+                {
+                    var pid = GetPlayerId(isCs: false, rank);
+                    if (!pid.HasValue || pid.Value <= 0)
+                        ModelState.AddModelError($"LolPotyPlayerId{rank}", "Required when this rank is enabled.");
+                }
+            }
+
             if (!ModelState.IsValid)
             {
                 ViewBag.Year = year;
@@ -963,6 +1056,30 @@ namespace Balkana.Controllers
                 _context.Trophies.Add(trophy);
                 await _context.SaveChangesAsync();
                 return trophy.Id;
+            }
+
+            // Manual POTY trophies (CS + LoL)
+            for (int rank = 1; rank <= 10; rank++)
+            {
+                if (GetGive(isCs: true, rank))
+                {
+                    var pid = GetPlayerId(isCs: true, rank)!.Value;
+                    var trophyId = await CreateTrophyAsync(
+                        $"Counter-Strike Player of the Year #{rank}",
+                        $"Balkana Awards {year} - Counter-Strike Player of the Year #{rank}",
+                        GetIcon(isCs: true, rank));
+                    _context.PlayerTrophies.Add(new PlayerTrophy { PlayerId = pid, TrophyId = trophyId, DateAwarded = model.AwardDate });
+                }
+
+                if (GetGive(isCs: false, rank))
+                {
+                    var pid = GetPlayerId(isCs: false, rank)!.Value;
+                    var trophyId = await CreateTrophyAsync(
+                        $"League of Legends Player of the Year #{rank}",
+                        $"Balkana Awards {year} - League of Legends Player of the Year #{rank}",
+                        GetIcon(isCs: false, rank));
+                    _context.PlayerTrophies.Add(new PlayerTrophy { PlayerId = pid, TrophyId = trophyId, DateAwarded = model.AwardDate });
+                }
             }
 
             if (model.GiveEntryFragger)

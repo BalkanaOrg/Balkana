@@ -5,7 +5,10 @@
     var year = Model?.Year ?? (int)(ViewBag.Year ?? DateTime.UtcNow.Year);
 }
 
-<div class="container py-4">
+<link rel="stylesheet" href="~/css/admin.css" />
+<link rel="stylesheet" href="~/css/balkana-awards.css" />
+
+<div class="container py-4 ba-dark">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
         <div>
             <h1 class="h3 mb-1">Manual award giving</h1>
@@ -46,6 +49,94 @@
                 </div>
 
                 <div class="row g-3">
+                    <div class="col-12">
+                        <div class="card bg-black border-secondary">
+                            <div class="card-body">
+                                <h2 class="h5 mb-1">Counter-Strike Player of the Year</h2>
+                                <div class="text-muted mb-3">Manual awarding for ranks #1–#10 (each rank can be enabled independently).</div>
+
+                                <div class="row g-3">
+                                    @for (var r = 1; r <= 10; r++)
+                                    {
+                                        var giveName = $"GiveCsPoty{r}";
+                                        var idName = $"CsPotyPlayerId{r}";
+                                        var iconName = $"CsPotyIcon{r}";
+                                        var isChecked = (bool)(Model.GetType().GetProperty(giveName)?.GetValue(Model) ?? false);
+                                        <div class="col-12 col-lg-6">
+                                            <div class="card bg-dark border-secondary h-100">
+                                                <div class="card-body">
+                                                    <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+                                                        <div class="fw-bold">#@r</div>
+                                                        <div class="form-check form-switch mb-0">
+                                                            <input class="form-check-input" type="checkbox" name="@giveName" value="true" @(isChecked ? "checked" : "") />
+                                                            <input type="hidden" name="@giveName" value="false" />
+                                                            <label class="form-check-label">Enable</label>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Player</label>
+                                                        <select class="form-select ba-player-select" data-hidden="@idName" data-placeholder="Search player for #@r..."></select>
+                                                        <input type="hidden" name="@idName" value="@(Model.GetType().GetProperty(idName)?.GetValue(Model) ?? "")" />
+                                                    </div>
+
+                                                    <div class="mb-0">
+                                                        <label class="form-label">Trophy icon (optional)</label>
+                                                        <input class="form-control" type="file" name="@iconName" accept="image/*" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="card bg-black border-secondary">
+                            <div class="card-body">
+                                <h2 class="h5 mb-1">League of Legends Player of the Year</h2>
+                                <div class="text-muted mb-3">Manual awarding for ranks #1–#10 (each rank can be enabled independently).</div>
+
+                                <div class="row g-3">
+                                    @for (var r = 1; r <= 10; r++)
+                                    {
+                                        var giveName = $"GiveLolPoty{r}";
+                                        var idName = $"LolPotyPlayerId{r}";
+                                        var iconName = $"LolPotyIcon{r}";
+                                        var isChecked = (bool)(Model.GetType().GetProperty(giveName)?.GetValue(Model) ?? false);
+                                        <div class="col-12 col-lg-6">
+                                            <div class="card bg-dark border-secondary h-100">
+                                                <div class="card-body">
+                                                    <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+                                                        <div class="fw-bold">#@r</div>
+                                                        <div class="form-check form-switch mb-0">
+                                                            <input class="form-check-input" type="checkbox" name="@giveName" value="true" @(isChecked ? "checked" : "") />
+                                                            <input type="hidden" name="@giveName" value="false" />
+                                                            <label class="form-check-label">Enable</label>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Player</label>
+                                                        <select class="form-select ba-player-select" data-hidden="@idName" data-placeholder="Search player for #@r..."></select>
+                                                        <input type="hidden" name="@idName" value="@(Model.GetType().GetProperty(idName)?.GetValue(Model) ?? "")" />
+                                                    </div>
+
+                                                    <div class="mb-0">
+                                                        <label class="form-label">Trophy icon (optional)</label>
+                                                        <input class="form-control" type="file" name="@iconName" accept="image/*" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="col-12 col-xl-6">
                         <div class="card bg-black border-secondary h-100">
                             <div class="card-body">
@@ -250,6 +341,41 @@
 
     <script>
         $(function () {
+            // POTY rank selects (players)
+            $('.ba-player-select').each(function () {
+                var $sel = $(this);
+                var hiddenName = $sel.data('hidden');
+                var placeholder = $sel.data('placeholder') || 'Search player...';
+                var $hidden = $('input[name="' + hiddenName + '"]');
+
+                $sel.select2({
+                    placeholder: placeholder,
+                    allowClear: true,
+                    minimumInputLength: 2,
+                    width: '100%',
+                    ajax: {
+                        url: '/admin/balkana-awards/search/players',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return { term: params.term, page: params.page || 1, pageSize: 20 };
+                        },
+                        processResults: function (data, params) {
+                            params.page = params.page || 1;
+                            return { results: data.results, pagination: { more: data.pagination ? data.pagination.more : false } };
+                        },
+                        cache: true
+                    }
+                });
+
+                $sel.on('select2:select', function (e) {
+                    $hidden.val(e.params.data.id);
+                });
+                $sel.on('select2:clear', function () {
+                    $hidden.val('');
+                });
+            });
+
             function initSelect2($el, url, placeholder, onSelected) {
                 $el.select2({
                     placeholder: placeholder,
