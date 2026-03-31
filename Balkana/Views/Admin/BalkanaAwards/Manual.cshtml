@@ -1,0 +1,317 @@
+@model Balkana.Models.Admin.BalkanaAwardsManualAwardViewModel
+
+@{
+    ViewData["Title"] = "Balkana Awards - Manual Award Giving";
+    var year = Model?.Year ?? (int)(ViewBag.Year ?? DateTime.UtcNow.Year);
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-1">Manual award giving</h1>
+            <div class="text-muted">Create and issue trophies for Balkana Awards @year.</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-light" asp-controller="Admin" asp-action="BalkanaAwards">Back to hub</a>
+            <a class="btn btn-outline-light" asp-controller="Admin" asp-action="BalkanaAwardsPoll" asp-route-year="@year">Community poll</a>
+        </div>
+    </div>
+
+    <div class="alert alert-warning">
+        This page will support:\n
+        <ul class="mb-0">
+            <li>Pick award date (applied to trophies)</li>
+            <li>Choose which awards to issue (checkboxes)</li>
+            <li>Upload per-trophy icons (stored under <code>/uploads/BalkanaAwards/...</code>)</li>
+            <li>Searchable + lazy-loaded selectors for players/teams/tournaments/users</li>
+        </ul>
+    </div>
+
+    <div class="card bg-dark border-secondary">
+        <div class="card-body">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">@TempData["Success"]</div>
+            }
+
+            <form method="post" enctype="multipart/form-data" asp-controller="Admin" asp-action="BalkanaAwardsManual" asp-route-year="@year">
+                @Html.AntiForgeryToken()
+
+                <div class="row g-3 mb-4">
+                    <div class="col-12 col-lg-4">
+                        <label class="form-label">Award date (applies to trophies)</label>
+                        <input class="form-control" type="date" asp-for="AwardDate" />
+                        <span class="text-danger" asp-validation-for="AwardDate"></span>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-xl-6">
+                        <div class="card bg-black border-secondary h-100">
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="GiveEntryFragger" />
+                                    <label class="form-check-label" asp-for="GiveEntryFragger">Entry Fragger of the Year (player)</label>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Player</label>
+                                    <select id="entryPlayer" class="form-select"></select>
+                                    <input type="hidden" asp-for="EntryFraggerPlayerId" />
+                                    <span class="text-danger" asp-validation-for="EntryFraggerPlayerId"></span>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label">Trophy icon (optional)</label>
+                                    <input class="form-control" type="file" asp-for="EntryFraggerIcon" accept="image/*" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-6">
+                        <div class="card bg-black border-secondary h-100">
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="GiveAwper" />
+                                    <label class="form-check-label" asp-for="GiveAwper">AWPer of the Year (player)</label>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Player</label>
+                                    <select id="awperPlayer" class="form-select"></select>
+                                    <input type="hidden" asp-for="AwperPlayerId" />
+                                    <span class="text-danger" asp-validation-for="AwperPlayerId"></span>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label">Trophy icon (optional)</label>
+                                    <input class="form-control" type="file" asp-for="AwperIcon" accept="image/*" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-6">
+                        <div class="card bg-black border-secondary h-100">
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="GiveIgl" />
+                                    <label class="form-check-label" asp-for="GiveIgl">IGL of the Year (player)</label>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Player</label>
+                                    <select id="iglPlayer" class="form-select"></select>
+                                    <input type="hidden" asp-for="IglPlayerId" />
+                                    <span class="text-danger" asp-validation-for="IglPlayerId"></span>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label">Trophy icon (optional)</label>
+                                    <input class="form-control" type="file" asp-for="IglIcon" accept="image/*" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-6">
+                        <div class="card bg-black border-secondary h-100">
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="GiveTeamOfYear" />
+                                    <label class="form-check-label" asp-for="GiveTeamOfYear">Team of the Year (team)</label>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Team</label>
+                                    <select id="teamOfYearTeam" class="form-select"></select>
+                                    <input type="hidden" asp-for="TeamOfYearTeamId" />
+                                    <span class="text-danger" asp-validation-for="TeamOfYearTeamId"></span>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label">Trophy icon (optional)</label>
+                                    <input class="form-control" type="file" asp-for="TeamOfYearIcon" accept="image/*" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-6">
+                        <div class="card bg-black border-secondary h-100">
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="GiveTournamentOfYear" />
+                                    <label class="form-check-label" asp-for="GiveTournamentOfYear">Tournament of the Year (tournament)</label>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Tournament</label>
+                                    <select id="tournamentOfYearTournament" class="form-select"></select>
+                                    <input type="hidden" asp-for="TournamentOfYearTournamentId" />
+                                    <span class="text-danger" asp-validation-for="TournamentOfYearTournamentId"></span>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label">Trophy icon (optional)</label>
+                                    <input class="form-control" type="file" asp-for="TournamentOfYearIcon" accept="image/*" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-6">
+                        <div class="card bg-black border-secondary h-100">
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="GiveContentCreator" />
+                                    <label class="form-check-label" asp-for="GiveContentCreator">Content Creator of the Year (user)</label>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">User</label>
+                                    <select id="contentCreatorUser" class="form-select"></select>
+                                    <input type="hidden" asp-for="ContentCreatorUserId" />
+                                    <span class="text-danger" asp-validation-for="ContentCreatorUserId"></span>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label">Trophy icon (optional)</label>
+                                    <input class="form-control" type="file" asp-for="ContentCreatorIcon" accept="image/*" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-6">
+                        <div class="card bg-black border-secondary h-100">
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="GiveStreamer" />
+                                    <label class="form-check-label" asp-for="GiveStreamer">Streamer of the Year (user)</label>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">User</label>
+                                    <select id="streamerUser" class="form-select"></select>
+                                    <input type="hidden" asp-for="StreamerUserId" />
+                                    <span class="text-danger" asp-validation-for="StreamerUserId"></span>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label">Trophy icon (optional)</label>
+                                    <input class="form-control" type="file" asp-for="StreamerIcon" accept="image/*" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-6">
+                        <div class="card bg-black border-secondary h-100">
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="GivePlayByPlayCaster" />
+                                    <label class="form-check-label" asp-for="GivePlayByPlayCaster">Play-by-Play Caster of the Year (user)</label>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">User</label>
+                                    <select id="pbpUser" class="form-select"></select>
+                                    <input type="hidden" asp-for="PlayByPlayCasterUserId" />
+                                    <span class="text-danger" asp-validation-for="PlayByPlayCasterUserId"></span>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label">Trophy icon (optional)</label>
+                                    <input class="form-control" type="file" asp-for="PlayByPlayCasterIcon" accept="image/*" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-6">
+                        <div class="card bg-black border-secondary h-100">
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="GiveColorCaster" />
+                                    <label class="form-check-label" asp-for="GiveColorCaster">Color Caster of the Year (user)</label>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">User</label>
+                                    <select id="colorUser" class="form-select"></select>
+                                    <input type="hidden" asp-for="ColorCasterUserId" />
+                                    <span class="text-danger" asp-validation-for="ColorCasterUserId"></span>
+                                </div>
+                                <div class="mb-0">
+                                    <label class="form-label">Trophy icon (optional)</label>
+                                    <input class="form-control" type="file" asp-for="ColorCasterIcon" accept="image/*" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="submit" class="btn btn-primary">Issue selected awards</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(function () {
+            function initSelect2($el, url, placeholder, onSelected) {
+                $el.select2({
+                    placeholder: placeholder,
+                    allowClear: true,
+                    minimumInputLength: 2,
+                    width: '100%',
+                    ajax: {
+                        url: url,
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return {
+                                term: params.term,
+                                page: params.page || 1,
+                                pageSize: 20
+                            };
+                        },
+                        processResults: function (data, params) {
+                            params.page = params.page || 1;
+                            return {
+                                results: data.results,
+                                pagination: { more: data.pagination ? data.pagination.more : false }
+                            };
+                        },
+                        cache: true
+                    }
+                });
+
+                if (onSelected) {
+                    $el.on('select2:select', function (e) {
+                        onSelected(e.params.data);
+                    });
+                    $el.on('select2:clear', function () {
+                        onSelected(null);
+                    });
+                }
+            }
+
+            function bindHiddenInt($select, url, placeholder, $hidden) {
+                initSelect2($select, url, placeholder, function (item) {
+                    $hidden.val(item ? item.id : '');
+                });
+            }
+
+            function bindHiddenString($select, url, placeholder, $hidden) {
+                initSelect2($select, url, placeholder, function (item) {
+                    $hidden.val(item ? item.id : '');
+                });
+            }
+
+            bindHiddenInt($('#entryPlayer'), '/admin/balkana-awards/search/players', 'Search player...', $('input[name="EntryFraggerPlayerId"]'));
+            bindHiddenInt($('#awperPlayer'), '/admin/balkana-awards/search/players', 'Search player...', $('input[name="AwperPlayerId"]'));
+            bindHiddenInt($('#iglPlayer'), '/admin/balkana-awards/search/players', 'Search player...', $('input[name="IglPlayerId"]'));
+
+            bindHiddenInt($('#teamOfYearTeam'), '/admin/balkana-awards/search/teams', 'Search team...', $('input[name="TeamOfYearTeamId"]'));
+            bindHiddenInt($('#tournamentOfYearTournament'), '/admin/balkana-awards/search/tournaments', 'Search tournament...', $('input[name="TournamentOfYearTournamentId"]'));
+
+            bindHiddenString($('#contentCreatorUser'), '/admin/balkana-awards/search/users', 'Search user...', $('input[name="ContentCreatorUserId"]'));
+            bindHiddenString($('#streamerUser'), '/admin/balkana-awards/search/users', 'Search user...', $('input[name="StreamerUserId"]'));
+            bindHiddenString($('#pbpUser'), '/admin/balkana-awards/search/users', 'Search user...', $('input[name="PlayByPlayCasterUserId"]'));
+            bindHiddenString($('#colorUser'), '/admin/balkana-awards/search/users', 'Search user...', $('input[name="ColorCasterUserId"]'));
+        });
+    </script>
+}
+

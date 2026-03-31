@@ -710,6 +710,440 @@ namespace Balkana.Controllers
             ulong.TryParse(s, System.Globalization.NumberStyles.None, null, out var v) && v > 0UL;
 
         // ============================================
+        // BALKANA AWARDS
+        // ============================================
+
+        [HttpGet]
+        [Route("admin/balkana-awards")]
+        public IActionResult BalkanaAwards()
+        {
+            return View("BalkanaAwards/Index");
+        }
+
+        [HttpGet]
+        [Route("admin/balkana-awards/poll/{year?}")]
+        public IActionResult BalkanaAwardsPoll(int? year = null)
+        {
+            ViewBag.Year = year ?? DateTime.UtcNow.Year;
+            return View("BalkanaAwards/Poll");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Route("admin/balkana-awards/{year:int}/finalize-poty")]
+        public async Task<IActionResult> BalkanaAwardsFinalizePoty(int year)
+        {
+            var evt = await _context.BalkanaAwards.FirstOrDefaultAsync(e => e.Year == year);
+            if (evt == null)
+            {
+                evt = new BalkanaAwardsEvent
+                {
+                    Year = year,
+                    EventDate = new DateTime(year, 12, 31, 0, 0, 0, DateTimeKind.Utc)
+                };
+                _context.BalkanaAwards.Add(evt);
+                await _context.SaveChangesAsync();
+            }
+
+            var categories = await _context.BalkanaAwardCategories
+                .AsNoTracking()
+                .Where(c => c.Key == "cs_poty" || c.Key == "lol_poty")
+                .ToListAsync();
+
+            var csCat = categories.FirstOrDefault(c => c.Key == "cs_poty");
+            var lolCat = categories.FirstOrDefault(c => c.Key == "lol_poty");
+
+            if (csCat == null || lolCat == null)
+            {
+                TempData["Error"] = "Missing Balkana award categories (cs_poty / lol_poty). Ensure the SQL migration seeded categories.";
+                return RedirectToAction(nameof(BalkanaAwardsPoll), new { year });
+            }
+
+            var start = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var end = new DateTime(year + 1, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+            async Task<List<int>> ComputeCsTop10Async()
+            {
+                var csStats = await _context.PlayerStatsCS
+                    .AsNoTracking()
+                    .Where(ps => ps.Match.PlayedAt >= start && ps.Match.PlayedAt < end)
+                    .Join(_context.GameProfiles.AsNoTracking(),
+                        ps => ps.PlayerUUID,
+                        gp => gp.UUID,
+                        (ps, gp) => new { ps, gp })
+                    .Where(x => x.gp.Provider == x.ps.Source)
+                    .GroupBy(x => x.gp.PlayerId)
+                    .Select(g => new
+                    {
+                        PlayerId = g.Key,
+                        Matches = g.Count(),
+                        AvgHltv2 = g.Average(x => x.ps.HLTV2)
+                    })
+                    .Where(x => x.Matches >= 5)
+                    .OrderByDescending(x => x.AvgHltv2)
+                    .ThenByDescending(x => x.Matches)
+                    .Take(10)
+                    .Select(x => x.PlayerId)
+                    .ToListAsync();
+
+                return csStats;
+            }
+
+            async Task<List<int>> ComputeLolTop10Async()
+            {
+                var lolStats = await _context.PlayerStatsLoL
+                    .AsNoTracking()
+                    .Where(ps => ps.Match.PlayedAt >= start && ps.Match.PlayedAt < end)
+                    .Join(_context.GameProfiles.AsNoTracking(),
+                        ps => ps.PlayerUUID,
+                        gp => gp.UUID,
+                        (ps, gp) => new { ps, gp })
+                    .Where(x => x.gp.Provider == x.ps.Source)
+                    .GroupBy(x => x.gp.PlayerId)
+                    .Select(g => new
+                    {
+                        PlayerId = g.Key,
+                        Matches = g.Count(),
+                        AvgKda = g.Average(x =>
+                            ((double)(x.ps.Kills ?? 0) + (double)(x.ps.Assists ?? 0)) / Math.Max(1.0, (double)(x.ps.Deaths ?? 0)))
+                    })
+                    .Where(x => x.Matches >= 5)
+                    .OrderByDescending(x => x.AvgKda)
+                    .ThenByDescending(x => x.Matches)
+                    .Take(10)
+                    .Select(x => x.PlayerId)
+                    .ToListAsync();
+
+                return lolStats;
+            }
+
+            var csTop10 = await ComputeCsTop10Async();
+            var lolTop10 = await ComputeLolTop10Async();
+
+            var existing = await _context.BalkanaAwardResults
+                .Where(r => r.BalkanaAwardsId == evt.Id && (r.CategoryId == csCat.Id || r.CategoryId == lolCat.Id))
+                .ToListAsync();
+            if (existing.Count > 0)
+                _context.BalkanaAwardResults.RemoveRange(existing);
+
+            for (int i = 0; i < csTop10.Count; i++)
+            {
+                _context.BalkanaAwardResults.Add(new BalkanaAwardResult
+                {
+                    BalkanaAwardsId = evt.Id,
+                    CategoryId = csCat.Id,
+                    Rank = i + 1,
+                    PlayerId = csTop10[i]
+                });
+            }
+
+            for (int i = 0; i < lolTop10.Count; i++)
+            {
+                _context.BalkanaAwardResults.Add(new BalkanaAwardResult
+                {
+                    BalkanaAwardsId = evt.Id,
+                    CategoryId = lolCat.Id,
+                    Rank = i + 1,
+                    PlayerId = lolTop10[i]
+                });
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "POTY top10 results have been finalized for the selected year.";
+            return RedirectToAction(nameof(BalkanaAwardsPoll), new { year });
+        }
+
+        [HttpGet]
+        [Route("admin/balkana-awards/manual/{year?}")]
+        public async Task<IActionResult> BalkanaAwardsManual(int? year = null)
+        {
+            var y = year ?? DateTime.UtcNow.Year;
+            ViewBag.Year = y;
+
+            var evt = await _context.BalkanaAwards.FirstOrDefaultAsync(e => e.Year == y);
+            if (evt == null)
+            {
+                evt = new BalkanaAwardsEvent
+                {
+                    Year = y,
+                    EventDate = new DateTime(y, 12, 31, 0, 0, 0, DateTimeKind.Utc)
+                };
+                _context.BalkanaAwards.Add(evt);
+                await _context.SaveChangesAsync();
+            }
+
+            var vm = new Balkana.Models.Admin.BalkanaAwardsManualAwardViewModel
+            {
+                Year = y,
+                AwardDate = evt.EventDate
+            };
+
+            return View("BalkanaAwards/Manual", vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Route("admin/balkana-awards/manual/{year:int}")]
+        public async Task<IActionResult> BalkanaAwardsManual(int year,
+            Balkana.Models.Admin.BalkanaAwardsManualAwardViewModel model,
+            [FromServices] IWebHostEnvironment env)
+        {
+            model.Year = year;
+
+            var evt = await _context.BalkanaAwards.FirstOrDefaultAsync(e => e.Year == year);
+            if (evt == null)
+            {
+                evt = new BalkanaAwardsEvent
+                {
+                    Year = year,
+                    EventDate = model.AwardDate
+                };
+                _context.BalkanaAwards.Add(evt);
+            }
+            else
+            {
+                evt.EventDate = model.AwardDate;
+            }
+
+            bool NeedId(bool give, object? id, string field)
+            {
+                if (!give) return false;
+                if (id == null || (id is int i && i <= 0) || (id is string s && string.IsNullOrWhiteSpace(s)))
+                {
+                    ModelState.AddModelError(field, "Required when the award is enabled.");
+                    return true;
+                }
+                return false;
+            }
+
+            NeedId(model.GiveEntryFragger, model.EntryFraggerPlayerId, nameof(model.EntryFraggerPlayerId));
+            NeedId(model.GiveAwper, model.AwperPlayerId, nameof(model.AwperPlayerId));
+            NeedId(model.GiveIgl, model.IglPlayerId, nameof(model.IglPlayerId));
+            NeedId(model.GiveTeamOfYear, model.TeamOfYearTeamId, nameof(model.TeamOfYearTeamId));
+            NeedId(model.GiveTournamentOfYear, model.TournamentOfYearTournamentId, nameof(model.TournamentOfYearTournamentId));
+            NeedId(model.GiveContentCreator, model.ContentCreatorUserId, nameof(model.ContentCreatorUserId));
+            NeedId(model.GiveStreamer, model.StreamerUserId, nameof(model.StreamerUserId));
+            NeedId(model.GivePlayByPlayCaster, model.PlayByPlayCasterUserId, nameof(model.PlayByPlayCasterUserId));
+            NeedId(model.GiveColorCaster, model.ColorCasterUserId, nameof(model.ColorCasterUserId));
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Year = year;
+                return View("BalkanaAwards/Manual", model);
+            }
+
+            string baseFolder = Path.Combine("uploads", "BalkanaAwards", "Trophies", year.ToString());
+            async Task<string> SaveIconAsync(IFormFile? file, string fallback)
+            {
+                if (file == null || file.Length == 0) return fallback;
+                return await Balkana.Services.Images.ImageOptimizer.SaveWebpAsync(
+                    file,
+                    env.WebRootPath,
+                    baseFolder,
+                    maxWidth: 1024,
+                    maxHeight: 1024,
+                    quality: 85);
+            }
+
+            const string awardType = "Balkana Awards";
+            string defaultIcon = "/uploads/Tournaments/Trophies/default_trophy.png";
+
+            async Task<int> CreateTrophyAsync(string name, string description, IFormFile? iconFile)
+            {
+                var iconUrl = await SaveIconAsync(iconFile, defaultIcon);
+                var trophy = new Trophy
+                {
+                    Name = name,
+                    Description = description,
+                    IconURL = iconUrl,
+                    AwardType = awardType,
+                    AwardDate = model.AwardDate
+                };
+                _context.Trophies.Add(trophy);
+                await _context.SaveChangesAsync();
+                return trophy.Id;
+            }
+
+            if (model.GiveEntryFragger)
+            {
+                var trophyId = await CreateTrophyAsync("Entry Fragger of the Year", $"Balkana Awards {year} - Entry Fragger of the Year", model.EntryFraggerIcon);
+                _context.PlayerTrophies.Add(new PlayerTrophy { PlayerId = model.EntryFraggerPlayerId!.Value, TrophyId = trophyId, DateAwarded = model.AwardDate });
+            }
+
+            if (model.GiveAwper)
+            {
+                var trophyId = await CreateTrophyAsync("AWPer of the Year", $"Balkana Awards {year} - AWPer of the Year", model.AwperIcon);
+                _context.PlayerTrophies.Add(new PlayerTrophy { PlayerId = model.AwperPlayerId!.Value, TrophyId = trophyId, DateAwarded = model.AwardDate });
+            }
+
+            if (model.GiveIgl)
+            {
+                var trophyId = await CreateTrophyAsync("IGL of the Year", $"Balkana Awards {year} - IGL of the Year", model.IglIcon);
+                _context.PlayerTrophies.Add(new PlayerTrophy { PlayerId = model.IglPlayerId!.Value, TrophyId = trophyId, DateAwarded = model.AwardDate });
+            }
+
+            if (model.GiveTeamOfYear)
+            {
+                var trophyId = await CreateTrophyAsync("Team of the Year", $"Balkana Awards {year} - Team of the Year", model.TeamOfYearIcon);
+                _context.TeamTrophies.Add(new TeamTrophy { TeamId = model.TeamOfYearTeamId!.Value, TrophyId = trophyId });
+            }
+
+            if (model.GiveTournamentOfYear)
+            {
+                var iconUrl = await SaveIconAsync(model.TournamentOfYearIcon, defaultIcon);
+                var trophy = new TrophyTournament
+                {
+                    Name = "Tournament of the Year",
+                    TournamentId = model.TournamentOfYearTournamentId!.Value,
+                    Description = $"Balkana Awards {year} - Tournament of the Year",
+                    IconURL = iconUrl,
+                    AwardType = awardType,
+                    AwardDate = model.AwardDate
+                };
+                _context.Trophies.Add(trophy);
+                await _context.SaveChangesAsync();
+            }
+
+            if (model.GiveContentCreator)
+            {
+                var trophyId = await CreateTrophyAsync("Content Creator of the Year", $"Balkana Awards {year} - Content Creator of the Year", model.ContentCreatorIcon);
+                _context.UserTrophies.Add(new UserTrophy { UserId = model.ContentCreatorUserId!, TrophyId = trophyId, DateAwarded = model.AwardDate });
+            }
+
+            if (model.GiveStreamer)
+            {
+                var trophyId = await CreateTrophyAsync("Streamer of the Year", $"Balkana Awards {year} - Streamer of the Year", model.StreamerIcon);
+                _context.UserTrophies.Add(new UserTrophy { UserId = model.StreamerUserId!, TrophyId = trophyId, DateAwarded = model.AwardDate });
+            }
+
+            if (model.GivePlayByPlayCaster)
+            {
+                var trophyId = await CreateTrophyAsync("Play-by-Play Caster of the Year", $"Balkana Awards {year} - Play-by-Play Caster of the Year", model.PlayByPlayCasterIcon);
+                _context.UserTrophies.Add(new UserTrophy { UserId = model.PlayByPlayCasterUserId!, TrophyId = trophyId, DateAwarded = model.AwardDate });
+            }
+
+            if (model.GiveColorCaster)
+            {
+                var trophyId = await CreateTrophyAsync("Color Caster of the Year", $"Balkana Awards {year} - Color Caster of the Year", model.ColorCasterIcon);
+                _context.UserTrophies.Add(new UserTrophy { UserId = model.ColorCasterUserId!, TrophyId = trophyId, DateAwarded = model.AwardDate });
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Balkana Awards trophies issued.";
+            return RedirectToAction(nameof(BalkanaAwardsManual), new { year });
+        }
+
+        [HttpGet]
+        [Route("admin/balkana-awards/search/players")]
+        public async Task<IActionResult> BalkanaAwardsSearchPlayers(string term, int page = 1, int pageSize = 20)
+        {
+            var query = _context.Players.AsNoTracking().AsQueryable();
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                var t = term.Trim();
+                query = query.Where(p =>
+                    p.Nickname.Contains(t) ||
+                    p.FirstName.Contains(t) ||
+                    p.LastName.Contains(t));
+            }
+
+            var rows = await query
+                .OrderBy(p => p.Nickname)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new { id = p.Id, text = p.Nickname })
+                .ToListAsync();
+
+            return Json(new
+            {
+                results = rows,
+                pagination = new { more = rows.Count == pageSize }
+            });
+        }
+
+        [HttpGet]
+        [Route("admin/balkana-awards/search/teams")]
+        public async Task<IActionResult> BalkanaAwardsSearchTeams(string term, int page = 1, int pageSize = 20)
+        {
+            var query = _context.Teams.AsNoTracking().AsQueryable();
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                var t = term.Trim();
+                query = query.Where(team => team.Tag.Contains(t) || team.FullName.Contains(t));
+            }
+
+            var rows = await query
+                .OrderBy(team => team.Tag)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(team => new { id = team.Id, text = $"{team.Tag} - {team.FullName}" })
+                .ToListAsync();
+
+            return Json(new
+            {
+                results = rows,
+                pagination = new { more = rows.Count == pageSize }
+            });
+        }
+
+        [HttpGet]
+        [Route("admin/balkana-awards/search/tournaments")]
+        public async Task<IActionResult> BalkanaAwardsSearchTournaments(string term, int page = 1, int pageSize = 20)
+        {
+            var query = _context.Tournaments.AsNoTracking().AsQueryable();
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                var t = term.Trim();
+                query = query.Where(tr => tr.FullName.Contains(t));
+            }
+
+            var rows = await query
+                .OrderByDescending(tr => tr.EndDate)
+                .ThenBy(tr => tr.FullName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(tr => new { id = tr.Id, text = tr.FullName })
+                .ToListAsync();
+
+            return Json(new
+            {
+                results = rows,
+                pagination = new { more = rows.Count == pageSize }
+            });
+        }
+
+        [HttpGet]
+        [Route("admin/balkana-awards/search/users")]
+        public async Task<IActionResult> BalkanaAwardsSearchUsers(string term, int page = 1, int pageSize = 20)
+        {
+            var query = _context.Users.AsNoTracking().AsQueryable();
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                var t = term.Trim();
+                query = query.Where(u =>
+                    u.UserName.Contains(t) ||
+                    u.Email.Contains(t) ||
+                    u.FirstName.Contains(t) ||
+                    u.LastName.Contains(t));
+            }
+
+            var rows = await query
+                .OrderBy(u => u.UserName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(u => new { id = u.Id, text = u.UserName })
+                .ToListAsync();
+
+            return Json(new
+            {
+                results = rows,
+                pagination = new { more = rows.Count == pageSize }
+            });
+        }
+
+        // ============================================
         // RIOT TOURNAMENT API MANAGEMENT
         // ============================================
 

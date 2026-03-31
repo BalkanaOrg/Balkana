@@ -39,6 +39,15 @@ namespace Balkana.Data
         public DbSet<TrophyAward> TrophyAwards { get; set; }
         public DbSet<PlayerTrophy> PlayerTrophies { get; set; }
         public DbSet<TeamTrophy> TeamTrophies { get; set; }
+        public DbSet<UserTrophy> UserTrophies { get; set; }
+
+        // Balkana Awards
+        public DbSet<BalkanaAwardsEvent> BalkanaAwards { get; set; }
+        public DbSet<BalkanaAwardCategory> BalkanaAwardCategories { get; set; }
+        public DbSet<BalkanaAwardEligibilityPlayer> BalkanaAwardEligibilityPlayers { get; set; }
+        public DbSet<UserVoting> UserVoting { get; set; }
+        public DbSet<UserVotingItem> UserVotingItems { get; set; }
+        public DbSet<BalkanaAwardResult> BalkanaAwardResults { get; set; }
 
         // Match hierarchy
         public DbSet<Match> Matches { get; set; }
@@ -331,6 +340,89 @@ namespace Balkana.Data
                 .HasOne(ta => ta.Trophy)
                 .WithMany(t => t.TeamTrophies)
                 .HasForeignKey(ta => ta.TrophyId);
+
+            modelBuilder.Entity<UserTrophy>()
+                .HasOne(ut => ut.User)
+                .WithMany()
+                .HasForeignKey(ut => ut.UserId);
+
+            modelBuilder.Entity<UserTrophy>()
+                .HasOne(ut => ut.Trophy)
+                .WithMany()
+                .HasForeignKey(ut => ut.TrophyId);
+
+            modelBuilder.Entity<BalkanaAwardsEvent>()
+                .HasIndex(e => e.Year)
+                .IsUnique();
+
+            modelBuilder.Entity<BalkanaAwardCategory>()
+                .HasIndex(c => c.Key)
+                .IsUnique();
+
+            modelBuilder.Entity<BalkanaAwardEligibilityPlayer>()
+                .HasKey(x => new { x.BalkanaAwardsId, x.CategoryId, x.PlayerId });
+
+            modelBuilder.Entity<BalkanaAwardEligibilityPlayer>()
+                .HasOne(x => x.BalkanaAwards)
+                .WithMany(e => e.EligiblePlayers)
+                .HasForeignKey(x => x.BalkanaAwardsId);
+
+            modelBuilder.Entity<BalkanaAwardEligibilityPlayer>()
+                .HasOne(x => x.Category)
+                .WithMany(c => c.EligiblePlayers)
+                .HasForeignKey(x => x.CategoryId);
+
+            modelBuilder.Entity<BalkanaAwardEligibilityPlayer>()
+                .HasOne(x => x.Player)
+                .WithMany()
+                .HasForeignKey(x => x.PlayerId);
+
+            modelBuilder.Entity<UserVoting>()
+                .HasIndex(v => new { v.BalkanaAwardsId, v.CategoryId, v.UserId })
+                .IsUnique();
+
+            modelBuilder.Entity<UserVoting>()
+                .HasOne(v => v.BalkanaAwards)
+                .WithMany(e => e.Votes)
+                .HasForeignKey(v => v.BalkanaAwardsId);
+
+            modelBuilder.Entity<UserVoting>()
+                .HasOne(v => v.Category)
+                .WithMany(c => c.Votes)
+                .HasForeignKey(v => v.CategoryId);
+
+            modelBuilder.Entity<UserVoting>()
+                .HasOne(v => v.User)
+                .WithMany()
+                .HasForeignKey(v => v.UserId);
+
+            modelBuilder.Entity<UserVotingItem>()
+                .HasIndex(i => new { i.UserVotingId, i.Rank })
+                .IsUnique();
+
+            modelBuilder.Entity<UserVotingItem>()
+                .HasOne(i => i.UserVoting)
+                .WithMany(v => v.Items)
+                .HasForeignKey(i => i.UserVotingId);
+
+            modelBuilder.Entity<BalkanaAwardResult>()
+                .HasIndex(r => new { r.BalkanaAwardsId, r.CategoryId, r.Rank })
+                .IsUnique();
+
+            modelBuilder.Entity<BalkanaAwardResult>()
+                .HasOne(r => r.BalkanaAwards)
+                .WithMany(e => e.Results)
+                .HasForeignKey(r => r.BalkanaAwardsId);
+
+            modelBuilder.Entity<BalkanaAwardResult>()
+                .HasOne(r => r.Category)
+                .WithMany(c => c.Results)
+                .HasForeignKey(r => r.CategoryId);
+
+            modelBuilder.Entity<BalkanaAwardResult>()
+                .HasOne(r => r.Player)
+                .WithMany()
+                .HasForeignKey(r => r.PlayerId);
 
             // Tournament and Seasonal Circuit Points
             modelBuilder.Entity<CorePlayer>()

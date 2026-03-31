@@ -123,7 +123,7 @@
                         </div>
                         <div class="card-content">
                             <div class="player-profile-link">
-                                <a asp-controller="Players" asp-action="Profile" asp-route-id="@Model.Player.Id" class="player-link-btn">
+                                <a asp-controller="Players" asp-action="Profile" asp-route-id="@Model.Player.Id" asp-route-information="@Model.Player.GetInformation()" class="player-link-btn">
                                     <i class="fi fi-rr-eye"></i>
                                     View Player Profile
                                 </a>

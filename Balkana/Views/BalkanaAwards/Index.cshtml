@@ -1,0 +1,203 @@
+@model Balkana.Models.BalkanaAwards.BalkanaAwardsVotingPageViewModel
+
+@{
+    ViewData["Title"] = $"Balkana Awards {Model.Year}";
+    bool votingWindowDefined = Model.VotingOpensAt.HasValue || Model.VotingClosesAt.HasValue;
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-1">Balkana Awards @Model.Year</h1>
+            <div class="text-muted">Vote for the community categories and view yearly rankings.</div>
+        </div>
+    </div>
+
+    @if (votingWindowDefined)
+    {
+        <div class="alert alert-secondary">
+            Voting window:
+            <strong>@(Model.VotingOpensAt?.ToString("yyyy-MM-dd HH:mm 'UTC'") ?? "N/A")</strong>
+            →
+            <strong>@(Model.VotingClosesAt?.ToString("yyyy-MM-dd HH:mm 'UTC'") ?? "N/A")</strong>
+        </div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <div class="card bg-dark border-secondary">
+        <div class="card-body">
+            <p class="text-muted mb-3">
+                For now this page provides a basic per-category vote submission form. Ranked categories accept multiple ranks.
+            </p>
+
+            <div class="accordion" id="baCats">
+                @for (var i = 0; i < Model.Categories.Count; i++)
+                {
+                    var c = Model.Categories[i];
+                    var collapseId = $"baCat_{c.Id}";
+                    <div class="accordion-item bg-dark border-secondary">
+                        <h2 class="accordion-header" id="heading_@c.Id">
+                            <button class="accordion-button collapsed bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId">
+                                @c.Name
+                                @if (!c.IsCommunityVoted)
+                                {
+                                    <span class="ms-2 badge bg-secondary">stats-based / not community voted</span>
+                                }
+                                else if (c.IsRanked)
+                                {
+                                    <span class="ms-2 badge bg-primary">ranked</span>
+                                }
+                                else
+                                {
+                                    <span class="ms-2 badge bg-primary">single</span>
+                                }
+                            </button>
+                        </h2>
+                        <div id="@collapseId" class="accordion-collapse collapse" data-bs-parent="#baCats">
+                            <div class="accordion-body">
+                                @if (!c.IsCommunityVoted)
+                                {
+                                    <div class="text-muted">
+                                        This category is computed from statistics and will be shown once results are finalized.
+                                    </div>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-controller="BalkanaAwards" asp-action="Vote" asp-route-year="@Model.Year">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="CategoryId" value="@c.Id" />
+
+                                        <div class="row g-3">
+                                            <div class="col-12 col-lg-6">
+                                                <label class="form-label">Candidate search</label>
+                                                <select class="form-select ba-candidate-select"
+                                                        data-target-type="@c.TargetType"
+                                                        data-max-ranks="@c.MaxRanks"
+                                                        data-is-ranked="@c.IsRanked.ToString().ToLower()">
+                                                </select>
+                                                <div class="form-text text-muted">
+                                                    Search is lazy-loaded. After selecting, add it as Rank 1..N below.
+                                                </div>
+                                            </div>
+
+                                            <div class="col-12 col-lg-6">
+                                                <label class="form-label">Your ranks</label>
+                                                <div class="ba-ranks" data-max="@c.MaxRanks">
+                                                    @for (var r = 1; r <= (c.IsRanked ? c.MaxRanks : 1); r++)
+                                                    {
+                                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                                            <div class="badge bg-secondary" style="min-width: 54px;">#@r</div>
+                                                            <input type="hidden" name="Items[@(r-1)].Rank" value="@r" />
+                                                            <input type="hidden" class="ba-player" name="Items[@(r-1)].PlayerId" />
+                                                            <input type="hidden" class="ba-team" name="Items[@(r-1)].TeamId" />
+                                                            <input type="hidden" class="ba-tournament" name="Items[@(r-1)].TournamentId" />
+                                                            <input type="hidden" class="ba-user" name="Items[@(r-1)].CandidateUserId" />
+                                                            <input type="text" class="form-control form-control-sm ba-rank-display" placeholder="No selection" readonly />
+                                                            <button type="button" class="btn btn-sm btn-outline-danger ba-clear-rank">Clear</button>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-3 d-flex justify-content-end">
+                                            <button type="submit" class="btn btn-primary">Save vote</button>
+                                        </div>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(function () {
+            function endpointFor(targetType) {
+                if (targetType === 'Player') return '/admin/balkana-awards/search/players';
+                if (targetType === 'Team') return '/admin/balkana-awards/search/teams';
+                if (targetType === 'Tournament') return '/admin/balkana-awards/search/tournaments';
+                if (targetType === 'User') return '/admin/balkana-awards/search/users';
+                return null;
+            }
+
+            function initCandidateSelect($sel) {
+                var targetType = $sel.data('target-type');
+                var url = endpointFor(targetType);
+                if (!url) return;
+
+                $sel.select2({
+                    placeholder: 'Search...',
+                    allowClear: true,
+                    minimumInputLength: 2,
+                    width: '100%',
+                    ajax: {
+                        url: url,
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return { term: params.term, page: params.page || 1, pageSize: 20 };
+                        },
+                        processResults: function (data, params) {
+                            params.page = params.page || 1;
+                            return { results: data.results, pagination: { more: data.pagination ? data.pagination.more : false } };
+                        },
+                        cache: true
+                    }
+                });
+            }
+
+            $('.ba-candidate-select').each(function () { initCandidateSelect($(this)); });
+
+            // When candidate selected, fill the first empty rank slot.
+            $(document).on('select2:select', '.ba-candidate-select', function (e) {
+                var $sel = $(this);
+                var targetType = $sel.data('target-type');
+                var selected = e.params.data;
+
+                var $form = $sel.closest('form');
+                var $rows = $form.find('.ba-ranks .d-flex');
+                var filled = false;
+
+                $rows.each(function () {
+                    if (filled) return;
+                    var $row = $(this);
+                    var $display = $row.find('.ba-rank-display');
+                    if ($display.val()) return;
+
+                    // clear all hidden ids first
+                    $row.find('.ba-player,.ba-team,.ba-tournament,.ba-user').val('');
+
+                    if (targetType === 'Player') $row.find('.ba-player').val(selected.id);
+                    else if (targetType === 'Team') $row.find('.ba-team').val(selected.id);
+                    else if (targetType === 'Tournament') $row.find('.ba-tournament').val(selected.id);
+                    else if (targetType === 'User') $row.find('.ba-user').val(selected.id);
+
+                    $display.val(selected.text);
+                    filled = true;
+                });
+
+                // clear the select after assigning
+                $sel.val(null).trigger('change');
+            });
+
+            $(document).on('click', '.ba-clear-rank', function () {
+                var $row = $(this).closest('.d-flex');
+                $row.find('.ba-player,.ba-team,.ba-tournament,.ba-user').val('');
+                $row.find('.ba-rank-display').val('');
+            });
+        });
+    </script>
+}
+

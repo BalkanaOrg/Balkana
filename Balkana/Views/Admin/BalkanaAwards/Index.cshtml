@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Balkana Awards";
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-1">Balkana Awards</h1>
+            <div class="text-muted">Admin hub for the yearly Balkana Awards event.</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-light" asp-controller="Admin" asp-action="BalkanaAwardsPoll">Community poll</a>
+            <a class="btn btn-primary" asp-controller="Admin" asp-action="BalkanaAwardsManual">Manual award giving</a>
+        </div>
+    </div>
+
+    <div class="card bg-dark border-secondary">
+        <div class="card-body">
+            <div class="text-muted">
+                This section will contain:\n
+                <ul class="mb-0">
+                    <li>Voting window configuration + eligibility lists (Entry Fragger / AWPer / IGL)</li>
+                    <li>Manual trophy issuing with per-trophy icon uploads</li>
+                    <li>Yearly snapshot results for CS/LoL Player of the Year (#1-#10)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
