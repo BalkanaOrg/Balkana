@@ -201,10 +201,6 @@
                     <i class="fi fi-rr-info"></i>
                     <span>About Us</span>
                 </a>
-                <a asp-controller="Community" asp-action="Index" class="nav-link">
-                    <i class="fi fi-rr-users-alt"></i>
-                    <span>Community</span>
-                </a>
 
                 <!-- Author/Editor Navigation Section -->
                 @if (User.IsInRole("Author") || User.IsInRole("Editor"))
@@ -283,9 +279,9 @@
                 }
 
                 <!-- Mobile-only nav links (shown instead of dropdown on mobile) -->
-                <a href="#" class="nav-link mobile-only-link" data-page="fantasy">
-                    <i class="fi fi-rr-gamepad"></i>
-                    <span>Fantasy</span>
+                <a asp-controller="Community" asp-action="Index" class="nav-link">
+                    <i class="fi fi-rr-users-alt"></i>
+                    <span>Community</span>
                 </a>
                 <a asp-controller="Teams" asp-action="Index" asp-route-game="Counter-Strike" asp-route-year="2026" class="nav-link mobile-only-link" data-page="ranking">
                     <i class="fi fi-rr-star"></i>
@@ -311,9 +307,9 @@
                         <span>More</span>
                     </button>
                     <div class="dropdown-content">
-                        <a href="#" data-page="fantasy">
-                            <i class="fi fi-rr-gamepad"></i>
-                            Fantasy
+                        <a asp-controller="Community" asp-action="Index" class="nav-link">
+                            <i class="fi fi-rr-users-alt"></i>
+                            <span>Community</span>
                         </a>
                         <a asp-controller="Teams" asp-action="Index" asp-route-game="Counter-Strike" asp-route-year="2026" data-page="ranking">
                             <i class="fi fi-rr-star"></i>
