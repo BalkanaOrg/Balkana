@@ -8,6 +8,7 @@ namespace Balkana.Services.Teams.Models
         public string TournamentName { get; set; }
         public string? TournamentShortName { get; set; }
         public int? OpponentTeamId { get; set; }
+        public string? OpponentInformation { get; set; }
         public DateTime PlayedAt { get; set; }
         public string OpponentName { get; set; }
         public string OpponentTag { get; set; }

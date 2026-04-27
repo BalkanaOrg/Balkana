@@ -178,7 +178,7 @@ namespace Balkana.Controllers
 
         private async Task<List<object>> GetSeriesMatchStatsLoL(Series series)
         {
-            // In LoL, each "match" is a single game; the UI should label them "map 1", "map 2", etc.
+            // In LoL, each "match" is a single game; the UI should label them "Game 1", "Game 2", etc.
             var orderedMatches = series.Matches
                 .OrderBy(m => m.PlayedAt)
                 .ToList();
@@ -192,7 +192,7 @@ namespace Balkana.Controllers
                     continue;
 
                 var mapId = i + 1;
-                var mapName = $"map {mapId}";
+                var mapName = $"Game {mapId}";
 
                 var teamARounds = 0;
                 var teamBRounds = 0;
@@ -417,6 +417,12 @@ namespace Balkana.Controllers
                         g => g.Key,
                         g => g.OrderByDescending(t => t.StartDate).First().TeamId);
 
+                var playerIdToPositionId = transfers
+                    .GroupBy(t => t.PlayerId)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.OrderByDescending(t => t.StartDate).First().PositionId);
+
                 foreach (var s in stats)
                 {
                     if (!uuidMap.TryGetValue(s.PlayerUUID, out var playerId))
@@ -474,10 +480,24 @@ namespace Balkana.Controllers
 
                     // Keep winner/isWinner consistent with the series winner.
                     vm.IsWinner = isWinner;
+
+                    if (playerIdToPositionId.TryGetValue(playerId, out var posId))
+                        vm.LolPositionId = posId;
                 }
             }
 
-            return playerStats.Values.OrderBy(v => v.Team).ThenBy(v => v.PlayerName).ToList();
+            int LolRoleOrder(int? p)
+            {
+                if (p is int pos && pos >= 9 && pos <= 13) return pos - 9;
+                if (p.HasValue) return 20 + p.Value;
+                return 200;
+            }
+
+            return playerStats.Values
+                .OrderBy(v => v.Team)
+                .ThenBy(v => LolRoleOrder(v.LolPositionId))
+                .ThenBy(v => v.PlayerName)
+                .ToList();
         }
 
         [HttpGet]

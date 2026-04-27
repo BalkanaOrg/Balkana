@@ -198,7 +198,10 @@
                         <div class="match-card" data-map-id="@match.MapId">
                             <div class="match-header">
                                 <div class="map-info">
+                                    @if (!string.Equals(gameShortName, "LoL", StringComparison.OrdinalIgnoreCase))
+                                    {
                                     <img src="@match.MapImage" alt="@match.MapName" class="map-image" />
+                                    }
                                     <h4 class="map-name">@match.MapName</h4>
                                 </div>
                                 <div class="match-date">@(((DateTime)match.PlayedAt).ToString("MMM dd, HH:mm"))</div>

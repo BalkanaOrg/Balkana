@@ -8,6 +8,9 @@ namespace Balkana.Models.Series
         public string PlayerName { get; set; }
         public string Team { get; set; } // "Team1" / "Team2"
 
+        /// <summary>LoL roster position at match time (9–13 = Top, Jungle, Mid, ADC, Support).</summary>
+        public int? LolPositionId { get; set; }
+
         public int Kills { get; set; }
         public int Deaths { get; set; }
         public int Assists { get; set; }

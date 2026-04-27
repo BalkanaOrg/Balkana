@@ -277,7 +277,9 @@ namespace Balkana.Services.Tournaments
             var cs = 0;
             var dmg = 0;
             var objDmg = 0;
-            var totalGameMinutes = 0.0;
+
+            // One entry per match: minutes = GameDurationSeconds/60, counted once per MatchId
+            var minutesByMatchId = new Dictionary<int, double>();
 
             foreach (var s in rowStats)
             {
@@ -288,21 +290,29 @@ namespace Balkana.Services.Tournaments
                 cs += s.CreepScore;
                 dmg += s.TotalDamageToChampions ?? 0;
                 objDmg += s.TotalDamageToObjectives ?? 0;
-                if (s.Match is MatchLoL m)
-                    totalGameMinutes += m.GameDurationSeconds / 60.0;
+
+                if (!minutesByMatchId.ContainsKey(s.MatchId) && s.Match is MatchLoL m && m.GameDurationSeconds > 0)
+                    minutesByMatchId[s.MatchId] = m.GameDurationSeconds / 60.0;
             }
+
+            var totalGameMinutes = minutesByMatchId.Values.Sum();
 
             var games = rowStats.GroupBy(s => s.MatchId).Count();
             if (games < 1) games = 1;
             var kdaVal = d == 0 ? 1_000_000.0 + k + a : (k + a) / (double)d;
-            var dpm = totalGameMinutes > 0.01 ? dmg / totalGameMinutes : 0;
             var avgCs = cs / (double)games;
             var avgObj = objDmg / (double)games;
+
+            var usesTotalDmg = totalGameMinutes <= 0.01 && dmg > 0;
+            var dpm = totalGameMinutes > 0.01
+                ? dmg / totalGameMinutes
+                : usesTotalDmg ? dmg : 0;
 
             return new MVFormulaScore
             {
                 LolKdaValue = kdaVal,
                 LolDpm = dpm,
+                LolDpmUsesTotalDamage = usesTotalDmg,
                 LolVisionTotal = vision,
                 LolAverageCs = avgCs,
                 LolAverageObjectivesDmg = avgObj,

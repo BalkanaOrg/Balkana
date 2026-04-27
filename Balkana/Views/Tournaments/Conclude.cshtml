@@ -347,7 +347,7 @@
                                     @if (Model.IsLeagueOfLegendsTournament)
                                     {
                                         <p class="form-text text-white-50">
-                                            <strong>League of Legends (fixed per category):</strong> 5 KDA, 5 avg damage to champions / minute, 5 total vision score, 5 average CS per game, 3 average damage to objectives per game, plus A/B stream picks below. MVP match pool: finals only if ≤8 teams; finals + semis if 9+.
+                                            <strong>League of Legends (fixed per category):</strong> 5 KDA, 5 avg damage to champions per minute (or <strong>total</strong> damage to champions in that row when all game lengths are missing/0 in the data), 5 total vision score, 5 average CS per game, 3 average damage to objectives per game, plus A/B stream picks below. MVP match pool: finals only if ≤8 teams; finals + semis if 9+.
                                         </p>
                                         <div class="row mt-2">
                                             <div class="col-md-3">
@@ -469,7 +469,7 @@
                                                 @if (Model.IsLeagueOfLegendsTournament)
                                                 {
                                                     <th>KDA (pts)</th>
-                                                    <th>DPM (pts)</th>
+                                                    <th>@(Model.MVPCandidates.Any(c => c.FormulaScore.LolDpmUsesTotalDamage) ? "T.dmg / DPM (pts)" : "DPM (pts)")</th>
                                                     <th>Vision (pts)</th>
                                                     <th>CSØ (pts)</th>
                                                     <th>ObjØ (pts)</th>
@@ -499,7 +499,7 @@
                                                     @if (Model.IsLeagueOfLegendsTournament)
                                                     {
                                                         <td>@candidate.FormulaScore.LolKdaValue.ToString("F2") (@candidate.FormulaScore.LolKdaPoints.ToString("F0"))</td>
-                                                        <td>@candidate.FormulaScore.LolDpm.ToString("F1") (@candidate.FormulaScore.LolDpmPoints.ToString("F0"))</td>
+                                                        <td>@(candidate.FormulaScore.LolDpmUsesTotalDamage ? candidate.FormulaScore.LolDpm.ToString("F0") : candidate.FormulaScore.LolDpm.ToString("F1")) (@candidate.FormulaScore.LolDpmPoints.ToString("F0"))</td>
                                                         <td>@candidate.FormulaScore.LolVisionTotal (@candidate.FormulaScore.LolVisionPoints.ToString("F0"))</td>
                                                         <td>@candidate.FormulaScore.LolAverageCs.ToString("F1") (@candidate.FormulaScore.LolCsPoints.ToString("F0"))</td>
                                                         <td>@candidate.FormulaScore.LolAverageObjectivesDmg.ToString("F0") (@candidate.FormulaScore.LolObjectivesPoints.ToString("F0"))</td>
@@ -570,7 +570,7 @@
                                                 @if (Model.IsLeagueOfLegendsTournament)
                                                 {
                                                     <th>KDA (pts)</th>
-                                                    <th>DPM (pts)</th>
+                                                    <th>@(Model.EVPCandidates.Any(c => c.FormulaScore.LolDpmUsesTotalDamage) ? "T.dmg / DPM (pts)" : "DPM (pts)")</th>
                                                     <th>Vision (pts)</th>
                                                     <th>CSØ (pts)</th>
                                                     <th>ObjØ (pts)</th>
@@ -600,7 +600,7 @@
                                                     @if (Model.IsLeagueOfLegendsTournament)
                                                     {
                                                         <td>@candidate.FormulaScore.LolKdaValue.ToString("F2") (@candidate.FormulaScore.LolKdaPoints.ToString("F0"))</td>
-                                                        <td>@candidate.FormulaScore.LolDpm.ToString("F1") (@candidate.FormulaScore.LolDpmPoints.ToString("F0"))</td>
+                                                        <td>@(candidate.FormulaScore.LolDpmUsesTotalDamage ? candidate.FormulaScore.LolDpm.ToString("F0") : candidate.FormulaScore.LolDpm.ToString("F1")) (@candidate.FormulaScore.LolDpmPoints.ToString("F0"))</td>
                                                         <td>@candidate.FormulaScore.LolVisionTotal (@candidate.FormulaScore.LolVisionPoints.ToString("F0"))</td>
                                                         <td>@candidate.FormulaScore.LolAverageCs.ToString("F1") (@candidate.FormulaScore.LolCsPoints.ToString("F0"))</td>
                                                         <td>@candidate.FormulaScore.LolAverageObjectivesDmg.ToString("F0") (@candidate.FormulaScore.LolObjectivesPoints.ToString("F0"))</td>

@@ -1,12 +1,12 @@
 @model List<Balkana.Models.Series.LoLPlayerStatsViewModel>
 
 @functions {
-    string GetKDColorClass(double kd)
+    string GetKdaColorClass(double kda)
     {
-        if (kd >= 2.00) return "stat-dark-green";
-        if (kd >= 1.50) return "stat-light-green";
-        if (kd >= 1.10) return "stat-yellow";
-        if (kd >= 0.80) return "stat-light-red";
+        if (kda >= 5.00) return "stat-dark-green";
+        if (kda >= 3.50) return "stat-light-green";
+        if (kda >= 2.50) return "stat-yellow";
+        if (kda >= 1.50) return "stat-light-red";
         return "stat-dark-red";
     }
 }
@@ -28,7 +28,7 @@
                             <th>K</th>
                             <th>D</th>
                             <th>A</th>
-                            <th>K/D</th>
+                            <th>KDA</th>
                             <th>CS</th>
                             <th>Vision</th>
                             <th>Damage</th>
@@ -37,7 +37,7 @@
                     <tbody>
                         @foreach (var player in Model.Where(p => p.Team == "Team1"))
                         {
-                            var kd = player.Deaths > 0 ? (double)player.Kills / player.Deaths : player.Kills;
+                            var kda = player.Deaths > 0 ? (double)(player.Kills + player.Assists) / player.Deaths : player.Kills + player.Assists;
                             var hasIcons = !string.IsNullOrWhiteSpace(player.DDragonVersion) && !string.IsNullOrWhiteSpace(player.ChampionName) && player.ItemIds != null && player.ItemIds.Count > 0;
 
                             <tr class="@(player.IsWinner ? "winner-row" : "")">
@@ -74,7 +74,7 @@
                                 <td>@player.Kills</td>
                                 <td>@player.Deaths</td>
                                 <td>@player.Assists</td>
-                                <td class="@GetKDColorClass(kd)">@((player.Deaths > 0 ? kd.ToString("F2") : "∞"))</td>
+                                <td class="@GetKdaColorClass(kda)">@((player.Deaths > 0 ? kda.ToString("F2") : "∞"))</td>
                                 <td>@player.CreepScore</td>
                                 <td>@player.VisionScore</td>
                                 <td>@player.TotalDamageToChampions</td>
@@ -99,7 +99,7 @@
                             <th>K</th>
                             <th>D</th>
                             <th>A</th>
-                            <th>K/D</th>
+                            <th>KDA</th>
                             <th>CS</th>
                             <th>Vision</th>
                             <th>Damage</th>
@@ -108,7 +108,7 @@
                     <tbody>
                         @foreach (var player in Model.Where(p => p.Team == "Team2"))
                         {
-                            var kd = player.Deaths > 0 ? (double)player.Kills / player.Deaths : player.Kills;
+                            var kda = player.Deaths > 0 ? (double)(player.Kills + player.Assists) / player.Deaths : player.Kills + player.Assists;
                             var hasIcons = !string.IsNullOrWhiteSpace(player.DDragonVersion) && !string.IsNullOrWhiteSpace(player.ChampionName) && player.ItemIds != null && player.ItemIds.Count > 0;
 
                             <tr class="@(player.IsWinner ? "winner-row" : "")">
@@ -145,7 +145,7 @@
                                 <td>@player.Kills</td>
                                 <td>@player.Deaths</td>
                                 <td>@player.Assists</td>
-                                <td class="@GetKDColorClass(kd)">@((player.Deaths > 0 ? kd.ToString("F2") : "∞"))</td>
+                                <td class="@GetKdaColorClass(kda)">@((player.Deaths > 0 ? kda.ToString("F2") : "∞"))</td>
                                 <td>@player.CreepScore</td>
                                 <td>@player.VisionScore</td>
                                 <td>@player.TotalDamageToChampions</td>

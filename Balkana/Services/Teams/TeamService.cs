@@ -11,6 +11,7 @@ namespace Balkana.Services.Teams
     using Balkana.Data.Models;
     using Balkana.Services.Players.Models;
     using Microsoft.EntityFrameworkCore;
+    using Balkana.Data.Infrastructure.Extensions;
 
     public class TeamService : ITeamService
     {
@@ -533,6 +534,7 @@ namespace Balkana.Services.Teams
 
                 var t = match.Series?.Tournament;
                 var opponentTeamId = team.Id == match.TeamAId ? match.TeamBId : match.TeamAId;
+                Team? opponentEntity = team.Id == match.TeamAId ? match.TeamB : match.TeamA;
 
                 var row = new TeamMatchServiceModel
                 {
@@ -542,6 +544,7 @@ namespace Balkana.Services.Teams
                     TournamentName = t?.FullName ?? "",
                     TournamentShortName = t?.ShortName,
                     OpponentTeamId = opponentTeamId,
+                    OpponentInformation = opponentEntity?.GetInformation(),
                     PlayedAt = match.PlayedAt,
                     OpponentName = team.Id == match.TeamAId ? match.TeamB?.FullName : match.TeamA?.FullName,
                     OpponentTag = team.Id == match.TeamAId ? match.TeamB?.Tag : match.TeamA?.Tag,

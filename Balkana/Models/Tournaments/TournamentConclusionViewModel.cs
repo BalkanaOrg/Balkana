@@ -96,6 +96,8 @@ namespace Balkana.Models.Tournaments
         // League of Legends: raw metrics and per-category point awards
         public double LolKdaValue { get; set; }
         public double LolDpm { get; set; }
+        /// <summary>When true, <see cref="LolDpm"/> holds total damage to champions (no game duration) instead of DPM.</summary>
+        public bool LolDpmUsesTotalDamage { get; set; }
         public int LolVisionTotal { get; set; }
         public double LolAverageCs { get; set; }
         public double LolAverageObjectivesDmg { get; set; }

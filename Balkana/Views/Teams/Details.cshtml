@@ -292,8 +292,8 @@
                                     <th>Date</th>
                                     <th>Team</th>
                                     <th>Opponent</th>
-                                    <th class="lol-champ-col">Our <span class="d-none d-md-inline">squad</span></th>
-                                    <th class="lol-champ-col">They</th>
+                                    <th class="lol-champ-col">Team</th>
+                                    <th class="lol-champ-col">Opponent</th>
                                     <th>Tournament</th>
                                     <th>Result</th>
                                 </tr>
@@ -338,7 +338,7 @@
                                     <td onclick="event.stopPropagation()">
                                         @if (match.OpponentTeamId.HasValue)
                                         {
-                                            <a class="d-flex align-items-center text-decoration-none" href="@Url.Action("Details", "Teams", new { id = match.OpponentTeamId })" rel="nofollow">
+                                            <a class="d-flex align-items-center text-decoration-none" href="@(string.IsNullOrEmpty(match.OpponentInformation) ? Url.Action("Details", "Teams", new { id = match.OpponentTeamId }) : Url.Action("Details", "Teams", new { id = match.OpponentTeamId, information = match.OpponentInformation }))" rel="nofollow">
                                                 <div class="me-2">
                                                     <img src="@match.OpponentLogoUrl" alt="@match.OpponentName" style="width: 20px; height: 20px; object-fit: cover; border-radius: 3px;" 
                                                          onerror="this.src='https://ui-avatars.com/api/?name=@match.OpponentTag&background=random&color=fff&size=20'" />
