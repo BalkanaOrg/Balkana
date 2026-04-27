@@ -87,10 +87,11 @@ namespace Balkana.Controllers
                 // Get match statistics and player performance
                 if (string.Equals(series.Tournament?.Game?.ShortName, "LoL", StringComparison.OrdinalIgnoreCase))
                 {
-                    // LoL match cards (map 1..N) - player stats will be implemented in later steps of the plan.
+                    // LoL: per-game only (no combined "All Maps" stats).
                     var matchStats = await GetSeriesMatchStatsLoL(series);
                     ViewData["MatchStats"] = matchStats;
-                    ViewData["PlayerStats"] = await GetSeriesPlayerStatsLoL(series, mapId: null);
+                    ViewData["LolNoCombinedMapStats"] = true;
+                    ViewData["PlayerStats"] = await GetSeriesPlayerStatsLoL(series, mapId: 1);
                 }
                 else
                 {

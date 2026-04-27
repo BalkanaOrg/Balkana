@@ -204,9 +204,11 @@
                 <div class="tournament-conclude-body">
                     <form asp-action="Conclude" method="post" enctype="multipart/form-data">
                         <input asp-for="TournamentId" type="hidden" />
+                        <input asp-for="TournamentShortName" type="hidden" />
                         <input asp-for="TournamentName" type="hidden" />
                         <input asp-for="TotalTeams" type="hidden" />
                         <input asp-for="EliminationType" type="hidden" />
+                        <input asp-for="IsLeagueOfLegendsTournament" type="hidden" />
 
                         @if (Model.TeamPointsPreview.Count > 0)
                         {
@@ -215,10 +217,19 @@
                                     <h5><i class="fas fa-chart-bar"></i> Placement points preview</h5>
                                 </div>
                                 <div class="card-body">
-                                    <p class="form-text">
-                                        Each emergency substitute stint overlapping the tournament reduces the player points pool by 20% (capped at 100%).
-                                        The organisation receives 20% of the post-penalty player pool. Values use the current bracket state.
-                                    </p>
+                                    @if (Model.IsLeagueOfLegendsTournament)
+                                    {
+                                        <p class="form-text">
+                                            League of Legends: after emergency-substitute penalty, the full <strong>team</strong> placement points are stored on the organisation placement row (no split to individual players, no additional 20% to org).
+                                        </p>
+                                    }
+                                    else
+                                    {
+                                        <p class="form-text">
+                                            Each emergency substitute stint overlapping the tournament reduces the player points pool by 20% (capped at 100%).
+                                            The organisation receives 20% of the post-penalty player pool. Values use the current bracket state.
+                                        </p>
+                                    }
                                     @if (Model.TeamPointsPreview.Any(t => t.BracketPreviewIncomplete))
                                     {
                                         <div class="alert alert-info">
@@ -235,8 +246,15 @@
                                                 <th>Pl.</th>
                                                 <th>Prize</th>
                                                 <th>Base P</th>
-                                                <th>Player pool</th>
-                                                <th>Org 20%</th>
+                                                @if (Model.IsLeagueOfLegendsTournament)
+                                                {
+                                                    <th>Team circuit</th>
+                                                }
+                                                else
+                                                {
+                                                    <th>Player pool</th>
+                                                    <th>Org 20%</th>
+                                                }
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -249,8 +267,15 @@
                                                     <td>@(row.Placement?.ToString() ?? "—")</td>
                                                     <td>@(row.PrizePoolAwarded is > 0 ? $"${row.PrizePoolAwarded:N2}" : "—")</td>
                                                     <td>@(row.BasePointsFromPlacement?.ToString() ?? "—")</td>
-                                                    <td>@(row.EffectivePlayerPool?.ToString() ?? "—")</td>
-                                                    <td>@(row.OrganisationPoints?.ToString() ?? "—")</td>
+                                                    @if (Model.IsLeagueOfLegendsTournament)
+                                                    {
+                                                        <td>@(row.EffectivePlayerPool?.ToString() ?? "—")</td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td>@(row.EffectivePlayerPool?.ToString() ?? "—")</td>
+                                                        <td>@(row.OrganisationPoints?.ToString() ?? "—")</td>
+                                                    }
                                                 </tr>
                                             }
                                             </tbody>
@@ -319,52 +344,71 @@
                                 <!-- Formula Configuration -->
                                 <div id="mvpFormulaConfig" class="mt-4">
                                     <h6>MVP Formula Configuration</h6>
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <label asp-for="MVFormulaConfig.HLTVRatingPoints" class="form-label">HLTV Rating Points</label>
-                                            <input asp-for="MVFormulaConfig.HLTVRatingPoints" class="form-control" type="number" min="0" value="5" />
+                                    @if (Model.IsLeagueOfLegendsTournament)
+                                    {
+                                        <p class="form-text text-white-50">
+                                            <strong>League of Legends (fixed per category):</strong> 5 KDA, 5 avg damage to champions / minute, 5 total vision score, 5 average CS per game, 3 average damage to objectives per game, plus A/B stream picks below. MVP match pool: finals only if ≤8 teams; finals + semis if 9+.
+                                        </p>
+                                        <div class="row mt-2">
+                                            <div class="col-md-3">
+                                                <label asp-for="MVFormulaConfig.Commentator1Points" class="form-label">@Model.MVFormulaConfig.Commentator1Name Points</label>
+                                                <input asp-for="MVFormulaConfig.Commentator1Points" class="form-control" type="number" min="0" value="5" />
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label asp-for="MVFormulaConfig.Commentator2Points" class="form-label">@Model.MVFormulaConfig.Commentator2Name Points</label>
+                                                <input asp-for="MVFormulaConfig.Commentator2Points" class="form-control" type="number" min="0" value="5" />
+                                            </div>
                                         </div>
-                                        <div class="col-md-3">
-                                            <label asp-for="MVFormulaConfig.KillPerRoundPoints" class="form-label">Kill/Round Points</label>
-                                            <input asp-for="MVFormulaConfig.KillPerRoundPoints" class="form-control" type="number" min="0" value="5" />
+                                    }
+                                    else
+                                    {
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <label asp-for="MVFormulaConfig.HLTVRatingPoints" class="form-label">HLTV Rating Points</label>
+                                                <input asp-for="MVFormulaConfig.HLTVRatingPoints" class="form-control" type="number" min="0" value="5" />
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label asp-for="MVFormulaConfig.KillPerRoundPoints" class="form-label">Kill/Round Points</label>
+                                                <input asp-for="MVFormulaConfig.KillPerRoundPoints" class="form-control" type="number" min="0" value="5" />
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label asp-for="MVFormulaConfig.ImpactPoints" class="form-label">Impact Points</label>
+                                                <input asp-for="MVFormulaConfig.ImpactPoints" class="form-control" type="number" min="0" value="5" />
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label asp-for="MVFormulaConfig.UtilityScorePoints" class="form-label">Utility Score Points</label>
+                                                <input asp-for="MVFormulaConfig.UtilityScorePoints" class="form-control" type="number" min="0" value="5" />
+                                            </div>
                                         </div>
-                                        <div class="col-md-3">
-                                            <label asp-for="MVFormulaConfig.ImpactPoints" class="form-label">Impact Points</label>
-                                            <input asp-for="MVFormulaConfig.ImpactPoints" class="form-control" type="number" min="0" value="5" />
+                                        <div class="row mt-2">
+                                            <div class="col-md-3">
+                                                <label asp-for="MVFormulaConfig.FirstKillsPoints" class="form-label">First Kills Points</label>
+                                                <input asp-for="MVFormulaConfig.FirstKillsPoints" class="form-control" type="number" min="0" value="3" />
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label asp-for="MVFormulaConfig.SniperPoints" class="form-label">Sniper Points</label>
+                                                <input asp-for="MVFormulaConfig.SniperPoints" class="form-control" type="number" min="0" value="3" />
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label asp-for="MVFormulaConfig.ADRPoints" class="form-label">ADR Points</label>
+                                                <input asp-for="MVFormulaConfig.ADRPoints" class="form-control" type="number" min="0" value="3" />
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label asp-for="MVFormulaConfig.DPRPoints" class="form-label">DPR Points (Lowest Wins)</label>
+                                                <input asp-for="MVFormulaConfig.DPRPoints" class="form-control" type="number" min="0" value="2" />
+                                            </div>
                                         </div>
-                                        <div class="col-md-3">
-                                            <label asp-for="MVFormulaConfig.UtilityScorePoints" class="form-label">Utility Score Points</label>
-                                            <input asp-for="MVFormulaConfig.UtilityScorePoints" class="form-control" type="number" min="0" value="5" />
+                                        <div class="row mt-2">
+                                            <div class="col-md-3">
+                                                <label asp-for="MVFormulaConfig.Commentator1Points" class="form-label">@Model.MVFormulaConfig.Commentator1Name Points</label>
+                                                <input asp-for="MVFormulaConfig.Commentator1Points" class="form-control" type="number" min="0" value="5" />
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label asp-for="MVFormulaConfig.Commentator2Points" class="form-label">@Model.MVFormulaConfig.Commentator2Name Points</label>
+                                                <input asp-for="MVFormulaConfig.Commentator2Points" class="form-control" type="number" min="0" value="5" />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="row mt-2">
-                                        <div class="col-md-3">
-                                            <label asp-for="MVFormulaConfig.FirstKillsPoints" class="form-label">First Kills Points</label>
-                                            <input asp-for="MVFormulaConfig.FirstKillsPoints" class="form-control" type="number" min="0" value="3" />
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label asp-for="MVFormulaConfig.SniperPoints" class="form-label">Sniper Points</label>
-                                            <input asp-for="MVFormulaConfig.SniperPoints" class="form-control" type="number" min="0" value="3" />
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label asp-for="MVFormulaConfig.ADRPoints" class="form-label">ADR Points</label>
-                                            <input asp-for="MVFormulaConfig.ADRPoints" class="form-control" type="number" min="0" value="3" />
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label asp-for="MVFormulaConfig.DPRPoints" class="form-label">DPR Points (Lowest Wins)</label>
-                                            <input asp-for="MVFormulaConfig.DPRPoints" class="form-control" type="number" min="0" value="2" />
-                                        </div>
-                                    </div>
-                                    <div class="row mt-2">
-                                        <div class="col-md-3">
-                                            <label asp-for="MVFormulaConfig.Commentator1Points" class="form-label">@Model.MVFormulaConfig.Commentator1Name Points</label>
-                                            <input asp-for="MVFormulaConfig.Commentator1Points" class="form-control" type="number" min="0" value="5" />
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label asp-for="MVFormulaConfig.Commentator2Points" class="form-label">@Model.MVFormulaConfig.Commentator2Name Points</label>
-                                            <input asp-for="MVFormulaConfig.Commentator2Points" class="form-control" type="number" min="0" value="5" />
-                                        </div>
-                                    </div>
+                                    }
                                 </div>
 
                                 <!-- Commentator Selection -->
@@ -421,15 +465,28 @@
                                             <tr>
                                                 <th>Player</th>
                                                 <th>Team</th>
-                                                <th>Total Score</th>
-                                                <th>HLTV</th>
-                                                <th>K/R</th>
-                                                <th>Impact</th>
-                                                <th>Utility</th>
-                                                <th>FK</th>
-                                                <th>Sniper</th>
-                                                <th>ADR</th>
-                                                <th>DPR</th>
+                                                <th>Total</th>
+                                                @if (Model.IsLeagueOfLegendsTournament)
+                                                {
+                                                    <th>KDA (pts)</th>
+                                                    <th>DPM (pts)</th>
+                                                    <th>Vision (pts)</th>
+                                                    <th>CSØ (pts)</th>
+                                                    <th>ObjØ (pts)</th>
+                                                    <th>@(Model.MVFormulaConfig.Commentator1Name)</th>
+                                                    <th>@(Model.MVFormulaConfig.Commentator2Name)</th>
+                                                }
+                                                else
+                                                {
+                                                    <th>HLTV</th>
+                                                    <th>K/R</th>
+                                                    <th>Impact</th>
+                                                    <th>Utility</th>
+                                                    <th>FK</th>
+                                                    <th>Sniper</th>
+                                                    <th>ADR</th>
+                                                    <th>DPR</th>
+                                                }
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -439,14 +496,27 @@
                                                     <td>@candidate.PlayerName</td>
                                                     <td>@candidate.TeamName</td>
                                                     <td><strong>@candidate.FormulaScore.TotalScore.ToString("F2")</strong></td>
-                                                    <td>@candidate.FormulaScore.HLTVRatingScore.ToString("F2")</td>
-                                                    <td>@candidate.FormulaScore.KillPerRoundScore.ToString("F2")</td>
-                                                    <td>@candidate.FormulaScore.ImpactScore.ToString("F2")</td>
-                                                    <td>@candidate.FormulaScore.UtilityScore.ToString("F2")</td>
-                                                    <td>@candidate.FormulaScore.FirstKillsScore.ToString("F0")</td>
-                                                    <td>@candidate.FormulaScore.SniperScore.ToString("F0")</td>
-                                                    <td>@candidate.FormulaScore.ADRScore.ToString("F2")</td>
-                                                    <td>@candidate.FormulaScore.DPRScore.ToString("F2")</td>
+                                                    @if (Model.IsLeagueOfLegendsTournament)
+                                                    {
+                                                        <td>@candidate.FormulaScore.LolKdaValue.ToString("F2") (@candidate.FormulaScore.LolKdaPoints.ToString("F0"))</td>
+                                                        <td>@candidate.FormulaScore.LolDpm.ToString("F1") (@candidate.FormulaScore.LolDpmPoints.ToString("F0"))</td>
+                                                        <td>@candidate.FormulaScore.LolVisionTotal (@candidate.FormulaScore.LolVisionPoints.ToString("F0"))</td>
+                                                        <td>@candidate.FormulaScore.LolAverageCs.ToString("F1") (@candidate.FormulaScore.LolCsPoints.ToString("F0"))</td>
+                                                        <td>@candidate.FormulaScore.LolAverageObjectivesDmg.ToString("F0") (@candidate.FormulaScore.LolObjectivesPoints.ToString("F0"))</td>
+                                                        <td>@candidate.FormulaScore.Commentator1Score.ToString("F0")</td>
+                                                        <td>@candidate.FormulaScore.Commentator2Score.ToString("F0")</td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td>@candidate.FormulaScore.HLTVRatingScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.KillPerRoundScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.ImpactScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.UtilityScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.FirstKillsScore.ToString("F0")</td>
+                                                        <td>@candidate.FormulaScore.SniperScore.ToString("F0")</td>
+                                                        <td>@candidate.FormulaScore.ADRScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.DPRScore.ToString("F2")</td>
+                                                    }
                                                 </tr>
                                             }
                                             </tbody>
@@ -496,15 +566,28 @@
                                             <tr>
                                                 <th>Player</th>
                                                 <th>Team</th>
-                                                <th>Total Score</th>
-                                                <th>HLTV</th>
-                                                <th>K/R</th>
-                                                <th>Impact</th>
-                                                <th>Utility</th>
-                                                <th>FK</th>
-                                                <th>Sniper</th>
-                                                <th>ADR</th>
-                                                <th>DPR</th>
+                                                <th>Total</th>
+                                                @if (Model.IsLeagueOfLegendsTournament)
+                                                {
+                                                    <th>KDA (pts)</th>
+                                                    <th>DPM (pts)</th>
+                                                    <th>Vision (pts)</th>
+                                                    <th>CSØ (pts)</th>
+                                                    <th>ObjØ (pts)</th>
+                                                    <th>@(Model.MVFormulaConfig.Commentator1Name)</th>
+                                                    <th>@(Model.MVFormulaConfig.Commentator2Name)</th>
+                                                }
+                                                else
+                                                {
+                                                    <th>HLTV</th>
+                                                    <th>K/R</th>
+                                                    <th>Impact</th>
+                                                    <th>Utility</th>
+                                                    <th>FK</th>
+                                                    <th>Sniper</th>
+                                                    <th>ADR</th>
+                                                    <th>DPR</th>
+                                                }
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -514,14 +597,27 @@
                                                     <td>@candidate.PlayerName</td>
                                                     <td>@candidate.TeamName</td>
                                                     <td><strong>@candidate.FormulaScore.TotalScore.ToString("F2")</strong></td>
-                                                    <td>@candidate.FormulaScore.HLTVRatingScore.ToString("F2")</td>
-                                                    <td>@candidate.FormulaScore.KillPerRoundScore.ToString("F2")</td>
-                                                    <td>@candidate.FormulaScore.ImpactScore.ToString("F2")</td>
-                                                    <td>@candidate.FormulaScore.UtilityScore.ToString("F2")</td>
-                                                    <td>@candidate.FormulaScore.FirstKillsScore.ToString("F0")</td>
-                                                    <td>@candidate.FormulaScore.SniperScore.ToString("F0")</td>
-                                                    <td>@candidate.FormulaScore.ADRScore.ToString("F2")</td>
-                                                    <td>@candidate.FormulaScore.DPRScore.ToString("F2")</td>
+                                                    @if (Model.IsLeagueOfLegendsTournament)
+                                                    {
+                                                        <td>@candidate.FormulaScore.LolKdaValue.ToString("F2") (@candidate.FormulaScore.LolKdaPoints.ToString("F0"))</td>
+                                                        <td>@candidate.FormulaScore.LolDpm.ToString("F1") (@candidate.FormulaScore.LolDpmPoints.ToString("F0"))</td>
+                                                        <td>@candidate.FormulaScore.LolVisionTotal (@candidate.FormulaScore.LolVisionPoints.ToString("F0"))</td>
+                                                        <td>@candidate.FormulaScore.LolAverageCs.ToString("F1") (@candidate.FormulaScore.LolCsPoints.ToString("F0"))</td>
+                                                        <td>@candidate.FormulaScore.LolAverageObjectivesDmg.ToString("F0") (@candidate.FormulaScore.LolObjectivesPoints.ToString("F0"))</td>
+                                                        <td>@candidate.FormulaScore.Commentator1Score.ToString("F0")</td>
+                                                        <td>@candidate.FormulaScore.Commentator2Score.ToString("F0")</td>
+                                                    }
+                                                    else
+                                                    {
+                                                        <td>@candidate.FormulaScore.HLTVRatingScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.KillPerRoundScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.ImpactScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.UtilityScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.FirstKillsScore.ToString("F0")</td>
+                                                        <td>@candidate.FormulaScore.SniperScore.ToString("F0")</td>
+                                                        <td>@candidate.FormulaScore.ADRScore.ToString("F2")</td>
+                                                        <td>@candidate.FormulaScore.DPRScore.ToString("F2")</td>
+                                                    }
                                                 </tr>
                                             }
                                             </tbody>
@@ -533,7 +629,7 @@
 
                         <!-- Action Buttons -->
                         <div class="d-flex justify-content-between">
-                            <a asp-action="Details" asp-route-id="@Model.TournamentId" class="btn btn-secondary">
+                            <a asp-action="Details" asp-route-id="@(string.IsNullOrWhiteSpace(Model.TournamentShortName) ? Model.TournamentId.ToString() : Model.TournamentShortName)" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left"></i> Back to Tournament
                             </a>
                             <button type="submit" class="btn btn-success">

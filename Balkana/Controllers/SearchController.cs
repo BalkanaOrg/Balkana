@@ -74,7 +74,7 @@ namespace Balkana.Controllers
                     shortName = t.ShortName,
                     type = "tournament",
                     game = t.Game.FullName,
-                    url = $"/Tournaments/Details/{t.Id}"
+                    url = $"/Tournaments/Details/{t.ShortName}"
                 })
                 .ToListAsync();
 

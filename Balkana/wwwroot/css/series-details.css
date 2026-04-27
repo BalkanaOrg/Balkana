@@ -1,7 +1,7 @@
 .series-details-container {
-    max-width: 1400px;
+    max-width: 1700px;
     margin: 0 auto;
-    padding: 40px 20px;
+    padding: 40px 24px;
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(10, 10, 26, 0.9) 100%);
     border-radius: 20px;
     backdrop-filter: blur(20px);

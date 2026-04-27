@@ -1,3 +1,4 @@
+using System;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -164,7 +165,7 @@ namespace Balkana.Services.Discord
         {
             var sb = new System.Text.StringBuilder();
             sb.AppendLine($"# {dto.TournamentName} Results");
-            sb.AppendLine($"{baseUrl}/Tournaments/Details/{dto.TournamentId}");
+            sb.AppendLine($"{baseUrl}/Tournaments/Details/{Uri.EscapeDataString(dto.TournamentDetailsRouteSegment)}");
             sb.AppendLine();
             sb.AppendLine("(On Discord, a composite PNG with team logos is attached to the message.)");
             sb.AppendLine();
@@ -215,7 +216,7 @@ namespace Balkana.Services.Discord
             string mvpIconUrl,
             string evpIconUrl)
         {
-            var tournamentUrl = $"{baseUrl}/Tournaments/Details/{dto.TournamentId}";
+            var tournamentUrl = $"{baseUrl}/Tournaments/Details/{Uri.EscapeDataString(dto.TournamentDetailsRouteSegment)}";
             var attachmentRef = $"attachment://{TournamentResultsCompositeRenderer.AttachmentFilename}";
 
             var statsUrl = $"{baseUrl}/stats/tournament?tournamentid={dto.TournamentId}";

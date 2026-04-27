@@ -20,6 +20,16 @@ namespace Balkana.Services.Tournaments
 
             if (tournament == null) return new List<PlayerMVPCandidate>();
 
+            if (IsLeagueOfLegendsTournament(tournament))
+            {
+                var mvpLol = await BuildLolMvpCandidatesAsync(
+                    tournamentId, GetEligibleSeriesForMVP(tournament), formulaConfig);
+                return mvpLol
+                    .OrderByDescending(p => p.FormulaScore.LolDpm)
+                    .ThenByDescending(p => p.FormulaScore.LolKdaValue)
+                    .ToList();
+            }
+
             // Determine which matches to include based on tournament size
             var eligibleSeries = GetEligibleSeriesForMVP(tournament);
             var seriesIds = eligibleSeries.Select(s => s.Id).ToList();
@@ -42,7 +52,7 @@ namespace Balkana.Services.Tournaments
                 var playerUUID = group.Key;
 
                 // Get player from GameProfile using UUID
-                var player = await GetPlayerByUUIDAsync(playerUUID);
+                var player = await GetPlayerByFaceitUuidAsync(playerUUID);
                 if (player == null) continue;
 
                 // Get player's team from the tournament
@@ -71,6 +81,16 @@ namespace Balkana.Services.Tournaments
 
             if (tournament == null) return new List<PlayerEVPCandidate>();
 
+            if (IsLeagueOfLegendsTournament(tournament))
+            {
+                var evpLol = await BuildLolEvpCandidatesAsync(
+                    tournamentId, GetEligibleSeriesForEVP(tournament), formulaConfig);
+                return evpLol
+                    .OrderByDescending(p => p.FormulaScore.LolDpm)
+                    .ThenByDescending(p => p.FormulaScore.LolKdaValue)
+                    .ToList();
+            }
+
             // Determine which matches to include based on tournament size
             var eligibleSeries = GetEligibleSeriesForEVP(tournament);
             var seriesIds = eligibleSeries.Select(s => s.Id).ToList();
@@ -93,7 +113,7 @@ namespace Balkana.Services.Tournaments
                 var playerUUID = group.Key;
 
                 // Get player from GameProfile using UUID
-                var player = await GetPlayerByUUIDAsync(playerUUID);
+                var player = await GetPlayerByFaceitUuidAsync(playerUUID);
                 if (player == null) continue;
 
                 // Get player's team from the tournament
@@ -120,18 +140,31 @@ namespace Balkana.Services.Tournaments
         {
             return await _context.Tournaments
                 .AsSplitQuery()
+                .Include(t => t.Game)
                 .Include(t => t.Series)
                 .Include(t => t.TournamentTeams)
                 .FirstOrDefaultAsync(t => t.Id == tournamentId);
         }
 
+        private static bool IsLeagueOfLegendsTournament(Tournament? tournament) =>
+            tournament != null && (tournament.GameId == 2
+                || string.Equals(tournament.Game?.ShortName, "LoL", StringComparison.OrdinalIgnoreCase));
+
         /// <summary>
-        /// Formula MVP pool: finals only if &lt; 16 teams; semifinals + finals if 16+ teams.
+        /// CS2: finals only if &amp;lt; 16 teams; semis+finals if 16+.
+        /// LoL: finals only if ≤8 teams; semis+finals if 9+.
         /// </summary>
         private List<Balkana.Data.Models.Series> GetEligibleSeriesForMVP(Tournament tournament)
         {
             var allSeries = tournament.Series.ToList();
             var teamCount = tournament.TournamentTeams.Count;
+
+            if (IsLeagueOfLegendsTournament(tournament))
+            {
+                if (teamCount > 8)
+                    return GetFinalAndSemiFinalSeries(allSeries);
+                return GetFinalSeries(allSeries);
+            }
 
             if (teamCount >= 16)
                 return GetFinalAndSemiFinalSeries(allSeries);
@@ -233,11 +266,130 @@ namespace Balkana.Services.Tournaments
             };
         }
 
+        private static MVFormulaScore CalculateLolRawScore(List<PlayerStatistic_LoL> rowStats, MVFormulaConfiguration _config)
+        {
+            if (!rowStats.Any()) return new MVFormulaScore();
+
+            var k = 0;
+            var a = 0;
+            var d = 0;
+            var vision = 0;
+            var cs = 0;
+            var dmg = 0;
+            var objDmg = 0;
+            var totalGameMinutes = 0.0;
+
+            foreach (var s in rowStats)
+            {
+                k += s.Kills ?? 0;
+                a += s.Assists ?? 0;
+                d += s.Deaths ?? 0;
+                vision += s.VisionScore;
+                cs += s.CreepScore;
+                dmg += s.TotalDamageToChampions ?? 0;
+                objDmg += s.TotalDamageToObjectives ?? 0;
+                if (s.Match is MatchLoL m)
+                    totalGameMinutes += m.GameDurationSeconds / 60.0;
+            }
+
+            var games = rowStats.GroupBy(s => s.MatchId).Count();
+            if (games < 1) games = 1;
+            var kdaVal = d == 0 ? 1_000_000.0 + k + a : (k + a) / (double)d;
+            var dpm = totalGameMinutes > 0.01 ? dmg / totalGameMinutes : 0;
+            var avgCs = cs / (double)games;
+            var avgObj = objDmg / (double)games;
+
+            return new MVFormulaScore
+            {
+                LolKdaValue = kdaVal,
+                LolDpm = dpm,
+                LolVisionTotal = vision,
+                LolAverageCs = avgCs,
+                LolAverageObjectivesDmg = avgObj,
+                Commentator1Score = 0,
+                Commentator2Score = 0,
+                TotalScore = 0
+            };
+        }
+
+        private async Task<List<PlayerMVPCandidate>> BuildLolMvpCandidatesAsync(
+            int tournamentId,
+            List<Balkana.Data.Models.Series> eligibleSeries,
+            MVFormulaConfiguration formulaConfig)
+        {
+            return await BuildLolPlayerListAsync<PlayerMVPCandidate>(tournamentId, eligibleSeries, formulaConfig, (a, t, s, c) => new PlayerMVPCandidate
+            {
+                PlayerId = a.Id,
+                PlayerName = a.Nickname,
+                TeamName = t.FullName,
+                TeamId = t.Id,
+                IsInEligibleMatches = true,
+                FormulaScore = c
+            });
+        }
+
+        private async Task<List<PlayerEVPCandidate>> BuildLolEvpCandidatesAsync(
+            int tournamentId,
+            List<Balkana.Data.Models.Series> eligibleSeries,
+            MVFormulaConfiguration formulaConfig)
+        {
+            return await BuildLolPlayerListAsync<PlayerEVPCandidate>(tournamentId, eligibleSeries, formulaConfig, (a, t, s, c) => new PlayerEVPCandidate
+            {
+                PlayerId = a.Id,
+                PlayerName = a.Nickname,
+                TeamName = t.FullName,
+                TeamId = t.Id,
+                IsInEligibleMatches = true,
+                FormulaScore = c
+            });
+        }
+
+        private async Task<List<TC>> BuildLolPlayerListAsync<TC>(
+            int tournamentId,
+            List<Balkana.Data.Models.Series> eligibleSeries,
+            MVFormulaConfiguration formulaConfig,
+            Func<Player, Team, List<PlayerStatistic_LoL>, MVFormulaScore, TC> build)
+        {
+            var seriesIds = eligibleSeries.Select(s => s.Id).ToList();
+            if (seriesIds.Count == 0)
+                return new List<TC>();
+
+            var playerStats = await _context.PlayerStatsLoL
+                .Include(ps => ps.Match)
+                    .ThenInclude(m => m!.Series)
+                .Where(ps => seriesIds.Contains(ps.Match.SeriesId) && ps.Source == "RIOT")
+                .ToListAsync();
+
+            var outList = new List<TC>();
+            var groups = playerStats.GroupBy(ps => ps.PlayerUUID);
+            foreach (var group in groups)
+            {
+                var rowStats = group.ToList();
+                var player = await GetPlayerByRiotPuuidAsync(group.Key);
+                if (player == null) continue;
+                var team = await GetPlayerTeamInTournamentAsync(tournamentId, player.Id);
+                if (team == null) continue;
+                var raw = CalculateLolRawScore(rowStats, formulaConfig);
+                outList.Add(build(player, team, rowStats, raw));
+            }
+
+            return outList;
+        }
+
         public async Task<List<PlayerMVPCandidate>> CalculateRankedMVPCandidatesAsync(int tournamentId, MVFormulaConfiguration formulaConfig)
         {
             var tournament = await LoadTournamentForMvpEvpAsync(tournamentId);
 
             if (tournament == null) return new List<PlayerMVPCandidate>();
+
+            if (IsLeagueOfLegendsTournament(tournament))
+            {
+                var lolMvp = await BuildLolMvpCandidatesAsync(
+                    tournamentId, GetEligibleSeriesForMVP(tournament), formulaConfig);
+                return CalculateRankedPointsLolMvp(lolMvp, formulaConfig)
+                    .OrderByDescending(c => c.FormulaScore.TotalScore)
+                    .ToList();
+            }
 
             // Determine which matches to include based on tournament size
             var eligibleSeries = GetEligibleSeriesForMVP(tournament);
@@ -261,7 +413,7 @@ namespace Balkana.Services.Tournaments
                 var playerUUID = group.Key;
 
                 // Get player from GameProfile using UUID
-                var player = await GetPlayerByUUIDAsync(playerUUID);
+                var player = await GetPlayerByFaceitUuidAsync(playerUUID);
                 if (player == null) continue;
 
                 // Get player's team from the tournament
@@ -293,6 +445,15 @@ namespace Balkana.Services.Tournaments
 
             if (tournament == null) return new List<PlayerEVPCandidate>();
 
+            if (IsLeagueOfLegendsTournament(tournament))
+            {
+                var lolEvp = await BuildLolEvpCandidatesAsync(
+                    tournamentId, GetEligibleSeriesForEVP(tournament), formulaConfig);
+                return CalculateRankedPointsLolEvp(lolEvp, formulaConfig)
+                    .OrderByDescending(c => c.FormulaScore.TotalScore)
+                    .ToList();
+            }
+
             // Determine which matches to include based on tournament size
             var eligibleSeries = GetEligibleSeriesForEVP(tournament);
             var seriesIds = eligibleSeries.Select(s => s.Id).ToList();
@@ -315,7 +476,7 @@ namespace Balkana.Services.Tournaments
                 var playerUUID = group.Key;
 
                 // Get player from GameProfile using UUID
-                var player = await GetPlayerByUUIDAsync(playerUUID);
+                var player = await GetPlayerByFaceitUuidAsync(playerUUID);
                 if (player == null) continue;
 
                 // Get player's team from the tournament
@@ -339,6 +500,120 @@ namespace Balkana.Services.Tournaments
             var rankedCandidates = CalculateRankedPointsEVP(candidates, formulaConfig);
 
             return rankedCandidates.OrderByDescending(c => c.FormulaScore.TotalScore).ToList();
+        }
+
+        private const int LolKdaCategoryPoints = 5;
+        private const int LolDpmCategoryPoints = 5;
+        private const int LolVisionCategoryPoints = 5;
+        private const int LolCsCategoryPoints = 5;
+        private const int LolObjectivesCategoryPoints = 3;
+
+        private static List<PlayerMVPCandidate> CalculateRankedPointsLolMvp(
+            List<PlayerMVPCandidate> candidates, MVFormulaConfiguration config)
+        {
+            if (candidates.Count == 0) return candidates;
+
+            var kda = candidates.OrderByDescending(c => c.FormulaScore.LolKdaValue).First();
+            var dpm = candidates.OrderByDescending(c => c.FormulaScore.LolDpm).First();
+            var vis = candidates.OrderByDescending(c => c.FormulaScore.LolVisionTotal).First();
+            var csx = candidates.OrderByDescending(c => c.FormulaScore.LolAverageCs).First();
+            var obj = candidates.OrderByDescending(c => c.FormulaScore.LolAverageObjectivesDmg).First();
+
+            foreach (var c in candidates)
+            {
+                c.FormulaScore.LolKdaPoints = 0;
+                c.FormulaScore.LolDpmPoints = 0;
+                c.FormulaScore.LolVisionPoints = 0;
+                c.FormulaScore.LolCsPoints = 0;
+                c.FormulaScore.LolObjectivesPoints = 0;
+                c.FormulaScore.Commentator1Score = 0;
+                c.FormulaScore.Commentator2Score = 0;
+                c.FormulaScore.TotalScore = 0;
+            }
+
+            kda.FormulaScore.LolKdaPoints = LolKdaCategoryPoints;
+            dpm.FormulaScore.LolDpmPoints = LolDpmCategoryPoints;
+            vis.FormulaScore.LolVisionPoints = LolVisionCategoryPoints;
+            csx.FormulaScore.LolCsPoints = LolCsCategoryPoints;
+            obj.FormulaScore.LolObjectivesPoints = LolObjectivesCategoryPoints;
+
+            if (config.Commentator1SelectedPlayerId.HasValue)
+            {
+                var a = candidates.FirstOrDefault(p => p.PlayerId == config.Commentator1SelectedPlayerId.Value);
+                if (a != null) a.FormulaScore.Commentator1Score = config.Commentator1Points;
+            }
+            if (config.Commentator2SelectedPlayerId.HasValue)
+            {
+                var a = candidates.FirstOrDefault(p => p.PlayerId == config.Commentator2SelectedPlayerId.Value);
+                if (a != null) a.FormulaScore.Commentator2Score = config.Commentator2Points;
+            }
+
+            foreach (var c in candidates)
+            {
+                c.FormulaScore.TotalScore = c.FormulaScore.LolKdaPoints
+                    + c.FormulaScore.LolDpmPoints
+                    + c.FormulaScore.LolVisionPoints
+                    + c.FormulaScore.LolCsPoints
+                    + c.FormulaScore.LolObjectivesPoints
+                    + c.FormulaScore.Commentator1Score
+                    + c.FormulaScore.Commentator2Score;
+            }
+
+            return candidates;
+        }
+
+        private static List<PlayerEVPCandidate> CalculateRankedPointsLolEvp(
+            List<PlayerEVPCandidate> candidates, MVFormulaConfiguration config)
+        {
+            if (candidates.Count == 0) return candidates;
+
+            var kda = candidates.OrderByDescending(c => c.FormulaScore.LolKdaValue).First();
+            var dpm = candidates.OrderByDescending(c => c.FormulaScore.LolDpm).First();
+            var vis = candidates.OrderByDescending(c => c.FormulaScore.LolVisionTotal).First();
+            var csx = candidates.OrderByDescending(c => c.FormulaScore.LolAverageCs).First();
+            var obj = candidates.OrderByDescending(c => c.FormulaScore.LolAverageObjectivesDmg).First();
+
+            foreach (var c in candidates)
+            {
+                c.FormulaScore.LolKdaPoints = 0;
+                c.FormulaScore.LolDpmPoints = 0;
+                c.FormulaScore.LolVisionPoints = 0;
+                c.FormulaScore.LolCsPoints = 0;
+                c.FormulaScore.LolObjectivesPoints = 0;
+                c.FormulaScore.Commentator1Score = 0;
+                c.FormulaScore.Commentator2Score = 0;
+                c.FormulaScore.TotalScore = 0;
+            }
+
+            kda.FormulaScore.LolKdaPoints = LolKdaCategoryPoints;
+            dpm.FormulaScore.LolDpmPoints = LolDpmCategoryPoints;
+            vis.FormulaScore.LolVisionPoints = LolVisionCategoryPoints;
+            csx.FormulaScore.LolCsPoints = LolCsCategoryPoints;
+            obj.FormulaScore.LolObjectivesPoints = LolObjectivesCategoryPoints;
+
+            if (config.Commentator1SelectedPlayerId.HasValue)
+            {
+                var a = candidates.FirstOrDefault(p => p.PlayerId == config.Commentator1SelectedPlayerId.Value);
+                if (a != null) a.FormulaScore.Commentator1Score = config.Commentator1Points;
+            }
+            if (config.Commentator2SelectedPlayerId.HasValue)
+            {
+                var a = candidates.FirstOrDefault(p => p.PlayerId == config.Commentator2SelectedPlayerId.Value);
+                if (a != null) a.FormulaScore.Commentator2Score = config.Commentator2Points;
+            }
+
+            foreach (var c in candidates)
+            {
+                c.FormulaScore.TotalScore = c.FormulaScore.LolKdaPoints
+                    + c.FormulaScore.LolDpmPoints
+                    + c.FormulaScore.LolVisionPoints
+                    + c.FormulaScore.LolCsPoints
+                    + c.FormulaScore.LolObjectivesPoints
+                    + c.FormulaScore.Commentator1Score
+                    + c.FormulaScore.Commentator2Score;
+            }
+
+            return candidates;
         }
 
         private List<PlayerMVPCandidate> CalculateRankedPoints(List<PlayerMVPCandidate> candidates, MVFormulaConfiguration config)
@@ -497,14 +772,29 @@ namespace Balkana.Services.Tournaments
             return candidates;
         }
 
-        private async Task<Player> GetPlayerByUUIDAsync(string playerUUID)
+        private static async Task<Player?> GetPlayerByFaceitUuidAsync(
+            ApplicationDbContext context, string playerUUID) =>
+            await GetPlayerByProviderAsync(context, playerUUID, "FACEIT");
+
+        private static async Task<Player?> GetPlayerByRiotPuuidAsync(
+            ApplicationDbContext context, string puuid) =>
+            await GetPlayerByProviderAsync(context, puuid, "RIOT");
+
+        private static async Task<Player?> GetPlayerByProviderAsync(
+            ApplicationDbContext context, string u, string provider)
         {
-            var gameProfile = await _context.GameProfiles
+            var gameProfile = await context.GameProfiles
                 .Include(gp => gp.Player)
-                .FirstOrDefaultAsync(gp => gp.UUID == playerUUID && gp.Provider == "FACEIT");
+                .FirstOrDefaultAsync(gp => gp.UUID == u && gp.Provider == provider);
 
             return gameProfile?.Player;
         }
+
+        private Task<Player?> GetPlayerByFaceitUuidAsync(string playerUUID) =>
+            GetPlayerByFaceitUuidAsync(_context, playerUUID);
+
+        private Task<Player?> GetPlayerByRiotPuuidAsync(string puuid) =>
+            GetPlayerByRiotPuuidAsync(_context, puuid);
 
         private async Task<Team> GetPlayerTeamInTournamentAsync(int tournamentId, int playerId)
         {

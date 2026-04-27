@@ -38,7 +38,7 @@
         <div class="tournaments-grid">
             @foreach (var tournament in Model)
             {
-                <a href="/Tournaments/Details/@tournament.Id" class="tournament-card-link">
+                <a href="/Tournaments/Details/@tournament.ShortName" class="tournament-card-link">
                     <div class="tournament-card-content">
                         <div class="tournament-card-image">
                             <img src="@tournament.BannerUrl" alt="@tournament.FullName" />

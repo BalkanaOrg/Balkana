@@ -689,6 +689,9 @@ namespace Balkana.Services.Players
                                 OpponentTeamLogo = opponentTeam?.LogoURL,
                                 
                                 Matches = sg.Select(s => {
+                                    var ddragon = s.Match is MatchLoL ml
+                                        ? (ToDDragonVersion(ml.GameVersion) ?? "15.1.1")
+                                        : null;
                                     var matchStats = new PlayerMatchStatsServiceModel
                                     {
                                         MatchId = s.MatchId,
@@ -697,7 +700,8 @@ namespace Balkana.Services.Players
                                         MapName = GetMapName(s.Match),
                                         IsWinner = IsPlayerWinner(s.Match, s.PlayerUUID),
                                         CS2Stats = s as PlayerStatistic_CS2,
-                                        LoLStats = s as PlayerStatistic_LoL
+                                        LoLStats = s as PlayerStatistic_LoL,
+                                        DDragonVersion = ddragon
                                     };
 
                                     // Add team rounds for CS2 matches

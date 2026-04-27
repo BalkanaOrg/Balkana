@@ -503,103 +503,148 @@
                                             
                                             <div class="table-responsive">
                                                 <table class="table table-sm table-dark matches-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Date</th>
-                                                            <th>Player Team</th>
-                                                            <th>Opponent</th>
-                                                            <th>Map</th>
-                                                            <th>K - D</th>
-                                                            <th>+/-</th>
-                                                            <th>Rating</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @{
-                                                            int seriesIndex = 0;
-                                                        }
-                                                        @foreach (var series in tournament.SeriesGroups)
-                                                        {
-                                                            @foreach (var match in series.Matches)
+                                                    @if (string.Equals(gameHistory.Value.Source, "RIOT", StringComparison.OrdinalIgnoreCase))
+                                                    {
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Date</th>
+                                                                <th>Player Team</th>
+                                                                <th>Opponent</th>
+                                                                <th>Champion</th>
+                                                                <th>Items</th>
+                                                                <th>K / D / A</th>
+                                                                <th>CS</th>
+                                                                <th>Vision</th>
+                                                                <th>Damage</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @{
+                                                                int rSeriesLoL = 0;
+                                                            }
+                                                            @foreach (var series in tournament.SeriesGroups)
                                                             {
-                                                                <tr class="@(seriesIndex % 2 == 0 ? "match-row-even" : "match-row-odd") @(series.IsSeriesWinner ? "series-winner" : "series-loser")">
-                                                                    <td>
-                                                                        @series.DatePlayed.ToString("MMM dd, yyyy")
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="d-flex align-items-center">
-                                                                            <div class="me-2">
-                                                                                <img src="@(series.PlayerTeamLogo ?? "https://via.placeholder.com/20x20/333333/ffffff?text=?")" alt="Team" style="width: 20px; height: 20px; object-fit: cover; border-radius: 3px;" />
+                                                                @foreach (var match in series.Matches)
+                                                                {
+                                                                    var lol = match.LoLStats;
+                                                                    var ddv = match.DDragonVersion ?? "15.1.1";
+                                                                    <tr class="@(rSeriesLoL % 2 == 0 ? "match-row-even" : "match-row-odd") @(series.IsSeriesWinner ? "series-winner" : "series-loser")">
+                                                                        <td>@match.PlayedAt.ToString("MMM dd, yyyy")</td>
+                                                                        <td>
+                                                                            <div class="d-flex align-items-center">
+                                                                                <img class="me-2" src="@(series.PlayerTeamLogo ?? "https://via.placeholder.com/20x20/333333/ffffff?text=?")" alt="" style="width: 20px; height: 20px; object-fit: cover; border-radius: 3px;" />
+                                                                                <span class="team-name">@(series.PlayerTeamTag ?? "—")</span>
                                                                             </div>
-                                                                            <div>
-                                                                                @if (match.CS2Stats != null)
+                                                                        </td>
+                                                                        <td>
+                                                                            <div class="d-flex align-items-center">
+                                                                                <img class="me-2" src="@(series.OpponentTeamLogo ?? "https://via.placeholder.com/20x20/333333/ffffff?text=?")" alt="" style="width: 20px; height: 20px; object-fit: cover; border-radius: 3px;" />
+                                                                                <span>@(series.OpponentTeamTag ?? "—")</span>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td>
+                                                                            @if (lol != null)
+                                                                            {
+                                                                                <img src="https://ddragon.leagueoflegends.com/cdn/@ddv/img/champion/@(lol.ChampionName).png"
+                                                                                     title="@(lol.ChampionName)"
+                                                                                     alt="@lol.ChampionName" style="width: 36px; height: 36px; border-radius: 4px; object-fit: cover;" 
+                                                                                     onerror="this.style.display='none'" />
+                                                                            }
+                                                                        </td>
+                                                                        <td class="p-1">
+                                                                            @if (lol != null)
+                                                                            {
+                                                                                <div class="d-flex flex-wrap gap-0 align-items-center" style="max-width: 200px;">
+                                                                                @foreach (var item in match.LoLItems)
                                                                                 {
+                                                                                    if (item <= 0) { continue; }
+                                                                                    <img src="https://ddragon.leagueoflegends.com/cdn/@ddv/img/item/@(item).png" alt="" class="m-0" style="width: 28px; height: 28px; border-radius: 2px;" onerror="this.style.visibility='hidden'" />
+                                                                                }
+                                                                                </div>
+                                                                            }
+                                                                        </td>
+                                                                        <td>@(lol?.Kills ?? 0) / @(lol?.Deaths ?? 0) / @(lol?.Assists ?? 0)</td>
+                                                                        <td>@(lol?.CreepScore)</td>
+                                                                        <td>@(lol?.VisionScore)</td>
+                                                                        <td>@(lol?.TotalDamageToChampions ?? 0)</td>
+                                                                    </tr>
+                                                                }
+                                                                rSeriesLoL++;
+                                                            }
+                                                        </tbody>
+                                                    }
+                                                    else
+                                                    {
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Date</th>
+                                                                <th>Player Team</th>
+                                                                <th>Opponent</th>
+                                                                <th>Map</th>
+                                                                <th>K - D</th>
+                                                                <th>+/-</th>
+                                                                <th>Rating</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @{
+                                                                int seriesIndex = 0;
+                                                            }
+                                                            @foreach (var series in tournament.SeriesGroups)
+                                                            {
+                                                                @foreach (var match in series.Matches)
+                                                                {
+                                                                    <tr class="@(seriesIndex % 2 == 0 ? "match-row-even" : "match-row-odd") @(series.IsSeriesWinner ? "series-winner" : "series-loser")">
+                                                                        <td>
+                                                                            @series.DatePlayed.ToString("MMM dd, yyyy")
+                                                                        </td>
+                                                                        <td>
+                                                                            <div class="d-flex align-items-center">
+                                                                                <div class="me-2">
+                                                                                    <img src="@(series.PlayerTeamLogo ?? "https://via.placeholder.com/20x20/333333/ffffff?text=?")" alt="Team" style="width: 20px; height: 20px; object-fit: cover; border-radius: 3px;" />
+                                                                                </div>
+                                                                                <div>
                                                                                     <div class="team-name">@(series.PlayerTeamTag ?? "Unknown Team") (@(match.PlayerTeamRounds ?? 0))</div>
-                                                                                }
-                                                                                else
-                                                                                {
-                                                                                    <div class="team-name">@(series.PlayerTeamTag ?? "Unknown Team")</div>
-                                                                                }
+                                                                                </div>
                                                                             </div>
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        <div class="d-flex align-items-center">
-                                                                            <div class="me-2">
-                                                                                <img src="@(series.OpponentTeamLogo ?? "https://via.placeholder.com/20x20/333333/ffffff?text=?")" alt="Team" style="width: 20px; height: 20px; object-fit: cover; border-radius: 3px;" />
+                                                                        </td>
+                                                                        <td>
+                                                                            <div class="d-flex align-items-center">
+                                                                                <div class="me-2">
+                                                                                    <img src="@(series.OpponentTeamLogo ?? "https://via.placeholder.com/20x20/333333/ffffff?text=?")" alt="Team" style="width: 20px; height: 20px; object-fit: cover; border-radius: 3px;" />
+                                                                                </div>
+                                                                                <span>@(series.OpponentTeamTag ?? "Unknown Team") (@(match.OpponentTeamRounds ?? 0))</span>
                                                                             </div>
+                                                                        </td>
+                                                                        <td>@match.MapName</td>
+                                                                        <td>
                                                                             @if (match.CS2Stats != null)
                                                                             {
-                                                                                <span>@(series.OpponentTeamTag ?? "Unknown Team") (@(match.OpponentTeamRounds ?? 0))</span>
+                                                                                <span>@match.CS2Stats.Kills - @match.CS2Stats.Deaths</span>
                                                                             }
-                                                                            else
+                                                                        </td>
+                                                                        <td>
+                                                                            @if (match.CS2Stats != null)
                                                                             {
-                                                                                <span>@(series.OpponentTeamTag ?? "Unknown Team")</span>
+                                                                                <span class="@(match.CS2Stats.Kills - match.CS2Stats.Deaths >= 0 ? "border-success" : "text-danger")">
+                                                                                    @(match.CS2Stats.Kills - match.CS2Stats.Deaths >= 0 ? "+" : "")@(match.CS2Stats.Kills - match.CS2Stats.Deaths)
+                                                                                </span>
                                                                             }
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>@match.MapName</td>
-                                                                    <td>
-                                                                        @if (match.CS2Stats != null)
-                                                                        {
-                                                                            <span>@match.CS2Stats.Kills - @match.CS2Stats.Deaths</span>
-                                                                        }
-                                                                        else if (match.LoLStats != null)
-                                                                        {
-                                                                            <span>@match.LoLStats.Kills - @match.LoLStats.Deaths</span>
-                                                                        }
-                                                                    </td>
-                                                                    <td>
-                                                                        @if (match.CS2Stats != null)
-                                                                        {
-                                                                            <span class="@(match.CS2Stats.Kills - match.CS2Stats.Deaths >= 0 ? "border-success" : "text-danger")">
-                                                                                @(match.CS2Stats.Kills - match.CS2Stats.Deaths >= 0 ? "+" : "")@(match.CS2Stats.Kills - match.CS2Stats.Deaths)
-                                                                            </span>
-                                                                        }
-                                                                        else if (match.LoLStats != null)
-                                                                        {
-                                                                            <span class="@((match.LoLStats.Kills ?? 0) - (match.LoLStats.Deaths ?? 0) >= 0 ? "border-success" : "text-danger")">
-                                                                                @((match.LoLStats.Kills ?? 0) - (match.LoLStats.Deaths ?? 0) >= 0 ? "+" : "")@((match.LoLStats.Kills ?? 0) - (match.LoLStats.Deaths ?? 0))
-                                                                            </span>
-                                                                        }
-                                                                    </td>
-                                                                    <td>
-                                                                        @if (match.CS2Stats != null)
-                                                                        {
-                                                                            var rating = match.CS2Stats.HLTV1;
-                                                                            var ratingClass = rating < 0.98 ? "rating-low" : rating <= 1.07 ? "rating-medium" : "rating-high";
-                                                                            <span class="rating-value @ratingClass">@rating.ToString("F2")</span>
-                                                                        }
-                                                                        else if (match.LoLStats != null)
-                                                                        {
-                                                                            <span class="rating-value">N/A</span>
-                                                                        }
-                                                                    </td>
-                                                                </tr>
+                                                                        </td>
+                                                                        <td>
+                                                                            @if (match.CS2Stats != null)
+                                                                            {
+                                                                                var rating = match.CS2Stats.HLTV1;
+                                                                                var ratingClass = rating < 0.98 ? "rating-low" : rating <= 1.07 ? "rating-medium" : "rating-high";
+                                                                                <span class="rating-value @ratingClass">@rating.ToString("F2")</span>
+                                                                            }
+                                                                        </td>
+                                                                    </tr>
+                                                                }
+                                                                seriesIndex++;
                                                             }
-                                                            seriesIndex++;
-                                                        }
-                                                    </tbody>
+                                                        </tbody>
+                                                    }
                                                 </table>
                                             </div>
                                         </div>

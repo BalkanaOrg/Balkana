@@ -64,22 +64,43 @@ namespace Balkana.Controllers
             return View(tournaments);
         }
 
-        // GET: Tournament/Details/5
-        public async Task<IActionResult> Details(int id)
+        // GET: Tournaments/Details/{id}  — id is ShortName, or legacy numeric id (301 to ShortName)
+        public async Task<IActionResult> Details(string id)
         {
+            if (string.IsNullOrWhiteSpace(id))
+                return NotFound();
+
+            const StringComparison c = StringComparison.OrdinalIgnoreCase;
             var tournament = await _context.Tournaments
                 .Include(t => t.Organizer)
                 .Include(t => t.Game)
-                .Include(t => t.TournamentTeams).ThenInclude(tt => tt.Team) // include teams here
+                .Include(t => t.TournamentTeams).ThenInclude(tt => tt.Team)
                 .Include(t => t.Series).ThenInclude(s => s.TeamA)
                 .Include(t => t.Series).ThenInclude(s => s.TeamB)
                 .Include(t => t.Series).ThenInclude(s => s.NextSeries)
                 .Include(t => t.Placements).ThenInclude(p => p.Team)
-                .FirstOrDefaultAsync(t => t.Id == id);
+                .FirstOrDefaultAsync(t => t.ShortName == id);
 
+            if (tournament == null && int.TryParse(id, out var legacyId))
+            {
+                tournament = await _context.Tournaments
+                    .Include(t => t.Organizer)
+                    .Include(t => t.Game)
+                    .Include(t => t.TournamentTeams).ThenInclude(tt => tt.Team)
+                    .Include(t => t.Series).ThenInclude(s => s.TeamA)
+                    .Include(t => t.Series).ThenInclude(s => s.TeamB)
+                    .Include(t => t.Series).ThenInclude(s => s.NextSeries)
+                    .Include(t => t.Placements).ThenInclude(p => p.Team)
+                    .FirstOrDefaultAsync(t => t.Id == legacyId);
+            }
 
+            if (tournament == null)
+                return NotFound();
 
-            if (tournament == null) return NotFound();   // move this up
+            if (!string.IsNullOrEmpty(tournament.ShortName) && !string.Equals(id, tournament.ShortName, c))
+            {
+                return RedirectPermanent(Url.Action(nameof(Details), "Tournaments", new { id = tournament.ShortName })!);
+            }
 
             if (!tournament.IsPublic && !CanManageTournaments())
                 return RedirectToAction(nameof(Index));
@@ -93,7 +114,7 @@ namespace Balkana.Controllers
                 .ToList();
 
             var participatingTeams = await _context.TournamentTeams
-                .Where(tt => tt.TournamentId == id)
+                .Where(tt => tt.TournamentId == tournament.Id)
                 .Include(tt => tt.Team)
                     .ThenInclude(t => t.Transfers)
                         .ThenInclude(tr => tr.Player)
@@ -795,7 +816,8 @@ namespace Balkana.Controllers
             {
                 using var page = await browser.NewPageAsync();
                 await page.SetViewportAsync(viewPort);
-                var tournamentUrl = $"{Request.Scheme}://{Request.Host}/Tournaments/Details/{tournament.Id}";
+                var detailsSeg = string.IsNullOrWhiteSpace(tournament.ShortName) ? tournament.Id.ToString() : tournament.ShortName;
+                var tournamentUrl = $"{Request.Scheme}://{Request.Host}/Tournaments/Details/{Uri.EscapeDataString(detailsSeg)}";
                 await page.GoToAsync(tournamentUrl, WaitUntilNavigation.Networkidle2);
 
                 try
@@ -1146,7 +1168,7 @@ namespace Balkana.Controllers
             await _context.TournamentTeams.AddRangeAsync(newEntries);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Details", new { id = model.TournamentId });
+            return RedirectToAction("Details", new { id = await GetTournamentDetailsRouteIdAsync(model.TournamentId) });
         }
 
         [HttpPost]
@@ -1163,13 +1185,13 @@ namespace Balkana.Controllers
             if (tournament.Series.Any())
             {
                 TempData["Error"] = "Bracket already exists.";
-                return RedirectToAction("Details", new { id = tournamentId });
+                return RedirectToAction("Details", new { id = await GetTournamentDetailsRouteIdAsync(tournamentId) });
             }
 
             if (!tournament.TournamentTeams.Any())
             {
                 TempData["Error"] = "No teams added to tournament. Please add teams first.";
-                return RedirectToAction("Details", new { id = tournamentId });
+                return RedirectToAction("Details", new { id = await GetTournamentDetailsRouteIdAsync(tournamentId) });
             }
 
             var service = new BracketService(_context, mapper);
@@ -1210,7 +1232,7 @@ namespace Balkana.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Success"] = $"{tournament.Elimination} bracket generated with {teams.Count} teams!";
-            return RedirectToAction("Details", new { id = tournamentId });
+            return RedirectToAction("Details", new { id = await GetTournamentDetailsRouteIdAsync(tournamentId) });
         }
 
         [HttpPost]
@@ -1227,46 +1249,68 @@ namespace Balkana.Controllers
             if (!tournament.Series.Any())
             {
                 TempData["Error"] = "No bracket exists to delete.";
-                return RedirectToAction("Details", new { id = tournamentId });
+                return RedirectToAction("Details", new { id = await GetTournamentDetailsRouteIdAsync(tournamentId) });
             }
 
             _context.Series.RemoveRange(tournament.Series);
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Bracket deleted successfully.";
-            return RedirectToAction("Details", new { id = tournamentId });
+            return RedirectToAction("Details", new { id = await GetTournamentDetailsRouteIdAsync(tournamentId) });
         }
 
         [HttpGet]
         [Authorize(Roles = "Administrator,Moderator")]
-        public async Task<IActionResult> Conclude(int id)
+        public async Task<IActionResult> Conclude(string id)
         {
+            if (string.IsNullOrWhiteSpace(id))
+                return NotFound();
+
+            const StringComparison c = StringComparison.OrdinalIgnoreCase;
             var tournament = await _context.Tournaments
+                .Include(t => t.Game)
                 .Include(t => t.TournamentTeams).ThenInclude(tt => tt.Team)
                 .Include(t => t.Placements)
-                .FirstOrDefaultAsync(t => t.Id == id);
+                .FirstOrDefaultAsync(t => t.ShortName == id);
+
+            if (tournament == null && int.TryParse(id, out var legacyId))
+            {
+                tournament = await _context.Tournaments
+                    .Include(t => t.Game)
+                    .Include(t => t.TournamentTeams).ThenInclude(tt => tt.Team)
+                    .Include(t => t.Placements)
+                    .FirstOrDefaultAsync(t => t.Id == legacyId);
+            }
 
             if (tournament == null) return NotFound();
+
+            if (!string.IsNullOrEmpty(tournament.ShortName) && !string.Equals(id, tournament.ShortName, c))
+            {
+                return RedirectPermanent(Url.Action(nameof(Conclude), "Tournaments", new { id = tournament.ShortName })!);
+            }
 
             var mvpEVPService = new MVPEVPService(_context);
             var formulaConfig = new MVFormulaConfiguration();
 
+            var isLoL = tournament.GameId == 2 || string.Equals(tournament.Game?.ShortName, "LoL", StringComparison.OrdinalIgnoreCase);
             var vm = new TournamentConclusionViewModel
             {
                 TournamentId = tournament.Id,
+                TournamentShortName = tournament.ShortName,
                 TournamentName = tournament.FullName,
                 TotalTeams = tournament.TournamentTeams.Count,
                 EliminationType = tournament.Elimination.ToString(),
                 ChampionTrophyDescription = $"Champion of {tournament.FullName}",
-                MVFormulaConfig = formulaConfig
+                MVFormulaConfig = formulaConfig,
+                IsLeagueOfLegendsTournament = isLoL
             };
 
             // Load MVP and EVP candidates
-            vm.MVPCandidates = await mvpEVPService.CalculateRankedMVPCandidatesAsync(id, formulaConfig);
-            vm.EVPCandidates = await mvpEVPService.CalculateRankedEVPCandidatesAsync(id, formulaConfig);
+            vm.MVPCandidates = await mvpEVPService.CalculateRankedMVPCandidatesAsync(tournament.Id, formulaConfig);
+            vm.EVPCandidates = await mvpEVPService.CalculateRankedEVPCandidatesAsync(tournament.Id, formulaConfig);
 
             var placementPointsService = new TournamentPlacementPointsService(_context);
-            vm.TeamPointsPreview = await placementPointsService.BuildPointsPreviewAsync(id);
+            vm.TeamPointsPreview = await placementPointsService.BuildPointsPreviewAsync(tournament.Id);
 
             return View(vm);
         }
@@ -1468,7 +1512,7 @@ namespace Balkana.Controllers
             }
 
             TempData["Success"] = $"Tournament '{model.TournamentName}' concluded with trophies and points awarded!";
-            return RedirectToAction("Details", new { id = model.TournamentId });
+            return RedirectToAction("Details", new { id = await GetTournamentDetailsRouteIdAsync(model.TournamentId) });
         }
 
 
@@ -1558,6 +1602,24 @@ namespace Balkana.Controllers
         {
             var svc = new TournamentPlacementPointsService(_context);
             model.TeamPointsPreview = await svc.BuildPointsPreviewAsync(model.TournamentId);
+            var t = await _context.Tournaments
+                .AsNoTracking()
+                .Include(x => x.Game)
+                .FirstOrDefaultAsync(x => x.Id == model.TournamentId);
+            if (t != null)
+            {
+                model.TournamentShortName = t.ShortName;
+                model.IsLeagueOfLegendsTournament = t.GameId == 2 ||
+                    string.Equals(t.Game?.ShortName, "LoL", StringComparison.OrdinalIgnoreCase);
+            }
         }
+
+        private async Task<string> GetTournamentDetailsRouteIdAsync(int tournamentId) =>
+            await _context.Tournaments.AsNoTracking()
+                .Where(t => t.Id == tournamentId)
+                .Select(t => t.ShortName)
+                .FirstOrDefaultAsync() is { } s && !string.IsNullOrWhiteSpace(s)
+                ? s
+                : tournamentId.ToString();
     }
 }

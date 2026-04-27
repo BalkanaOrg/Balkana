@@ -1957,6 +1957,9 @@ namespace Balkana.Migrations
 
                     b.HasIndex("OrganizerId");
 
+                    b.HasIndex("ShortName")
+                        .IsUnique();
+
                     b.ToTable("Tournaments");
                 });
 
@@ -2329,6 +2332,9 @@ namespace Balkana.Migrations
             modelBuilder.Entity("Balkana.Data.Models.MatchLoL", b =>
                 {
                     b.HasBaseType("Balkana.Data.Models.Match");
+
+                    b.Property<int>("GameDurationSeconds")
+                        .HasColumnType("int");
 
                     b.Property<string>("GameMode")
                         .IsRequired()

@@ -472,6 +472,11 @@ app.UseAuthentication();
 // Authorization middleware
 app.UseAuthorization();
 
+// Short static links (before controller routing / static files)
+app.MapGet("/discord", () => Microsoft.AspNetCore.Http.Results.Redirect("https://discord.gg/qzQJyUsypu", permanent: true));
+app.MapGet("/lite", () => Microsoft.AspNetCore.Http.Results.Redirect("https://discord.gg/mcSxtc5uJ4", permanent: true));
+app.MapGet("/meallyinc", () => Microsoft.AspNetCore.Http.Results.Redirect("https://discord.gg/e3DbmrAzmx", permanent: true));
+
 // Map controllers - the SitemapController has [Route("/sitemap.xml")] attribute
 app.MapControllers();
 

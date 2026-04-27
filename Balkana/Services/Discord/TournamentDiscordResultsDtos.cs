@@ -3,6 +3,8 @@ namespace Balkana.Services.Discord
     public class TournamentDiscordResultsDto
     {
         public int TournamentId { get; set; }
+        /// <summary>URL path segment for /Tournaments/Details/{segment} (ShortName, or id when missing).</summary>
+        public string TournamentDetailsRouteSegment { get; set; } = "";
         public string TournamentName { get; set; } = "";
         public int GameId { get; set; }
         public List<DiscordPlacementBandDto> Bands { get; set; } = new();

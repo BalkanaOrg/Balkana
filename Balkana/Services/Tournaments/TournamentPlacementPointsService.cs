@@ -18,9 +18,12 @@ namespace Balkana.Services.Tournaments
         {
             var tournament = await _context.Tournaments
                 .AsNoTracking()
+                .Include(t => t.Game)
                 .FirstOrDefaultAsync(t => t.Id == tournamentId);
             if (tournament == null)
                 return new List<TeamPointsPreviewRow>();
+
+            var isLoL = IsLeagueOfLegendsTournament(tournament);
 
             var tournamentEndExclusiveUtc = ToEndExclusiveUtc(tournament.EndDate);
             var tournamentStartUtc = tournament.StartDate;
@@ -60,8 +63,17 @@ namespace Balkana.Services.Tournaments
                     var pEff = (int)Math.Round(p * factor);
                     row.Placement = pl.Placement;
                     row.BasePointsFromPlacement = p;
-                    row.EffectivePlayerPool = pEff;
-                    row.OrganisationPoints = (int)Math.Round(0.2 * pEff);
+                    if (isLoL)
+                    {
+                        row.EffectivePlayerPool = pEff;
+                        row.OrganisationPoints = 0;
+                    }
+                    else
+                    {
+                        row.EffectivePlayerPool = pEff;
+                        row.OrganisationPoints = (int)Math.Round(0.2 * pEff);
+                    }
+
                     row.PrizePoolAwarded = pl.PrizePoolAwarded;
                 }
 
@@ -75,9 +87,12 @@ namespace Balkana.Services.Tournaments
         {
             var tournament = await _context.Tournaments
                 .Include(t => t.Placements)
+                .Include(t => t.Game)
                 .FirstOrDefaultAsync(t => t.Id == tournamentId);
             if (tournament == null)
                 return;
+
+            var isLoL = IsLeagueOfLegendsTournament(tournament);
 
             var tournamentEndExclusiveUtc = ToEndExclusiveUtc(tournament.EndDate);
             var tournamentStartUtc = tournament.StartDate;
@@ -93,10 +108,12 @@ namespace Balkana.Services.Tournaments
                 var esCount = await CountEmergencySubstitutesAsync(placement.TeamId, tournamentEndExclusiveUtc, tournamentStartUtc);
                 var factor = 1 - Math.Min(1.0, 0.2 * esCount);
                 var pEff = (int)Math.Round(p * factor);
-                var org = (int)Math.Round(0.2 * pEff);
 
                 placement.PointsAwarded = pEff;
-                placement.OrganisationPointsAwarded = org;
+                placement.OrganisationPointsAwarded = isLoL ? 0 : (int)Math.Round(0.2 * pEff);
+
+                if (isLoL)
+                    continue;
 
                 var counts = await GetPlayerMapCountsForTeamAsync(
                     placement.TeamId,
@@ -128,6 +145,9 @@ namespace Balkana.Services.Tournaments
 
             await _context.SaveChangesAsync();
         }
+
+        private static bool IsLeagueOfLegendsTournament(Tournament tournament) =>
+            tournament.GameId == 2 || string.Equals(tournament.Game?.ShortName, "LoL", StringComparison.OrdinalIgnoreCase);
 
         private static DateTime ToEndExclusiveUtc(DateTime endDate)
             => endDate.Date.AddDays(1);

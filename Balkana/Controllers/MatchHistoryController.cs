@@ -197,7 +197,7 @@ namespace Balkana.Controllers
             if (series.isFinished)
             {
                 TempData["Error"] = "Series is already completed.";
-                return RedirectToAction("Details", "Tournaments", new { id = series.TournamentId });
+                return RedirectToAction("Details", "Tournaments", new { id = await GetTournamentDetailsRouteIdAsync(series.TournamentId) });
             }
 
             // Determine the winning team (the one selected to progress)
@@ -216,13 +216,13 @@ namespace Balkana.Controllers
             else
             {
                 TempData["Error"] = "Invalid team specified for progression.";
-                return RedirectToAction("Details", "Tournaments", new { id = series.TournamentId });
+                return RedirectToAction("Details", "Tournaments", new { id = await GetTournamentDetailsRouteIdAsync(series.TournamentId) });
             }
 
             if (winningTeam == null)
             {
                 TempData["Error"] = "Cannot determine winning team for forfeit.";
-                return RedirectToAction("Details", "Tournaments", new { id = series.TournamentId });
+                return RedirectToAction("Details", "Tournaments", new { id = await GetTournamentDetailsRouteIdAsync(series.TournamentId) });
             }
 
             // Mark series as finished and set winner
@@ -258,8 +258,16 @@ namespace Balkana.Controllers
             await AdvanceWinnerToNextSeries(series);
 
             TempData["Success"] = $"{series.TeamA?.FullName} vs {series.TeamB?.FullName} - {winningTeam.FullName} advances (opponent forfeited).";
-            return RedirectToAction("Details", "Tournaments", new { id = series.TournamentId });
+            return RedirectToAction("Details", "Tournaments", new { id = await GetTournamentDetailsRouteIdAsync(series.TournamentId) });
         }
+
+        private async Task<string> GetTournamentDetailsRouteIdAsync(int tournamentId) =>
+            await _db.Tournaments.AsNoTracking()
+                .Where(t => t.Id == tournamentId)
+                .Select(t => t.ShortName)
+                .FirstOrDefaultAsync() is { } s && !string.IsNullOrWhiteSpace(s)
+                ? s
+                : tournamentId.ToString();
 
         private async Task UpdateSeriesWinner(Series series, List<Match> matches)
         {

@@ -342,6 +342,18 @@ namespace Balkana.Services.Teams
 
         private (int RosterPlayerPoints, int OrganisationPoints) GetCircuitYearPoints(Team team, int circuitYear, DateTime now)
         {
+            if (team.GameId == 2)
+            {
+                // LoL: full team placement points (no per-player split) live on placement PointsAwarded; no org 20% slice.
+                var teamOnly = this.data.TournamentPlacements
+                    .AsNoTracking()
+                    .Where(p => p.TeamId == team.Id
+                                && p.Tournament.StartDate.Year == circuitYear
+                                && p.Tournament.GameId == 2)
+                    .Sum(p => (int?)p.PointsAwarded) ?? 0;
+                return (0, teamOnly);
+            }
+
             var orgPoints = this.data.TournamentPlacements
                 .AsNoTracking()
                 .Where(p => p.TeamId == team.Id && p.Tournament.StartDate.Year == circuitYear)
@@ -471,11 +483,22 @@ namespace Balkana.Services.Teams
                 .ToList();
         }
 
+        private static string? LolDDragonVersionFromGameVersion(string? gameVersion)
+        {
+            if (string.IsNullOrWhiteSpace(gameVersion))
+                return null;
+            var parts = gameVersion.Trim().Split('.');
+            if (parts.Length < 2)
+                return null;
+            return $"{parts[0]}.{parts[1]}.1";
+        }
+
         private IEnumerable<TeamMatchServiceModel> GetRecentMatches(Team team)
         {
             var allMatches = this.data.Matches
                 .AsNoTracking()
                 .Where(m => (m.TeamAId == team.Id || m.TeamBId == team.Id) && m.IsCompleted)
+                .Include(m => m.PlayerStats)
                 .Include(m => m.Series)
                     .ThenInclude(s => s.Tournament)
                 .Include(m => m.TeamA)
@@ -497,28 +520,101 @@ namespace Balkana.Services.Teams
                     .ToDictionary(m => m.Id);
             }
 
-            return allMatches.Select(match =>
+            var rows = new List<TeamMatchServiceModel>();
+            var isLolTeam = team.GameId == 2;
+
+            foreach (var match in allMatches)
             {
-                string mapName = "N/A";
+                var mapName = "N/A";
                 if (match is MatchCS && csWithMapById.TryGetValue(match.Id, out var csRow))
                     mapName = csRow.Map?.Name ?? "Unknown";
+                if (isLolTeam && match is MatchLoL)
+                    mapName = "Summoner's Rift";
 
-                return new TeamMatchServiceModel
+                var t = match.Series?.Tournament;
+                var opponentTeamId = team.Id == match.TeamAId ? match.TeamBId : match.TeamAId;
+
+                var row = new TeamMatchServiceModel
                 {
                     MatchId = match.Id,
                     SeriesId = match.SeriesId,
-                    TournamentName = match.Series?.Tournament?.FullName ?? "",
+                    TournamentId = t?.Id,
+                    TournamentName = t?.FullName ?? "",
+                    TournamentShortName = t?.ShortName,
+                    OpponentTeamId = opponentTeamId,
                     PlayedAt = match.PlayedAt,
-                    OpponentName = match.TeamAId == team.Id ? match.TeamB?.FullName : match.TeamA?.FullName,
-                    OpponentTag = match.TeamAId == team.Id ? match.TeamB?.Tag : match.TeamA?.Tag,
-                    OpponentLogoUrl = match.TeamAId == team.Id ? match.TeamB?.LogoURL : match.TeamA?.LogoURL,
+                    OpponentName = team.Id == match.TeamAId ? match.TeamB?.FullName : match.TeamA?.FullName,
+                    OpponentTag = team.Id == match.TeamAId ? match.TeamB?.Tag : match.TeamA?.Tag,
+                    OpponentLogoUrl = team.Id == match.TeamAId ? match.TeamB?.LogoURL : match.TeamA?.LogoURL,
                     IsWin = match.WinnerTeamId == team.Id,
                     IsCompleted = match.IsCompleted,
                     MapName = mapName,
                     Source = match.Source,
                     ExternalMatchId = match.ExternalMatchId
                 };
-            }).ToList();
+
+                if (isLolTeam && match is MatchLoL ml)
+                {
+                    row.IsLeagueOfLegends = true;
+                    row.DDragonVersion = LolDDragonVersionFromGameVersion(ml.GameVersion) ?? "15.1.1";
+                    (row.OurChampions, row.TheirChampions) = BuildLolChampionPicksForTeamRow(team, match, opponentTeamId, ml);
+                }
+
+                rows.Add(row);
+            }
+
+            return rows;
+        }
+
+        private (IReadOnlyList<LoLChampionRowVm> Ours, IReadOnlyList<LoLChampionRowVm> Theirs) BuildLolChampionPicksForTeamRow(
+            Team team,
+            Match match,
+            int? opponentTeamId,
+            MatchLoL _)
+        {
+            var loLStats = match.PlayerStats.OfType<PlayerStatistic_LoL>().ToList();
+            if (loLStats.Count == 0)
+                return (Array.Empty<LoLChampionRowVm>(), Array.Empty<LoLChampionRowVm>());
+
+            var uuids = loLStats.Select(s => s.PlayerUUID).Where(u => !string.IsNullOrEmpty(u)).Distinct().ToList();
+            if (uuids.Count == 0)
+                return (Array.Empty<LoLChampionRowVm>(), Array.Empty<LoLChampionRowVm>());
+
+            var uuidToPlayerId = this.data.GameProfiles
+                .AsNoTracking()
+                .Where(gp => uuids.Contains(gp.UUID) && gp.Provider == "RIOT")
+                .ToDictionary(g => g.UUID, g => g.PlayerId);
+            if (uuidToPlayerId.Count == 0)
+                return (Array.Empty<LoLChampionRowVm>(), Array.Empty<LoLChampionRowVm>());
+
+            var playerIds = uuidToPlayerId.Values.Distinct().ToList();
+            var transferRows = this.data.PlayerTeamTransfers
+                .AsNoTracking()
+                .Where(tr => playerIds.Contains(tr.PlayerId) && tr.StartDate <= match.PlayedAt
+                    && (tr.EndDate == null || tr.EndDate >= match.PlayedAt))
+                .ToList();
+
+            IReadOnlyList<LoLChampionRowVm> PicksFor(int? tid)
+            {
+                if (!tid.HasValue) return Array.Empty<LoLChampionRowVm>();
+                var set = new List<LoLChampionRowVm>();
+                foreach (var s in loLStats)
+                {
+                    if (!uuidToPlayerId.TryGetValue(s.PlayerUUID, out var pid)) continue;
+                    var tr = transferRows
+                        .Where(t => t.PlayerId == pid)
+                        .OrderByDescending(t => t.StartDate)
+                        .FirstOrDefault();
+                    if (tr?.TeamId == tid) set.Add(new LoLChampionRowVm
+                    {
+                        ChampionId = s.ChampionId,
+                        ChampionName = s.ChampionName ?? ""
+                    });
+                }
+                return set.OrderBy(x => x.ChampionName).ToList();
+            }
+
+            return (PicksFor(team.Id), PicksFor(opponentTeamId));
         }
 
         private TeamStatisticsServiceModel GetCurrentRosterStats(Team team, DateTime now)

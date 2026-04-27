@@ -54,7 +54,16 @@
                     <div class="stat-item">
                         <div class="stat-number">@Model.CircuitYearPointsTotal</div>
                         <div class="stat-label">@Model.CircuitYear Circuit Points</div>
-                        <div class="stat-sub">@Model.CircuitYearRosterPlayerPoints + @Model.CircuitYearOrganisationPoints (@Model.CircuitYearOrganisationPoints from organization)</div>
+                        <div class="stat-sub">
+                            @if (Model.GameId == 2)
+                            {
+                                <text>@Model.CircuitYearOrganisationPoints team points (no per-player pool)</text>
+                            }
+                            else
+                            {
+                                <text>@Model.CircuitYearRosterPlayerPoints + @Model.CircuitYearOrganisationPoints (@Model.CircuitYearOrganisationPoints from organization)</text>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
@@ -273,28 +282,49 @@
 
             @if (Model.RecentMatches.Any())
             {
-                <div class="table-responsive">
-                    <table class="table table-sm table-dark matches-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Team</th>
-                                <th>Opponent</th>
-                                <th>Map</th>
-                                <th>Tournament</th>
-                                <th>Result</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                int matchIndex = 0;
-                            }
-                            @foreach (var match in Model.RecentMatches.Take(15))
+                var recent = Model.RecentMatches.Take(15).ToList();
+                <div class="table-responsive team-recent-matches-table-wrap">
+                    <table class="table table-sm table-dark matches-table team-recent-matches-table">
+                        @if (Model.GameId == 2)
+                        {
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Team</th>
+                                    <th>Opponent</th>
+                                    <th class="lol-champ-col">Our <span class="d-none d-md-inline">squad</span></th>
+                                    <th class="lol-champ-col">They</th>
+                                    <th>Tournament</th>
+                                    <th>Result</th>
+                                </tr>
+                            </thead>
+                        }
+                        else
+                        {
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Team</th>
+                                    <th>Opponent</th>
+                                    <th>Map</th>
+                                    <th>Tournament</th>
+                                    <th>Result</th>
+                                </tr>
+                            </thead>
+                        }
+                        @{
+                            var bySeries = recent
+                                .GroupBy(m => m.SeriesId)
+                                .ToList();
+                        }
+                        @foreach (var grp in bySeries)
+                        {
+                            <tbody class="recent-matches-series-group">
+                            @foreach (var match in grp)
                             {
-                                <tr class="@(matchIndex % 2 == 0 ? "match-row-even" : "match-row-odd") @(match.IsWin ? "match-winner" : "match-loser")">
-                                    <td>
-                                        @match.PlayedAt.ToString("MMM dd, yyyy")
-                                    </td>
+                                var ddv = match.DDragonVersion ?? "15.1.1";
+                                <tr class="team-recent-match-row position-relative @(match.IsWin ? "match-winner" : "match-loser")" data-series-href="@Url.Action("Details", "Series", new { id = match.SeriesId })" style="cursor:pointer">
+                                    <td>@match.PlayedAt.ToString("MMM dd, yyyy")</td>
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <div class="me-2">
@@ -305,30 +335,64 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="me-2">
-                                                <img src="@match.OpponentLogoUrl" alt="@match.OpponentName" style="width: 20px; height: 20px; object-fit: cover; border-radius: 3px;" 
-                                                     onerror="this.src='https://ui-avatars.com/api/?name=@match.OpponentTag&background=random&color=fff&size=20'" />
-                                            </div>
-                                            <div>
-                                                <div class="team-name">@match.OpponentName</div>
-                                            </div>
-                                        </div>
+                                    <td onclick="event.stopPropagation()">
+                                        @if (match.OpponentTeamId.HasValue)
+                                        {
+                                            <a class="d-flex align-items-center text-decoration-none" href="@Url.Action("Details", "Teams", new { id = match.OpponentTeamId })" rel="nofollow">
+                                                <div class="me-2">
+                                                    <img src="@match.OpponentLogoUrl" alt="@match.OpponentName" style="width: 20px; height: 20px; object-fit: cover; border-radius: 3px;" 
+                                                         onerror="this.src='https://ui-avatars.com/api/?name=@match.OpponentTag&background=random&color=fff&size=20'" />
+                                                </div>
+                                                <div class="team-name text-body">@match.OpponentName</div>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <div class="d-flex align-items-center text-muted">@match.OpponentName</div>
+                                        }
                                     </td>
-                                    <td>@match.MapName</td>
+                                    @if (Model.GameId == 2)
+                                    {
+                                        <td class="py-1 lol-champ-col" onclick="event.stopPropagation()">
+                                            <div class="d-flex flex-wrap align-items-center gap-1" style="max-width: 220px;">
+                                            @foreach (var c in match.OurChampions)
+                                            {
+                                                <img src="https://ddragon.leagueoflegends.com/cdn/@ddv/img/champion/@(c.ChampionName).png" 
+                                                     title="@c.ChampionName" alt="@c.ChampionName" class="lo-champ" style="width: 28px; height: 28px; border-radius: 3px; object-fit: cover;" onerror="this.style.display='none'" />
+                                            }
+                                            </div>
+                                        </td>
+                                        <td class="py-1 lol-champ-col" onclick="event.stopPropagation()">
+                                            <div class="d-flex flex-wrap align-items-center gap-1" style="max-width: 220px;">
+                                            @foreach (var c in match.TheirChampions)
+                                            {
+                                                <img src="https://ddragon.leagueoflegends.com/cdn/@ddv/img/champion/@(c.ChampionName).png" 
+                                                     title="@c.ChampionName" alt="@c.ChampionName" class="lo-champ" style="width: 28px; height: 28px; border-radius: 3px; object-fit: cover;" onerror="this.style.display='none'" />
+                                            }
+                                            </div>
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td>@match.MapName</td>
+                                    }
+                                    <td onclick="event.stopPropagation()">
+                                        @if (!string.IsNullOrEmpty(match.TournamentShortName))
+                                        {
+                                            <a class="tournament-name text-decoration-none" href="@Url.Action("Details", "Tournaments", new { id = match.TournamentShortName })">@match.TournamentName</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="tournament-name">@match.TournamentName</span>
+                                        }
+                                    </td>
                                     <td>
-                                        <span class="tournament-name">@match.TournamentName</span>
-        </td>
-                                    <td>
-                                        <span class="match-result @(match.IsWin ? "result-win" : "result-loss")">
-                                            @(match.IsWin ? "W" : "L")
-                                        </span>
-        </td>
-    </tr>
-                                matchIndex++;
+                                        <span class="match-result @(match.IsWin ? "result-win" : "result-loss")" onclick="return false">@(match.IsWin ? "W" : "L")</span>
+                                    </td>
+                                </tr>
                             }
-                        </tbody>
+                            </tbody>
+                        }
 </table>
                 </div>
             }
@@ -621,6 +685,13 @@
             var total = btn.getAttribute('data-total') || '0';
             btn.textContent = 'Show all ' + total + ' stints';
         }
+        document.querySelectorAll('.team-recent-match-row').forEach(function (r) {
+            r.addEventListener('click', function (e) {
+                if (e.target.closest('a') || e.target.tagName === 'A') return;
+                var h = r.getAttribute('data-series-href');
+                if (h) window.location = h;
+            });
+        });
     });
 
     function showTab(tabName) {

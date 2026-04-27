@@ -27,7 +27,7 @@ namespace Balkana.Services.Discord
                 return null;
 
             baseUrl = baseUrl.TrimEnd('/');
-            var tournamentUrl = $"{baseUrl}/Tournaments/Details/{tournament.Id}";
+            var detailsSeg = string.IsNullOrWhiteSpace(tournament.ShortName) ? tournament.Id.ToString() : tournament.ShortName;
 
             var teamIds = tournament.Placements.Select(p => p.TeamId).Distinct().ToList();
 
@@ -48,6 +48,7 @@ namespace Balkana.Services.Discord
             var dto = new TournamentDiscordResultsDto
             {
                 TournamentId = tournament.Id,
+                TournamentDetailsRouteSegment = detailsSeg,
                 TournamentName = tournament.FullName,
                 GameId = tournament.GameId
             };

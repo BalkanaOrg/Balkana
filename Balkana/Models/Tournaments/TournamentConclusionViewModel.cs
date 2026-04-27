@@ -6,6 +6,7 @@ namespace Balkana.Models.Tournaments
     public class TournamentConclusionViewModel
     {
         public int TournamentId { get; set; }
+        public string? TournamentShortName { get; set; }
         public string TournamentName { get; set; }
         public int TotalTeams { get; set; }
         public string EliminationType { get; set; }
@@ -27,6 +28,9 @@ namespace Balkana.Models.Tournaments
         public IFormFile? TrophyImageFile { get; set; }
 
         public List<TeamPointsPreviewRow> TeamPointsPreview { get; set; } = new();
+
+        /// <summary>League of Legends: circuit points are awarded to the team only (no per-player pool, no org 20%).</summary>
+        public bool IsLeagueOfLegendsTournament { get; set; }
     }
 
     public class TeamPointsPreviewRow
@@ -88,6 +92,19 @@ namespace Balkana.Models.Tournaments
         public double DPRScore { get; set; }
         public double Commentator1Score { get; set; }
         public double Commentator2Score { get; set; }
+
+        // League of Legends: raw metrics and per-category point awards
+        public double LolKdaValue { get; set; }
+        public double LolDpm { get; set; }
+        public int LolVisionTotal { get; set; }
+        public double LolAverageCs { get; set; }
+        public double LolAverageObjectivesDmg { get; set; }
+
+        public double LolKdaPoints { get; set; }
+        public double LolDpmPoints { get; set; }
+        public double LolVisionPoints { get; set; }
+        public double LolCsPoints { get; set; }
+        public double LolObjectivesPoints { get; set; }
     }
 
     public class MVFormulaConfiguration

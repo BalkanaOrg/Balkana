@@ -57,6 +57,7 @@ namespace Balkana.Services.Matches.Models
                 GameVersion = response.info.gameVersion,
                 MapId = response.info.mapId,
                 GameMode = response.info.gameMode,
+                GameDurationSeconds = response.info.gameDuration,
                 PlayerStats = new List<PlayerStatistic>()
             };
 

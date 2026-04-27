@@ -172,7 +172,7 @@ namespace Balkana.Controllers
                 
                 return CreateUrlElement(
                     baseUrl,
-                    $"/Tournaments/Details/{tournament.Id}",
+                    $"/Tournaments/Details/{tournament.ShortName}",
                     lastMod,
                     "weekly",
                     0.9

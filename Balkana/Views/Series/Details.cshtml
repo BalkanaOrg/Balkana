@@ -4,6 +4,7 @@
     ViewData["Title"] = "Series Details";
     bool hasMatches = (bool)ViewData["HasMatches"];
     var gameShortName = ViewData["GameShortName"] as string ?? "";
+    var lolNoCombinedMapStats = ViewData["LolNoCombinedMapStats"] as bool? == true;
 }
 
 @functions {
@@ -241,10 +242,13 @@
                         Player Statistics
                     </h2>
                     <div class="filter-controls">
-                        <button class="btn btn-sm btn-primary filter-btn active" data-map-id="">
-                            <i class="fi fi-rr-globe"></i>
-                            All Maps
-                        </button>
+                        @if (!lolNoCombinedMapStats)
+                        {
+                            <button class="btn btn-sm btn-primary filter-btn active" data-map-id="" type="button">
+                                <i class="fi fi-rr-globe"></i>
+                                All Maps
+                            </button>
+                        }
                     </div>
                 </div>
                 
@@ -366,6 +370,7 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
+            var lolNoCombined = @(lolNoCombinedMapStats ? "true" : "false");
             // Add filter buttons for each map
             var matchCards = $('.match-card');
             var filterControls = $('.filter-controls');
@@ -375,10 +380,15 @@
                 var mapName = $(this).find('.map-name').text();
                 
                 if (mapId && mapName) {
-                    var filterBtn = $('<button class="btn btn-sm btn-outline-primary filter-btn" data-map-id="' + mapId + '">' +
-                        '<i class="fi fi-rr-map"></i>' +
-                        mapName +
-                        '</button>');
+                    var isFirstGame = filterControls.find('.filter-btn').length === 0
+                        && lolNoCombined;
+                    var filterBtn = $('<button type="button" class="btn btn-sm filter-btn" data-map-id="' + mapId + '">' +
+                        '<i class="fi fi-rr-map"></i> ' + mapName + '</button>');
+                    if (isFirstGame) {
+                        filterBtn.addClass('btn-primary active');
+                    } else {
+                        filterBtn.addClass('btn-outline-primary');
+                    }
                     filterControls.append(filterBtn);
                 }
             });
@@ -391,6 +401,9 @@
                 $('.filter-btn').removeClass('active btn-primary').addClass('btn-outline-primary');
                 $(this).removeClass('btn-outline-primary').addClass('active btn-primary');
                 
+                if (lolNoCombined && (mapId === undefined || mapId === '')) {
+                    return;
+                }
                 // Load player stats for the selected map
                 loadPlayerStats(mapId);
             });
@@ -403,6 +416,9 @@
                 $('.filter-btn').removeClass('active btn-primary').addClass('btn-outline-primary');
                 $('.filter-btn[data-map-id="' + mapId + '"]').removeClass('btn-outline-primary').addClass('active btn-primary');
                 
+                if (lolNoCombined && (mapId === undefined || mapId === '')) {
+                    return;
+                }
                 // Load player stats for the selected map
                 loadPlayerStats(mapId);
             });
@@ -411,7 +427,7 @@
                 var seriesId = @Model.Id;
                 var url = '@Url.Action("GetPlayerStatsByMap", "Series")' + '?seriesId=' + seriesId;
                 
-                if (mapId) {
+                if (mapId !== undefined && mapId !== null && mapId !== '') {
                     url += '&mapId=' + mapId;
                 }
                 
