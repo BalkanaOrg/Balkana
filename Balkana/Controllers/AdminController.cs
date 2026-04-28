@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Balkana.Data.Infrastructure.Extensions;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 
 namespace Balkana.Controllers
@@ -705,11 +706,17 @@ namespace Balkana.Controllers
         public IActionResult DiscordCircuitStandings([FromServices] ITeamService teamService)
         {
             var games = new List<string> { "League of Legends", "Counter-Strike" };
-            ViewBag.GameSelect = new SelectList(games);
+            ViewBag.GameSelect = new SelectList(
+                games.Select(g => new { Value = g, Text = g }),
+                "Value",
+                "Text");
             var years = teamService.GetAvailableYears().ToList();
             if (years.Count == 0)
                 years = new List<int> { DateTime.UtcNow.Year };
-            ViewBag.YearSelect = new SelectList(years);
+            ViewBag.YearSelect = new SelectList(
+                years.Select(y => new { Value = y.ToString(), Text = y.ToString() }),
+                "Value",
+                "Text");
             return View("Discord/CircuitStandingsPost");
         }
 

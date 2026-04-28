@@ -29,7 +29,7 @@
                         Uses the Discord channel mapped for that game unless you override below.
                     </p>
 
-                    <form asp-action="DiscordCircuitStandings" method="post" class="mb-4">
+                    <form asp-controller="Admin" asp-action="DiscordCircuitStandings" method="post" class="mb-4">
                         @Html.AntiForgeryToken()
                         <div class="mb-3">
                             <label for="gameFullName" class="form-label">Game</label>
