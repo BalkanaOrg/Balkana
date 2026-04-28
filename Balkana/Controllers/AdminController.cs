@@ -731,24 +731,40 @@ namespace Balkana.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DiscordCircuitStandings(
             string gameFullName,
-            int circuitYear,
+            int? circuitYear,
             string? channelIdOverride,
             [FromServices] IDiscordCircuitStandingsService standingsService)
         {
+            gameFullName = string.IsNullOrWhiteSpace(gameFullName) ? "" : gameFullName.Trim();
+
             if (string.IsNullOrWhiteSpace(gameFullName))
             {
                 TempData["Error"] = "Select a game.";
                 return RedirectToAction(nameof(DiscordCircuitStandings));
             }
 
-            var trimmed = string.IsNullOrWhiteSpace(channelIdOverride) ? null : channelIdOverride.Trim();
-            if (!string.IsNullOrEmpty(trimmed) && !IsDiscordSnowflake(trimmed))
+            if (circuitYear is null || circuitYear <= 0)
             {
-                TempData["Error"] = "Channel override must be a numeric Discord snowflake.";
+                TempData["Error"] = "Select a valid circuit year.";
                 return RedirectToAction(nameof(DiscordCircuitStandings));
             }
 
-            var (ok, err) = await standingsService.PostCircuitStandingsAsync(gameFullName, circuitYear, trimmed);
+            var trimmed = string.IsNullOrWhiteSpace(channelIdOverride) ? null : channelIdOverride.Trim();
+            if (!string.IsNullOrEmpty(trimmed))
+            {
+                var digitsOnly = new string(trimmed.Where(char.IsDigit).ToArray());
+                if (!string.IsNullOrEmpty(digitsOnly) && IsDiscordSnowflake(digitsOnly))
+                {
+                    trimmed = digitsOnly;
+                }
+                else if (!IsDiscordSnowflake(trimmed))
+                {
+                    TempData["Error"] = "Channel override must be a numeric Discord snowflake (e.g. 123456789012345678).";
+                    return RedirectToAction(nameof(DiscordCircuitStandings));
+                }
+            }
+
+            var (ok, err) = await standingsService.PostCircuitStandingsAsync(gameFullName, circuitYear.Value, trimmed);
             if (ok)
                 TempData["Success"] = "Circuit standings posted to Discord.";
             else
