@@ -386,6 +386,12 @@ void ConfigureServices(IServiceCollection services)
         if (!string.IsNullOrEmpty(cfg.BotToken))
             client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bot {cfg.BotToken}");
     });
+    builder.Services.AddHttpClient<IDiscordCircuitStandingsService, DiscordCircuitStandingsService>((sp, client) =>
+    {
+        var cfg = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Balkana.Models.Discord.DiscordConfig>>().Value;
+        if (!string.IsNullOrEmpty(cfg.BotToken))
+            client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bot {cfg.BotToken}");
+    });
     builder.Services.AddScoped<TournamentResultsCompositeRenderer>();
 }
 

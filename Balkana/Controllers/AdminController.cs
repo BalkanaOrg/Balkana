@@ -7,6 +7,7 @@ using Balkana.Models.Store;
 using Balkana.Models.Tournaments;
 using Balkana.Services.Admin;
 using Balkana.Services.Discord;
+using Balkana.Services.Teams;
 using Balkana.Services.Players;
 using Balkana.Services.Players.Models;
 using Balkana.Services.Store;
@@ -698,6 +699,62 @@ namespace Balkana.Controllers
                 TempData["Error"] = err ?? "Failed to post to Discord.";
 
             return RedirectToAction(nameof(DiscordTournamentResults));
+        }
+
+        [HttpGet]
+        public IActionResult DiscordCircuitStandings([FromServices] ITeamService teamService)
+        {
+            var games = new List<string> { "League of Legends", "Counter-Strike" };
+            ViewBag.GameSelect = new SelectList(games);
+            var years = teamService.GetAvailableYears().ToList();
+            if (years.Count == 0)
+                years = new List<int> { DateTime.UtcNow.Year };
+            ViewBag.YearSelect = new SelectList(years);
+            return View("Discord/CircuitStandingsPost");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DiscordCircuitStandingsPreview(
+            string gameFullName,
+            int circuitYear,
+            [FromServices] IDiscordCircuitStandingsService standingsService)
+        {
+            if (string.IsNullOrWhiteSpace(gameFullName))
+                return BadRequest("gameFullName is required.");
+
+            var preview = await standingsService.BuildPlainTextPreviewAsync(gameFullName, circuitYear);
+            ViewData["Title"] = "Circuit standings preview";
+            return View("Discord/CircuitStandingsPreview", preview);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DiscordCircuitStandings(
+            string gameFullName,
+            int circuitYear,
+            string? channelIdOverride,
+            [FromServices] IDiscordCircuitStandingsService standingsService)
+        {
+            if (string.IsNullOrWhiteSpace(gameFullName))
+            {
+                TempData["Error"] = "Select a game.";
+                return RedirectToAction(nameof(DiscordCircuitStandings));
+            }
+
+            var trimmed = string.IsNullOrWhiteSpace(channelIdOverride) ? null : channelIdOverride.Trim();
+            if (!string.IsNullOrEmpty(trimmed) && !IsDiscordSnowflake(trimmed))
+            {
+                TempData["Error"] = "Channel override must be a numeric Discord snowflake.";
+                return RedirectToAction(nameof(DiscordCircuitStandings));
+            }
+
+            var (ok, err) = await standingsService.PostCircuitStandingsAsync(gameFullName, circuitYear, trimmed);
+            if (ok)
+                TempData["Success"] = "Circuit standings posted to Discord.";
+            else
+                TempData["Error"] = err ?? "Failed to post to Discord.";
+
+            return RedirectToAction(nameof(DiscordCircuitStandings));
         }
 
         private async Task LoadGamesSelectListAsync()

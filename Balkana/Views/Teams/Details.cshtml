@@ -55,14 +55,14 @@
                         <div class="stat-number">@Model.CircuitYearPointsTotal</div>
                         <div class="stat-label">@Model.CircuitYear Circuit Points</div>
                         <div class="stat-sub">
-                            @if (Model.GameId == 2)
+                            @* @if (Model.GameId == 2)
                             {
-                                <text>@Model.CircuitYearOrganisationPoints team points (no per-player pool)</text>
+                                
                             }
                             else
                             {
                                 <text>@Model.CircuitYearRosterPlayerPoints + @Model.CircuitYearOrganisationPoints (@Model.CircuitYearOrganisationPoints from organization)</text>
-                            }
+                            } *@
                         </div>
                     </div>
                 </div>

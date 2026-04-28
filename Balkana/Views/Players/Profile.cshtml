@@ -136,7 +136,7 @@
                                 <h5 class="mb-0"><i class="fa fa-bar-chart me-2"></i>@(Model.ProfileSectionTitles.GetValueOrDefault(gameStats.Key) ?? gameStats.Value.GameName) Statistics</h5>
                             </div>
                             <div class="card-body">
-                                @if (gameStats.Value.Source == "FACEIT" || gameStats.Value.Source == "RIOT")
+                                @if (gameStats.Value.Source == "FACEIT")
                                 {
                                     <div class="row mb-3">
                                         <div class="col-md-6 mb-2">

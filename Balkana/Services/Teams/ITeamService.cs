@@ -36,6 +36,12 @@ namespace Balkana.Services.Teams
         public int AbsoluteNumberOfTeams();
         public IEnumerable<TeamGameServiceModel> AllGames();
         public IEnumerable<TeamStaffServiceModel> AllPlayers(int teamId);
-        
+
+        /// <summary>
+        /// Teams in the circuit year for the given game, ordered by total circuit points (desc), then team id.
+        /// LoL: team placement points + active roster ordered by lane PositionId 9–13.
+        /// CS: active roster player points + organisation points, with per-player year totals.
+        /// </summary>
+        IReadOnlyList<CircuitStandingTeamDto> GetCircuitStandings(string gameFullName, int circuitYear);
     }
 }

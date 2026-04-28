@@ -1,0 +1,92 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Post circuit standings to Discord";
+    var previewActionUrl = Url.Action("DiscordCircuitStandingsPreview", "Admin")!;
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card bg-dark text-white">
+                <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #1e40af, #dc2626);">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-list-ol me-2"></i>
+                        Post circuit standings to Discord
+                    </h3>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success">@TempData["Success"]</div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger">@TempData["Error"]</div>
+                    }
+
+                    <p class="text-muted">
+                        Sends standings for teams that participated in any tournament in the selected year, ordered by circuit points (same rules as Teams listing for 2026+).
+                        Uses the Discord channel mapped for that game unless you override below.
+                    </p>
+
+                    <form asp-action="DiscordCircuitStandings" method="post" class="mb-4">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label for="gameFullName" class="form-label">Game</label>
+                            <select name="gameFullName" id="gameFullName" class="form-select bg-dark text-white border-secondary" required>
+                                <option value="">— Select game —</option>
+                                @if (ViewBag.GameSelect is SelectList gl)
+                                {
+                                    foreach (var item in gl)
+                                    {
+                                        <option value="@item.Value">@item.Text</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="circuitYear" class="form-label">Circuit year</label>
+                            <select name="circuitYear" id="circuitYear" class="form-select bg-dark text-white border-secondary" required>
+                                @if (ViewBag.YearSelect is SelectList yl)
+                                {
+                                    foreach (var item in yl)
+                                    {
+                                        <option value="@item.Value">@item.Text</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="channelIdOverride" class="form-label">Channel ID override (optional)</label>
+                            <input type="text" name="channelIdOverride" id="channelIdOverride" class="form-control bg-dark text-white border-secondary" autocomplete="off" />
+                            <div class="form-text text-muted">Leave empty to use the mapped channel for the selected game.</div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-1"></i> Post to Discord
+                            </button>
+                            <button type="button" class="btn btn-outline-info" id="btnPreview">
+                                <i class="fas fa-eye me-1"></i> Preview text
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var previewActionUrl = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(previewActionUrl));
+    document.getElementById('btnPreview').addEventListener('click', function () {
+        var game = document.getElementById('gameFullName').value;
+        var year = document.getElementById('circuitYear').value;
+        if (!game) { alert('Select a game first.'); return; }
+        if (!year) { alert('Select a year first.'); return; }
+        var base = previewActionUrl.replace(/\/$/, '');
+        var sep = base.indexOf('?') >= 0 ? '&' : '?';
+        window.location.href = base + sep + 'gameFullName=' + encodeURIComponent(game) + '&circuitYear=' + encodeURIComponent(year);
+    });
+})();
+</script>

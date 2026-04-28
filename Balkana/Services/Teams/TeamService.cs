@@ -264,6 +264,142 @@ namespace Balkana.Services.Teams
             return latestTransfers.ToList();
         }
 
+        public IReadOnlyList<CircuitStandingTeamDto> GetCircuitStandings(string gameFullName, int circuitYear)
+        {
+            if (string.IsNullOrWhiteSpace(gameFullName) || circuitYear <= 0)
+                return Array.Empty<CircuitStandingTeamDto>();
+
+            var game = this.data.Games.AsNoTracking().FirstOrDefault(g => g.FullName == gameFullName);
+            if (game == null)
+                return Array.Empty<CircuitStandingTeamDto>();
+
+            var now = DateTime.UtcNow;
+
+            var teams = this.data.Teams
+                .AsNoTracking()
+                .Include(t => t.TournamentTeams).ThenInclude(tt => tt.Tournament)
+                .Include(t => t.Transfers).ThenInclude(tr => tr.Player)
+                .Include(t => t.Transfers).ThenInclude(tr => tr.TeamPosition)
+                .Where(t => t.GameId == game.Id
+                            && t.TournamentTeams.Any(tt => tt.Tournament.StartDate.Year == circuitYear))
+                .ToList();
+
+            var results = new List<CircuitStandingTeamDto>(teams.Count);
+
+            foreach (var team in teams)
+            {
+                var (rosterPts, orgPts) = GetCircuitYearPoints(team, circuitYear, now);
+                var total = rosterPts + orgPts;
+
+                if (team.GameId == 2)
+                {
+                    var lolRoster = BuildLolCircuitStandingRoster(team, now);
+                    results.Add(new CircuitStandingTeamDto
+                    {
+                        TeamId = team.Id,
+                        Tag = team.Tag,
+                        FullName = team.FullName,
+                        GameId = team.GameId,
+                        IsLeagueOfLegends = true,
+                        TotalPoints = total,
+                        LolTeamPlacementPoints = orgPts,
+                        LolRoster = lolRoster
+                    });
+                }
+                else
+                {
+                    var rosterIds = GetCurrentRosterPlayerIds(team, now).ToList();
+                    var pointsByPlayer = GetCsPlayerPointsSumByPlayerId(rosterIds, circuitYear);
+                    var csLines = BuildCsCircuitStandingLines(team, now, pointsByPlayer);
+                    results.Add(new CircuitStandingTeamDto
+                    {
+                        TeamId = team.Id,
+                        Tag = team.Tag,
+                        FullName = team.FullName,
+                        GameId = team.GameId,
+                        IsLeagueOfLegends = false,
+                        TotalPoints = total,
+                        CsRosterPlayerPoints = rosterPts,
+                        CsOrganisationPoints = orgPts,
+                        CsPlayers = csLines
+                    });
+                }
+            }
+
+            return results
+                .OrderByDescending(r => r.TotalPoints)
+                .ThenBy(r => r.TeamId)
+                .ToList();
+        }
+
+        private static IReadOnlyList<CircuitStandingLolRosterLine> BuildLolCircuitStandingRoster(Team team, DateTime now)
+        {
+            var transfers = team.Transfers
+                .Where(tr => tr.StartDate <= now &&
+                             (tr.EndDate == null || tr.EndDate >= now) &&
+                             tr.Status == PlayerTeamStatus.Active)
+                .GroupBy(tr => tr.PlayerId)
+                .Select(g => g.OrderByDescending(tr => tr.StartDate).First())
+                .OrderBy(tr => LolLanePrimarySort(tr.PositionId))
+                .ThenBy(tr => tr.PositionId)
+                .ThenBy(tr => tr.Player.Nickname)
+                .Select(tr => new CircuitStandingLolRosterLine
+                {
+                    Nickname = tr.Player.Nickname,
+                    PositionId = tr.PositionId,
+                    PositionName = tr.TeamPosition?.Name ?? ""
+                })
+                .ToList();
+
+            return transfers;
+        }
+
+        /// <summary>Maps lane PositionIds 9–13 to 0–4; other roles sort after lanes.</summary>
+        private static int LolLanePrimarySort(int? positionId)
+        {
+            if (positionId is >= 9 and <= 13)
+                return positionId.Value - 9;
+            return 80 + (positionId ?? 0);
+        }
+
+        private Dictionary<int, int> GetCsPlayerPointsSumByPlayerId(IReadOnlyList<int> rosterIds, int circuitYear)
+        {
+            if (rosterIds.Count == 0)
+                return new Dictionary<int, int>();
+
+            var rows = this.data.PlayerPoints
+                .AsNoTracking()
+                .Where(pp => rosterIds.Contains(pp.PlayerId) && pp.Tournament.StartDate.Year == circuitYear)
+                .Select(pp => new { pp.PlayerId, pp.PointsAwarded })
+                .ToList();
+
+            return rows
+                .GroupBy(x => x.PlayerId)
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.PointsAwarded));
+        }
+
+        private static IReadOnlyList<CircuitStandingCsPlayerLine> BuildCsCircuitStandingLines(
+            Team team,
+            DateTime now,
+            IReadOnlyDictionary<int, int> pointsByPlayer)
+        {
+            return team.Transfers
+                .Where(tr => tr.StartDate <= now &&
+                             (tr.EndDate == null || tr.EndDate >= now) &&
+                             tr.Status == PlayerTeamStatus.Active)
+                .GroupBy(tr => tr.PlayerId)
+                .Select(g => g.OrderByDescending(tr => tr.StartDate).First())
+                .OrderBy(tr => tr.PositionId ?? 999)
+                .ThenBy(tr => tr.Player.Nickname)
+                .Select(tr => new CircuitStandingCsPlayerLine
+                {
+                    Nickname = tr.Player.Nickname,
+                    PositionId = tr.PositionId,
+                    PositionName = tr.TeamPosition?.Name ?? "",
+                    PointsThisYear = pointsByPlayer.TryGetValue(tr.PlayerId, out var pts) ? pts : 0
+                })
+                .ToList();
+        }
 
         private IEnumerable<TeamServiceModel> BuildTeamListCards(IQueryable<Team> teamQuery, int circuitYear, DateTime now)
         {
