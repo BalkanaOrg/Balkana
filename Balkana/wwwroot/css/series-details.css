@@ -719,6 +719,75 @@
     color: rgba(45, 27, 105, 0.5);
 }
 
+/* Series Edit form */
+.series-edit-header {
+    margin-bottom: 2rem;
+}
+
+.series-edit-header .series-title {
+    font-size: 2.25rem;
+}
+
+.series-edit-lead {
+    margin-top: 0.75rem;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 1rem;
+    line-height: 1.5;
+    max-width: 640px;
+}
+
+.series-edit-form {
+    max-width: 560px;
+}
+
+.series-edit-field {
+    margin-bottom: 1.35rem;
+}
+
+.series-edit-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.02em;
+}
+
+.series-edit-input,
+.series-edit-select {
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.35);
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 1rem;
+}
+
+.series-edit-input:focus,
+.series-edit-select:focus {
+    outline: none;
+    border-color: rgba(139, 0, 0, 0.65);
+    box-shadow: 0 0 0 3px rgba(45, 27, 105, 0.35);
+}
+
+.series-edit-select {
+    cursor: pointer;
+    appearance: auto;
+}
+
+.series-edit-validation {
+    display: block;
+    margin-top: 0.35rem;
+    color: #f87171;
+    font-size: 0.875rem;
+}
+
+.series-edit-actions {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    justify-content: flex-start;
+}
+
 /* Animations */
 @keyframes spin {
     0% { transform: rotate(0deg); }

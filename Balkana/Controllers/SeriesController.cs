@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -582,10 +583,7 @@ namespace Balkana.Controllers
 
             if (series == null) return NotFound();
 
-            ViewData["TeamAId"] = new SelectList(_context.Teams, "Id", "FullName", series.TeamAId);
-            ViewData["TeamBId"] = new SelectList(_context.Teams, "Id", "FullName", series.TeamBId);
-            ViewData["GameId"] = new SelectList(_context.Games, "Id", "FullName", series.Tournament.GameId);
-            ViewData["TournamentId"] = new SelectList(_context.Tournaments, "Id", "FullName", series.TournamentId);
+            await PopulateSeriesEditViewDataAsync(series);
 
             return View(series);
         }
@@ -604,7 +602,54 @@ namespace Balkana.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
+            await PopulateSeriesEditViewDataAsync(series);
             return View(series);
+        }
+
+        private async Task PopulateSeriesEditViewDataAsync(Series series)
+        {
+            var tournament = series.Tournament;
+            if (tournament == null && series.TournamentId != 0)
+            {
+                tournament = await _context.Tournaments.AsNoTracking().FirstOrDefaultAsync(t => t.Id == series.TournamentId);
+            }
+
+            var gameId = tournament?.GameId ?? 0;
+
+            var teamIds = await _context.TournamentTeams
+                .Where(tt => tt.TournamentId == series.TournamentId)
+                .Select(tt => tt.TeamId)
+                .ToListAsync();
+
+            var teams = await _context.Teams
+                .Where(t => teamIds.Contains(t.Id))
+                .OrderBy(t => t.FullName)
+                .AsNoTracking()
+                .ToListAsync();
+
+            ViewData["TeamAId"] = BuildSeriesEditTeamSelectList(teams, series.TeamAId);
+            ViewData["TeamBId"] = BuildSeriesEditTeamSelectList(teams, series.TeamBId);
+
+            var games = await _context.Games.AsNoTracking().OrderBy(g => g.FullName).ToListAsync();
+            var tournaments = await _context.Tournaments.AsNoTracking().OrderBy(t => t.FullName).ToListAsync();
+            ViewData["GameId"] = new SelectList(games, "Id", "FullName", gameId);
+            ViewData["TournamentId"] = new SelectList(tournaments, "Id", "FullName", series.TournamentId);
+        }
+
+        private static SelectList BuildSeriesEditTeamSelectList(IReadOnlyList<Team> teams, int? selectedTeamId)
+        {
+            var items = new List<SelectListItem>
+            {
+                new SelectListItem { Value = "", Text = "TBD" }
+            };
+            foreach (var t in teams)
+            {
+                items.Add(new SelectListItem { Value = t.Id.ToString(), Text = t.FullName });
+            }
+
+            var selected = selectedTeamId.HasValue ? selectedTeamId.Value.ToString() : "";
+            return new SelectList(items, "Value", "Text", selected);
         }
 
         // GET: Series/Delete/5

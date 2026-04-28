@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Balkana.Data.DTOs.Riot
 {
@@ -17,7 +18,8 @@ namespace Balkana.Data.DTOs.Riot
         /// Optional metadata string that can be used to retrieve tournament code details
         /// Max length 1000 characters
         /// </summary>
-        public string metadata { get; set; } = "";
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? metadata { get; set; }
 
         /// <summary>
         /// Team size for the tournament code's game (1-5)

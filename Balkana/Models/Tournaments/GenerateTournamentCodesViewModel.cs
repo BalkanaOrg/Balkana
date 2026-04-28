@@ -26,7 +26,7 @@ namespace Balkana.Models.Tournaments
 
         [Display(Name = "Description")]
         [StringLength(500)]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [Required]
         [Display(Name = "Map Type")]
@@ -47,7 +47,7 @@ namespace Balkana.Models.Tournaments
 
         [Display(Name = "Metadata (Optional)")]
         [StringLength(1000)]
-        public string Metadata { get; set; }
+        public string? Metadata { get; set; }
 
         public List<SelectListItem> MapTypes { get; set; } = new List<SelectListItem>
         {

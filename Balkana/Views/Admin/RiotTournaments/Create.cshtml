@@ -2,76 +2,70 @@
 
 @{
     ViewData["Title"] = "Create Riot Tournament";
+    Layout = "_Layout";
 }
 
-<div class="container mt-4">
-    <h2>Create Riot Tournament</h2>
-    <p class="text-muted">Register a new tournament with the Riot Tournament API</p>
+<link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
 
-    <div class="row">
-        <div class="col-md-8">
+<div class="admin-container">
+    <div class="admin-header" style="text-align: left;">
+        <h1 style="justify-content: flex-start;">Create Riot Tournament</h1>
+        <p class="admin-subtitle">Register a tournament with the Riot Tournament API.</p>
+    </div>
+
+    <div class="admin-layout-split">
+        <div>
             <form asp-action="CreateRiotTournament" method="post">
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                <div asp-validation-summary="ModelOnly" class="alert alert-error admin-validation-summary"></div>
 
-                <div class="mb-3">
-                    <label asp-for="Name" class="form-label"></label>
-                    <input asp-for="Name" class="form-control" placeholder="e.g., Spring Championship 2025" />
-                    <span asp-validation-for="Name" class="text-danger"></span>
+                <div class="admin-form-field">
+                    <label asp-for="Name" class="admin-form-label"></label>
+                    <input asp-for="Name" class="admin-form-input" placeholder="e.g., Spring Championship 2026" />
+                    <span asp-validation-for="Name" class="admin-field-error"></span>
                 </div>
 
-                <div class="mb-3">
-                    <label asp-for="Region" class="form-label"></label>
-                    <select asp-for="Region" asp-items="Model.AvailableRegions" class="form-select">
+                <div class="admin-form-field">
+                    <label asp-for="Region" class="admin-form-label"></label>
+                    <select asp-for="Region" asp-items="Model.AvailableRegions" class="admin-form-select">
                         <option value="">-- Select Region --</option>
                     </select>
-                    <span asp-validation-for="Region" class="text-danger"></span>
-                    <small class="form-text text-muted">The League of Legends server region where this tournament will be hosted.</small>
+                    <span asp-validation-for="Region" class="admin-field-error"></span>
+                    <span class="admin-form-hint">League of Legends server region for this tournament.</span>
                 </div>
 
-                <div class="mb-3">
-                    <label asp-for="TournamentId" class="form-label"></label>
-                    <select asp-for="TournamentId" asp-items="Model.InternalTournaments" class="form-select">
+                <div class="admin-form-field">
+                    <label asp-for="TournamentId" class="admin-form-label"></label>
+                    <select asp-for="TournamentId" asp-items="Model.InternalTournaments" class="admin-form-select">
                         <option value="">-- None (Optional) --</option>
                     </select>
-                    <span asp-validation-for="TournamentId" class="text-danger"></span>
-                    <small class="form-text text-muted">Optionally link this Riot tournament to an existing internal tournament for easier management.</small>
+                    <span asp-validation-for="TournamentId" class="admin-field-error"></span>
+                    <span class="admin-form-hint">Optionally link to an internal Balkana tournament.</span>
                 </div>
 
                 <input type="hidden" asp-for="ProviderId" />
 
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">
+                <div class="admin-inline-actions" style="margin-top: 1rem;">
+                    <button type="submit" class="btn-link" style="border: none; cursor: pointer;">
                         <i class="fas fa-save"></i> Create Tournament
                     </button>
-                    <a asp-action="RiotTournaments" class="btn btn-secondary">
+                    <a asp-action="RiotTournaments" class="btn-unlink" style="text-decoration: none;">
                         <i class="fas fa-times"></i> Cancel
                     </a>
                 </div>
             </form>
         </div>
 
-        <div class="col-md-4">
-            <div class="card bg-light">
-                <div class="card-body">
-                    <h5 class="card-title">Information</h5>
-                    <p class="card-text">
-                        Creating a Riot tournament will:
-                    </p>
-                    <ul>
-                        <li>Register a provider with Riot (if needed)</li>
-                        <li>Create a tournament ID from Riot API</li>
-                        <li>Store the tournament in your database</li>
-                    </ul>
-                    <p class="card-text">
-                        After creation, you can generate tournament codes that players will use to create custom games.
-                    </p>
-                </div>
-            </div>
-        </div>
+        <aside class="admin-side-panel">
+            <h5>What happens next</h5>
+            <ul>
+                <li>Registers a provider with Riot when needed.</li>
+                <li>Creates a Riot tournament ID and stores it locally.</li>
+                <li>You can then generate tournament codes for matches.</li>
+            </ul>
+        </aside>
     </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
-

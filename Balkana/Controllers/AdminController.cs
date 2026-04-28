@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Balkana.Data.Infrastructure.Extensions;
+using System.Collections.Generic;
 using System.Security.Claims;
 
 namespace Balkana.Controllers
@@ -1438,28 +1439,11 @@ namespace Balkana.Controllers
             if (tournament == null)
                 return NotFound();
 
-            // Get available series from the linked tournament
-            var series = new List<SelectListItem>();
-            if (tournament.TournamentId.HasValue)
-            {
-                series = await _context.Series
-                    .Where(s => s.TournamentId == tournament.TournamentId.Value)
-                    .Select(s => new SelectListItem
-                    {
-                        Value = s.Id.ToString(),
-                        Text = $"{s.TeamA.Tag} vs {s.TeamB.Tag} - {s.Round}"
-                    })
-                    .ToListAsync();
-            }
+            var series = tournament.TournamentId.HasValue
+                ? await BuildGenerateCodesSeriesSelectAsync(tournament.TournamentId.Value)
+                : new List<SelectListItem>();
 
-            var teams = await _context.Teams
-                .Where(t => t.Game.FullName == "League of Legends")
-                .Select(t => new SelectListItem
-                {
-                    Value = t.Id.ToString(),
-                    Text = $"{t.Tag} - {t.FullName}"
-                })
-                .ToListAsync();
+            var teams = await BuildGenerateCodesTeamsSelectAsync();
 
             var vm = new GenerateTournamentCodesViewModel
             {
@@ -1485,31 +1469,10 @@ namespace Balkana.Controllers
                 var tournament = await tournamentService.GetTournamentByIdAsync(id);
                 model.TournamentName = tournament?.Name;
 
-                // Reload dropdowns
-                var series = new List<SelectListItem>();
-                if (tournament?.TournamentId.HasValue == true)
-                {
-                    series = await _context.Series
-                        .Where(s => s.TournamentId == tournament.TournamentId.Value)
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.Id.ToString(),
-                            Text = $"{s.TeamA.Tag} vs {s.TeamB.Tag} - {s.Round}"
-                        })
-                        .ToListAsync();
-                }
-
-                var teams = await _context.Teams
-                    .Where(t => t.Game.FullName == "League of Legends")
-                    .Select(t => new SelectListItem
-                    {
-                        Value = t.Id.ToString(),
-                        Text = $"{t.Tag} - {t.FullName}"
-                    })
-                    .ToListAsync();
-
-                model.AvailableSeries = series;
-                model.AvailableTeams = teams;
+                model.AvailableSeries = tournament?.TournamentId.HasValue == true
+                    ? await BuildGenerateCodesSeriesSelectAsync(tournament.TournamentId.Value)
+                    : new List<SelectListItem>();
+                model.AvailableTeams = await BuildGenerateCodesTeamsSelectAsync();
 
                 return View("RiotTournaments/GenerateCodes", model);
             }
@@ -1517,7 +1480,9 @@ namespace Balkana.Controllers
             try
             {
                 var tournament = await tournamentService.GetTournamentByIdAsync(id);
-                
+
+                var metadata = string.IsNullOrWhiteSpace(model.Metadata) ? null : model.Metadata.Trim();
+
                 var codes = await tournamentService.GenerateTournamentCodesAsync(
                     tournament.RiotTournamentId,
                     model.Count,
@@ -1530,7 +1495,7 @@ namespace Balkana.Controllers
                     model.SpectatorType,
                     model.TeamSize,
                     null,
-                    model.Metadata);
+                    metadata);
 
                 TempData["SuccessMessage"] = $"Successfully generated {codes.Count} tournament code(s)!";
                 return RedirectToAction("RiotTournamentDetails", new { id });
@@ -1542,34 +1507,53 @@ namespace Balkana.Controllers
                 var tournament = await tournamentService.GetTournamentByIdAsync(id);
                 model.TournamentName = tournament?.Name;
 
-                // Reload dropdowns
-                var series = new List<SelectListItem>();
-                if (tournament?.TournamentId.HasValue == true)
-                {
-                    series = await _context.Series
-                        .Where(s => s.TournamentId == tournament.TournamentId.Value)
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.Id.ToString(),
-                            Text = $"{s.TeamA.Tag} vs {s.TeamB.Tag} - {s.Round}"
-                        })
-                        .ToListAsync();
-                }
-
-                var teams = await _context.Teams
-                    .Where(t => t.Game.FullName == "League of Legends")
-                    .Select(t => new SelectListItem
-                    {
-                        Value = t.Id.ToString(),
-                        Text = $"{t.Tag} - {t.FullName}"
-                    })
-                    .ToListAsync();
-
-                model.AvailableSeries = series;
-                model.AvailableTeams = teams;
+                model.AvailableSeries = tournament?.TournamentId.HasValue == true
+                    ? await BuildGenerateCodesSeriesSelectAsync(tournament.TournamentId.Value)
+                    : new List<SelectListItem>();
+                model.AvailableTeams = await BuildGenerateCodesTeamsSelectAsync();
 
                 return View("RiotTournaments/GenerateCodes", model);
             }
+        }
+
+        private async Task<List<SelectListItem>> BuildGenerateCodesSeriesSelectAsync(int balkanaTournamentId)
+        {
+            var rows = await _context.Series
+                .AsNoTracking()
+                .Where(s => s.TournamentId == balkanaTournamentId)
+                .Include(s => s.TeamA)
+                .Include(s => s.TeamB)
+                .OrderBy(s => s.Round)
+                .ThenBy(s => s.Position)
+                .ThenBy(s => s.Id)
+                .ToListAsync();
+
+            return rows.Select(s => new SelectListItem
+            {
+                Value = s.Id.ToString(),
+                Text = FormatGenerateCodesSeriesLabel(s)
+            }).ToList();
+        }
+
+        private static string FormatGenerateCodesSeriesLabel(Series s)
+        {
+            var tagA = s.TeamA?.Tag ?? "TBD";
+            var tagB = s.TeamB?.Tag ?? "TBD";
+            return $"{tagA} vs {tagB} – Round {s.Round}";
+        }
+
+        private async Task<List<SelectListItem>> BuildGenerateCodesTeamsSelectAsync()
+        {
+            return await _context.Teams
+                .AsNoTracking()
+                .Where(t => t.Game.FullName == "League of Legends")
+                .OrderBy(t => t.FullName)
+                .Select(t => new SelectListItem
+                {
+                    Value = t.Id.ToString(),
+                    Text = $"{t.Tag} - {t.FullName}"
+                })
+                .ToListAsync();
         }
 
         /// <summary>

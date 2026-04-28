@@ -202,7 +202,7 @@ namespace Balkana.Services.Tournaments
             var request = new RiotTournamentCodeRequestDto
             {
                 allowedSummonerIds = allowedSummonerIds ?? new List<string>(),
-                metadata = metadata ?? "",
+                metadata = string.IsNullOrWhiteSpace(metadata) ? null : metadata.Trim(),
                 teamSize = teamSize,
                 pickType = pickType,
                 mapType = mapType,
