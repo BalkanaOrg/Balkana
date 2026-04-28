@@ -1,10 +1,13 @@
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Balkana.Data;
 using Balkana.Models.Discord;
 using Balkana.Services.Teams;
 using Balkana.Services.Teams.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace Balkana.Services.Discord
@@ -25,7 +28,7 @@ namespace Balkana.Services.Discord
 
     public sealed class DiscordCircuitStandingsService : IDiscordCircuitStandingsService
     {
-        /// <summary>Discord message content max length.</summary>
+        /// <summary>Discord message content max length (legacy text split; preview still uses plain text).</summary>
         private const int MaxContentLength = 2000;
 
         private static readonly JsonSerializerOptions JsonOptions = new()
@@ -33,24 +36,35 @@ namespace Balkana.Services.Discord
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
+        private static readonly JsonSerializerOptions PayloadJsonOptions = new()
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
+
         private readonly ApplicationDbContext _context;
         private readonly ITeamService _teamService;
         private readonly DiscordConfig _discordConfig;
         private readonly HttpClient _httpClient;
         private readonly ILogger<DiscordCircuitStandingsService> _logger;
+        private readonly IConfiguration _configuration;
+        private readonly CircuitStandingsCompositeRenderer _compositeRenderer;
 
         public DiscordCircuitStandingsService(
             ApplicationDbContext context,
             ITeamService teamService,
             IOptions<DiscordConfig> discordConfig,
             HttpClient httpClient,
-            ILogger<DiscordCircuitStandingsService> logger)
+            ILogger<DiscordCircuitStandingsService> logger,
+            IConfiguration configuration,
+            CircuitStandingsCompositeRenderer compositeRenderer)
         {
             _context = context;
             _teamService = teamService;
             _discordConfig = discordConfig.Value;
             _httpClient = httpClient;
             _logger = logger;
+            _configuration = configuration;
+            _compositeRenderer = compositeRenderer;
 
             if (!_httpClient.DefaultRequestHeaders.Contains("Authorization")
                 && !string.IsNullOrEmpty(_discordConfig.BotToken))
@@ -101,29 +115,140 @@ namespace Balkana.Services.Discord
             if (!ulong.TryParse(channelId, out _))
                 return (false, "Discord channel id must be a numeric snowflake.");
 
+            var baseUrl = DiscordUrlHelper.GetBaseUrl(_configuration);
             var standings = _teamService.GetCircuitStandings(gameFullName, circuitYear);
-            var chunks = SplitIntoDiscordMessages(FormatStandingsPlainText(gameFullName, circuitYear, standings));
+            var imageDto = BuildCircuitStandingsImageDto(gameFullName, circuitYear, standings, baseUrl);
+
+            var pngBytes = await _compositeRenderer.RenderAsync(imageDto, cancellationToken).ConfigureAwait(false);
+            if (pngBytes == null || pngBytes.Length == 0)
+                return (false, "Failed to render circuit standings image (check server logs and Resources/NotoSans-Regular.ttf).");
+
+            var teamsUrl =
+                $"{baseUrl}/Teams?Game={Uri.EscapeDataString(gameFullName)}&Year={circuitYear}";
+
+            var embeds = new List<DiscordApiEmbed>
+            {
+                new DiscordApiEmbed
+                {
+                    Title = $"{gameFullName} — {circuitYear} circuit standings",
+                    Url = teamsUrl,
+                    Color = 0xE94560,
+                    Image = new DiscordApiEmbedImage
+                    {
+                        Url = $"attachment://{CircuitStandingsCompositeRenderer.AttachmentFilename}"
+                    },
+                    Footer = new DiscordApiEmbedFooter { Text = "Balkana" }
+                }
+            };
+
+            var payload = new DiscordCreateMultipartPayload
+            {
+                Embeds = embeds,
+                Attachments =
+                [
+                    new DiscordApiAttachmentStub
+                    {
+                        Id = 0,
+                        Filename = CircuitStandingsCompositeRenderer.AttachmentFilename
+                    }
+                ]
+            };
 
             var url = $"https://discord.com/api/v10/channels/{channelId}/messages";
+            var payloadJson = JsonSerializer.Serialize(payload, PayloadJsonOptions);
 
-            for (var i = 0; i < chunks.Count; i++)
+            using var multipart = new MultipartFormDataContent();
+            multipart.Add(new StringContent(payloadJson, Encoding.UTF8, "application/json"), "payload_json");
+            var fileContent = new ByteArrayContent(pngBytes);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+            multipart.Add(fileContent, "files[0]", CircuitStandingsCompositeRenderer.AttachmentFilename);
+
+            var response = await _httpClient.PostAsync(url, multipart, cancellationToken).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
             {
-                var payload = JsonSerializer.Serialize(new Dictionary<string, string> { ["content"] = chunks[i] }, JsonOptions);
-                using var content = new StringContent(payload, Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync(url, content, cancellationToken).ConfigureAwait(false);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-                    _logger.LogWarning("Discord API error {Status} posting standings chunk {Index}: {Body}", response.StatusCode, i, body);
-                    return (false, $"Discord API {(int)response.StatusCode}: {body}");
-                }
-
-                if (i < chunks.Count - 1)
-                    await Task.Delay(750, cancellationToken).ConfigureAwait(false);
+                var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                _logger.LogWarning("Discord API error {Status} posting circuit standings: {Body}", response.StatusCode,
+                    body);
+                return (false, $"Discord API {(int)response.StatusCode}: {body}");
             }
 
             return (true, null);
+        }
+
+        private static CircuitStandingsImageDto BuildCircuitStandingsImageDto(
+            string gameFullName,
+            int circuitYear,
+            IReadOnlyList<CircuitStandingTeamDto> standings,
+            string baseUrl)
+        {
+            baseUrl = baseUrl.TrimEnd('/');
+            var dto = new CircuitStandingsImageDto
+            {
+                GameFullName = gameFullName,
+                CircuitYear = circuitYear
+            };
+
+            var rank = 1;
+            foreach (var t in standings)
+            {
+                dto.Teams.Add(new CircuitStandingsImageTeamRow
+                {
+                    Rank = rank++,
+                    TeamId = t.TeamId,
+                    Tag = t.Tag,
+                    FullName = t.FullName,
+                    LogoAbsoluteUrl = TournamentDiscordResultsBuilder.ToAbsoluteUrl(baseUrl, t.LogoURL),
+                    TotalPoints = t.TotalPoints,
+                    DetailLines = BuildDetailLinesForImage(t)
+                });
+            }
+
+            return dto;
+        }
+
+        private static List<string> BuildDetailLinesForImage(CircuitStandingTeamDto t)
+        {
+            var lines = new List<string>();
+
+            if (t.IsLeagueOfLegends)
+            {
+                lines.Add($"Placement (team): {t.LolTeamPlacementPoints ?? 0}");
+                if (t.LolRoster.Count == 0)
+                {
+                    lines.Add("No active roster entries.");
+                }
+                else
+                {
+                    foreach (var line in t.LolRoster)
+                    {
+                        var role = string.IsNullOrEmpty(line.PositionName)
+                            ? (line.PositionId?.ToString() ?? "?")
+                            : line.PositionName;
+                        lines.Add($"{role}: {line.Nickname}");
+                    }
+                }
+            }
+            else
+            {
+                lines.Add($"Roster pts: {t.CsRosterPlayerPoints ?? 0} · Org: {t.CsOrganisationPoints ?? 0}");
+                if (t.CsPlayers.Count == 0)
+                {
+                    lines.Add("No active roster entries.");
+                }
+                else
+                {
+                    foreach (var p in t.CsPlayers)
+                    {
+                        var role = string.IsNullOrEmpty(p.PositionName)
+                            ? (p.PositionId?.ToString() ?? "?")
+                            : p.PositionName;
+                        lines.Add($"{p.Nickname} ({role}) — {p.PointsThisYear} pts");
+                    }
+                }
+            }
+
+            return lines;
         }
 
         internal static string FormatStandingsPlainText(

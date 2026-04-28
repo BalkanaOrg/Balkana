@@ -393,6 +393,7 @@ void ConfigureServices(IServiceCollection services)
             client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bot {cfg.BotToken}");
     });
     builder.Services.AddScoped<TournamentResultsCompositeRenderer>();
+    builder.Services.AddScoped<CircuitStandingsCompositeRenderer>();
 }
 
 // Configure the HTTP request pipeline.

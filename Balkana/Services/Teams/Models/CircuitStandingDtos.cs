@@ -7,6 +7,8 @@ namespace Balkana.Services.Teams.Models
         public int TeamId { get; init; }
         public string Tag { get; init; } = "";
         public string FullName { get; init; } = "";
+        /// <summary>Relative or absolute logo URL as stored on the team.</summary>
+        public string? LogoURL { get; init; }
         public int GameId { get; init; }
         public bool IsLeagueOfLegends { get; init; }
         public int TotalPoints { get; init; }
